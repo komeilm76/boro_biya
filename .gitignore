@@ -1,0 +1,49 @@
+# Dependencies and build output
+node_modules/
+dist/
+build/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local environment and secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+
+# Runtime data
+var/
+tmp/
+*.log
+logs/
+
+# Test and tooling caches
+.vitest/
+.playwright/
+.cache/
+.turbo/
+.eslintcache
+.prettiercache
+
+# Editor and OS noise
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Android build output (Phase 8)
+android/.gradle/
+android/app/build/
+android/build/
+apps/android/android/
+
+# Docker/Compose local overrides
+docker-compose.override.yml

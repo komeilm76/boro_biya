@@ -1,0 +1,22 @@
+# Normalise line endings so Windows contributors cannot introduce CRLF churn.
+* text=auto eol=lf
+
+# Keep binary assets untouched.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.apk binary
+*.aab binary
+
+# Generated or vendored files are not counted in diffs and language statistics.
+docs/development/07-traceability.md linguist-generated=true
+package-lock.json linguist-generated=true
+bun.lock linguist-generated=true

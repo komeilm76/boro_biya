@@ -1,0 +1,54 @@
+# Phase 0 documentation gates.
+#
+# Runs the dependency-free documentation gate on Linux and Windows so a clean clone can
+# be verified on both supported contributor platforms (docs/development/01-development-environment.md).
+# Application gates (format, lint, types, tests, builds) are added in Phase 1 together with
+# the code they check — see docs/development/03-ci-and-gates.md §2.
+#
+# Actions are pinned to immutable commit SHAs (QUALITY_GATES §1).
+
+name: docs-gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  documentation:
+    name: documentation gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Show runtime versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Verify requirement traceability is current
+        run: node scripts/gates/traceability.mjs
+
+      - name: Run documentation gate
+        run: node scripts/gates/phase0.mjs

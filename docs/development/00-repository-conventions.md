@@ -1,0 +1,69 @@
+# Repository Conventions
+
+Normative rules for this repository: how work is organised, named, reviewed, and kept honest. Requirement identifiers referenced here (`GOV-…`, `QA-…`) are defined in the requirement registry — see [Documentation index](../README.md#requirement-ids).
+
+## 1. Language and documents
+
+- **[GOV-41]** The normative documentation of this project lives in `/docs`. Code, scripts, comments, JSDoc, commit messages, branch names, and file names are written in English.
+- **[GOV-42]** Documentation and behaviour change in the **same commit**. A commit that changes behaviour without updating the affected document is incomplete.
+- **[GOV-43]** Two audiences are kept separate: `/docs/user/` is written for people who use the product and must never reference phase numbers, requirement IDs, ADRs, or internal test identifiers; `/docs/development/` and `/docs/security/` are written for engineers and agents.
+- **[GOV-44]** Every document has an H1 title, one owner, and one review date, and is listed in the index table in [`docs/README.md`](../README.md). An unlisted document is a defect.
+
+## 2. Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `docs/` | Normative documentation: requirements, architecture, security, decisions, roadmap, guides. |
+| `docs/development/` | Engineer- and agent-facing process, environment, tooling, inventory, phase gates. |
+| `docs/security/` | Threat models and data classification. |
+| `docs/user/` | End-user documentation (shipped audience). |
+| `docs/performance/` | Reproducible performance evidence. |
+| `scripts/` | Repository tooling (gate runners, generators). Cross-platform Node scripts only. |
+| `apps/`, `services/`, `packages/` | Application code. Introduced in Phase 1; layout is fixed by [ARCHITECTURE](../ARCHITECTURE.md) §5. |
+
+Rules:
+
+- **[GOV-45]** Repository tooling is written in dependency-free Node.js with LF line endings so it runs identically on Windows, Linux, and CI. Shell-specific scripts are not added to the repository.
+- **[GOV-46]** Generated artefacts (build output, coverage, lockfile-adjacent caches, local `.env` files, uploaded media) are never committed. `.gitignore` is the source of truth for this.
+- **[GOV-47]** Secrets never enter the repository, CI logs, fixtures, screenshots, or documentation. `.env.example` contains placeholders only.
+- **[GOV-48]** No production data, real user data, or real location coordinates are used in fixtures, tests, issues, or documentation.
+
+## 3. Branches, commits, and reviews
+
+- **[GOV-49]** The default branch is `main` and is protected: no direct pushes, no force push, no deletion.
+- **[GOV-50]** Work happens on short-lived branches named `<type>/<short-topic>` where `<type>` is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `security`. Example: `docs/phase-0-gate`.
+- **[GOV-51]** Commit messages use Conventional Commits: `<type>(<scope>): <imperative summary>`, with an optional body explaining **why** and a footer listing the requirement IDs the change satisfies.
+- **[GOV-52]** Every pull request states the requirement IDs it satisfies, lists the gates that were actually run with their outcomes, and records known risks. The template is [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
+- **[GOV-53]** Security-sensitive changes (authentication, authorization, cryptography, plugin loading, file upload, location sharing, release workflow) require review by a second person where feasible. A self-review must be recorded as such.
+- **[GOV-54]** A pull request that weakens a quality gate is rejected unless the exception is recorded in [QUALITY_GATES](../QUALITY_GATES.md) §6 with owner, justification, and expiry date.
+- **[GOV-55]** Phase transitions follow [ROADMAP](../ROADMAP.md): each phase ends with recorded evidence and explicit repository-owner approval. Starting the next phase before that approval is not permitted.
+
+## 4. Code conventions
+
+- **[GOV-56]** TypeScript in `strict` mode for all workspaces, with `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, and `noImplicitOverride` enabled. `any` is not permitted except where a third-party type forces it, with a comment explaining why.
+- **[GOV-57]** Untrusted input is parsed and validated exactly once, at the boundary, with Zod schemas that live in a shared package (`packages/validation`). Domain code receives typed values, never raw request data.
+- **[GOV-58]** Domain types are explicit: discriminated unions for state machines, branded types for identifiers, no bare `string` for identifiers in domain signatures.
+- **[GOV-59]** Exported functions, classes, types, and package entry points carry JSDoc describing purpose, parameters, return value, thrown errors, and an example where it aids use.
+- **[GOV-60]** Errors are typed and mapped to a stable machine-readable code at the API boundary. Internal error details, stack traces, SQL text, and secrets are never returned to clients.
+- **[GOV-61]** Every module that touches an external system (database, provider, object storage, notification service) is reached through an injected interface so tests can substitute a fake.
+- **[GOV-62]** Naming: `camelCase` for values and functions, `PascalCase` for types and Vue components, `SCREAMING_SNAKE_CASE` for constants, `kebab-case` for file names (Vue single-file components use `PascalCase.vue`), `snake_case` for database identifiers.
+- **[GOV-63]** User-facing strings are never hard-coded in components; they come from the i18n catalogue (see [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §9).
+
+## 5. Tests
+
+- **[GOV-64]** A change that alters behaviour ships with tests, including at least one negative or boundary case.
+- **[GOV-65]** Tests must not depend on wall-clock timing, network access, external services, execution order, or shared mutable state.
+- **[GOV-66]** A test that is skipped or quarantined requires an inline reason, an owner, and an expiry date, and must be listed in the phase report.
+- **[GOV-67]** Fixtures use synthetic data only and are built through shared builders in `packages/test-utils` rather than inline literals once that package exists (Phase 1).
+
+## 6. Dependency changes
+
+- **[GOV-68]** Every new dependency is justified against [dependency policy](02-dependency-policy.md): need, runtime cost, maintenance status, license, security posture, and alternatives considered.
+- **[GOV-69]** Versions are pinned exactly in application manifests and the lockfile is committed. Renovation happens through reviewed pull requests, never automatic merges of major versions.
+- **[GOV-70]** A dependency that fails the license policy or has an unresolved critical advisory is not merged.
+
+## 7. Documentation maintenance
+
+- **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory, requirement-ID uniqueness and coverage, internal links, absence of placeholders, and secret patterns.
+- **[GOV-72]** Requirement IDs are permanent. Once assigned, an ID is never reused or renumbered; withdrawn requirements are marked `Withdrawn` in the phase report instead of deleted.
+- **[GOV-73]** External references ([REFERENCES](../REFERENCES.md)) are re-verified at each phase boundary and before release, and the verification log is updated with the date and result.
