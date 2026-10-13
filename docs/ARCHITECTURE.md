@@ -22,12 +22,13 @@ Constraints:
 ## 2. Service boundaries
 
 - **[OPS-10]** The Core API owns identity, sessions, roles, account lifecycle, profile identity, user preferences, audit records, the plugin registry/install metadata, and integration contracts.
-- **[OPS-11]** The Relation Service owns follow requests, blocks, accepted relationships, relationship-specific preferences, live-sharing sessions, the immediate location row, and the retention-bounded location trail. It consumes stable user IDs from the core and MUST NOT create a second identity system.
-- **[OPS-12]** The SOS Service owns SOS records, alert categories, dispatch suggestions, claims/tasks, task transitions, and SOS-specific notifications. It uses core user IDs and a defined authorization mechanism.
+- **[OPS-11]** The Relation Service owns follow requests, blocks, accepted relationships, relationship-specific preferences, live-sharing sessions and their per-follower grants (`live_share_sessions`, `live_share_grants`), history-share grants (`history_share_grants`), the immediate location row, and the retention-bounded location trail (`user_location_history`). It consumes stable user IDs from the core and MUST NOT create a second identity system.
+- **[OPS-12]** The SOS Service owns SOS records, the categories an alert carries (`sos_alert_categories`), dispatch suggestions, claims/tasks, task transitions, and SOS-specific notifications. The assistance-category catalogue and each user's single category are core data (OPS-10) and are read using the rule in OPS-80. It uses core user IDs and a defined authorization mechanism.
 - **[OPS-13]** Each service exposes versioned APIs, health and readiness checks, metrics, and structured logs. Internal endpoints are not publicly reachable unless explicitly required.
 - **[OPS-14]** Service-to-service calls are authenticated (mTLS or short-lived signed service tokens with a documented audience and scope) and follow least privilege. Service tokens are never reused for user-facing authorization.
 - **[OPS-15]** A service MUST NOT depend on another service's availability for authentication or login. Plugin unavailability degrades features, never sign-in.
 - **[OPS-16]** Cross-service reads and writes go through APIs or published events, never through direct table access.
+- **[OPS-80]** SOS dispatch applies the category filter inside the SOS Service, using category data obtained through the core API or published events (OPS-16); the SOS Service never reads core tables directly, and the candidate set is bounded before distance ordering so the filter cannot be bypassed by a large radius.
 
 ### Database ownership
 
@@ -41,10 +42,10 @@ Constraints:
 - **[OPS-21]** **SSE** is preferred for server-to-client feeds (SOS status, notification updates, admin dashboards) when clients do not send messages on the same connection.
 - **[OPS-22]** **WebSocket / Socket.IO** is used only where bidirectional interaction or measurably lower latency is required, and the reason is recorded as an ADR.
 - **[OPS-23]** Events and notifications are persisted before delivery; reconnecting clients fetch missed updates and reconcile by last-known event ID.
-- **[OPS-24]** Every subscription is authenticated and authorized: filtering is per recipient, and access is re-checked when permissions, relationships, or account state change.
+- **[OPS-24]** Every subscription is authenticated and authorized: filtering is per recipient, and access is re-checked when permissions, relationships, grants, or account state change. A stream whose grant is revoked or expired is **closed**, not merely muted, and stream tickets carry no standing authority of their own.
 - **[OPS-25]** Because `EventSource` cannot set request headers, browser SSE authentication uses the session cookie (same-site scoped, CSRF-safe for read-only streams) or a short-lived single-use stream ticket issued by an authenticated API call. Stream tickets are bound to the user and expire within seconds.
 - **[OPS-26]** Heartbeats, backpressure handling, payload size limits, per-user connection limits, and cleanup on disconnect are mandatory; a slow client must not consume unbounded memory.
-- **[OPS-27]** Location is never broadcast to all connected clients; a subscriber receives only the locations it is authorized to see.
+- **[OPS-27]** Location is never broadcast to all connected clients; a subscriber receives only the locations it is authorized to see, which for live location means the publisher must hold an active grant naming that subscriber.
 
 ### Shared state constraint
 

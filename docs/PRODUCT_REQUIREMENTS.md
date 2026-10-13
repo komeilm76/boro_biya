@@ -136,7 +136,7 @@ All accounts are private by default.
 - **[REL-04]** Users can unfollow. Whether the *followed* party may also remove a follower, and how blocking interacts with pending requests and existing relationships, is an open decision ([DECISIONS](DECISIONS.md) Q-20); until it is resolved the API MUST NOT expose a behaviour that contradicts the chosen policy.
 - **[REL-05]** Blocking is a first-class relationship that terminates access in both directions, cancels pending requests, and hides the blocked user from search results and from location/notification delivery. Block records are retained even if the relationship is later deleted, to prevent immediate re-request abuse.
 - **[REL-06]** Relationship state changes (accept, reject, unfollow, block, unblock) invalidate cached authorization immediately; a revoked relationship MUST NOT continue to receive location updates.
-- **[REL-07]** User preferences: enable/disable live location sharing sessions; enable/disable last-known location sharing; enable/disable history sharing.
+- **[REL-07]** User preferences: enable/disable live location grants; enable/disable last-known location sharing; enable/disable history sharing.
 - **[REL-11]** A follower sees a live position only while a grant **to that follower** is active **and** the relationship is still accepted. The grant ends on revoke, expiry, unfollow, block, disabling sharing, or service unavailability.
 - **[REL-12]** When history sharing is enabled, only the followers the owner has explicitly granted can view the recorded trail inside the retention window, with timestamps and accuracy. The trail is paginated, never bulk-exportable, and never visible to anyone else.
 - **[REL-13]** The owner can see which follower currently has access to their live or historical location, and revoking a single grant takes effect immediately, including for already-open streams.
@@ -170,7 +170,7 @@ All accounts are private by default.
 - **[SOS-15]** Suggestions expire after a configured window and expired suggestions cannot be accepted afterwards.
 - **[SOS-25]** Dispatch eligibility requires a **category match**: a user is suggested only if their category is among the categories the alert carries — and, where that category requires verification, only with a verified membership. A user inside the radius without a matching category is never suggested.
 - **[SOS-26]** Category matching is applied before distance ranking, and the dispatch view shows which category matched, so the admin can see why each user was suggested.
-- **[SOS-27]** Each user holds **exactly one** assistance category and may change it; changes are audited and rate-limited. A category flagged as requiring verification stays unverified for that user until an administrator verifies it, and only a verified membership satisfies such a category for dispatch.
+- **[SOS-27]** Each user holds **exactly one** assistance category (`user_categories`, unique per user) and may change it; changes are audited and rate-limited. A category flagged as requiring verification stays unverified for that user until an administrator verifies it, and only a verified membership satisfies such a category for dispatch.
 - **[SOS-28]** Catalogue changes (create, rename, deactivate) and membership changes (add, remove, verify) are audited, affect future dispatch only, and never grant authorization by themselves.
 - **[SOS-29]** Deactivating a category preserves the recorded category on existing alerts for audit, while new alerts can no longer select it.
 

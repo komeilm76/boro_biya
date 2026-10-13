@@ -15,6 +15,8 @@
  *   6. Audience separation — user documentation contains no internal identifiers.
  *   7. Secrets — no credential material or token-looking strings, and .env.example
  *      contains placeholders only.
+ *   8. Model coherence — data concepts introduced by a decision are reflected in the
+ *      documents that govern them, and wording retired by a decision is gone.
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -230,6 +232,69 @@ function checkAudience() {
   }
 }
 
+// ------------------------------------- check 8: model coherence / retired wording
+/**
+ * Concepts that must be reflected wherever they are governed. A table or capability
+ * introduced by an ADR has to appear in the data model, in the privacy rule that
+ * constrains it, and in the requirement that promises it — otherwise one document is
+ * describing a model that another document no longer has.
+ */
+const MODEL_COHERENCE = [
+  { concept: 'live_share_sessions', docs: ['DATA_MODEL.md', 'ARCHITECTURE.md'], adr: 'ADR-013' },
+  { concept: 'live_share_grants', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-013' },
+  { concept: 'history_share_grants', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-014' },
+  { concept: 'user_location_history', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-014' },
+  { concept: 'user_categories', docs: ['DATA_MODEL.md', 'PRODUCT_REQUIREMENTS.md', 'SECURITY.md'], adr: 'ADR-015' },
+  { concept: 'sos_alert_categories', docs: ['DATA_MODEL.md', 'ARCHITECTURE.md'], adr: 'ADR-015' },
+];
+
+/**
+ * Wording that a decision retired. A hit means some document still describes the
+ * superseded model, which is how two contradicting designs end up in the same pack.
+ */
+const RETIRED_WORDING = [
+  { phrase: 'share_session_id', adr: 'ADR-014 (history rows no longer belong to a share)' },
+  { phrase: 'scope (`followers`)', adr: 'ADR-013 (a share names individual followers)' },
+  { phrase: 'accepted followers with sharing enabled', adr: 'ADR-013 (audience is per-grant)' },
+  { phrase: 'accepted followers the owner shares with', adr: 'ADR-014 (history audience is per-grant)' },
+  { phrase: 'at least one category that the alert carries', adr: 'ADR-015 (single category per user)' },
+  { phrase: 'within the configured maximum', adr: 'ADR-015 (exactly one category per user)' },
+  { phrase: 'live-sharing session is running', adr: 'ADR-013 (grants, not sessions, gate a viewer)' },
+];
+
+function checkModelCoherence() {
+  const docs = walk(DOCS, (file) => file.endsWith('.md'));
+  const byRel = new Map(docs.map((file) => [relative(DOCS, file).split('\\').join('/'), file]));
+
+  for (const { concept, docs: required, adr } of MODEL_COHERENCE) {
+    for (const rel of required) {
+      const file = byRel.get(rel);
+      if (!file) {
+        failures.push(`[model] ${rel} is missing (required by ${adr} for \`${concept}\`)`);
+        continue;
+      }
+      if (!read(file).includes(concept)) {
+        failures.push(`[model] \`${concept}\` (${adr}) is not mentioned in ${rel} — the model and its governing documents disagree`);
+      }
+    }
+  }
+
+  for (const [rel, file] of byRel) {
+    read(file)
+      .split('\n')
+      .forEach((line, index) => {
+        // As in check 5, text inside inline code documents the rule instead of violating it,
+        // so a review record may quote a retired phrase without failing the gate.
+        const prose = line.replace(/`[^`]*`/g, '');
+        for (const { phrase, adr } of RETIRED_WORDING) {
+          if (prose.includes(phrase)) {
+            failures.push(`[model] retired wording "${phrase}" in ${rel}:${index + 1} — superseded by ${adr}`);
+          }
+        }
+      });
+  }
+}
+
 // ----------------------------------------------------------------- check 7: secrets
 function checkSecrets() {
   for (const file of walk(ROOT, (f) => /\.(md|mjs|js|ts|json|ya?ml|env|example|gitignore|editorconfig|gitattributes)$/.test(f) || f.endsWith('.env.example'))) {
@@ -266,7 +331,8 @@ const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets). Exit code 0 = pass.');
+  console.log('links, placeholders, audience separation, secrets, model coherence).');
+  console.log('Exit code 0 = pass.');
   process.exit(0);
 }
 
@@ -276,6 +342,7 @@ checkLinks();
 checkPlaceholders();
 checkAudience();
 checkSecrets();
+checkModelCoherence();
 
 if (failures.length) {
   console.error(`\nPhase 0 documentation gate FAILED with ${failures.length} problem(s):\n`);
@@ -292,4 +359,5 @@ console.log('  4. internal links and anchors resolve');
 console.log('  5. no placeholders in normative documents');
 console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
+console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
 for (const note of notes) console.log(`  · ${note}`);

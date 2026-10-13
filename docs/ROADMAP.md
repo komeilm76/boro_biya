@@ -13,7 +13,7 @@ Deliverables and evidence:
 | Documentation structure with developer and user audiences separated | [`docs/`](README.md) index with an owner and review date per document; `/docs/user/` contains no internal identifiers |
 | Repository conventions and code/commit/review rules | [repository conventions](development/00-repository-conventions.md) |
 | Architecture, threat model, data classification, data model, plugin trust model | [ARCHITECTURE](ARCHITECTURE.md), [threat model](security/threat-model.md), [data classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [plugin threat model](security/plugin-threat-model.md) |
-| Architecture decisions and open questions with owner and deadline | [DECISIONS](DECISIONS.md) — ADR-001 … ADR-012, register Q-01 … Q-20 |
+| Architecture decisions and open questions with owner and deadline | [DECISIONS](DECISIONS.md) — ADR-001 … ADR-016, register Q-01 … Q-23 |
 | Version/dependency policy with verified current versions | [dependency policy](development/02-dependency-policy.md) with verification date 2026-10-13 |
 | Windows/Linux developer workflows and Docker-based startup | [development environment](development/01-development-environment.md) |
 | Environment configuration template | [`.env.example`](../.env.example) |
@@ -39,19 +39,19 @@ Exit gate: security and negative-case tests pass (including cross-user and repla
 
 ## Phase 3 — Map foundation and user settings
 
-Deliver: MapLibre map, provider adapters with documented terms and attribution, address search and manual coordinates, permission UX, location display, theme and locale settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)).
+Deliver: MapLibre map, provider adapters with documented terms and attribution, address search and manual coordinates, permission UX, location display, theme, locale, and accessibility settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)).
 
-Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in; time-boxed per-follower live grants and the history-sharing toggle (window, granted followers, delete, access list) work and are privacy-tested; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15, Q-18, Q-21, Q-22 resolved.
+Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in, and a default build shares nothing; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15, Q-18 resolved.
 
 ## Phase 4 — Relation Service
 
-Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates.
+Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates, and the location-sharing settings screens (remaining time per grant, "end now", history window, delete history, access list).
 
-Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams stop on every revocation path; the geospatial decision is implemented and benchmarked; Q-20 resolved.
+Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; the geospatial decision is implemented and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
 
 ## Phase 5 — SOS Service
 
-Deliver: SOS creation with at least one category and optional image, category catalogue and single-category membership management, admin map and list, category-matched nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, and resilience when realtime is disconnected.
+Deliver: SOS creation with at least one category and optional image, category catalogue and single-category management (including SOS settings: the assistance-suggestion preference and the user's category with its verification state), admin map and list, category-matched nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, and resilience when realtime is disconnected.
 
 Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; dispatch tests prove a user without a matching category is never suggested and that the matched category is recorded; Q-07, Q-08, Q-09, Q-11, Q-23 resolved.
 

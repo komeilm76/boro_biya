@@ -50,10 +50,10 @@ Cross-cutting rules:
 | Login attempt counters and lockout state | C2 | Throttle store / `login_attempts` | Server only | Keyed by account or hashed origin |
 | Recovery challenges and grants | C3 | Core DB `password_reset_challenges` | Server only | Short-lived, single-use, attempt-limited |
 | Follow requests, relationships, blocks | C2 | Relation schema | Owner and the other party as the product requires | Social graph: not searchable by third parties |
-| Live/last-known location | C3 | Relation schema `user_locations` (latest point, TTL) | Owner; accepted followers with sharing on; audited admin access | Retention per §4; published only inside an active, time-boxed sharing session |
-| Live-sharing sessions (start, expiry, end reason) | C2 | Relation schema `live_share_sessions` | Owner (own history); security review | Auditable record of when location was shareable and why it stopped |
-| Location history (recorded trail) | C3 | Relation schema `user_location_history` (TTL per row) | Owner; accepted followers the owner shares with; audited admin access | Recorded only while history sharing is enabled; expiry always set |
-| Assistance categories and membership | C2 | Core schema `categories`, `user_categories` | Owner sees own memberships; admins manage the catalogue; matched users' membership is used server-side for dispatch | Never a public listing, never an authorization role |
+| Live/last-known location | C3 | Relation schema `user_locations` (latest point, TTL) | Owner; for last-known values an accepted follower of an owner who enabled that preference; for live values only followers named in an active `live_share_grants` row; audited admin access | Retention per §4; live values are published only inside an active, time-boxed per-follower grant |
+| Live-sharing sessions and grants (owner, viewer, start, expiry, end reason) | C2 | Relation schema `live_share_sessions`, `live_share_grants` | Owner (own history); security review | Auditable record of who location was shareable with, when, and why it stopped |
+| Location history (recorded trail) | C3 | Relation schema `user_location_history` (TTL per row) | Owner; viewers holding an active `history_share_grants` row; audited admin access | Recorded only while history sharing is enabled; expiry always set; the grant's window bounds what each viewer may read |
+| Assistance category catalogue and each user's single category | C2 | Core schema `categories`, `user_categories` | Owner sees their own category; admins manage the catalogue and verification; the value is read server-side for dispatch matching | Never a public listing, never an authorization role |
 | SOS alert (priority, description, status, coordinates) | C3 | SOS schema `sos_alerts` | Creator, admins, assigned responder (filtered) | Description may contain third-party information |
 | SOS attachments (photos) | C3 | Private object storage + `sos_attachments` metadata | Same as alert, authorization-checked per request | EXIF stripped, key generated server-side, no public URLs |
 | Suggestions and task transitions | C2 | SOS schema | Recipient, admins, creator (status only) | Transition reasons are auditable |
@@ -76,7 +76,8 @@ Cross-cutting rules:
 | Recovery challenges and grants | Minutes (short-lived), deleted or marked consumed after use | `consumed_at` + cleanup |
 | Idempotency records | Long enough to cover client retries (typically 24 hours to 7 days, per operation) | TTL column + cleanup |
 | Live location points | Only the current point; superseded points removed promptly | Unique row per user, TTL |
-| Live-sharing sessions | Session row kept as an audit record for the audit retention window; no coordinates stored on it | Audit retention policy |
+| Live-sharing sessions and grants | Session and grant rows are kept as an audit record for the audit retention window; no coordinates are stored on them | Audit retention policy |
+| History-share grants | Kept while granted plus the audit retention window after revoke | Revoke flag + audit retention policy |
 | Location history | Bounded retention window chosen by the owner within the server maximum (default window is Q-22), enforced per row | `expires_at` per row + TTL purge; immediate delete on user request |
 | Last-known location | Owner-defined retention window, decided in Q-06, then expired | TTL column; must be labelled with age |
 | SOS alerts and attachments | Retained while the operational/legal need exists, defined in Q-14; attachments may be deleted earlier than metadata | Deletion job + owner/admin action, both audited |
@@ -86,9 +87,9 @@ Cross-cutting rules:
 | Backups | Rolling window with documented restore procedure | Encrypted; deletion of a record does not silently survive in backups beyond the window |
 | Application logs | Short (days to weeks), redacted | Rotation policy; no C3 content by construction |
 
-Account deletion: the account, its credentials, security answers, sessions, preferences, category memberships, location row, live-sharing sessions, and the full location history are deleted or irreversibly anonymised. Records that must be retained (audit events, abuse evidence where legally required) are retained in a form that no longer identifies the user beyond what the obligation requires. The deletion outcome is recorded as an audit event that does not itself contain C2/C3 data. The exact obligations are defined in Q-14.
+Account deletion: the account, its credentials, security answers, sessions, preferences, the category assignment, the immediate location row, live-sharing sessions and their grants, history-share grants, and the full location history (`user_location_history`) are deleted or irreversibly anonymised. Records that must be retained (audit events, abuse evidence where legally required) are retained in a form that no longer identifies the user beyond what the obligation requires. The deletion outcome is recorded as an audit event that does not itself contain C2/C3 data. The exact obligations are defined in Q-14.
 
-Data-subject export: a user can obtain their own profile, preferences, relationships, immediate location row, category memberships, live-sharing session history, SOS records, and notifications in a machine-readable format through an authenticated endpoint. A recorded location trail is exported only through the same authenticated, audited channel and never in bulk by a third party. Export generation is audited and the artefact is short-lived.
+Data-subject export: a user can obtain their own profile, preferences, relationships, immediate location row, category assignment, live-sharing session and grant history, SOS records, and notifications in a machine-readable format through an authenticated endpoint. A recorded location trail is exported only through the same authenticated, audited channel and never in bulk by a third party. Export generation is audited and the artefact is short-lived.
 
 ## 5. Privacy defaults
 
@@ -104,7 +105,7 @@ These defaults are binding unless the user explicitly changes them, and each is 
 8. **[PRIV-20]** Admin access to location requires a stated purpose, is role-scoped, and is audited.
 9. **[PRIV-21]** A user can always see and revoke their own active sessions and revoke sharing without contacting support.
 10. **[PRIV-22]** Every change to a sharing or consent setting is recorded with a timestamp and the source of the change.
-11. **[PRIV-27]** Live location is shared only inside an explicit, time-boxed session the owner starts; the default maximum duration is bounded by configuration (Q-21) and no session renews itself.
-12. **[PRIV-28]** Location history is never exportable in bulk, and the owner can delete it in full at any time with immediate effect.
-13. **[PRIV-29]** Followers see live and historical location only while the relationship is accepted and sharing is on; ending either stops access immediately, including for open streams.
+11. **[PRIV-27]** Live location is shared only through an explicit, time-boxed grant to the specific follower the owner selects; the maximum duration and viewer count are bounded by configuration (Q-21), and no grant renews itself or applies to anyone else.
+12. **[PRIV-28]** Location history is never exportable in bulk, is readable only by granted viewers inside their window, and the owner can delete it in full at any time with immediate effect.
+13. **[PRIV-29]** A follower sees live or historical location only while that follower's grant is active and the relationship is accepted; revoking one grant stops that access immediately, including for open streams.
 14. **[PRIV-30]** Assistance-category membership is visible to its owner and to administrators for administration, is used server-side for dispatch matching, and is never exposed as a public profile list.

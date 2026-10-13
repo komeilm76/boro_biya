@@ -74,7 +74,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | DELETE | `/relation/blocks/:id` | auth | Unblock |
 | GET | `/relation/preferences` | auth | Live/last-known sharing flags |
 | PUT | `/relation/preferences` | auth | Audited; effects on streams re-evaluated |
-| GET | `/relation/locations/:userId` | auth | Requires accepted relationship, sharing enabled, and an **active live-sharing session**; returns live flag, timestamp, accuracy, and session expiry |
+| GET | `/relation/locations/:userId` | auth | **Live** coordinates require an active grant naming the caller, and the owner's live preference; **last-known** coordinates require an accepted relationship and the owner's last-known preference (ADR-013). Response always carries the live flag, timestamp, and accuracy |
 | POST | `/relation/live-shares` | auth | Starts a time-boxed session with an explicit viewer list and a duration within the server maximum; every viewer must be an accepted follower; audited |
 | DELETE | `/relation/live-shares` | auth | Ends the active session (all its grants) immediately; open streams closed |
 | DELETE | `/relation/live-shares/:viewerId` | auth | Revokes one follower's grant inside the active session; that stream closes; audited |

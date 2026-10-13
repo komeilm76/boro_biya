@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 ## 1. Commands
 
 ```bash
-node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, links, traceability, secrets
+node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence
 node scripts/gates/traceability.mjs  # Traceability file is current (run with --write to update)
 ```
 
@@ -21,8 +21,8 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 2 | Documentation is separated by audience, with users never exposed to internal identifiers | `docs/README.md` index, `docs/user/README.md`, enforced by gate check 6 | Met |
 | 3 | Every binding requirement carries a permanent `AREA-NN` identifier | Identifiers present in all registry documents; gate check 2 | Met |
 | 4 | Every identifier is covered by exactly one traceability row, and the file is current | `docs/development/07-traceability.md`; gate checks 3 and 4 | Met |
-| 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-20) | Met |
-| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-012 | Met |
+| 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-23) | Met |
+| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-016 | Met |
 | 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
 | 9 | Windows and Linux workflows are documented, including Docker-based startup | [development environment](01-development-environment.md) | Met |

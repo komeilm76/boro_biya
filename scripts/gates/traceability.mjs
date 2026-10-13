@@ -60,14 +60,19 @@ const PHASE_RULES = [
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 5, 2],
   ['UI', 1, 7, 1],      // route namespaces established with the application shell
-  ['UI', 8, 24, 3],     // settings, accessibility, localisation
+  ['UI', 8, 8, 4],      // location-sharing settings ship with the sharing pipeline (Relation Service)
+  ['UI', 9, 9, 5],      // SOS settings (suggestion preference, assistance category) ship with the SOS Service
+  ['UI', 10, 24, 3],    // remaining settings, accessibility, localisation
 
   // Authentication and account lifecycle
   ['AUTH', 1, 38, 2],
 
   // Map, navigation
-  ['MAP', 1, 21, 3],    // map shell, permissions, provider adapters (routing detail in Phase 6)
-  ['MAP', 22, 23, 3],   // time-boxed sharing sessions + opt-in location history
+  ['MAP', 1, 8, 3],     // map shell, permissions, provider adapters (routing detail in Phase 6)
+  ['MAP', 9, 10, 4],    // live-sharing grants and share history follow the Relation Service
+  ['MAP', 11, 21, 3],
+  ['MAP', 22, 22, 4],   // location history capability (Relation Service)
+  ['MAP', 23, 23, 3],   // generic location-never-in-URLs rule applies from the first location flow
   ['NAV', 1, 13, 6],
 
   // Services
@@ -84,16 +89,20 @@ const PHASE_RULES = [
   ['SEC', 63, 71, 1],   // security release gates
 
   // Location privacy and data lifecycle
-  ['PRIV', 1, 9, 3],
   ['PRIV', 10, 12, 1],  // classification rules apply from the first stored record
-  ['PRIV', 13, 22, 3],  // privacy defaults (location sharing off, private by default)
-  ['PRIV', 23, 26, 3],  // session lifecycle, history ownership, per-request re-authorization
-  ['PRIV', 27, 30, 3],  // history, export and category-visibility defaults
+  ['PRIV', 1, 2, 4],    // live-share defaults and audience are enforceable once grants exist
+  ['PRIV', 3, 3, 3],    // last-known labelling is a display rule (map phase)
+  ['PRIV', 4, 5, 4],    // revocation and retention of the sharing pipeline
+  ['PRIV', 6, 9, 3],    // platform privacy rules apply from Phase 3
+  ['PRIV', 13, 22, 3],  // privacy defaults (nothing shared, private by default)
+  ['PRIV', 23, 29, 4],  // grant lifecycle, history ownership, per-request re-authorization
+  ['PRIV', 30, 30, 5],  // category visibility belongs to the SOS phase
 
   // Architecture and operations
   ['OPS', 1, 20, 1],    // topology, service boundaries, database ownership
   ['OPS', 21, 27, 4],   // realtime model and shared-state constraint
   ['OPS', 28, 79, 1],   // packages, performance, configuration, operations, environment
+  ['OPS', 80, 80, 5],   // SOS dispatch applies the category filter through service APIs
 
   // Plugin/service contracts
   ['PLG', 1, 3, 1],
@@ -125,9 +134,9 @@ const PHASE_RULES = [
   ['QA', 57, 61, 1],    // gate model rules
   ['QA', 62, 68, 0],    // documentation gate implementation rules
   ['QA', 69, 111, 1],   // CI workflow, branch protection, adding gates, release plan, performance rules
-  ['QA', 112, 112, 3],  // live-sharing session expiry and stream closure
-  ['QA', 113, 113, 4],  // location-history authorization boundaries
+  ['QA', 112, 113, 4],  // live-sharing grant expiry, stream closure, history authorization
   ['QA', 114, 115, 5],  // SOS category enforcement and category-as-metadata
+  ['QA', 116, 116, 0],  // documentation gate: model coherence and retired wording
 
   // Data model invariants
   ['DATA', 1, 1, 2],
@@ -140,8 +149,7 @@ const PHASE_RULES = [
   ['DATA', 13, 13, 7],
   ['DATA', 14, 14, 5],
   ['DATA', 15, 15, 1],
-  ['DATA', 16, 16, 3],
-  ['DATA', 17, 18, 4],
+  ['DATA', 16, 18, 4],
   ['DATA', 19, 21, 5],
   ['DATA', 22, 24, 3],
   ['DATA', 25, 25, 5],

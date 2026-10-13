@@ -49,6 +49,10 @@ It enforces, in order:
 5. **[QA-66]** **Placeholders** — no placeholder markers remain in normative documents (the exact patterns are listed in `scripts/gates/phase0.mjs`).
 6. **[QA-67]** **Audience separation** — clientside user documentation (`docs/user/`) contains no phase numbers, requirement IDs, or ADR references.
 7. **[QA-68]** **Secret patterns** — no private-key blocks, common token prefixes, or credential-looking assignments anywhere in the repository.
+8. **[QA-116]** **Model coherence** — every data concept introduced by a decision is reflected in the documents that govern it (data model, privacy rules, requirement that promises it), and wording retired by a decision no longer appears anywhere in the documentation set, except where a document quotes it inside inline code to explain the change. Both lists are maintained in `scripts/gates/phase0.mjs`.
+
+
+Check 8 exists because structure alone does not keep documents truthful: a pack can pass every inventory, link, and ID check while one document still describes a superseded model ([ADR-011](../DECISIONS.md#adr-011--documentation-architecture-and-requirement-identifiers)). Each entry in its retired-wording list names the decision that replaced the wording, so a failure explains itself.
 
 The gate is dependency-free Node.js so it runs on Linux and Windows with no install step.
 

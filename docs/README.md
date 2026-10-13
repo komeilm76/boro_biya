@@ -32,6 +32,7 @@ This directory is the normative planning and implementation baseline for **Boro_
 | [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist and reported evidence format | Engineering | 2026-10-13 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artifacts, promotion, rollback, and release evidence | Engineering | 2026-10-13 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage (checked by the documentation gate) | Engineering | generated |
+| [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-13 |
 
 ### Security and privacy
 
