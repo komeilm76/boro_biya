@@ -16,7 +16,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-04]** Strict type check| No implicit `any`, no unchecked access | `tsc --noEmit` per workspace with the strict flags in [repository conventions](development/00-repository-conventions.md) §4 (Phase 1) |
 | **[QA-05]** Unit tests| Domain rules, schemas, state machines, adapters | Vitest (Phase 1) |
 | **[QA-06]** Integration tests with isolated PostgreSQL| Constraints, transactions, throttling, races | Vitest against a disposable PostgreSQL container (Phase 1) |
-| **[QA-07]** API/OpenAPI validation and contract tests| Contract fidelity and no accidental breaking changes | OpenAPI validator + `zopia validate` + `zopia diff` (Phase 1/2) |
+| **[QA-07]** API/OpenAPI validation and contract tests| Contract fidelity and no accidental breaking changes | OpenAPI validator + `zopia validate` + `zopia diff` (Phase 2, when generated contracts first exist) |
 | **[QA-08]** Security tests| Auth, authorization, account states, recovery, plugin archives, location privacy | Vitest security suites plus dedicated adversarial fixtures (Phase 2+) |
 | **[QA-09]** Dependency vulnerability audit and licence policy| Known CVEs and licence compliance | Registry advisory scan + licence allowlist from the [dependency policy](development/02-dependency-policy.md) (Phase 1) |
 | **[QA-10]** Secret scanning| No credentials in the repository or history | Secret scanner in CI plus the documentation gate's pattern check (Phase 0 for docs) |
@@ -26,7 +26,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-14]** Container image and configuration checks| No `latest` tags, non-root user, health checks, no embedded secrets, vulnerability scan | Image scanner plus configuration assertions (Phase 1+) |
 | **[QA-15]** Database migration tests and backup/restore smoke test| Migrations apply and reverse; backups restore | Migration runner in CI against a disposable database; restore rehearsal for release candidates (Phase 1, extended Phase 9) |
 | **[QA-16]** Accessibility checks| Keyboard, focus, labels, contrast, reduced motion | Automated axe checks in component/browser tests plus a manual review checklist (Phase 3+) |
-| **[QA-17]** Localisation checks| No hard-coded user-facing strings, no missing keys, RTL sanity | Lint rule over components plus a message-catalogue test (Phase 3+) |
+| **[QA-17]** Localisation checks| No hard-coded user-facing strings, no missing keys, RTL sanity | Lint rule over components plus a message-catalogue test (Phase 2+, when the first user-facing strings exist) |
 
 - **[QA-18]** CI actions are pinned to immutable commit SHAs, workflow permissions are least-privilege, and secrets are never exposed to untrusted pull-request code.
 - **[QA-19]** Release signing credentials live outside source control and outside normal CI logs.

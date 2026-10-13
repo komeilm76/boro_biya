@@ -26,7 +26,8 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | Secret scanning | active (docs) | active | active | active | active | active |
 | Production builds | inactive | active | active | active | active | active |
 | PWA checks | inactive | inactive | inactive | active | active | active |
-| Accessibility and localisation checks | inactive | inactive | inactive | active | active | active |
+| Localisation checks (no hard-coded strings, catalogue keys) | inactive | inactive | active | active | active | active |
+| Accessibility checks (axe plus manual review) | inactive | inactive | inactive | active | active | active |
 | Container image checks | inactive | active | active | active | active | active |
 | Migration tests, backup/restore | inactive | active (migrations) | active | active | active | active (restore rehearsal) |
 | Android build | inactive | inactive | inactive | inactive | inactive | active |

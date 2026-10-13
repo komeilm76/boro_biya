@@ -12,6 +12,19 @@
  * The phase mapping below is the source of truth for "which phase must deliver which
  * requirement". Every identifier must be covered by exactly one rule; a missing or
  * overlapping rule is a hard failure, so a new requirement cannot be added silently.
+ *
+ * Check, in addition to coverage: an "affiliation audit" (GOV-87). A requirement must not cite
+ * an open question whose decide-by phase is later than the requirement's own phase — that is the
+ * signature of a requirement affiliated with the wrong phase. Two exceptions are deliberate and
+ * listed with their reason in AFFILIATION_EXEMPT below.
+ *
+ * Affiliation rule (GOV-87): a requirement belongs to the phase in which its behaviour is
+ * first *implemented and can be verified* — not the phase in which it is discussed, and not
+ * the phase whose wording mentions it. A rule that constrains data lands no earlier than the
+ * phase that creates the data; a structural prerequisite that is cheap early and expensive
+ * later (message catalogue, RTL scaffolding, privacy defaults) belongs to the earliest phase
+ * that renders user-facing UI. When a requirement moves, the reason is recorded in the phase
+ * report and the phase exit gates are re-aligned in the same change.
  */
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
@@ -56,13 +69,16 @@ const PHASE_RULES = [
   ['GOV', 19, 26, 0],   // mandatory Phase 0 deliverables
   ['GOV', 27, 40, 1],   // definition of done + dependency policy in ARCHITECTURE
   ['GOV', 41, 86, 1],   // repository conventions, environment, dependency policy, docs maintenance
+  ['GOV', 87, 87, 0],   // phase-affiliation and prioritization rule (delivered by this review)
 
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 5, 2],
   ['UI', 1, 7, 1],      // route namespaces established with the application shell
   ['UI', 8, 8, 4],      // location-sharing settings ship with the sharing pipeline (Relation Service)
   ['UI', 9, 9, 5],      // SOS settings (suggestion preference, assistance category) ship with the SOS Service
-  ['UI', 10, 24, 3],    // remaining settings, accessibility, localisation
+  ['UI', 10, 20, 3],    // remaining settings, accessibility, offline behaviour
+  ['UI', 21, 22, 2],    // message catalogue and RTL scaffolding, before user-facing screens ship
+  ['UI', 23, 24, 3],    // contrast/state rules reviewed with the accessibility gate
 
   // Authentication and account lifecycle
   ['AUTH', 1, 38, 2],
@@ -85,7 +101,10 @@ const PHASE_RULES = [
   ['SEC', 29, 39, 7],   // plugin ZIP surface (enabled in Phase 7)
   ['SEC', 40, 49, 2],   // API/transport/validation
   ['SEC', 50, 56, 5],   // image and file handling (first real uploads in SOS)
-  ['SEC', 57, 62, 1],   // observability and audit baseline
+  ['SEC', 57, 57, 1],   // structured logging and redaction (Phase 1 skeleton)
+  ['SEC', 58, 60, 2],   // audit events, tamper-evident store, and alerting start with real signals
+  ['SEC', 61, 61, 9],   // incident-response procedure is stored in the Phase 9 runbook
+  ['SEC', 62, 62, 1],   // log/metric retention is defined in the classification rules
   ['SEC', 63, 71, 1],   // security release gates
 
   // Location privacy and data lifecycle
@@ -93,10 +112,23 @@ const PHASE_RULES = [
   ['PRIV', 1, 2, 4],    // live-share defaults and audience are enforceable once grants exist
   ['PRIV', 3, 3, 3],    // last-known labelling is a display rule (map phase)
   ['PRIV', 4, 5, 4],    // revocation and retention of the sharing pipeline
-  ['PRIV', 6, 9, 3],    // platform privacy rules apply from Phase 3
-  ['PRIV', 13, 22, 3],  // privacy defaults (nothing shared, private by default)
-  ['PRIV', 23, 29, 4],  // grant lifecycle, history ownership, per-request re-authorization
-  ['PRIV', 30, 30, 5],  // category visibility belongs to the SOS phase
+  ['PRIV', 6, 6, 3],    // coordinates in logs, URLs, and provider calls (first coordinates)
+  ['PRIV', 7, 7, 5],    // admin access to location first exists on the SOS admin map
+  ['PRIV', 8, 8, 2],    // TLS in transit and encryption at rest (first datastore and transport)
+  ['PRIV', 9, 9, 3],    // consent-change audit starts with the settings screens
+  ['PRIV', 13, 14, 4],  // sharing defaults land with the sharing pipeline
+  ['PRIV', 15, 15, 2],  // account visibility default lands with accounts
+  ['PRIV', 16, 16, 5],  // SOS suggestion opt-in belongs to the SOS phase
+  ['PRIV', 17, 17, 4],  // history off by default
+  ['PRIV', 18, 18, 5],  // notification defaults land with notifications
+  ['PRIV', 19, 19, 1],  // no analytics or telemetry by default, from the skeleton
+  ['PRIV', 20, 20, 4],  // admin location access needs locations to exist
+  ['PRIV', 21, 21, 2],  // own-session visibility and revocation (sharing revocation extends in 4)
+  ['PRIV', 22, 22, 4],  // consent/sharing change audit lands with the sharing settings
+  ['PRIV', 23, 25, 4],  // grant lifecycle, history ownership, per-request re-authorization
+  ['PRIV', 26, 26, 5],  // category visibility belongs to the SOS phase
+  ['PRIV', 27, 29, 4],  // history authorization and revocation
+  ['PRIV', 30, 30, 5],  // category visibility for administrators
 
   // Architecture and operations
   ['OPS', 1, 20, 1],    // topology, service boundaries, database ownership
@@ -126,7 +158,8 @@ const PHASE_RULES = [
   ['QA', 12, 12, 3],    // PWA checks
   ['QA', 13, 13, 8],    // Android build
   ['QA', 14, 15, 1],    // container checks, migration/backup
-  ['QA', 16, 17, 3],    // accessibility, localisation
+  ['QA', 16, 16, 3],    // accessibility checks activate with the first full screen set
+  ['QA', 17, 17, 2],    // localisation checks activate when user-facing strings first exist
   ['QA', 18, 19, 1],
   ['QA', 20, 28, 2],    // security/negative test matrix
   ['QA', 29, 36, 3],    // performance tests
@@ -141,7 +174,7 @@ const PHASE_RULES = [
   // Data model invariants
   ['DATA', 1, 1, 2],
   ['DATA', 2, 3, 4],
-  ['DATA', 4, 5, 3],
+  ['DATA', 4, 5, 4],    // sharing defaults are column defaults in the Relation schema
   ['DATA', 6, 8, 5],
   ['DATA', 9, 10, 2],
   ['DATA', 11, 11, 7],
@@ -155,6 +188,15 @@ const PHASE_RULES = [
   ['DATA', 25, 25, 5],
   ['DATA', 26, 26, 4],
 ];
+
+/**
+ * Requirements that cite a question due in a later phase on purpose. Each entry states why the
+ * citation is a constraint on the earlier phase rather than a mis-affiliation.
+ */
+const AFFILIATION_EXEMPT = new Map([
+  ['GOV-84', 'dependency policy: "do not adopt a provider before Q-10 resolves" is a Phase 1 policy rule'],
+  ['OPS-58', 'architecture: "resolve the hosting target before Phase 9" constrains Phase 1 environment design'],
+]);
 
 const AREA_ALT = 'GOV|ADM|UI|AUTH|MAP|NAV|REL|SOS|SEC|PRIV|OPS|PLG|API|QA|DATA';
 const ID_RE = new RegExp(`\\b(${AREA_ALT})-(\\d{2,3})\\b`, 'g');
@@ -194,6 +236,43 @@ function collectRequirements() {
     }
   }
   return { reqs, duplicates };
+}
+
+/**
+ * Cross-check phase affiliation against the open-question register: a requirement that depends on
+ * a decision due later than its own phase is almost always affiliated with the wrong phase.
+ */
+function auditAffiliation(reqs, phases) {
+  const problems = [];
+  const decisions = readFileSync(join(DOCS, 'DECISIONS.md'), 'utf8').split('\n');
+  const questionPhase = new Map();
+  for (const line of decisions) {
+    const row = /^\|\s*(Q-\d{2})\s*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    if (!row) continue;
+    const phasesInCell = [...row[4].matchAll(/Phase\s+(\d)/g)].map((m) => Number(m[1]));
+    if (phasesInCell.length) questionPhase.set(row[1], Math.min(...phasesInCell));
+  }
+  for (const file of collectDocs()) {
+    const rel = relative(DOCS, file).split('\\').join('/');
+    if (!REGISTRY_DOCS.includes(rel)) continue;
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const def = DEF_RE.exec(line);
+      if (!def) continue;
+      const num = Number(def[2]);
+      if (num === 0) continue;
+      const id = `${def[1]}-${String(num).padStart(2, '0')}`;
+      const own = phases.get(id);
+      if (own === undefined) continue;
+      for (const cited of new Set(line.match(/\bQ-\d{2}\b/g) || [])) {
+        const due = questionPhase.get(cited);
+        if (due === undefined || due <= own || AFFILIATION_EXEMPT.has(id)) continue;
+        problems.push(
+          `affiliation: ${id} is in Phase ${own} but depends on ${cited}, which is due by Phase ${due} — move the requirement, or record it in AFFILIATION_EXEMPT with a reason`,
+        );
+      }
+    }
+  }
+  return problems;
 }
 
 /** Map every requirement to a phase, failing on overlap or missing coverage. */
@@ -260,7 +339,7 @@ function render(reqs, rows) {
   lines.push('');
   lines.push('Owner: Engineering. Reviewed: 2026-10-13.');
   lines.push('');
-  lines.push('Each row lists a contiguous requirement range, the document and section that defines it, and the phase in which it must first be delivered and verified. A requirement may be extended or hardened in a later phase; the phase below is where it starts.');
+  lines.push('Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.');
   lines.push('');
   lines.push(`Total requirements: **${total}** across ${rows.length} groups.`);
   lines.push('');
@@ -283,6 +362,7 @@ function main() {
   const write = process.argv.includes('--write');
   const { reqs, duplicates } = collectRequirements();
   const { phases, problems } = assignPhases(reqs);
+  problems.push(...auditAffiliation(reqs, phases));
   const errors = [...duplicates.map((d) => `duplicate id: ${d}`), ...problems];
   if (errors.length) {
     console.error('traceability check failed:');

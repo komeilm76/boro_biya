@@ -5,25 +5,27 @@ Do not edit by hand: change the requirement documents or the phase mapping in th
 
 Owner: Engineering. Reviewed: 2026-10-13.
 
-Each row lists a contiguous requirement range, the document and section that defines it, and the phase in which it must first be delivered and verified. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
+Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **646** across 106 groups.
+Total requirements: **647** across 112 groups.
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 17 |
-| 1 | 281 |
-| 2 | 103 |
-| 3 | 66 |
-| 4 | 62 |
-| 5 | 49 |
+| 0 (foundation) | 18 |
+| 1 | 278 |
+| 2 | 112 |
+| 3 | 49 |
+| 4 | 68 |
+| 5 | 53 |
 | 6 | 13 |
 | 7 | 54 |
 | 8 | 1 |
+| 9 | 1 |
 
 | Phase | Requirement range | Count | Document | Section |
 | --- | --- | --- | --- | --- |
 | 0 | `GOV-19 … GOV-26` | 8 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| 0 | `GOV-87` | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 0 | `QA-62 … QA-116` | 8 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
@@ -41,9 +43,10 @@ Total requirements: **646** across 106 groups.
 | 1 | `GOV-84 … GOV-86` | 3 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
 | 1 | `UI-01 … UI-07` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
 | 1 | `SEC-01 … SEC-03` | 3 | [SECURITY.md](../SECURITY.md) | 1. Security baseline |
-| 1 | `SEC-57 … SEC-62` | 6 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| 1 | `SEC-57 … SEC-62` | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
 | 1 | `SEC-63 … SEC-71` | 9 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
 | 1 | `PRIV-10 … PRIV-12` | 3 | [security/data-classification.md](../security/data-classification.md) | 2. Handling rules by class |
+| 1 | `PRIV-19` | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 1 | `OPS-01 … OPS-09` | 9 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
 | 1 | `OPS-10 … OPS-16` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
 | 1 | `OPS-17 … OPS-20` | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
@@ -72,6 +75,7 @@ Total requirements: **646** across 106 groups.
 | 1 | `QA-107 … QA-111` | 5 | [performance/README.md](../performance/README.md) | Rules |
 | 1 | `DATA-15` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 2 | `ADM-01 … ADM-05` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| 2 | `UI-21 … UI-22` | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 2 | `AUTH-01 … AUTH-06` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
 | 2 | `AUTH-07 … AUTH-12` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
 | 2 | `AUTH-13 … AUTH-20` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
@@ -82,32 +86,33 @@ Total requirements: **646** across 106 groups.
 | 2 | `SEC-14 … SEC-20` | 7 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
 | 2 | `SEC-21 … SEC-28` | 8 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
 | 2 | `SEC-40 … SEC-49` | 10 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| 2 | `SEC-58 … SEC-60` | 3 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| 2 | `PRIV-08` | 1 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 2 | `PRIV-15 … PRIV-21` | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 2 | `API-20 … API-24` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
 | 2 | `API-25 … API-30` | 6 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
-| 2 | `QA-07 … QA-08` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 2 | `QA-07 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 2 | `QA-20 … QA-28` | 9 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 2 | `DATA-01 … DATA-10` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 3 | `UI-10 … UI-15` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
-| 3 | `UI-16 … UI-24` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| 3 | `UI-16 … UI-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 3 | `MAP-01 … MAP-23` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 3 | `MAP-11 … MAP-21` | 11 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
-| 3 | `PRIV-03 … PRIV-09` | 5 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 3 | `PRIV-13 … PRIV-22` | 10 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
-| 3 | `QA-12 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 3 | `PRIV-03 … PRIV-09` | 3 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 3 | `QA-12 … QA-16` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 3 | `QA-29 … QA-36` | 8 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
-| 3 | `DATA-04 … DATA-05` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 3 | `DATA-22 … DATA-24` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
 | 4 | `UI-08` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 4 | `MAP-09 … MAP-22` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 4 | `REL-01 … REL-14` | 14 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
-| 4 | `PRIV-01 … PRIV-26` | 8 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 4 | `PRIV-27 … PRIV-29` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 4 | `PRIV-01 … PRIV-25` | 7 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 4 | `PRIV-13 … PRIV-29` | 8 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 4 | `OPS-21 … OPS-27` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
 | 4 | `PLG-35 … PLG-40` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
 | 4 | `PLG-41 … PLG-46` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 4 | `API-31 … API-35` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
 | 4 | `QA-112 … QA-113` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
-| 4 | `DATA-02 … DATA-18` | 6 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| 4 | `DATA-02 … DATA-18` | 8 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 4 | `DATA-26` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
 | 5 | `UI-09` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 5 | `SOS-01 … SOS-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
@@ -115,7 +120,8 @@ Total requirements: **646** across 106 groups.
 | 5 | `SOS-16 … SOS-20` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
 | 5 | `SOS-21 … SOS-23` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
 | 5 | `SEC-50 … SEC-56` | 7 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
-| 5 | `PRIV-30` | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 5 | `PRIV-07 … PRIV-26` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 5 | `PRIV-16 … PRIV-30` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 5 | `OPS-80` | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
 | 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 5 | `DATA-06 … DATA-21` | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
@@ -129,3 +135,4 @@ Total requirements: **646** across 106 groups.
 | 7 | `PLG-51 … PLG-56` | 6 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
 | 7 | `DATA-11 … DATA-13` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 8 | `QA-13` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 9 | `SEC-61` | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |

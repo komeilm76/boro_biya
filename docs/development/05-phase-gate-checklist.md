@@ -48,16 +48,48 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 8 | Runtime decision (Bun vs Node for services) made, with the spike evidence recorded | Decision recorded in DECISIONS, evidence attached | Not started |
 | 9 | Performance budgets defined with target hardware and traffic profile | `docs/performance/README.md` budget table | Not started |
 | 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Not started |
+| 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Not started |
 
-## 4. Reporting the gate result
+## 4. Phase affiliation audit (every phase)
+
+Before a phase gate is reported, the requirements affiliated with that phase are re-checked against the reason the phase exists. The generated table is the record; the audit is the evidence that the record is still true.
+
+```bash
+node scripts/gates/traceability.mjs          # coverage, uniqueness, and the affiliation audit (GOV-87)
+```
+
+The audit fails when a requirement cites an open question that is due later than the phase the requirement sits in — the signature of a requirement affiliated with a phase that cannot implement or verify it. Deliberate exceptions are listed with their reason in the generator's `AFFILIATION_EXEMPT`, and nowhere else.
+
+Three questions are asked of every requirement affiliated with the phase, and a "no" is a defect to fix in the phase, not a note:
+
+1. **Can this phase implement it?** If the requirement constrains a column, table, or endpoint that a later phase creates, it is affiliated too early.
+2. **Can this phase verify it?** If the only proof would come from a capability the phase does not build, it is affiliated too early.
+3. **Does the phase's exit gate require something a later phase delivers?** If yes, one of them is wrong ([GOV-87](00-repository-conventions.md) §8).
+
+A requirement that genuinely belongs earlier — a default, a redaction layer, a message catalogue, an audit store — is moved earlier together with the deliverable and gate wording it implies. A requirement that belongs later is moved later and removed from the exit gate that claimed it. Both directions are recorded in the phase report as a mapping change with its reason.
+
+## 5. Sequencing and parallel work
+
+Phases are sequential for *approval*, not for *all* work: a phase starts only after the previous gate passes, but work inside a phase may run in any order, and one workstream may be prepared early when it touches no shared contract. The dependencies that actually constrain order are:
+
+| Workstream | May start when | Blocked by |
+| --- | --- | --- |
+| Plugin lifecycle (Phase 7) | Phase 2 gate passes | Nothing in Phases 3–6 for install, isolation, health, and rollback: it needs the admin role, authentication, and the service skeleton. Integration tests that exercise the location scopes wait for Phase 4, so the permission-vocabulary tests are the piece that cannot run early. |
+| Android shell (Phase 8) | Phase 3 gate passes | The PWA it wraps; not by routing or SOS. Load, tuning, and backup/restore work still follows the phases above. |
+| Routing and navigation (Phase 6) | Phase 3 gate passes | Map shell and provider adapters; not by the SOS service. |
+| SOS service (Phase 5) | Phase 4 gate passes | Relation Service (eligibility, blocks, location) and the category catalogue it dispatches on. This is the real critical path: every later phase inherits its contract. |
+| Release engineering (Phase 9) | Phase 8 gate passes | Everything above; the release plan is exercised earlier with a non-production tag ([release plan](06-release-plan.md)). |
+
+## 6. Reporting the gate result
 
 The phase report states, in this order:
 
 1. Phase, commit SHA, and date.
 2. Commands executed, and the exit status of each (a command that was not run must be listed as not run).
 3. For each checklist row: met / not met / withdrawn, with the evidence that proves it.
-4. Deviations from the plan, each with the reason and the decision that records it.
-5. Residual risks handed to the next phase, with owners.
-6. Owner approval (name/role and date), or the explicit statement that approval is pending.
+4. The phase affiliation audit from §4, including any mapping change made during the phase and its reason.
+5. Deviations from the plan, each with the reason and the decision that records it.
+6. Residual risks handed to the next phase, with owners.
+7. Owner approval (name/role and date), or the explicit statement that approval is pending.
 
 A checklist row is never marked met on the strength of an intention. If the evidence does not exist yet, the row is "not met" and the phase has not ended.

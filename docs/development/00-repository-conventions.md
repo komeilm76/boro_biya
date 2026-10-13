@@ -69,3 +69,13 @@ Rules:
 - **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory (including each document's owner and review date), requirement-ID uniqueness and reference resolution, traceability coverage, internal links and anchors, absence of placeholders, audience separation, secret patterns, and model coherence (no retired wording).
 - **[GOV-72]** Requirement IDs are permanent. Once assigned, an ID is never reused or renumbered; withdrawn requirements are marked `Withdrawn` in the phase report instead of deleted.
 - **[GOV-73]** External references ([REFERENCES](../REFERENCES.md)) are re-verified at each phase boundary and before release, and the verification log is updated with the date and result.
+
+## 8. Phases, prioritization, and affiliation
+
+- **[GOV-87]** A requirement is affiliated with the phase in which its behaviour is first **implemented and can be verified** — not the phase in which it is written, and not a later phase whose wording happens to mention it. Four consequences are binding, and each phase report records the audit that checked them:
+  1. A requirement that constrains data (a default, a constraint, a retention rule) is affiliated with the phase that creates that data, never earlier: a gate cannot verify a column that does not exist yet.
+  2. A requirement whose behaviour first appears in a later phase stays in that later phase. Deferring the *implementation* does not move the requirement, and moving the requirement earlier does not authorize building the capability early ([GOV-55](00-repository-conventions.md#3-branches-commits-and-reviews) still governs the transition).
+  3. A **structural prerequisite** — something cheap to do from the first screen and expensive to retrofit (message catalogue, right-to-left scaffolding, privacy defaults, audit plumbing, redaction) — is affiliated with the *earliest* phase that renders user-facing UI or stores user data, even when its review is completed later.
+  4. **A phase's exit gate must not require a capability a later phase delivers.** If a gate and the mapping disagree, one of them is wrong and the disagreement is a defect, not a judgement call.
+
+  Phase affiliation and prioritization live in the generated [traceability](07-traceability.md) table (mapped in `scripts/gates/traceability.mjs`) and nowhere else. A change to a mapping is made in the same change as the phase deliverable and exit-gate wording it affects, with the reason recorded in the phase report.

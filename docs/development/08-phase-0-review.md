@@ -159,3 +159,75 @@ exit status 0
 ```
 
 Verified as correct as written, no change made: `OPS-60` (diagnostic detail protected) and `OPS-64` (health endpoints are infrastructure paths) are distinct rules, not a duplicate; and the textual-reference sweep found no dangling `§N` reference. The one candidate it raised was a reference to the **next** document's section in the same sentence, which resolves.
+
+## 8. Third review pass: phase affiliation and prioritization
+
+### 8.1 Why this pass existed
+
+A phase mapping is a plan, and a plan can be internally consistent while being impossible to execute: a requirement can sit in a phase that cannot implement it, and a phase gate can demand work that a later phase delivers. Round 1 fixed one instance of this by hand. This pass looked for the whole class, with the rule written down so the class cannot come back ([GOV-87](00-repository-conventions.md) §8): **a requirement is affiliated with the phase in which its behaviour is first implemented and can be verified.**
+
+### 8.2 The audit
+
+| Sweep | How | Result |
+| --- | --- | --- |
+| Requirement cites a question due later than its own phase | Parse the open-question register, then every requirement definition, and compare the two phases | Three hits: two deliberate policy constraints, one mis-affiliation (`PRIV-16`) |
+| Requirement text names a phase different from its mapping | Parse `Phase N` inside every requirement definition and compare with the mapping | Six hits, all legitimate scope statements ("this lifecycle is delivered in Phase 7") — no change |
+| Requirement mentions a table delivered later | Cross-check every table name against the phase its owner document delivers it in | Three hits: two are boundary definitions that must name the tables they own, one was the same `PRIV-16`/category family |
+| Reading pass, requirement by requirement | Every privacy default, security control, UI rule, and data invariant read against the phase it is mapped to | The moves in §8.3 |
+
+### 8.3 Requirements moved, and why
+
+| Requirement | Was | Now | Reason |
+| --- | --- | --- | --- |
+| `PRIV-13`, `PRIV-14`, `PRIV-17` | 3 | 4 | These are defaults of the sharing pipeline (live off, last-known off, history off). Phase 3 has no table, no column, and no endpoint to prove them on. |
+| `PRIV-15` | 3 | 2 | Account visibility is private: it becomes true the moment accounts exist, and the phase that adds an admin user list is the phase where it can first be violated. |
+| `PRIV-16` | 3 | 5 | SOS suggestions are opt-in; Phase 3 has no suggestions. The requirement itself cites `Q-08`, which is due in Phase 5. |
+| `PRIV-18` | 3 | 5 | Notification defaults exist when notifications exist. |
+| `PRIV-19` | 3 | 1 | No analytics or telemetry by default is a skeleton-level property, not a map feature. |
+| `PRIV-20` | 3 | 4 | Admin access to location needs location data to exist. |
+| `PRIV-21` | 3 | 2 | A user can see and revoke their own sessions: sessions are Phase 2. The sharing-revocation half is extended in Phase 4. |
+| `PRIV-22` | 3 | 4 | The consent/sharing change trail lands with the sharing settings it records. |
+| `PRIV-08` | 3 | 2 | TLS in transit and encryption at rest are datastore and transport properties, paired with `SEC-40` in Phase 2 rather than with the map. |
+| `PRIV-07` | 3 | 5 | The first administrative view of a location is the SOS admin map. |
+| `PRIV-26` | 4 | 5 | The assistance category is a Phase 5 concept; Phase 4 has no category to keep private. |
+| `SEC-58`, `SEC-59`, `SEC-60` | 1 | 2 | Audit events, the tamper-evident audit store, and alerting need something to audit and alert on. Phase 1 has no authentication, so a gate requiring alerts on authentication anomalies could never pass honestly. Phase 1 keeps the structured logging and redaction baseline (`SEC-57`, `SEC-62`). |
+| `SEC-61` | 1 | 9 | The incident-response procedure is stored in the operational runbook; the requirement's own text already said Phase 8/9, and Phase 9's deliverable list names the incident-response guide. |
+| `UI-21`, `UI-22` | 3 | 2 | Message catalogue and layout-direction scaffolding are the cheapest possible work before the first screen and a rewrite afterwards. Phase 2 ships the first user-facing screens. |
+| `QA-17` | 3 | 2 | The localisation check activates when user-facing strings first exist — which is when they can first be hard-coded. `QA-16` (accessibility) stays in Phase 3 with the full screen set. |
+| `DATA-04`, `DATA-05` | 3 | 4 | Sharing defaults and last-known labelling constraints live in the Relation schema; Phase 3 has no such table. |
+
+### 8.4 Prioritization moved, not just affiliation
+
+- **`Q-15` (languages and RTL) moved from Phase 3 to Phase 2.** The audit caught this as a contradiction the moment `UI-22` moved: RTL scaffolding in Phase 2 cannot be built before the decision that says whether RTL is required. Waiting until Phase 3 would mean deciding layout direction after every authentication string exists. This is the one place where the *decision* moved earlier so the *work* is not blocked, and Phase 2's exit gate now requires it.
+- **`QA-07` text corrected** from "(Phase 1/2)" to "(Phase 2)", matching the CI activation table, which has contract tests inactive in Phase 1.
+- **The administrative-location check moved from the Phase 4 exit gate to the Phase 5 gate**, because `PRIV-07` is affiliated with the phase that first gives an administrator a location view (the SOS admin map).
+- **The critical path is now stated** in [phase gate checklist](05-phase-gate-checklist.md) §5: Phase 4 → Phase 5 is the only hard chain (the SOS Service dispatches on the Relation Service); the plugin lifecycle can run in parallel from the Phase 2 gate with one exception (permission-vocabulary tests need Phase 4's location scopes); the Android shell can be prepared once the PWA exists. Nothing in Phases 3–6 blocks the plugin workstream.
+
+### 8.5 Gate change: the affiliation audit
+
+`scripts/gates/traceability.mjs` now cross-checks every requirement definition against the open-question register and fails when a requirement cites a question due later than its own phase, naming the requirement, both phases, and the fix ("move the requirement, or record it in `AFFILIATION_EXEMPT` with a reason"). Two constraints are exempt on purpose and the exemption text explains why: `GOV-84` and `OPS-58` both *constrain* an early phase using a later decision ("do not adopt a provider before `Q-10` resolves").
+
+The audit earned its place immediately: the first run failed on `UI-22` depending on `Q-15`, which is how §8.4's decision move was found. `GOV-87` itself was added as a requirement so the rule is traceable like any other, which moved the totals to 647 requirements.
+
+### 8.6 Reviewed and kept
+
+Three requirement texts name a phase that differs from their mapping, and each is correct as written — recorded so a future audit does not "fix" them:
+
+- `QA-10` (secret scanning, Phase 1) says the documentation gate already applies the same pattern check **in Phase 0**. That is a statement about earlier coverage, not a second affiliation.
+- `QA-50` (release artifact set, Phase 1) lists plugin packages as Phase 7+ and the Android artifact as Phase 8+. The requirement is the artifact *catalogue*; the phases named are the artefacts' own.
+- `PLG-02` (third-party plugin scope, Phase 1) says the lifecycle is delivered in Phase 7. The requirement defines what a third-party plugin *is*, which Phase 1 must know in order to draw the boundary.
+
+### 8.7 Evidence (third pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 647 requirements, 112 groups
+node scripts/gates/traceability.mjs           # exit 0
+node scripts/gates/phase0.mjs                 # 8 checks, exit 0 (check 2/3 delegates to the generator)
+
+# negative test: revert one mapping so a requirement again cites a later question
+#   PRIV-16 back to Phase 3  ->  exit 1:
+#   - affiliation: PRIV-16 is in Phase 3 but depends on Q-08, which is due by Phase 5
+# restored  ->  exit 0
+```
+
+

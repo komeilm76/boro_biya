@@ -36,27 +36,27 @@ Exit gate: a clean clone starts and passes every gate active in Phase 1 using on
 
 ## Phase 2 — Authentication and account lifecycle
 
-Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; authentication and negative-case tests; OpenAPI contract for auth endpoints.
+Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; authentication and negative-case tests; OpenAPI contract for auth endpoints; the message catalogue and layout-direction scaffolding the first user-facing screens need, so no user-facing string is hard-coded ([GOV-87](development/00-repository-conventions.md), UI-21/UI-22); the audit event store and the first alerts on real signals (SEC-58 … SEC-60).
 
-Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; decisions Q-01 … Q-05, Q-14 (user data), and Q-17 (role model) resolved.
+Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; audit events and alerting proven active on at least the authentication and rate-limit signals; privacy defaults verified (private by default, no telemetry, sessions revocable by their owner); localisation checks active (no hard-coded user-facing strings); decisions Q-01 … Q-05, Q-14 (user data), Q-15 (languages and RTL), and Q-17 (role model) resolved.
 
 ## Phase 3 — Map foundation and user settings
 
 Deliver: MapLibre map, provider adapters with documented terms and attribution, address search and manual coordinates, permission UX, location display, theme, locale, and accessibility settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)).
 
-Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in, and a default build shares nothing; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15 resolved and the stronger-recovery build permitted by Q-05 either implemented or explicitly deferred with the owner's agreement.
+Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in, and a default build shares nothing; provider terms review recorded; decisions Q-06 and Q-10 (map/search) resolved and the stronger-recovery build permitted by Q-05 either implemented or explicitly deferred with the owner's agreement.
 
 ## Phase 4 — Relation Service
 
 Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates, and the location-sharing settings screens (remaining time per grant, "end now", history window, delete history, access list).
 
-Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; ADR-004 (realtime transport) is accepted and ADR-005 (geospatial) is decided, implemented, and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
+Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; every sharing default is proven off in a fresh account and the consent/sharing change trail is queryable; ADR-004 (realtime transport) is accepted and ADR-005 (geospatial) is decided, implemented, and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
 
 ## Phase 5 — SOS Service
 
 Deliver: SOS creation with at least one category and optional image, category catalogue and single-category management (including SOS settings: the assistance-suggestion preference and the user's category with its verification state), admin map and list, category-matched nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, and resilience when realtime is disconnected.
 
-Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; dispatch tests prove a user without a matching category is never suggested and that the matched category is recorded; Q-07, Q-08, Q-09, Q-11, Q-23 resolved.
+Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; dispatch tests prove a user without a matching category is never suggested and that the matched category is recorded; suggestion opt-in is honoured and notification defaults are proven (in-app only, push opt-in); the assistance category is never exposed as a listing; administrative access to a location is purpose-scoped, role-limited, and audited (PRIV-07); Q-07, Q-08, Q-09, Q-11, Q-23 resolved.
 
 ## Phase 6 — Routing and navigation
 
@@ -80,7 +80,7 @@ Exit gate: supported device/OS matrix and measured resource targets documented; 
 
 Deliver: release artifacts with checksums, SBOM where practical, changelog, migration plan, backups, monitoring/alerts, rollback plan, incident-response guide, security review with a resolved or accepted risk register.
 
-Exit gate: no unresolved critical findings; Q-14 (audit retention, deletion, and export obligations) resolved; production readiness sign-off by the owner; release candidate passes the full gate set on the exact tagged commit.
+Exit gate: no unresolved critical findings; the incident-response procedure exists and has been exercised once against a rehearsal incident (SEC-61); alerting covers replication and backup failures; Q-14 (audit retention, deletion, and export obligations) resolved; production readiness sign-off by the owner; release candidate passes the full gate set on the exact tagged commit.
 
 ## Phase reporting format
 
