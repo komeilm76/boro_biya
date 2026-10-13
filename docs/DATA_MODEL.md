@@ -13,6 +13,8 @@ This is a logical starting point, not a final migration. It is converted into re
 - `idempotency_keys`: scope (for example `sos.claim`), key, actor_id, request fingerprint hash, response reference, created_at, expires_at. Unique `(scope, key, actor_id)`; replayed requests return the recorded outcome instead of repeating a side effect.
 - `audit_events`: id, actor_id (nullable for anonymous events), actor_type, action, target_type, target_id, request_id, source_ip_hash, safe metadata (JSON, redacted by construction), created_at. Append-only at the application layer and access-controlled; updates and deletes are restricted by role and never exposed through the API.
 - `user_preferences`: user_id, theme (`light` | `dark` | `system`), locale, text_direction, receive_sos_suggestions, notification channel preferences, updated_at, updated_by. Core-owned because these are app-wide preferences that plugins and services read through the core API — the SOS suggestion preference is deliberately **not** stored in the Relation Service.
+- `categories`: id, key (stable unique slug), label_key, description_key, active, requires_verification, sort_order, created_by, updated_by, created_at, updated_at. Server-owned, admin-managed catalogue: create, rename, and deactivate are audited; deactivating keeps historical references intact and blocks new selection.
+- `user_categories`: user_id, category_id, status (`self_declared` | `verified`), verified_by, verified_at, created_at, updated_at. Unique `(user_id, category_id)`; the number of categories a user may hold is bounded by configuration. Membership is a profile attribute, never an authorization grant ([DECISIONS](DECISIONS.md) ADR-015).
 - `consent_records`: user_id, consent_type (for example live location sharing), granted boolean, policy_version, recorded_at, source. Used to resolve "what did the user actually agree to, and when".
 
 ## Relation Service (own schema)
@@ -20,14 +22,17 @@ This is a logical starting point, not a final migration. It is converted into re
 - `follow_requests`: id, requester_id, target_id, status, created_at, responded_at, expires_at. Prevent self-follow and duplicate pending requests with a uniqueness rule on the active pair.
 - `relationships`: follower_id, followed_id, accepted_at. Unique pair, with a constraint that the pair cannot be identical.
 - `blocks`: blocker_id, blocked_id, created_at, reason_code. Unique pair; retained independently of relationship state so a block survives unfollow and cannot be bypassed by re-requesting.
-- `relation_preferences`: user_id, live_location_enabled, last_location_enabled, updated_at. Relationship-scoped location sharing only; app-wide preferences live in `user_preferences`.
-- `user_locations`: user_id, latitude, longitude, accuracy_m, recorded_at, expires_at, source (`device` | `manual`). **Latest point only** (unique `user_id`), with TTL cleanup; no implicit history. If history is ever approved ([DECISIONS](DECISIONS.md) Q-06) it requires a new table, retention policy, and access rules.
+- `live_share_sessions`: id, user_id, scope (`followers`), started_at, expires_at, ended_at, end_reason (`expired` | `revoked` | `blocked` | `disabled` | `service_unavailable`), duration_seconds, created_ip_hash. At most one active session per user (partial unique index on the open window); `duration_seconds` is bounded by configuration; `expires_at` is mandatory and enforced server-side.
+- `user_location_history`: id, user_id, latitude, longitude, accuracy_m, recorded_at, source (`device` | `manual`), share_session_id (nullable), expires_at. Written only while history sharing is enabled; indexed on `(user_id, recorded_at)`; every row carries an expiry and is purged by TTL.
+- `relation_preferences`: user_id, live_location_enabled, last_location_enabled, history_sharing_enabled, updated_at. Relationship-scoped location sharing only; app-wide preferences live in `user_preferences`.
+- `user_locations`: user_id, latitude, longitude, accuracy_m, recorded_at, expires_at, source (`device` | `manual`). **Latest point only** (unique `user_id`), with TTL cleanup; this table never stores a trail. If history is ever approved ([DECISIONS](DECISIONS.md) Q-06) it requires a new table, retention policy, and access rules.
 
 ## SOS Service (own schema)
 
 - `sos_alerts`: id, creator_id, priority (`high` | `medium` | `low`), description, latitude, longitude (nullable), location_source, accuracy_m, status, created_at, updated_at, cancelled_at, resolved_at. Coordinates are nullable because manual entry may be unavailable at creation time.
 - `sos_attachments`: id, alert_id, storage_provider, private_object_key, content_type, byte_size, sha256, width, height, scan_status, created_at. Object keys are generated server-side; uploaded filenames are stored as inert metadata only.
-- `sos_suggestions`: id, alert_id, recipient_id, status (`pending` | `accepted` | `declined` | `expired` | `cancelled`), sent_by, sent_at, responded_at, expires_at. Duplicate active suggestions for the same `(alert_id, recipient_id)` are prevented by a partial unique constraint.
+- `sos_alert_categories`: alert_id, category_id, matched_at. Unique pair; at least one row per alert is enforced inside the creation transaction, and the category is snapshotted so later catalogue edits cannot rewrite alert history.
+- `sos_suggestions`: id, alert_id, recipient_id, matched_category_id, status (`pending` | `accepted` | `declined` | `expired` | `cancelled`), sent_by, sent_at, responded_at, expires_at. Duplicate active suggestions for the same `(alert_id, recipient_id)` are prevented by a partial unique constraint.
 - `sos_tasks`: id, alert_id, assignee_id, status, claimed_at, arrived_at, resolved_at, closed_at, close_reason. One active task per user is enforced by a partial unique index on active statuses, and one active task per alert is enforced the same way in v1 ([DECISIONS](DECISIONS.md) Q-09).
 - `sos_task_events`: task_id, actor_id, prior_state, new_state, reason_code, created_at, idempotency_key. Append-only; the state machine ([PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) §7) is validated before insert.
 - `notifications`: recipient_id, event_type, payload with minimal data (no coordinates beyond the authorized minimum, no secrets), service_scope (`core` | `sos` | `relation`), read_at, created_at, expires_at. Persisted before realtime delivery; the core keeps its own notification records for authentication and account events.
@@ -59,9 +64,17 @@ Each invariant names its enforcement mechanism; enforcement is verified by the t
 14. **[DATA-14]** Idempotent operations replay rather than repeat — unique `(scope, key, actor_id)` plus stored outcome (integration).
 15. **[DATA-15]** Every mutable record carries `created_at` and `updated_at`; user-visible state changes record the actor and reason where the domain requires it (schema test).
 
+16. **[DATA-16]** A live-sharing session is time-boxed and expires server-side: `expires_at` is mandatory, at most one session is active per user, the duration is bounded by configuration, and no request can extend an ended or expired session (integration).
+17. **[DATA-17]** Location-history rows exist only while history sharing is enabled, always carry an expiry, and are purged by TTL; deleting history removes rows immediately (integration, security).
+18. **[DATA-18]** Live and historical location are visible only to accepted followers the owner shares with; unfollow, block, or disabling sharing stops access immediately, including for open streams (integration, security).
+19. **[DATA-19]** Every SOS alert carries at least one active category, enforced in the creation transaction; an alert with no category cannot be created (integration).
+20. **[DATA-20]** Dispatch suggests only users holding a category that matches the alert, evaluated before distance ordering, and stores the matched category on the suggestion for audit (integration, security).
+21. **[DATA-21]** Category catalogue and membership changes are audited, and category membership never grants authorization by itself (integration).
+
 ## Geospatial design
 
-- **[DATA-16]** PostGIS is evaluated by prototype for indexed proximity and bounding-box queries; adoption is [DECISIONS](DECISIONS.md) ADR-005. If adopted, extension availability in the Docker image, in backups/restores, and in the deployment target is documented and tested.
-- **[DATA-17]** Spatial indexes are used for proximity queries, and radius searches are bounded; distance is computed only over a bounded candidate set.
-- **[DATA-18]** If PostGIS is not adopted, the alternative (indexed bounding box on `(latitude, longitude)` plus exact distance over the candidate set) is benchmarked, documented with numbers, and covered by a test that fails if the query loses its index.
-- **[DATA-19]** "Nearby eligible users" for SOS dispatch uses the same mechanism, with eligibility (opt-in, not blocked, no active task, account status) applied as a filter before distance ordering.
+- **[DATA-22]** PostGIS is evaluated by prototype for indexed proximity and bounding-box queries; adoption is [DECISIONS](DECISIONS.md) ADR-005. If adopted, extension availability in the Docker image, in backups/restores, and in the deployment target is documented and tested.
+- **[DATA-23]** Spatial indexes are used for proximity queries, and radius searches are bounded; distance is computed only over a bounded candidate set.
+- **[DATA-24]** If PostGIS is not adopted, the alternative (indexed bounding box on `(latitude, longitude)` plus exact distance over the candidate set) is benchmarked, documented with numbers, and covered by a test that fails if the query loses its index.
+- **[DATA-25]** "Nearby eligible users" for SOS dispatch uses the same mechanism, with eligibility (matching category, opt-in, not blocked, no active task, account status) applied as a filter before distance ordering.
+- **[DATA-26]** Location-history reads are bounded by the retention window, paginated, and served from the `(user_id, recorded_at)` index; no query may scan a full history table.

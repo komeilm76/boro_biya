@@ -30,18 +30,23 @@ This guide is for people who use Boro_biya. It is written to be understood witho
 - Sending and answering follow requests.
 - Removing a follower and unfollowing someone.
 - Blocking someone and what blocking does.
-- Turning live location sharing on and off.
+- Turning the live location sharing *preference* on and off, and why that alone shares nothing.
+- Starting a live sharing session, choosing how long it lasts, watching the remaining time, and ending it immediately.
 - Sharing only your last known location, and understanding its age.
-- Deciding whether you want to receive assistance suggestions.
+- Turning location history sharing on or off, choosing a retention window, seeing your recorded trail, and deleting it.
+- Seeing exactly who can currently see your live or historical location, and stopping their access.
+- Choosing your assistance categories, what verification means, and why categories decide who is asked for help.
+- Deciding whether you want to receive assistance suggestions at all, and how categories narrow them.
 - What happens when a feature is temporarily unavailable.
 
 ### Asking for help and helping others
 
 - Creating an assistance request.
-- Choosing a priority and describing the situation.
+- Choosing a priority, choosing one or more categories, and describing the situation.
 - Using GPS or entering a location manually.
 - Adding a photo, and what happens to the photo's hidden information.
-- Receiving, accepting, declining, and completing a request to help.
+- Receiving, accepting, declining, and completing a request to help, and why you were asked.
+- Why you may not be asked for a nearby request that has no matching category.
 - What the app guarantees — and what no app can guarantee.
 
 ### Account security

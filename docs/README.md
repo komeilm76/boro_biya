@@ -85,6 +85,7 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`:
 Rules:
 
 - IDs are permanent and assigned when a requirement is written, using the area table above; they are **never renumbered or reused**, and an identifier that disappears is marked withdrawn in the phase report rather than deleted.
+- Identifiers are assigned in the order requirements are added, so a document's numbers are not necessarily consecutive or in reading order; a new requirement always takes the next free number in its area.
 - Every ID must be covered by exactly one row in the generated [traceability](development/07-traceability.md) file, and the documentation gate fails if coverage is incomplete or stale.
 - Withdrawn requirements are marked as withdrawn in the phase report instead of deleting the identifier.
 - `/docs/user/` never references requirement IDs, phases, or ADRs.

@@ -4,7 +4,7 @@ Requirement identifiers (`AUTH-…`, `SOS-…`) are permanent handles assigned b
 
 ## 1. Roles and access
 
-- **[ADM-01]** Two roles exist in v1: `admin` and `user`. Whether additional operational roles (for example a read-only support role) are needed is tracked in [DECISIONS](DECISIONS.md) Q-17; v1 MUST NOT invent sub-roles that are not backed by server-side policy.
+- **[ADM-01]** Exactly two roles exist: `admin` and `user` ([DECISIONS](DECISIONS.md) ADR-016). No sub-roles are introduced in v1. Assistance-category membership (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary.
 - **[ADM-02]** Authorization is enforced by the server on every protected operation. A frontend route guard is a user-experience affordance, not an authorization boundary.
 - **[ADM-03]** Admin capabilities are user administration, SOS monitoring/dispatch, and plugin management. Each admin capability requires an explicit authorization check and an audit event (`actor`, `action`, `target`, timestamp, request ID, source).
 - **[ADM-04]** Admins MUST NOT be able to read users' plaintext passwords, security-question answers, session tokens, or raw location trails.
@@ -100,8 +100,10 @@ Effective access rule: a session may be created only when `account_status = acti
 - **[MAP-06]** Live location and last-known location are visually and textually distinct. Last-known location always shows its timestamp (and accuracy when available) and MUST NOT be presented as current.
 - **[MAP-07]** Location sharing is off by default and is visible only to accepted followers according to explicit per-user settings.
 - **[MAP-08]** A clear disable/revoke control is available, and publishing of new live coordinates stops promptly (target: within one server publish interval) after disabling.
-- **[MAP-09]** No location history is retained by default. If history is introduced later, retention, access, export, and deletion policies must be defined and approved first ([DECISIONS](DECISIONS.md) Q-06).
-- **[MAP-10]** Location data never appears in URLs, analytics events, crash reports, or third-party requests beyond the minimum required provider interaction ([SECURITY](SECURITY.md) §5).
+- **[MAP-09]** Live location is published only while a **time-boxed sharing session** is active: the user chooses the duration each time they share (bounded by a server maximum), and the UI shows the remaining time. Sharing stops automatically at expiry without further user action, and the user can end the session immediately. A session never renews or chains silently.
+- **[MAP-10]** The user can review their own sharing history — when they shared, for how long, and how many sessions they have started — and session creation is rate-limited so that record cannot be flooded.
+- **[MAP-22]** Location history (a recorded trail) is a separate capability: it is **off by default**, recorded only while the user has explicitly enabled history sharing, bounded by a retention window and a sampling interval that are stated to the user in plain language, and deletable in full by the user at any time ([DECISIONS](DECISIONS.md) ADR-014, Q-22).
+- **[MAP-23]** Location data never appears in URLs, analytics events, crash reports, or third-party requests beyond the minimum required provider interaction ([SECURITY](SECURITY.md) §5).
 
 ## 5. Routing and navigation
 
@@ -134,7 +136,11 @@ All accounts are private by default.
 - **[REL-04]** Users can unfollow. Whether the *followed* party may also remove a follower, and how blocking interacts with pending requests and existing relationships, is an open decision ([DECISIONS](DECISIONS.md) Q-20); until it is resolved the API MUST NOT expose a behaviour that contradicts the chosen policy.
 - **[REL-05]** Blocking is a first-class relationship that terminates access in both directions, cancels pending requests, and hides the blocked user from search results and from location/notification delivery. Block records are retained even if the relationship is later deleted, to prevent immediate re-request abuse.
 - **[REL-06]** Relationship state changes (accept, reject, unfollow, block, unblock) invalidate cached authorization immediately; a revoked relationship MUST NOT continue to receive location updates.
-- **[REL-07]** User preferences: enable/disable live location sharing; enable/disable last-known location sharing.
+- **[REL-07]** User preferences: enable/disable live location sharing sessions; enable/disable last-known location sharing; enable/disable history sharing.
+- **[REL-11]** A follower sees a live position only while an active sharing session is running **and** the relationship is still accepted. The session ends on unfollow, block, disabling sharing, or service unavailability.
+- **[REL-12]** When history sharing is enabled, the accepted followers this user shares with can view the recorded trail inside the retention window, with timestamps and accuracy. The trail is paginated, never bulk-exportable, and never visible to anyone else.
+- **[REL-13]** The owner can see who currently has access to their live and historical location, and revoking access takes effect immediately, including for already-open streams.
+- **[REL-14]** History access ends the moment the relationship ends, sharing is disabled, or the retention window passes. Viewer access is re-checked per request and never cached beyond the request.
 - **[REL-08]** Location-sharing settings are available only when the Relation Service is installed and healthy. If the service is unavailable, private location data fails closed (no sharing, no implied follower access).
 - **[REL-09]** Last-known sharing applies when live sharing is off, is labelled as not live with its timestamp, is subject to the retention policy, and MUST NOT silently publish stale coordinates as current.
 - **[REL-10]** Location queries are always scoped to an authorized relationship and requested by the viewer; the service never broadcasts a user's position to unrelated clients.
@@ -143,12 +149,13 @@ All accounts are private by default.
 
 ### Create SOS
 
-- **[SOS-01]** Fields: priority (`high`, `medium`, `low`), description, optional coordinates, optional image.
+- **[SOS-01]** Fields: priority (`high`, `medium`, `low`), **one or more categories**, description, optional coordinates, optional image. An alert without at least one active category is rejected by the server.
 - **[SOS-02]** GPS acquisition is attempted only when the user requests it; manual coordinate entry is always available.
 - **[SOS-03]** Images may come from the camera or a file picker where the platform supports it, and are validated for type, size, decoded dimensions, and content before storage.
 - **[SOS-04]** Attachments are stored outside the public web root or in private object storage with generated object keys; uploaded filenames are never trusted or used as paths ([SECURITY](SECURITY.md) §8).
 - **[SOS-05]** Creation supports an idempotency key so that client retries (flaky mobile networks) do not create duplicate alerts.
 - **[SOS-06]** The creator can see the current status of their own alert, and can cancel it while it is not yet resolved.
+- **[SOS-24]** Categories come from the server-owned, admin-managed catalogue ([DATA_MODEL](DATA_MODEL.md) `categories`). Unknown or inactive category identifiers are rejected, and category selection is bounded.
 
 ### Admin dispatch
 
@@ -161,6 +168,11 @@ All accounts are private by default.
 - **[SOS-13]** A task can be claimed by exactly one user. This is enforced by a database constraint or transaction, not by frontend logic, and repeated claim requests are protected by an idempotency key.
 - **[SOS-14]** Whether a single alert may later support more than one concurrent responder task is an open decision ([DECISIONS](DECISIONS.md) Q-09). v1 delivers exactly one active task per alert, and no schema, API, or UI shortcut may pre-judge the future answer.
 - **[SOS-15]** Suggestions expire after a configured window and expired suggestions cannot be accepted afterwards.
+- **[SOS-25]** Dispatch eligibility requires a **category match**: a user is suggested only if they hold at least one category that the alert carries — and, where that category requires verification, only with a verified membership. A user inside the radius without a matching category is never suggested.
+- **[SOS-26]** Category matching is applied before distance ranking, and the dispatch view shows which category matched, so the admin can see why each user was suggested.
+- **[SOS-27]** Users manage their own category membership within a configurable maximum. Categories flagged as requiring verification stay unverified until an administrator verifies them, and only verified memberships satisfy those categories for dispatch.
+- **[SOS-28]** Catalogue changes (create, rename, deactivate) and membership changes (add, remove, verify) are audited, affect future dispatch only, and never grant authorization by themselves.
+- **[SOS-29]** Deactivating a category preserves the recorded category on existing alerts for audit, while new alerts can no longer select it.
 
 ### Task states
 
@@ -184,8 +196,8 @@ with explicit cancellation/failed/needs-escalation transitions where product pol
 
 A user settings area exposes preferences whose backing schema/capability is actually available:
 
-- **[UI-08]** Relation: live location sharing, last-known location sharing.
-- **[UI-09]** SOS: receive assistance suggestions.
+- **[UI-08]** Location sharing: the current live-sharing session with its remaining time and an "end now" control; the history-sharing toggle with its retention window; a "delete my location history" action; and the list of followers who can currently see live or historical location.
+- **[UI-09]** SOS: receive assistance suggestions, plus the user's assistance categories and their verification state, with a plain-language explanation of what membership means for them.
 - **[UI-10]** Privacy: current sessions with revoke controls, account state and recovery options where appropriate.
 - **[UI-11]** Appearance: light, dark, system.
 - **[UI-12]** Language and locale, including text direction, once localisation is enabled.

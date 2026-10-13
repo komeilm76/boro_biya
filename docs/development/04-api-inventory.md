@@ -30,6 +30,14 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | GET | `/users/me` | auth | Own profile and effective preferences |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
 | GET | `/users/me/preferences` | auth | Theme, locale, notification channels, SOS suggestion opt-in |
+| GET | `/users/me/categories` | auth | Own assistance-category memberships with verification state |
+| PUT | `/users/me/categories` | auth | Replace own memberships within the configured maximum; unknown or inactive categories rejected; audited |
+| GET | `/categories` | auth | Active catalogue for selection UIs (key, localised label, verification requirement) |
+| GET | `/admin/categories` | admin | Full catalogue including inactive entries |
+| POST | `/admin/categories` | admin | Create a category; audited |
+| PATCH | `/admin/categories/:id` | admin | Rename, reorder, (de)activate, set verification requirement; deactivation blocks new selection and keeps history |
+| POST | `/admin/users/:id/categories/:categoryId/verify` | admin | Mark a membership verified; audited |
+| DELETE | `/admin/users/:id/categories/:categoryId` | admin | Remove a membership; audited |
 | PUT | `/users/me/preferences` | auth | Validated against schema; audited when a privacy-relevant value changes |
 | GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
 | POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
@@ -65,21 +73,28 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | DELETE | `/relation/blocks/:id` | auth | Unblock |
 | GET | `/relation/preferences` | auth | Live/last-known sharing flags |
 | PUT | `/relation/preferences` | auth | Audited; effects on streams re-evaluated |
-| GET | `/relation/locations/:userId` | auth | Requires accepted relationship **and** sharing enabled; returns live flag, timestamp, accuracy |
+| GET | `/relation/locations/:userId` | auth | Requires accepted relationship, sharing enabled, and an **active live-sharing session**; returns live flag, timestamp, accuracy, and session expiry |
+| POST | `/relation/live-share` | auth | Starts a time-boxed session (owner picks the duration within the server maximum); at most one active session; audited |
+| DELETE | `/relation/live-share` | auth | Ends the active session immediately; open streams closed |
+| GET | `/relation/live-share` | auth | Own session state plus sharing history (when, how long, end reason); paginated, rate-limited |
+| PUT | `/relation/preferences` | auth | Also toggles history sharing; the retention window is chosen within the server maximum |
+| GET | `/relation/locations/:userId/history` | auth | Requires accepted relationship **and** history sharing on; bounded by the retention window; paginated; no bulk export; re-authorized per request |
+| DELETE | `/relation/locations/mine/history` | auth | Owner deletes their full trail immediately; audited |
+| GET | `/relation/location-access` | auth | Who can currently see the owner's live or historical location |
 
 ## 5. SOS Service (Phase 5)
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
-| POST | `/sos/alerts` | auth | Idempotency key required; coordinates optional; attachment via separate upload |
+| POST | `/sos/alerts` | auth | Idempotency key required; **at least one active category required**; coordinates optional; attachment via separate upload |
 | GET | `/sos/alerts/mine` | auth | Creator's own alerts with status |
 | POST | `/sos/alerts/:id/cancel` | auth | Creator only; explicit transition |
 | POST | `/sos/attachments` | auth | Validated image upload; returns an attachment reference, not a public URL |
 | GET | `/sos/attachments/:id` | auth | Authorization-checked per request; short-lived signed access where applicable |
 | GET | `/admin/sos/alerts` | admin | Map and list views; filters by priority/status/time |
 | GET | `/admin/sos/alerts/:id` | admin | Detail with attachments and suggestion history |
-| POST | `/admin/sos/alerts/:id/suggestions` | admin | Fan-out to eligible users within the configured radius |
-| POST | `/admin/sos/nearby-users` | admin | Eligibility-filtered proximity search (documented radius + method) |
+| POST | `/admin/sos/alerts/:id/suggestions` | admin | Fan-out to eligible users within the configured radius **holding a category the alert carries** (verified membership where the category requires it) |
+| POST | `/admin/sos/nearby-users` | admin | Eligibility-filtered proximity search (documented radius + method) with optional category filter and the matched category returned per user |
 | GET | `/sos/suggestions/mine` | auth | Pending and historical suggestions |
 | POST | `/sos/suggestions/:id/accept` | auth | Idempotent; fails if the user already holds an active task |
 | POST | `/sos/suggestions/:id/decline` | auth | Idempotent |

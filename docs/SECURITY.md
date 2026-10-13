@@ -58,15 +58,19 @@ Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles assigned b
 
 ## 5. Location privacy
 
-- **[PRIV-01]** Live location sharing is off by default and requires both an accepted relationship and an explicit sharing setting.
+- **[PRIV-01]** Live location sharing is off by default and requires both an accepted relationship and an explicit, **time-boxed** sharing session started by the owner; there is no always-on live mode.
 - **[PRIV-02]** Location is published only to accepted followers with sharing enabled. A user with no accepted followers publishes to nobody, and the UI says so instead of implying sharing is active.
-- **[PRIV-03]** Last-known location is always labelled with its timestamp and accuracy and MUST NOT be represented as live.
-- **[PRIV-04]** Publishing stops promptly on opt-out, unfollow, block, or plugin unavailability; the server stops accepting and serving new coordinates rather than relying on clients to stop displaying them.
-- **[PRIV-05]** Retention is minimised: only the latest point per user is kept by default, with a TTL ([data classification](security/data-classification.md) §4). No history is created implicitly.
+- **[PRIV-03]** Last-known location is always labelled with its timestamp and accuracy and MUST NOT be represented as live, and it is never derived from a location-history query.
+- **[PRIV-04]** Publishing stops promptly on session expiry, revoke, opt-out, unfollow, block, or plugin unavailability; the server stops accepting and serving new coordinates rather than relying on clients to stop displaying them, and open streams are closed rather than merely hidden.
+- **[PRIV-05]** Retention is minimised: the latest point per user is kept with a TTL, and a location trail exists only while the owner has history sharing enabled and only inside its retention window ([data classification](security/data-classification.md) §4). No history is ever created implicitly.
 - **[PRIV-06]** Coordinates are protected in logs, analytics, crash reports, URLs, and outbound provider requests. Exact coordinates are C3 data (see data classification) and are never written to application logs at full precision.
 - **[PRIV-07]** Administrative access to location is limited to defined operational purposes, is role-scoped, is audited (who saw which subject, when, and why), and is not available to arbitrary admin browsing.
 - **[PRIV-08]** TLS is mandatory in transit and storage/backup encryption is required at rest. Data is minimised before encryption, not after.
 - **[PRIV-09]** Consent and preference changes are recorded as audit events, so a later dispute can be resolved from evidence rather than assumption.
+- **[PRIV-23]** Live-sharing session lifecycle is server-authoritative and auditable: start, expiry, revoke, and involuntary ends are recorded with the reason, and duration is bounded by configuration so a client cannot request an unbounded session.
+- **[PRIV-24]** Location history is owner-controlled: off by default, explicit opt-in, visible only to the accepted followers the owner shares with, fully deletable by the owner, and never exported in bulk through the API.
+- **[PRIV-25]** History reads are re-authorized on every request against the current relationship, block, and preference state; caches or materialized views MUST NOT outlive that authorization.
+- **[PRIV-26]** Assistance-category membership is treated as profile data, not as a secret or an authorization role; category filters narrow dispatch and never widen access to location or other users' data.
 
 ## 6. Plugin ZIP upload is a critical attack surface
 

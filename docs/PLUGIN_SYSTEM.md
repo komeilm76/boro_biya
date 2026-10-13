@@ -92,8 +92,8 @@ Third-party and first-party services declare capabilities from a closed vocabula
 | `users.read.basic` | Read a user's public profile fields by ID | Never includes location, sessions, or security data. |
 | `relationships.read` | Read accepted relationships for a user | Requires the user's relationship context. |
 | `relationships.write` | Create/respond to follow requests, block | Subject to user privacy settings. |
-| `locations.read.consented` | Read a user's live/last-known location where sharing is enabled and the relationship is accepted | Fails closed when consent or relationship is missing. |
-| `locations.publish.self` | Publish the publishing user's own coordinates | Requires an active sharing setting. |
+| `locations.read.consented` | Read a user's live/last-known location where sharing is enabled, an **active time-boxed sharing session** is running, and the relationship is accepted | Fails closed when consent, session, or relationship is missing. |
+| `locations.publish.self` | Publish the publishing user's own coordinates | Requires an active sharing session; requires the history-sharing setting as well when the point is meant to be recorded. |
 | `notifications.write` | Create persisted notifications for a user | Payload limited to the documented envelope. |
 | `sos.read.assigned` | Read SOS alerts assigned to the caller | Field-level filtering applies. |
 | `sos.dispatch` | Suggest and assign responders | Admin-only capability. |

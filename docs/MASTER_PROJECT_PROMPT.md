@@ -48,11 +48,11 @@ Render the map after successful login. Support location permission requests only
 
 ### Relation Service
 
-Private-by-default follow requests, accept/reject, unfollow, blocking, follower-only location sharing, last-known location sharing, user search, and user preferences. A follow request must not grant access until accepted. Location sharing is opt-in and revocable.
+Private-by-default follow requests, accept/reject, unfollow, blocking, follower-only location sharing, last-known location sharing, user search, and user preferences. A follow request must not grant access until accepted. Location sharing is opt-in and revocable, live publication happens only inside a **time-boxed sharing session the owner starts** ([DECISIONS](DECISIONS.md) ADR-013), and a retention-bounded **location history** is shared only while the owner enables it ([DECISIONS](DECISIONS.md) ADR-014). The owner can always see who has access, and every revocation takes effect immediately.
 
 ### SOS Service
 
-Create SOS alerts with priority, description, optional coordinates, and optional image. Admins view alerts on a map, find nearby eligible users, and send assistance suggestions. Suggestions may be delivered to multiple users, but a task may be claimed by exactly one eligible user. Task states are explicit and audited. A user with an active task cannot claim another. A completed task returns the user to eligibility only after the server validates the completion transition.
+Create SOS alerts with priority, **at least one assistance category**, description, optional coordinates, and optional image. Admins view alerts on a map, find nearby eligible users, and send assistance suggestions — suggestions reach only users whose categories match the alert ([DECISIONS](DECISIONS.md) ADR-015), and category membership is never a permission ([DECISIONS](DECISIONS.md) ADR-016). Suggestions may be delivered to multiple users, but a task may be claimed by exactly one eligible user. Task states are explicit and audited. A user with an active task cannot claim another. A completed task returns the user to eligibility only after the server validates the completion transition.
 
 ### Plugin management
 

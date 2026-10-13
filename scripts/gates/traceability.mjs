@@ -67,11 +67,12 @@ const PHASE_RULES = [
 
   // Map, navigation
   ['MAP', 1, 21, 3],    // map shell, permissions, provider adapters (routing detail in Phase 6)
+  ['MAP', 22, 23, 3],   // time-boxed sharing sessions + opt-in location history
   ['NAV', 1, 13, 6],
 
   // Services
-  ['REL', 1, 10, 4],
-  ['SOS', 1, 23, 5],
+  ['REL', 1, 14, 4],
+  ['SOS', 1, 29, 5],
 
   // Security controls
   ['SEC', 1, 3, 1],     // baseline and mapping (fail-closed, category mapping)
@@ -86,6 +87,8 @@ const PHASE_RULES = [
   ['PRIV', 1, 9, 3],
   ['PRIV', 10, 12, 1],  // classification rules apply from the first stored record
   ['PRIV', 13, 22, 3],  // privacy defaults (location sharing off, private by default)
+  ['PRIV', 23, 26, 3],  // session lifecycle, history ownership, per-request re-authorization
+  ['PRIV', 27, 30, 3],  // history, export and category-visibility defaults
 
   // Architecture and operations
   ['OPS', 1, 20, 1],    // topology, service boundaries, database ownership
@@ -122,6 +125,9 @@ const PHASE_RULES = [
   ['QA', 57, 61, 1],    // gate model rules
   ['QA', 62, 68, 0],    // documentation gate implementation rules
   ['QA', 69, 111, 1],   // CI workflow, branch protection, adding gates, release plan, performance rules
+  ['QA', 112, 112, 3],  // live-sharing session expiry and stream closure
+  ['QA', 113, 113, 4],  // location-history authorization boundaries
+  ['QA', 114, 115, 5],  // SOS category enforcement and category-as-metadata
 
   // Data model invariants
   ['DATA', 1, 1, 2],
@@ -134,8 +140,12 @@ const PHASE_RULES = [
   ['DATA', 13, 13, 7],
   ['DATA', 14, 14, 5],
   ['DATA', 15, 15, 1],
-  ['DATA', 16, 17, 3],
-  ['DATA', 18, 19, 5],
+  ['DATA', 16, 16, 3],
+  ['DATA', 17, 18, 4],
+  ['DATA', 19, 21, 5],
+  ['DATA', 22, 24, 3],
+  ['DATA', 25, 25, 5],
+  ['DATA', 26, 26, 4],
 ];
 
 const AREA_ALT = 'GOV|ADM|UI|AUTH|MAP|NAV|REL|SOS|SEC|PRIV|OPS|PLG|API|QA|DATA';

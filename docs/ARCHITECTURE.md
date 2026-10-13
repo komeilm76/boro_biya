@@ -22,8 +22,8 @@ Constraints:
 ## 2. Service boundaries
 
 - **[OPS-10]** The Core API owns identity, sessions, roles, account lifecycle, profile identity, user preferences, audit records, the plugin registry/install metadata, and integration contracts.
-- **[OPS-11]** The Relation Service owns follow requests, blocks, accepted relationships, and relationship-specific preferences. It consumes stable user IDs from the core and MUST NOT create a second identity system.
-- **[OPS-12]** The SOS Service owns SOS records, dispatch suggestions, claims/tasks, task transitions, and SOS-specific notifications. It uses core user IDs and a defined authorization mechanism.
+- **[OPS-11]** The Relation Service owns follow requests, blocks, accepted relationships, relationship-specific preferences, live-sharing sessions, the immediate location row, and the retention-bounded location trail. It consumes stable user IDs from the core and MUST NOT create a second identity system.
+- **[OPS-12]** The SOS Service owns SOS records, alert categories, dispatch suggestions, claims/tasks, task transitions, and SOS-specific notifications. It uses core user IDs and a defined authorization mechanism.
 - **[OPS-13]** Each service exposes versioned APIs, health and readiness checks, metrics, and structured logs. Internal endpoints are not publicly reachable unless explicitly required.
 - **[OPS-14]** Service-to-service calls are authenticated (mTLS or short-lived signed service tokens with a documented audience and scope) and follow least privilege. Service tokens are never reused for user-facing authorization.
 - **[OPS-15]** A service MUST NOT depend on another service's availability for authentication or login. Plugin unavailability degrades features, never sign-in.

@@ -41,19 +41,19 @@ Exit gate: security and negative-case tests pass (including cross-user and repla
 
 Deliver: MapLibre map, provider adapters with documented terms and attribution, address search and manual coordinates, permission UX, location display, theme and locale settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)).
 
-Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15, Q-18 resolved.
+Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in; time-boxed live-sharing sessions and the history-sharing toggle (window, delete, access list) work and are privacy-tested; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15, Q-18, Q-21, Q-22 resolved.
 
 ## Phase 4 — Relation Service
 
-Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, authorized location queries, realtime updates.
+Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, time-boxed live-sharing sessions with expiry and revoke, history sharing with retention and deletion, authorized location queries, realtime updates.
 
-Exit gate: cross-user privacy tests and revocation tests pass (unfollow, block, disable sharing); the geospatial decision is implemented and benchmarked; Q-20 resolved.
+Exit gate: cross-user privacy tests and revocation tests pass (unfollow, block, disable sharing, session expiry, history deletion); open streams stop on every revocation path; the geospatial decision is implemented and benchmarked; Q-20 resolved.
 
 ## Phase 5 — SOS Service
 
-Deliver: SOS creation with optional image, admin map and list, nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, and resilience when realtime is disconnected.
+Deliver: SOS creation with at least one category and optional image, category catalogue and membership management, admin map and list, category-matched nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, and resilience when realtime is disconnected.
 
-Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; Q-07, Q-08, Q-09, Q-11 resolved.
+Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; dispatch tests prove a user without a matching category is never suggested and that the matched category is recorded; Q-07, Q-08, Q-09, Q-11, Q-23 resolved.
 
 ## Phase 6 — Routing and navigation
 

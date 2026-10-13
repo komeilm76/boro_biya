@@ -58,6 +58,10 @@ Automated axe checks on primary routes, keyboard-only walkthrough of critical fl
 - **[QA-26]** Malicious archives (traversal, symlink, bomb, duplicate path, oversized member, nested archive) are rejected.
 - **[QA-27]** Plugin containers cannot read host secrets, mount the Docker socket, or reach arbitrary networks.
 - **[QA-28]** Invalid OpenAPI/Zod input is rejected consistently, with the documented error envelope.
+- **[QA-112]** A live-sharing session cannot be extended or resurrected after it expires or is revoked, and an open stream closes when it ends (integration).
+- **[QA-113]** Location history is authorized per request: expired rows are never served, unfollow/block/disable/delete ends access immediately, and no bulk-export path exists (integration).
+- **[QA-114]** An alert cannot be created without at least one active category, and a user without a matching category is never suggested, whatever the distance (integration).
+- **[QA-115]** Category membership alone never grants access to another user's data or an administrative capability (authorization).
 
 ### Test hygiene
 

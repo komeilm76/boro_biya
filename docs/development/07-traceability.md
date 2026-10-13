@@ -5,16 +5,16 @@ Do not edit by hand: change the requirement documents or the phase mapping in th
 
 Each row lists a contiguous requirement range, the document and section that defines it, and the phase in which it must first be delivered and verified. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **613** across 96 groups.
+Total requirements: **644** across 100 groups.
 
 | Phase | Requirements |
 | --- | --- |
 | 0 (foundation) | 16 |
 | 1 | 281 |
 | 2 | 103 |
-| 3 | 72 |
-| 4 | 37 |
-| 5 | 36 |
+| 3 | 85 |
+| 4 | 45 |
+| 5 | 46 |
 | 6 | 13 |
 | 7 | 54 |
 | 8 | 1 |
@@ -87,27 +87,31 @@ Total requirements: **613** across 96 groups.
 | 2 | `DATA-01 … DATA-10` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 3 | `UI-08 … UI-15` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 3 | `UI-16 … UI-24` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
-| 3 | `MAP-01 … MAP-10` | 10 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| 3 | `MAP-01 … MAP-23` | 12 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 3 | `MAP-11 … MAP-21` | 11 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
-| 3 | `PRIV-01 … PRIV-09` | 9 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 3 | `PRIV-13 … PRIV-22` | 10 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 3 | `PRIV-01 … PRIV-26` | 13 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 3 | `PRIV-13 … PRIV-30` | 14 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 3 | `QA-12 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 3 | `QA-29 … QA-36` | 8 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
-| 3 | `DATA-04 … DATA-05` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
-| 3 | `DATA-16 … DATA-17` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
-| 4 | `REL-01 … REL-10` | 10 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| 3 | `QA-112` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| 3 | `DATA-04 … DATA-16` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| 3 | `DATA-22 … DATA-24` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| 4 | `REL-01 … REL-14` | 14 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
 | 4 | `OPS-21 … OPS-27` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
 | 4 | `PLG-35 … PLG-40` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
 | 4 | `PLG-41 … PLG-46` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 4 | `API-31 … API-35` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
-| 4 | `DATA-02 … DATA-12` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
-| 5 | `SOS-01 … SOS-06` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
-| 5 | `SOS-07 … SOS-15` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| 4 | `QA-113` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| 4 | `DATA-02 … DATA-18` | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| 4 | `DATA-26` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| 5 | `SOS-01 … SOS-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| 5 | `SOS-07 … SOS-29` | 14 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
 | 5 | `SOS-16 … SOS-20` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
 | 5 | `SOS-21 … SOS-23` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
 | 5 | `SEC-50 … SEC-56` | 7 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
-| 5 | `DATA-06 … DATA-14` | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
-| 5 | `DATA-18 … DATA-19` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| 5 | `DATA-06 … DATA-21` | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| 5 | `DATA-25` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
 | 6 | `NAV-01 … NAV-13` | 13 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
 | 7 | `SEC-29 … SEC-39` | 11 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
 | 7 | `PLG-04 … PLG-14` | 11 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
