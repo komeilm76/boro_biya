@@ -42,12 +42,12 @@ node scripts/gates/phase0.mjs --help
 
 It enforces, in order:
 
-1. **[QA-62]** **Document inventory** — every required document exists, is non-empty, has an H1 title, and is listed in an index (`docs/README.md`, or `docs/user/README.md` for user pages).
-2. **[QA-63]** **Requirement IDs** — every requirement identifier matches `AREA-NN`, is unique across documents, and never appears twice; no identifier is reused.
+1. **[QA-62]** **Document inventory** — every required document exists, is non-empty, has an H1 title, opens with `Owner: <role>. Reviewed: YYYY-MM-DD.`, and is listed in an index (`docs/README.md`, or `docs/user/README.md` for user pages). Where the index states an owner and a date, they must match the document's own header.
+2. **[QA-63]** **Requirement IDs** — every requirement identifier matches `AREA-NN`, is unique across documents, and never appears twice; no identifier is reused; and every identifier **referenced** anywhere in the documentation set resolves to a definition.
 3. **[QA-64]** **Traceability coverage** — every identifier is covered by exactly one row of `docs/development/07-traceability.md`, and the committed file is up to date (`--write` regenerates it).
 4. **[QA-65]** **Internal links** — every relative Markdown link resolves to an existing file, and anchor links resolve to an existing heading in the target file.
 5. **[QA-66]** **Placeholders** — no placeholder markers remain in normative documents (the exact patterns are listed in `scripts/gates/phase0.mjs`).
-6. **[QA-67]** **Audience separation** — clientside user documentation (`docs/user/`) contains no phase numbers, requirement IDs, or ADR references.
+6. **[QA-67]** **Audience separation** — client-facing user documentation (`docs/user/`) contains no phase numbers, requirement IDs, or ADR references.
 7. **[QA-68]** **Secret patterns** — no private-key blocks, common token prefixes, or credential-looking assignments anywhere in the repository.
 8. **[QA-116]** **Model coherence** — every data concept introduced by a decision is reflected in the documents that govern it (data model, privacy rules, requirement that promises it), and wording retired by a decision no longer appears anywhere in the documentation set, except where a document quotes it inside inline code to explain the change. Both lists are maintained in `scripts/gates/phase0.mjs`.
 

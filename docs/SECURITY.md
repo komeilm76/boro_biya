@@ -2,6 +2,8 @@
 
 Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles assigned by the documentation gate. Security requirements are acceptance criteria, not optional cleanup.
 
+Owner: Security. Reviewed: 2026-10-13.
+
 ## 1. Security baseline
 
 - **[SEC-01]** Awareness baseline: **OWASP Top 10:2025** (the current released edition; verified 2026-10-13). Verification reference: **OWASP ASVS 5.0.0**, citing requirements in the form `v5.0.0-6.2.1` so a control maps to a specific ASVS version. API-specific review uses the **OWASP API Security Top 10 (2023 edition)** — still the latest published edition as of 2026-10-13; a newer edition must be re-checked before each release.
@@ -17,7 +19,7 @@ Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles assigned b
 | A06 Insecure Design | Threat models (docs/security/), abuse cases, fail-closed defaults, one-claimant invariants |
 | A07 Authentication Failures | §2, §3, PRODUCT_REQUIREMENTS §3 recovery and lockout |
 | A08 Software or Data Integrity Failures | Signed releases/artifacts, plugin signatures, migration integrity, no unsigned updates |
-| A09 Security Logging and Alerting Failures | §9 audit events, structured logs, alerting on authentication anomalies |
+| A09 Security Logging and Alerting Failures | §9 audit events, structured logs, and alerting with the coverage required by SEC-60 (authentication anomaly rates, repeated authorization failures, rate-limit saturation, upload rejections, plugin health failures, replication/backup failures) |
 | A10 Mishandling of Exceptional Conditions | Fail-closed error handling, uniform error shapes, no partial writes, bounded retries, explicit timeouts, no internal detail leakage |
 
 - **[SEC-03]** Fail-closed is the default: any control that cannot evaluate its condition (plugin unhealthy, permission lookup error, signature check inconclusive) denies the action and logs a safe diagnostic instead of allowing it.

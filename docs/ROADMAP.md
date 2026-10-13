@@ -2,6 +2,8 @@
 
 Phases are sequential. Each phase ends with recorded evidence, not a status claim, and the repository owner approves the transition. Requirement identifiers referenced below are defined in the registry documents and mapped to phases in [traceability](development/07-traceability.md). The gate catalogue that each phase must run is in [CI and gates](development/03-ci-and-gates.md).
 
+Owner: Repo owner. Reviewed: 2026-10-13.
+
 ## Phase 0 — Repository foundation and documentation
 
 **Status: complete, awaiting owner approval (2026-10-13).**
@@ -22,6 +24,7 @@ Deliverables and evidence:
 | Requirement identifiers with full phase coverage | [traceability](development/07-traceability.md), generated and verified by the documentation gate |
 | Phase gate checklist, runnable locally and in CI | [phase gate checklist](development/05-phase-gate-checklist.md); `node scripts/gates/phase0.mjs` |
 | Privacy defaults, release plan, performance policy | [SECURITY](SECURITY.md) §5, [release plan](development/06-release-plan.md), [performance](performance/README.md) |
+| Documentation reviewed for defects, not only for structure | [Phase 0 review record](development/08-phase-0-review.md) — two passes, with the defects, the fixes, and the gate evidence |
 
 Exit gate: documentation reviewed by the owner; every critical design question either resolved or explicitly deferred with owner, phase, and risk (see [DECISIONS](DECISIONS.md) open-questions table); documentation gates pass locally and in CI; no feature implementation present. Per [ADR-010](DECISIONS.md#adr-010--phase-0--phase-1-gate-boundary), the Phase 0 CI job runs documentation gates only.
 
@@ -29,25 +32,25 @@ Exit gate: documentation reviewed by the owner; every critical design question e
 
 Deliver: workspace and package setup with pinned dependencies and a committed lockfile; minimal Vue application, Fastify API, PostgreSQL migration framework, and the two service skeletons; Docker-based startup on Windows and Linux; liveness/readiness endpoints; structured logging; validated configuration; strict TypeScript; test examples; application CI (format, lint, typecheck, unit, integration); the Bun-versus-Node runtime spike ([Q-16](DECISIONS.md#open-questions)); performance budget definitions ([Q-12](DECISIONS.md#open-questions)).
 
-Exit gate: a clean clone starts and passes every gate active in Phase 1 using only the documented commands, on both Windows and Linux; the runtime decision is recorded; no authentication or map features exist yet.
+Exit gate: a clean clone starts and passes every gate active in Phase 1 using only the documented commands, on both Windows and Linux; the runtime decision (Q-16) is recorded and load-test budgets (Q-12) are defined; no authentication or map features exist yet.
 
 ## Phase 2 — Authentication and account lifecycle
 
 Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; authentication and negative-case tests; OpenAPI contract for auth endpoints.
 
-Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; decisions Q-01 … Q-05 and Q-14 (user data) resolved.
+Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; decisions Q-01 … Q-05, Q-14 (user data), and Q-17 (role model) resolved.
 
 ## Phase 3 — Map foundation and user settings
 
 Deliver: MapLibre map, provider adapters with documented terms and attribution, address search and manual coordinates, permission UX, location display, theme, locale, and accessibility settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)).
 
-Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in, and a default build shares nothing; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15, Q-18 resolved.
+Exit gate: denied-permission, unavailable-GPS, and manual-coordinate flows work; no location is shared without explicit opt-in, and a default build shares nothing; provider terms review recorded; decisions Q-06, Q-10 (map/search), Q-15 resolved and the stronger-recovery build permitted by Q-05 either implemented or explicitly deferred with the owner's agreement.
 
 ## Phase 4 — Relation Service
 
 Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences, time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates, and the location-sharing settings screens (remaining time per grant, "end now", history window, delete history, access list).
 
-Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; the geospatial decision is implemented and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
+Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; ADR-004 (realtime transport) is accepted and ADR-005 (geospatial) is decided, implemented, and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
 
 ## Phase 5 — SOS Service
 
@@ -59,7 +62,7 @@ Exit gate: concurrent claim tests prove exactly one assignee; task-transition an
 
 Deliver: routing provider adapter, car/bicycle/foot alternatives, route selection, navigation UI, instructions and voice where supported, distance and ETA, speed limits and traffic only when licensed provider data exists.
 
-Exit gate: documented provider limits with graceful fallback; mobile performance measured against the Phase 1 budgets; no fabricated data (speed limits, traffic, instructions) anywhere in the UI.
+Exit gate: documented provider limits with graceful fallback; mobile performance measured against the Phase 1 budgets; no fabricated data (speed limits, traffic, instructions) anywhere in the UI; Q-10 resolved for routing, traffic, and speed-limit providers.
 
 ## Phase 7 — Secure plugin lifecycle
 
@@ -77,7 +80,7 @@ Exit gate: supported device/OS matrix and measured resource targets documented; 
 
 Deliver: release artifacts with checksums, SBOM where practical, changelog, migration plan, backups, monitoring/alerts, rollback plan, incident-response guide, security review with a resolved or accepted risk register.
 
-Exit gate: no unresolved critical findings; production readiness sign-off by the owner; release candidate passes the full gate set on the exact tagged commit.
+Exit gate: no unresolved critical findings; Q-14 (audit retention, deletion, and export obligations) resolved; production readiness sign-off by the owner; release candidate passes the full gate set on the exact tagged commit.
 
 ## Phase reporting format
 

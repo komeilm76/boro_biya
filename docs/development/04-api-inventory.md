@@ -2,6 +2,8 @@
 
 Planned endpoints, grouped by area, with the access level and the phase that delivers them. This is a planning inventory: nothing here exists yet. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are not part of this inventory and are documented in [ARCHITECTURE](../ARCHITECTURE.md) §8.
 
 ## 1. Authentication and account lifecycle (Phase 2)
@@ -80,6 +82,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | DELETE | `/relation/live-shares/:viewerId` | auth | Revokes one follower's grant inside the active session; that stream closes; audited |
 | GET | `/relation/live-shares` | auth | Active session with its grants, plus sharing history (when, with whom, how long, end reason); paginated, rate-limited |
 | PUT | `/relation/preferences` | auth | Master switches for live, last-known, and history sharing |
+| GET | `/streams/events` (see §6) | auth/Ticket | Live location updates reach a granted viewer over the authenticated event stream: the subscription is authorized against the active grant and **closed** when the grant ends (OPS-24, OPS-27) |
 | GET | `/relation/history-shares` | auth | Followers currently granted history access and their windows |
 | PUT | `/relation/history-shares` | auth | Replace the granted follower list and the retention window (bounded by the server maximum); audited |
 | DELETE | `/relation/history-shares/:viewerId` | auth | Revoke one follower's history access; effective immediately, re-authorized per request |
@@ -137,6 +140,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | GET | `/internal/identity/users/:id` | internal | Minimal identity lookup; scoped service token |
+| POST | `/internal/categories/assignments` | internal | Batch lookup of assistance categories for a bounded candidate user set; used by SOS dispatch matching (OPS-80); scoped service token, audited |
 | POST | `/internal/events` | internal | Outbox/event delivery with idempotent consumption |
 | GET | `/internal/capabilities` | internal | Effective capability set for the calling service identity |
 

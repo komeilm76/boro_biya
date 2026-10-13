@@ -2,6 +2,8 @@
 
 ## 1. Design goals
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 Plugins add capabilities without coupling their release cycle to the core.
 
 - **[PLG-01]** **Relation Service** and **SOS Service** are the first two services. Per [ADR-012](DECISIONS.md#adr-012--relation-and-sos-are-first-party-services-not-third-party-plugins) they are **first-party** services: shipped from this repository, reviewed as source, deployed from `.env`-driven configuration, and never uploaded as untrusted ZIP packages. They MUST follow the API, permission, health, versioning, and failure contracts defined here, because those contracts are what the plugin boundary will later generalise.
@@ -60,7 +62,7 @@ A ZIP upload MUST NEVER cause arbitrary code to run with core API, host, or data
 
 Plugin lifecycle states: `uploaded`, `validating`, `staged`, `installed`, `disabled`, `failed`, `uninstalling`, `uninstalled`. These are persisted per installation (see [DATA_MODEL](DATA_MODEL.md) `plugin_installations`) and transition only through server-side validated operations; a transition records the actor, prior state, new state, digest, and request ID.
 
-- **[PLG-35]** Services expose versioned health/readiness endpoints and documented APIs under their own version prefix (`/api/v1`).
+- **[PLG-35]** Services expose versioned health/readiness endpoints and documented APIs under the shared version prefix `/api/v1`, each in its own path group (`/relation/*`, `/sos/*`).
 - **[PLG-36]** Service-to-service calls are authenticated with a service identity: mutual TLS or short-lived signed service tokens with an explicit audience and scope. A service token never authorizes a user-facing action on behalf of an arbitrary user.
 - **[PLG-37]** Calls have explicit timeouts, bounded retries with backoff, and circuit breaking where a dependency failure would otherwise cascade.
 - **[PLG-38]** Retried operations require idempotency: non-idempotent operations such as task claims are never retried without an idempotency key.
@@ -91,9 +93,11 @@ Third-party and first-party services declare capabilities from a closed vocabula
 | --- | --- | --- |
 | `users.read.basic` | Read a user's public profile fields by ID | Never includes location, sessions, or security data. |
 | `relationships.read` | Read accepted relationships for a user | Requires the user's relationship context. |
+| `categories.read.assignment` | Read a user's assistance category and its verification state | Used for dispatch matching; never exposes a user's category as a public listing. |
 | `relationships.write` | Create/respond to follow requests, block | Subject to user privacy settings. |
 | `locations.read.consented` | Read a user's location: **live** values require an active time-boxed grant naming the requesting user, **last-known** values require an accepted relationship and the owner's last-known preference, and both require the owner's consent | Fails closed when the relationship, consent, or (for live values) the grant is missing. |
 | `locations.publish.self` | Publish the publishing user's own coordinates | Requires an active session with at least one grant; recording into history additionally requires the history-sharing setting. |
+| `locations.read.history` | Read a user's recorded trail | Requires an active history grant naming the requesting user and stays inside that grant's window; never bulk-exportable. |
 | `notifications.write` | Create persisted notifications for a user | Payload limited to the documented envelope. |
 | `sos.read.assigned` | Read SOS alerts assigned to the caller | Field-level filtering applies. |
 | `sos.dispatch` | Suggest and assign responders | Admin-only capability. |

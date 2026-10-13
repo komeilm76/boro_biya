@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Baseline verified: **2026-10-13**. Next scheduled re-verification: Phase 1 start, then each phase boundary.
+Owner: Engineering. Reviewed: 2026-10-13. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
 
 ## 1. Principles
 

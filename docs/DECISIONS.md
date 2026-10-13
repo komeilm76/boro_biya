@@ -2,6 +2,8 @@
 
 Decisions are recorded here, never inferred from code. An open question is never silently converted into a permanent assumption.
 
+Owner: Repo owner. Reviewed: 2026-10-13.
+
 ## Status vocabulary
 
 | Status | Meaning |
@@ -9,6 +11,7 @@ Decisions are recorded here, never inferred from code. An open question is never
 | `Proposed` | Written down and ready for owner review; not yet binding. |
 | `Accepted` | Binding. Changes require a superseding ADR. |
 | `Accepted (mandatory)` | Binding security/product constraint from the security baseline; weakening it requires explicit owner risk acceptance with an expiry. |
+| `Accepted (owner decision, YYYY-MM-DD)` | Binding; the repository owner made the call personally on that date. Used where the decision needed the owner rather than an engineering default. |
 | `Deferred` | Deliberately not decided yet, with a named phase and owner. |
 | `Superseded by ADR-xxx` | Kept for history; the newer ADR governs. |
 
@@ -16,7 +19,7 @@ Decisions are recorded here, never inferred from code. An open question is never
 
 ```text
 ### ADR-0NN — <short title>
-**Status:** Proposed | Accepted | Accepted (mandatory) | Deferred | Superseded by ADR-0NN
+**Status:** Proposed | Accepted | Accepted (mandatory) | Accepted (owner decision, YYYY-MM-DD) | Deferred | Superseded by ADR-0NN
 **Date:** YYYY-MM-DD  **Owner:** <role>
 **Context:** <the forces, constraints, and evidence that make a decision necessary>
 **Decision:** <what is decided, in one or two sentences, using MUST/SHOULD per README>
@@ -49,13 +52,13 @@ Decisions are recorded here, never inferred from code. An open question is never
 **Status:** Accepted (mandatory)  
 **Date:** 2026-10-13  **Owner:** Repo owner  
 **Context:** Location is sensitive personal data, and a "share with followers" feature is the highest-risk data flow in the product.  
-**Decision:** Live sharing is off by default and requires both an accepted relationship and an explicit per-user sharing setting. **Live publication additionally requires an active, time-boxed sharing session the owner starts** ([ADR-013](#adr-013--live-location-sharing-is-a-time-boxed-session)). Last-known coordinates are labelled with timestamp and accuracy, expire per retention policy, and are never presented as live. A **history trail is supported only through explicit history sharing** ([ADR-014](#adr-014--location-history-sharing-is-opt-in-and-retention-bounded)). Publishing stops promptly on session expiry or revoke, opt-out, unfollow, or block.  
-**Alternatives considered:** Opt-out model with sharing on by default (rejected: violates consent-based sharing); sharing with all authenticated users (rejected: no privacy model); always-on live sharing while the toggle is on (rejected: the owner cannot limit how long they are exposed — see ADR-013).  
-**Consequences:** Location ranking/notification features must tolerate the common case where most users share nothing; the UI must state absence of sharing rather than implying presence, and must show how much session time remains.  
-**Revisit when:** Not planned; retention specifics are refined by [Q-06](#open-questions) and [Q-22](#open-questions).
+**Decision:** Live sharing is off by default, and no relationship implies access. **Live publication requires an explicit, time-boxed grant that names the individual follower receiving it** ([ADR-013](#adr-013--live-location-sharing-is-a-time-boxed-session)); there is no follower-wide live stream. Last-known coordinates follow the accepted relationship plus the owner's last-known preference, are labelled with timestamp and accuracy, expire per retention policy, and are never presented as live. A **history trail is supported only through explicit per-follower history sharing** ([ADR-014](#adr-014--location-history-sharing-is-opt-in-and-retention-bounded)). Publishing stops promptly on grant expiry or revoke, session end, opt-out, unfollow, or block.  
+**Alternatives considered:** Opt-out model with sharing on by default (rejected: violates consent-based sharing); sharing with all authenticated users (rejected: no privacy model); an indefinite toggle with a follower-wide audience (rejected: the owner cannot limit how long they are exposed, and a follower accepted once would keep receiving positions — see ADR-013).  
+**Consequences:** Location ranking/notification features must tolerate the common case where most users share nothing; the UI must state absence of sharing rather than implying presence, and must show, per follower, how much time remains on that follower's grant.  
+**Revisit when:** Not planned. Retention specifics are refined by [Q-06](#open-questions) and [Q-22](#open-questions); the grant model itself is refined by [ADR-013](#adr-013--live-location-sharing-is-a-time-boxed-session).
 
 ### ADR-004 — Realtime transport
-**Status:** Proposed  
+**Status:** Proposed — binding only after owner acceptance; Phase 4 must not start with it open (it is named in the Phase 4 exit criteria).  
 **Date:** 2026-10-13  **Owner:** Engineering  
 **Context:** Most realtime needs are one-way feeds (SOS status, notification updates, admin dashboards). WebSocket infrastructure costs more to operate, secure, and load-test.  
 **Decision:** Use SSE for one-way server-to-client feeds, and add Socket.IO/WebSocket only where bidirectional low-latency behaviour is required and justified in a new ADR. Authenticate and authorize every subscription and re-check on permission change.  
@@ -73,8 +76,8 @@ Decisions are recorded here, never inferred from code. An open question is never
 **Revisit when:** The Phase 4 prototype provides numbers.
 
 ### ADR-006 — API contract source of truth and OpenAPI dialect
-**Status:** Proposed  
-**Date:** 2026-10-13  **Owner:** Engineering  
+**Status:** Accepted (owner decision, 2026-10-13)  
+**Date:** 2026-10-13  **Owner:** Repo owner  
 **Context:** The pack requires OpenAPI 3.1 as the public contract and the project tools (`km-api`, `zopia`) where verified. Verification on 2026-10-13 showed: `km-api@0.4.1` is an endpoint/schema builder documented as **OpenAPI 3.0** compatible with a peer dependency on `zod ^4.3.6`; `zopia@0.7.1` converts between Swagger 2.0 / OpenAPI 3.0.x / 3.1.x, JSON Schema, and Zod v4, depends on `km-api ^0.4.1` and `zod ^4.0.0`, and its reverse conversion defaults to OpenAPI 3.1. Neither tool is a Fastify plugin; both are schema/contract tooling.  
 **Decision:** TypeScript endpoint definitions plus Zod v4 schemas are the single source of truth. The published contract is generated to **OpenAPI 3.1** by `zopia`, and CI validates it with the OpenAPI validator plus `zopia validate`/`zopia diff`. If a required construct cannot be represented in 3.1 without loss (nullable vs optional, discriminators, recursive schemas, `additionalProperties`, binary uploads), the loss is recorded as a fixture and regression test; the generator is fixed or the construct is expressed differently — never silently degraded. If 3.1 fidelity cannot be achieved for a construct the API needs, the fallback is an OpenAPI 3.0.3 document plus an explicit note in the API reference, and that fallback requires owner acknowledgement.  
 **Alternatives considered:** Hand-written OpenAPI document as source of truth (rejected: drifts from validation code); OpenAPI 3.0 as the default output (rejected: 3.1 aligns with JSON Schema 2020-12, which is what Zod emits); dropping the project tools (rejected: they are requested and verified to exist and work with Zod v4).  
@@ -82,8 +85,8 @@ Decisions are recorded here, never inferred from code. An open question is never
 **Revisit when:** Either tool changes its supported inputs, or a required construct fails the fidelity fixtures twice.
 
 ### ADR-007 — Runtime and toolchain baseline
-**Status:** Proposed  
-**Date:** 2026-10-13  **Owner:** Engineering  
+**Status:** Accepted (owner decision, 2026-10-13)  
+**Date:** 2026-10-13  **Owner:** Repo owner + Engineering  
 **Context:** The pack prefers Bun "where compatibility is verified" and requires exact, verified versions. Verification on 2026-10-13: Node 24 is Active LTS (maintenance from 2026-10-20), Node 26 becomes Active LTS on 2026-10-28; Vitest 5 requires `^22.12 || ^24 || >=26`; Vite 8 requires `^20.19 || >=22.12`; VueUse 15 requires `>=22`; ESLint 10 requires `^20.19 || ^22.13 || >=24`; `typescript-eslint@8` accepts `typescript >=4.8.4 <6.1.0`, so npm's `typescript@latest` (7.0.2) is **outside** the supported peer range. Bun 1.4.x provides built-in Argon2id (`Bun.password`), removing a native dependency from the security-critical password path.  
 **Decision:** Node.js 24 LTS is the baseline runtime for repository tooling and CI, and the guaranteed compatibility target for every workspace. Bun 1.4.x is the preferred package manager and script runner. Whether the API/services **run** on Bun in production is [Q-16](#open-questions); until that is answered, all application code must run correctly on Node 24 and must not depend on Bun-only APIs, except behind an explicitly swapped adapter (password hashing, for example). TypeScript is pinned to the 6.0.x line, not 7.x, until `typescript-eslint` supports it.  
 **Alternatives considered:** Node-only toolchain (simpler, loses Bun's speed and built-in Argon2id); TypeScript 7 (rejected for now: unsupported peer range); Bun-only (rejected until the compatibility spike proves the full toolchain).  
@@ -100,7 +103,7 @@ Decisions are recorded here, never inferred from code. An open question is never
 **Revisit when:** Multiple replicas are needed for availability or capacity, or a measured requirement justifies a shared store.
 
 ### ADR-009 — UI framework strategy for web and Android
-**Status:** Proposed  
+**Status:** Accepted (owner decision, 2026-10-13)  
 **Date:** 2026-10-13  **Owner:** Repo owner  
 **Context:** The pack lists Vuetify, Tailwind, Ionic Vue, and Capacitor together and asks to "share the Vue application where practical". Vuetify (Material components with its own SASS utilities), Tailwind (utility CSS with preflight resets), and Ionic (mobile components with their own theming and router expectations) overlap in styling, layout, and navigation. Combining all three in one application produces specificity conflicts, duplicated theming, larger bundles, and ambiguous ownership of component behaviour.  
 **Decision:** The web/PWA application is built with **Vuetify + Tailwind** (Vuetify for components, Tailwind for layout utilities, with preflight scoped so it cannot reset Vuetify's base). Ionic Vue is used **only** in the Android shell and only for native-shell affordances (safe areas, navigation transitions, hardware-back handling, native plugin integration) plus Capacitor APIs; shared product screens stay framework-neutral Vue components and are rendered by both hosts. If the Phase 8 spike shows that the split costs more than it saves, the fallback is a Capacitor-only Android build without Ionic, or an Ionic-only mobile UI sharing only stores/contracts with the web app — the choice must be recorded as a superseding ADR with bundle-size and maintenance evidence.  
@@ -157,7 +160,7 @@ Decisions are recorded here, never inferred from code. An open question is never
 **Status:** Accepted (mandatory)  
 **Date:** 2026-10-13  **Owner:** Repo owner  
 **Context:** Location alone is a weak dispatch filter: the nearest person is often the wrong person. The owner asked for a user attribute (category) that every SOS alert also carries, so suggestions go only to users whose categories match the alert.  
-**Decision:** A server-owned, admin-managed catalogue (`categories`) is added, and **each user holds exactly one category** (`user_categories`, unique per user). Every alert carries one or more active categories, snapshotted on the alert. Dispatch eligibility requires the user's category to be among the alert's categories, checked **before** distance ordering; category membership never grants authorization, and a category that requires verification only satisfies dispatch once an administrator has verified that user's membership. Catalogue and membership changes are audited and only affect future dispatch.  
+**Decision:** A server-owned, admin-managed catalogue (`categories`) is added, and **each user holds exactly one category** (`user_categories`, unique per user). Every alert carries one or more active categories, recorded on the alert by reference to the catalogue (categories are deactivated rather than deleted, so the alert stays resolvable and auditable). Dispatch eligibility requires the user's category to be among the alert's categories, checked **before** distance ordering; category membership never grants authorization, and a category that requires verification only satisfies dispatch once an administrator has verified that user's membership. Catalogue and membership changes are audited and only affect future dispatch.  
 **Alternatives considered:** Free-text skills (rejected: unqueryable, spoofable, no admin governance); multiple categories per user (rejected by the owner in favour of exactly one, which keeps matching and accountability unambiguous); category as a plugin-provided taxonomy (rejected for v1: dispatch is core SOS behaviour, see [ADR-012](#adr-012--relation-and-sos-are-first-party-services-not-third-party-plugins)); category-as-role (rejected: roles are exactly `admin`/`user` — see [ADR-016](#adr-016--exactly-two-roles-category-membership-is-not-a-role)).  
 **Consequences:** Dispatch can now legitimately return nobody even with many users nearby; the UI and admin view must explain "no matching category" rather than silently showing an empty list, and the dispatch query in [ARCHITECTURE](ARCHITECTURE.md) must carry the match filter.  
 **Revisit when:** Phase 5, if matching needs weighting, multi-category scoring, or per-category radii.
@@ -195,7 +198,7 @@ Each question has an owner and a phase by which it must be answered. Deferring a
 | Q-15 | Which languages are required for the first release (and therefore is RTL required immediately)? | Repo owner | Phase 3 | Layout, i18n tooling, and font choices are reworked late. |
 | Q-16 | Do the API and services run on Bun in production, or on Node 24 LTS with Bun as the toolchain? | Engineering | Phase 1 (spike) | The runtime decision leaks into code that accidentally depends on Bun-only APIs. |
 | Q-17 | Is a single `admin` role sufficient, or are scoped operational roles required? | Repo owner | Phase 2 | Role checks are written twice (once per interpretation) and permissions drift. |
-| Q-18 | UI framework strategy for web and Android — see [ADR-009](#adr-009--ui-framework-strategy-for-web-and-android). | Repo owner | Phase 3 | Component/theming conflicts surface after screens are built. |
+| Q-18 | UI framework strategy for web and Android — **resolved** by [ADR-009](#adr-009--ui-framework-strategy-for-web-and-android) (owner decision, 2026-10-13): Vuetify + Tailwind for web, Ionic Vue only in the Android shell. Kept here for traceability. | Repo owner | Closed | — |
 | Q-19 | Production hosting target (single VM with Docker Compose, managed container platform, or other). | Repo owner | Phase 8 | TLS, secrets, backups, and scaling assumptions are designed for the wrong environment. |
 | Q-20 | Can the followed party remove a follower, and how do blocks interact with pending requests and history? | Repo owner | Phase 4 | Relationship APIs and UI encode a policy that was never agreed. |
 | Q-21 | Maximum live-sharing session duration, the default duration offered in the UI, the maximum number of viewers per session, and whether a per-day share limit applies. | Repo owner | Phase 4 | The time box has no enforceable bound; shares could be effectively permanent or unbounded in audience. |

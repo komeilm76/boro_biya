@@ -7,7 +7,8 @@
  *
  * Checks, in order (see docs/development/03-ci-and-gates.md §3):
  *   1. Document inventory — required documents exist, are non-empty, have an H1 title,
- *      and every document is listed in an index.
+ *      carry an owner and review date, are listed in an index, and the owner and date in
+ *      that index agree with the document header.
  *   2. Requirement IDs — format and uniqueness (delegated to traceability.mjs).
  *   3. Traceability coverage — delegated to traceability.mjs (fails if stale).
  *   4. Internal links — every relative Markdown link resolves, including anchors.
@@ -153,13 +154,45 @@ function checkInventory() {
     const text = read(full);
     if (text.trim().length === 0) failures.push(`[inventory] empty file: ${rel}`);
     if (rel.endsWith('.md') && !/^#\s+\S/m.test(text)) failures.push(`[inventory] no H1 title: ${rel}`);
+    if (rel.endsWith('.md')) checkHeader(rel, text);
   }
   const indexes = ['docs/README.md', 'docs/user/README.md'].map((p) => read(join(ROOT, p))).join('\n');
   for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
     const rel = relative(ROOT, file).split('\\').join('/');
+    if (!REQUIRED_DOCS.includes(rel)) checkHeader(rel, read(file));
     if (rel === 'docs/README.md' || rel === 'docs/user/README.md') continue;
     const asDockerRelative = rel.replace(/^docs\//, '');
     if (!indexes.includes(asDockerRelative)) failures.push(`[inventory] document not listed in an index: ${rel}`);
+  }
+  checkIndexAgreement();
+}
+
+/** The index rows carry an owner and a date column; both must match the document header. */
+function checkIndexAgreement() {
+  const indexText = read(join(ROOT, 'docs', 'README.md'));
+  const rows = indexText.split('\n');
+  for (const line of rows) {
+    const match = /^\|\s*\[([^\]]+)\]\(([^)]+\.md)\)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    if (!match) continue;
+    const [, , rel, , owner, date] = match;
+    const target = join(ROOT, 'docs', rel);
+    if (!existsSync(target)) continue; // the link check reports missing files
+    const text = read(target);
+    const header = /^Owner:\s*(.+?)\.\s*Reviewed:\s*(\d{4}-\d{2}-\d{2})/m.exec(text);
+    if (!header) continue; // checkHeader reports the missing header
+    if (header[1].trim() !== owner.trim()) {
+      failures.push(`[inventory] index owner "${owner.trim()}" does not match "${header[1].trim()}" in docs/${rel}`);
+    }
+    if (date.trim() !== header[2] && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+      failures.push(`[inventory] index date "${date.trim()}" does not match "${header[2]}" in docs/${rel}`);
+    }
+  }
+}
+
+/** GOV-44: every document opens with `Owner: <role>. Reviewed: YYYY-MM-DD.` */
+function checkHeader(rel, text) {
+  if (!/^Owner:[^\n]*Reviewed:\s*\d{4}-\d{2}-\d{2}/m.test(text)) {
+    failures.push(`[inventory] missing "Owner: <role>. Reviewed: YYYY-MM-DD." header: ${rel}`);
   }
 }
 
@@ -332,6 +365,7 @@ if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
   console.log('links, placeholders, audience separation, secrets, model coherence).');
+  console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
 }
@@ -352,7 +386,7 @@ if (failures.length) {
 }
 
 console.log('Phase 0 documentation gate passed:');
-console.log('  1. document inventory complete');
+console.log('  1. document inventory complete; owner and review date on every document, agreeing with the index');
 console.log('  2. requirement identifiers unique and correctly formatted');
 console.log('  3. traceability coverage complete and up to date');
 console.log('  4. internal links and anchors resolve');

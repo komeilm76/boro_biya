@@ -2,6 +2,8 @@
 
 This directory holds performance budgets and the measurements that support them. No performance claim is published anywhere in this project — including in the user guide, release notes, or a pull request description — unless it names the commit, the environment, the dataset, and the exact command that produced it.
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## Rules
 
 - **[QA-107]** A measurement is only valid for the exact commit SHA and configuration it was taken with. Re-measuring after a change is required before reusing the number.

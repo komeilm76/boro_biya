@@ -2,6 +2,8 @@
 
 Supported contributor environments, prerequisites, and the commands that exist at each phase. Commands are marked **available** (verified to work in this repository today) or **planned** (specified here, implemented in the named phase, and not yet runnable).
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## 1. Supported platforms
 
 | Platform | Support level | Notes |

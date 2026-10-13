@@ -2,6 +2,8 @@
 
 Verify all links and current guidance during implementation and before every release. Search results, package versions, and standards editions change.
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## Verification log
 
 | Date | Verified | Result |

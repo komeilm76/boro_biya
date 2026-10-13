@@ -2,13 +2,15 @@
 
 Requirement identifiers (`QA-…`) are permanent handles assigned by the documentation gate. Which gates are active in which phase is defined in [CI and gates](development/03-ci-and-gates.md); a gate that cannot yet run must be declared inactive for that phase rather than reported as passing.
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## 1. Required gates
 
 Run gates locally and in CI. A gate returns a non-zero exit status on failure and is not bypassable through a normal commit or pull request without an approved, audited exception (§6).
 
 | Gate | Purpose | Tool (planned unless noted) |
 | --- | --- | --- |
-| **[QA-01]** Documentation gate — **active now**| Document inventory, requirement-ID uniqueness and coverage, internal links, placeholders, secret patterns, model coherence and retired wording | `node scripts/gates/phase0.mjs` (available today) |
+| **[QA-01]** Documentation gate — **active now**| Document inventory (owner and review date per document, matching the index), requirement-ID uniqueness and reference resolution, coverage, internal links and anchors, placeholders, audience separation, secret patterns, model coherence and retired wording | `node scripts/gates/phase0.mjs` (available today) |
 | **[QA-02]** Formatting check| Consistent formatting | Prettier `--check` (Phase 1) |
 | **[QA-03]** Static lint| Code defects and unsafe patterns | ESLint with Vue and TypeScript plugins (Phase 1) |
 | **[QA-04]** Strict type check| No implicit `any`, no unchecked access | `tsc --noEmit` per workspace with the strict flags in [repository conventions](development/00-repository-conventions.md) §4 (Phase 1) |
@@ -41,7 +43,7 @@ PostgreSQL constraints and transactions, login throttling, lockout windows, reco
 
 ### End-to-end
 
-Registration, first-login setup, login/logout, password change and reset, account lockout, admin user management, follower privacy, SOS creation/dispatch/claim/resolve, plugin install/disable/rollback, and map permission-denied and manual-coordinate flows.
+Registration, first-login setup, login/logout, password change and reset, account lockout, admin user management, follower privacy, live-sharing grant expiry and revoke, history-sharing boundaries, SOS creation and category-matched dispatch/claim/resolve, plugin install/disable/rollback, and map permission-denied and manual-coordinate flows.
 
 ### Accessibility and localisation
 

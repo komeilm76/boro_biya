@@ -2,11 +2,13 @@
 
 Requirement identifiers (`OPS-…`, `MAP-…`) are permanent handles assigned by the documentation gate.
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## 1. High-level topology
 
 Start with:
 
-- **[OPS-01]** **Web/PWA + Android shell**: Vue 3, Vite, Vuetify, Tailwind, Pinia, VueUse, `@vueuse/motion`, MapLibre GL JS, Ionic Vue, Capacitor.
+- **[OPS-01]** **Web/PWA**: Vue 3, Vite, Vuetify + Tailwind, Pinia, VueUse, `@vueuse/motion`, MapLibre GL JS. **Android shell**: Capacitor, with Ionic Vue confined to shell affordances ([DECISIONS](DECISIONS.md) ADR-009).
 - **[OPS-02]** **Core API**: TypeScript + Fastify, organised as a modular monolith.
 - **[OPS-03]** **Relation Service**: independently deployable TypeScript/Fastify service with its own bounded domain and API.
 - **[OPS-04]** **SOS Service**: independently deployable TypeScript/Fastify service with its own bounded domain and API.

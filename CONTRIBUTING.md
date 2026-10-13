@@ -2,6 +2,8 @@
 
 Thanks for helping. The full rules live in the documentation; this file is the short path to them.
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 ## Before you start
 
 1. Read [docs/MASTER_PROJECT_PROMPT.md](docs/MASTER_PROJECT_PROMPT.md) — it defines the mission, the technology direction, and the engineering rules.

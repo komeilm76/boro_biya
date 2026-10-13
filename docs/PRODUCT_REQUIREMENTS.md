@@ -2,6 +2,8 @@
 
 Requirement identifiers (`AUTH-…`, `SOS-…`) are permanent handles assigned by the documentation gate; they are never renumbered or reused. See [repository conventions](development/00-repository-conventions.md) §7 and the [roadmap](ROADMAP.md) for the phase in which each requirement must be delivered.
 
+Owner: Repo owner. Reviewed: 2026-10-13.
+
 ## 1. Roles and access
 
 - **[ADM-01]** Exactly two roles exist: `admin` and `user` ([DECISIONS](DECISIONS.md) ADR-016). No sub-roles are introduced in v1. Assistance-category membership (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary.
@@ -38,7 +40,7 @@ Infrastructure endpoints are **not** client routes and are documented in [ARCHIT
 
 ### Registration
 
-- **[AUTH-07]** Fields: username, password, repeat password, CAPTCHA.
+- **[AUTH-07]** Fields: username, password, repeat password, the five security questions with exactly one answer each ([AUTH-10](#3-authentication-and-account-recovery)), and CAPTCHA.
 - **[AUTH-08]** Password policy is validated server-side (length and composition rules, rejection of known-breached and trivially guessable passwords) and mirrored client-side for usability only.
 - **[AUTH-09]** Username is normalized before storage and uniqueness checks use the normalized form ([DATA_MODEL](DATA_MODEL.md) invariant 1). The normalization policy version is stored with the account.
 - **[AUTH-10]** Five distinct security questions are selected from a static, server-owned question catalogue, with exactly one answer per question. Duplicate question IDs are rejected.
@@ -92,13 +94,15 @@ Effective access rule: a session may be created only when `account_status = acti
 
 ## 4. Map and location
 
+The provider-adapter requirements (`MAP-11` … `MAP-21`: tiles, geocoding, routing, traffic, voice, attribution, privacy, credentials, degraded mode) are defined in [ARCHITECTURE](ARCHITECTURE.md) §4 and are delivered with the map work below.
+
 - **[MAP-01]** After login/setup, the map is the primary user experience.
 - **[MAP-02]** GPS/location permission is requested only when the user invokes a location-dependent feature or enables live sharing — never on page load.
 - **[MAP-03]** The UI reflects the real permission state reported by the platform and never claims the app can override a denied permission.
 - **[MAP-04]** Requesting location must handle: permission denied, permission dismissed, GPS unavailable, timeout, stale fix, and inaccurate coordinates (accuracy worse than the configured threshold is shown as approximate and must not be presented as precise).
 - **[MAP-05]** Manual coordinate selection is always available as an alternative to device location, and manually entered coordinates are labelled as such.
 - **[MAP-06]** Live location and last-known location are visually and textually distinct. Last-known location always shows its timestamp (and accuracy when available) and MUST NOT be presented as current.
-- **[MAP-07]** Location sharing is off by default and is visible only to accepted followers according to explicit per-user settings.
+- **[MAP-07]** Location sharing is off by default and no relationship implies access: live coordinates are visible only to followers the owner has explicitly granted, and last-known coordinates only to accepted followers while the owner's last-known preference is on ([DECISIONS](DECISIONS.md) ADR-013).
 - **[MAP-08]** A clear disable/revoke control is available, and publishing of new live coordinates stops promptly (target: within one server publish interval) after disabling.
 - **[MAP-09]** Live location is published only to **individually selected followers**, each under a **time-boxed grant**: the owner chooses who receives the share and for how long (bounded by a server maximum), and the UI shows the remaining time per follower. There is no blanket "all followers" live stream. Grants expire automatically without further user action and any one of them can be ended immediately. A grant never renews or chains silently.
 - **[MAP-10]** The user can review their own sharing history — when they shared, with whom, and for how long — and starting shares is rate-limited so that record cannot be flooded.
@@ -137,13 +141,13 @@ All accounts are private by default.
 - **[REL-05]** Blocking is a first-class relationship that terminates access in both directions, cancels pending requests, and hides the blocked user from search results and from location/notification delivery. Block records are retained even if the relationship is later deleted, to prevent immediate re-request abuse.
 - **[REL-06]** Relationship state changes (accept, reject, unfollow, block, unblock) invalidate cached authorization immediately; a revoked relationship MUST NOT continue to receive location updates.
 - **[REL-07]** User preferences: enable/disable live location grants; enable/disable last-known location sharing; enable/disable history sharing.
+- **[REL-08]** Location-sharing settings are available only when the Relation Service is installed and healthy. If the service is unavailable, private location data fails closed (no sharing, no implied follower access).
+- **[REL-09]** Last-known sharing applies when live sharing is off, is labelled as not live with its timestamp, is subject to the retention policy, and MUST NOT silently publish stale coordinates as current.
+- **[REL-10]** Location queries are always scoped to an authorized relationship and requested by the viewer; the service never broadcasts a user's position to unrelated clients.
 - **[REL-11]** A follower sees a live position only while a grant **to that follower** is active **and** the relationship is still accepted. The grant ends on revoke, expiry, unfollow, block, disabling sharing, or service unavailability.
 - **[REL-12]** When history sharing is enabled, only the followers the owner has explicitly granted can view the recorded trail inside the retention window, with timestamps and accuracy. The trail is paginated, never bulk-exportable, and never visible to anyone else.
 - **[REL-13]** The owner can see which follower currently has access to their live or historical location, and revoking a single grant takes effect immediately, including for already-open streams.
 - **[REL-14]** History access ends the moment the grant is revoked, the relationship ends, sharing is disabled, or the retention window passes. Viewer access is re-checked per request and never cached beyond the request.
-- **[REL-08]** Location-sharing settings are available only when the Relation Service is installed and healthy. If the service is unavailable, private location data fails closed (no sharing, no implied follower access).
-- **[REL-09]** Last-known sharing applies when live sharing is off, is labelled as not live with its timestamp, is subject to the retention policy, and MUST NOT silently publish stale coordinates as current.
-- **[REL-10]** Location queries are always scoped to an authorized relationship and requested by the viewer; the service never broadcasts a user's position to unrelated clients.
 
 ## 7. SOS Service
 
@@ -168,10 +172,10 @@ All accounts are private by default.
 - **[SOS-13]** A task can be claimed by exactly one user. This is enforced by a database constraint or transaction, not by frontend logic, and repeated claim requests are protected by an idempotency key.
 - **[SOS-14]** Whether a single alert may later support more than one concurrent responder task is an open decision ([DECISIONS](DECISIONS.md) Q-09). v1 delivers exactly one active task per alert, and no schema, API, or UI shortcut may pre-judge the future answer.
 - **[SOS-15]** Suggestions expire after a configured window and expired suggestions cannot be accepted afterwards.
-- **[SOS-25]** Dispatch eligibility requires a **category match**: a user is suggested only if their category is among the categories the alert carries — and, where that category requires verification, only with a verified membership. A user inside the radius without a matching category is never suggested.
+- **[SOS-25]** Dispatch eligibility requires a **category match**: a user is suggested only if their category is among the categories the alert carries — and, where that category requires verification, only when that user's category is verified. A user inside the radius whose category the alert does not carry is never suggested.
 - **[SOS-26]** Category matching is applied before distance ranking, and the dispatch view shows which category matched, so the admin can see why each user was suggested.
-- **[SOS-27]** Each user holds **exactly one** assistance category (`user_categories`, unique per user) and may change it; changes are audited and rate-limited. A category flagged as requiring verification stays unverified for that user until an administrator verifies it, and only a verified membership satisfies such a category for dispatch.
-- **[SOS-28]** Catalogue changes (create, rename, deactivate) and membership changes (add, remove, verify) are audited, affect future dispatch only, and never grant authorization by themselves.
+- **[SOS-27]** Each user holds **exactly one** assistance category (`user_categories`, unique per user) and may change it; changes are audited and rate-limited. A category flagged as requiring verification stays unverified for that user until an administrator verifies it, and only a verified category satisfies such an alert for dispatch.
+- **[SOS-28]** Catalogue changes (create, rename, deactivate) and assignment changes (set, change, clear, verify) are audited, affect future dispatch only, and never grant authorization by themselves.
 - **[SOS-29]** Deactivating a category preserves the recorded category on existing alerts for audit, while new alerts can no longer select it.
 
 ### Task states

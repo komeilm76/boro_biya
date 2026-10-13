@@ -2,6 +2,8 @@
 
 ## 1. Contract-first policy
 
+Owner: Engineering. Reviewed: 2026-10-13.
+
 - **[API-01]** The published API contract is **OpenAPI 3.1.x**, produced from a single source of truth and validated in CI.
 - **[API-02]** Every public endpoint defines method, path, authentication, authorization, request schema, response schema, error responses, pagination, and examples where useful, plus its requirement IDs.
 - **[API-03]** Verification performed on 2026-10-13 (see [REFERENCES](REFERENCES.md) for the full log):

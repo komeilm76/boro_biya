@@ -2,6 +2,8 @@
 
 This guide is for people who use Boro_biya. It is written to be understood without technical background, and it explains both what the app does and what it cannot do.
 
+Owner: Product. Reviewed: 2026-10-13.
+
 **Current status:** no public build has been released yet, so none of the features below are available to use today. This guide is being written ahead of the release so that the wording, limits, and safety statements are reviewed before users depend on them. Pages are only published for features that exist in a released build, and a feature is never described as available before it is.
 
 ## Contents
@@ -31,12 +33,12 @@ This guide is for people who use Boro_biya. It is written to be understood witho
 - Removing a follower and unfollowing someone.
 - Blocking someone and what blocking does.
 - Turning the live location sharing *preference* on and off, and why that alone shares nothing.
-- Starting a live sharing session, choosing how long it lasts, watching the remaining time, and ending it immediately.
+- Choosing exactly which followers receive a timed location share, how long each share lasts, watching the remaining time per follower, and ending one share or all of them immediately.
 - Sharing only your last known location, and understanding its age.
 - Turning location history sharing on or off, choosing a retention window, seeing your recorded trail, and deleting it.
 - Seeing exactly who can currently see your live or historical location, and stopping their access.
-- Choosing your assistance categories, what verification means, and why categories decide who is asked for help.
-- Deciding whether you want to receive assistance suggestions at all, and how categories narrow them.
+- Choosing your assistance category, what verification means, and why your category decides which requests you are asked to help with.
+- Deciding whether you want to receive assistance suggestions at all, and how your category narrows them.
 - What happens when a feature is temporarily unavailable.
 
 ### Asking for help and helping others
