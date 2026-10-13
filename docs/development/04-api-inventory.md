@@ -30,14 +30,15 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | GET | `/users/me` | auth | Own profile and effective preferences |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
 | GET | `/users/me/preferences` | auth | Theme, locale, notification channels, SOS suggestion opt-in |
-| GET | `/users/me/categories` | auth | Own assistance-category memberships with verification state |
-| PUT | `/users/me/categories` | auth | Replace own memberships within the configured maximum; unknown or inactive categories rejected; audited |
+| GET | `/users/me/category` | auth | Own assistance category with its verification state |
+| PUT | `/users/me/category` | auth | Set the single category (changing is allowed, rate-limited); unknown or inactive categories rejected; audited |
 | GET | `/categories` | auth | Active catalogue for selection UIs (key, localised label, verification requirement) |
 | GET | `/admin/categories` | admin | Full catalogue including inactive entries |
 | POST | `/admin/categories` | admin | Create a category; audited |
 | PATCH | `/admin/categories/:id` | admin | Rename, reorder, (de)activate, set verification requirement; deactivation blocks new selection and keeps history |
 | POST | `/admin/users/:id/categories/:categoryId/verify` | admin | Mark a membership verified; audited |
-| DELETE | `/admin/users/:id/categories/:categoryId` | admin | Remove a membership; audited |
+| PUT | `/admin/users/:id/category` | admin | Set or clear another user's category (for example when verification is required); audited |
+| DELETE | `/admin/users/:id/category` | admin | Clear a user's category; audited |
 | PUT | `/users/me/preferences` | auth | Validated against schema; audited when a privacy-relevant value changes |
 | GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
 | POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
@@ -74,11 +75,15 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | GET | `/relation/preferences` | auth | Live/last-known sharing flags |
 | PUT | `/relation/preferences` | auth | Audited; effects on streams re-evaluated |
 | GET | `/relation/locations/:userId` | auth | Requires accepted relationship, sharing enabled, and an **active live-sharing session**; returns live flag, timestamp, accuracy, and session expiry |
-| POST | `/relation/live-share` | auth | Starts a time-boxed session (owner picks the duration within the server maximum); at most one active session; audited |
-| DELETE | `/relation/live-share` | auth | Ends the active session immediately; open streams closed |
-| GET | `/relation/live-share` | auth | Own session state plus sharing history (when, how long, end reason); paginated, rate-limited |
-| PUT | `/relation/preferences` | auth | Also toggles history sharing; the retention window is chosen within the server maximum |
-| GET | `/relation/locations/:userId/history` | auth | Requires accepted relationship **and** history sharing on; bounded by the retention window; paginated; no bulk export; re-authorized per request |
+| POST | `/relation/live-shares` | auth | Starts a time-boxed session with an explicit viewer list and a duration within the server maximum; every viewer must be an accepted follower; audited |
+| DELETE | `/relation/live-shares` | auth | Ends the active session (all its grants) immediately; open streams closed |
+| DELETE | `/relation/live-shares/:viewerId` | auth | Revokes one follower's grant inside the active session; that stream closes; audited |
+| GET | `/relation/live-shares` | auth | Active session with its grants, plus sharing history (when, with whom, how long, end reason); paginated, rate-limited |
+| PUT | `/relation/preferences` | auth | Master switches for live, last-known, and history sharing |
+| GET | `/relation/history-shares` | auth | Followers currently granted history access and their windows |
+| PUT | `/relation/history-shares` | auth | Replace the granted follower list and the retention window (bounded by the server maximum); audited |
+| DELETE | `/relation/history-shares/:viewerId` | auth | Revoke one follower's history access; effective immediately, re-authorized per request |
+| GET | `/relation/locations/:userId/history` | auth | Requires accepted relationship **and an active history grant to this viewer**; bounded by that grant's window; paginated; no bulk export; re-authorized per request |
 | DELETE | `/relation/locations/mine/history` | auth | Owner deletes their full trail immediately; audited |
 | GET | `/relation/location-access` | auth | Who can currently see the owner's live or historical location |
 

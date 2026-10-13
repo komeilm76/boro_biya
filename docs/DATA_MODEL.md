@@ -14,7 +14,7 @@ This is a logical starting point, not a final migration. It is converted into re
 - `audit_events`: id, actor_id (nullable for anonymous events), actor_type, action, target_type, target_id, request_id, source_ip_hash, safe metadata (JSON, redacted by construction), created_at. Append-only at the application layer and access-controlled; updates and deletes are restricted by role and never exposed through the API.
 - `user_preferences`: user_id, theme (`light` | `dark` | `system`), locale, text_direction, receive_sos_suggestions, notification channel preferences, updated_at, updated_by. Core-owned because these are app-wide preferences that plugins and services read through the core API — the SOS suggestion preference is deliberately **not** stored in the Relation Service.
 - `categories`: id, key (stable unique slug), label_key, description_key, active, requires_verification, sort_order, created_by, updated_by, created_at, updated_at. Server-owned, admin-managed catalogue: create, rename, and deactivate are audited; deactivating keeps historical references intact and blocks new selection.
-- `user_categories`: user_id, category_id, status (`self_declared` | `verified`), verified_by, verified_at, created_at, updated_at. Unique `(user_id, category_id)`; the number of categories a user may hold is bounded by configuration. Membership is a profile attribute, never an authorization grant ([DECISIONS](DECISIONS.md) ADR-015).
+- `user_categories`: user_id, category_id, status (`self_declared` | `verified`), verified_by, verified_at, created_at, updated_at. **Exactly one row per user** — unique constraint on `user_id`. Membership is a profile attribute, never an authorization grant ([DECISIONS](DECISIONS.md) ADR-015).
 - `consent_records`: user_id, consent_type (for example live location sharing), granted boolean, policy_version, recorded_at, source. Used to resolve "what did the user actually agree to, and when".
 
 ## Relation Service (own schema)
@@ -22,9 +22,11 @@ This is a logical starting point, not a final migration. It is converted into re
 - `follow_requests`: id, requester_id, target_id, status, created_at, responded_at, expires_at. Prevent self-follow and duplicate pending requests with a uniqueness rule on the active pair.
 - `relationships`: follower_id, followed_id, accepted_at. Unique pair, with a constraint that the pair cannot be identical.
 - `blocks`: blocker_id, blocked_id, created_at, reason_code. Unique pair; retained independently of relationship state so a block survives unfollow and cannot be bypassed by re-requesting.
-- `live_share_sessions`: id, user_id, scope (`followers`), started_at, expires_at, ended_at, end_reason (`expired` | `revoked` | `blocked` | `disabled` | `service_unavailable`), duration_seconds, created_ip_hash. At most one active session per user (partial unique index on the open window); `duration_seconds` is bounded by configuration; `expires_at` is mandatory and enforced server-side.
-- `user_location_history`: id, user_id, latitude, longitude, accuracy_m, recorded_at, source (`device` | `manual`), share_session_id (nullable), expires_at. Written only while history sharing is enabled; indexed on `(user_id, recorded_at)`; every row carries an expiry and is purged by TTL.
-- `relation_preferences`: user_id, live_location_enabled, last_location_enabled, history_sharing_enabled, updated_at. Relationship-scoped location sharing only; app-wide preferences live in `user_preferences`.
+- `live_share_sessions`: id, owner_id, started_at, expires_at, ended_at, end_reason (`expired` | `revoked` | `blocked` | `disabled` | `service_unavailable`), duration_seconds, created_ip_hash. One share act by one owner; `duration_seconds` is bounded by configuration, and `expires_at` is mandatory and enforced server-side.
+- `live_share_grants`: id, session_id, viewer_id, revoked_at, revoke_reason. Unique `(session_id, viewer_id)`; at most one active grant per `(owner, viewer)` across sessions (partial unique index), so a follower cannot be re-granted until the previous grant has ended.
+- `user_location_history`: id, user_id, latitude, longitude, accuracy_m, recorded_at, source (`device` | `manual`), expires_at. Written only while history sharing is enabled; indexed on `(user_id, recorded_at)`; every row carries an expiry and is purged by TTL.
+- `history_share_grants`: id, owner_id, viewer_id, window_seconds, enabled_at, revoked_at, revoke_reason. Unique active `(owner, viewer)`; the grant is the audience decision, and its `window_seconds` bounds what that viewer may read.
+- `relation_preferences`: user_id, live_location_enabled, last_location_enabled, history_sharing_enabled, updated_at. These are **master switches** (may I share at all); the actual audience is always decided by a grant. Relationship-scoped location sharing only; app-wide preferences live in `user_preferences`.
 - `user_locations`: user_id, latitude, longitude, accuracy_m, recorded_at, expires_at, source (`device` | `manual`). **Latest point only** (unique `user_id`), with TTL cleanup; this table never stores a trail. If history is ever approved ([DECISIONS](DECISIONS.md) Q-06) it requires a new table, retention policy, and access rules.
 
 ## SOS Service (own schema)
@@ -64,12 +66,12 @@ Each invariant names its enforcement mechanism; enforcement is verified by the t
 14. **[DATA-14]** Idempotent operations replay rather than repeat — unique `(scope, key, actor_id)` plus stored outcome (integration).
 15. **[DATA-15]** Every mutable record carries `created_at` and `updated_at`; user-visible state changes record the actor and reason where the domain requires it (schema test).
 
-16. **[DATA-16]** A live-sharing session is time-boxed and expires server-side: `expires_at` is mandatory, at most one session is active per user, the duration is bounded by configuration, and no request can extend an ended or expired session (integration).
-17. **[DATA-17]** Location-history rows exist only while history sharing is enabled, always carry an expiry, and are purged by TTL; deleting history removes rows immediately (integration, security).
-18. **[DATA-18]** Live and historical location are visible only to accepted followers the owner shares with; unfollow, block, or disabling sharing stops access immediately, including for open streams (integration, security).
+16. **[DATA-16]** A live-sharing session is time-boxed and expires server-side: `expires_at` is mandatory, the duration is bounded by configuration, every session names at least one granted viewer, and no request can extend an ended or expired session or re-open a grant (integration).
+17. **[DATA-17]** Location-history rows exist only while history sharing is enabled, always carry an expiry, and are purged by TTL; deleting history removes rows immediately, and history is readable only through an active grant whose window bounds the query (integration, security).
+18. **[DATA-18]** Live and historical location are visible only to individually granted followers of an accepted relationship; revoking one grant, unfollowing, blocking, or disabling sharing stops that access immediately, including for open streams (integration, security).
 19. **[DATA-19]** Every SOS alert carries at least one active category, enforced in the creation transaction; an alert with no category cannot be created (integration).
 20. **[DATA-20]** Dispatch suggests only users holding a category that matches the alert, evaluated before distance ordering, and stores the matched category on the suggestion for audit (integration, security).
-21. **[DATA-21]** Category catalogue and membership changes are audited, and category membership never grants authorization by itself (integration).
+21. **[DATA-21]** Category catalogue and membership changes are audited, a user holds exactly one category at a time, and category membership never grants authorization by itself (integration).
 
 ## Geospatial design
 
