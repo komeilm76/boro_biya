@@ -46,7 +46,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 5 | Configuration is validated at startup and fails fast on invalid values | Test output | Not started |
 | 6 | Docker Compose starts the full local stack with safe defaults | Recorded run | Not started |
 | 7 | Formatting, lint, type check, unit, integration, audit, secret, and build gates active in Phase 1 | `bun run gate` exit status | Not started |
-| 8 | Runtime decision (Bun vs Node for services) made, with the spike evidence recorded | Decision recorded in DECISIONS, evidence attached | Not started |
+| 8 | Runtime baseline in place: production artefacts build and start on **Node 24 LTS**, Bun serves as the development package manager and script runner, and no Bun-only runtime API is reachable from application code outside an approved adapter ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Decision recorded in DECISIONS; `QA-123` exit status and the artefact smoke output; `OPS-84` deployment notes naming the runtime and tested versions | Not started |
 | 9 | Performance budgets defined with target hardware and traffic profile | `docs/performance/README.md` budget table | Not started |
 | 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Not started |
 | 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Not started |

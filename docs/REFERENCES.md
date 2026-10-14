@@ -44,7 +44,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 - Node.js release schedule (LTS windows and EOL dates): https://github.com/nodejs/Release — source for the runtime table above.
 - Node.js downloads/version guidance: https://nodejs.org/en/about/previous-releases — not reachable from the Phase 0 environment.
-- Bun documentation: https://bun.sh/docs — verify Bun-only APIs (for example `Bun.password`, `Bun.sql`) before relying on them, per [ADR-007](DECISIONS.md#adr-007--runtime-and-toolchain-baseline).
+- Bun documentation: https://bun.sh/docs — the development toolchain only; Bun-only runtime APIs (for example `Bun.password`, `Bun.sql`) stay out of application code unless the owner approves an adapter, per [ADR-025](DECISIONS.md#adr-007--runtime-and-toolchain-baseline).
 - TypeScript: https://www.typescriptlang.org/ — pin the 6.0.x line until `typescript-eslint` widens its peer range.
 
 ## Mapping

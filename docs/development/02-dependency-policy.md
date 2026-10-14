@@ -56,7 +56,7 @@ Backend and tooling:
 | `eslint-plugin-vue` | 10.11.1 | MIT | peers include `vue-eslint-parser ^10.3.0` |
 | `prettier` | 3.9.10 | MIT | — |
 | `vue-tsc` | 3.3.13 | MIT | peer: `typescript >=5.0.0` |
-| `bun` (runtime) | 1.4.x | MIT | Provides built-in Argon2id via `Bun.password` |
+| `bun` (development toolchain) | 1.4.x | MIT | Package manager and script runner only; not a production runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) |
 | `km-api` | 0.4.1 | MIT | peer: `zod ^4.3.6`; documented as OpenAPI **3.0**-compatible builder |
 | `zopia` | 0.7.1 | MIT | peers: `zod ^4.0.0`, `km-api ^0.4.1`; engines: node `>=20`, bun `>=1.1`; CLI `generate/reverse/validate/diff/navigate`; reverse defaults to OpenAPI 3.1 |
 
@@ -64,16 +64,17 @@ Runtimes and infrastructure:
 
 | Component | Baseline | Evidence |
 | --- | --- | --- |
-| Node.js | 24 LTS (Active LTS; maintenance from 2026-10-20, EOL 2028-04-30) | Node.js release schedule; Vitest 5 accepts `^22.12 \|\| ^24 \|\| >=26` |
+| Node.js (**production runtime**) | 24 LTS (Active LTS; maintenance from 2026-10-20, EOL 2028-04-30) | Node.js release schedule; Vitest 5 accepts `^22.12 \|\| ^24 \|\| >=26`; the runtime decision is [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) |
 | Node.js (next) | 26 becomes Active LTS on 2026-10-28 (EOL 2029-04-30) | Add to the CI matrix once LTS, then move the baseline after a green run |
 | PostgreSQL | 18 (current major, EOL November 2030; latest minor 18.6) | PostgreSQL support policy; 14 reaches EOL November 2026 and is not a target |
-| Bun | 1.4.x as package manager/script runner; server runtime pending [Q-16](../DECISIONS.md#open-questions) | `Bun.password` provides Argon2id without a native addon |
+| Bun | 1.4.x as package manager and script runner (development and the CI install step); **not** a production runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Must stay compatible with the pinned dependency set; no runtime-specific API may reach application code ([GOV-82](#4-runtime-baseline)) |
 | Docker Compose | Compose v2 specification, no version pin required | Used for local development and small deployments |
 
 ## 4. Runtime baseline
 
-- **[GOV-81]** **ADR-007** governs this section: Node.js **24 LTS** is the baseline for repository tooling, CI, and the guaranteed compatibility target for all application code; Bun 1.4.x is the preferred package manager and script runner.
-- **[GOV-82]** Application code must not depend on Bun-only APIs, except behind an explicit adapter with a Node implementation (password hashing is the only expected case). The Phase 1 spike ([Q-16](../DECISIONS.md#open-questions)) decides whether services run on Bun, and must verify at minimum: Fastify request handling under load, Vitest execution, Vite build, native-free Argon2id, worker-thread behaviour for image processing, and container image size/startup versus Node.
+- **[GOV-81]** **ADR-007** and **ADR-025** govern this section: Node.js **24 LTS** is the **production runtime** for the API and every service, and the baseline for repository tooling, CI, and the guaranteed compatibility target for all application code; Bun 1.4.x is the preferred package manager and script runner, where compatible with the pinned set.
+- **[GOV-82]** Application code must not depend on Bun-only runtime APIs. An exception needs **explicit owner approval** and lives behind an adapter with a Node implementation — password hashing is the one place where a runtime-provided alternative exists, and the production path uses the maintained `argon2` binding on Node instead ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain), `SEC-05`). Portability is checked, not assumed: a runtime compatibility and portability check runs in CI and fails on a Bun-only API reached from application code ([QA-123](../QUALITY_GATES.md#1-required-gates)). The Phase 1 spike verifies Bun **as a toolchain** — Vitest execution, Vite build, and workspace install behaviour — and no longer decides the server runtime.
+- **[GOV-90]** The web client and the Android application are built **independently of the backend runtime**: their pipelines do not require a running API, do not import backend-only modules, and use the pinned toolchain with a frozen lockfile. CI type-checks, tests, builds, and verifies each production artefact on the pinned runtime ([QA-11](../QUALITY_GATES.md#1-required-gates), [QA-123](../QUALITY_GATES.md#1-required-gates)), and every artefact records the runtime and exact versions it was built and tested with ([OPS-84](../ARCHITECTURE.md#7-configuration-and-environments)).
 - **[GOV-83]** When Node 26 is promoted to Active LTS (2026-10-28), it is added to the CI matrix; the baseline moves only after a green matrix run on both platforms.
 
 ## 5. Update policy
@@ -83,7 +84,7 @@ Runtimes and infrastructure:
 | Security advisory affecting a pinned version | Immediately | Patch or mitigate within 7 days for critical/high, 30 days for moderate; record the decision if a fix is not available |
 | Minor/patch updates | Monthly, batched | One reviewed pull request per batch, gates must pass, no automatic merge |
 | Major version upgrades | Deliberately, per dependency | Requires a short written assessment, a migration note, and a passing gate run; TypeScript major upgrades wait for `typescript-eslint` support |
-| Runtime (Node/Bun) upgrades | Per support window | No upgrade in the same change as a feature; baseline changes are announced in the release notes |
+| Runtime upgrades (Node production, Bun toolchain) | Per support window | No upgrade in the same change as a feature; baseline changes are announced in the release notes |
 | Database major upgrades | Per support window | Requires backup/restore rehearsal, a migration plan, and a rollback path |
 | Transitive dependencies | On lockfile change | Reviewed as part of the pull request; unexpected new native addons or install scripts are treated as findings |
 
@@ -114,7 +115,7 @@ Data, tiles, fonts, and content are covered by the same discipline:
 | Self-hosted CAPTCHA implementation | Phase 2 ([ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) | Accessibility, licence, maintenance status, offline data flow, challenge-record retention; no third-party service and no client-side tracker |
 | Push notification provider for Android | Phase 5 ([Q-11](../DECISIONS.md#open-questions)) | Delivery guarantees, cost, privacy, SDK maintenance |
 | **No email and no SMS provider** — the product stores no email address and no mobile number ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)) | — | Not applicable: no mail or SMS channel exists, so no provider is reviewed, pinned, or configured |
-| Password-hashing implementation on Node (`argon2` native binding) if Node is the server runtime | Phase 1 spike | Maintenance status, native build requirements, advisory history |
+| Password-hashing implementation on Node (`argon2` native binding) — the production path, because Node 24 LTS is the production runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Phase 1 | Maintenance status, native build requirements ([GOV-79](#2-how-verification-is-performed)), advisory history, benchmarked parameters (`SEC-04`) |
 | Redis or another shared store (only if scaling is required) | After [ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists) is revisited | Operational cost versus measured need |
 | Playwright (or equivalent) for browser-level tests | Phase 3 | Current compatibility with the pinned browser matrix |
 | Docker image scanning tool and secret scanner | Phase 1 | Availability in CI, licence, runtime cost |

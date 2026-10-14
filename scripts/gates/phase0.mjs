@@ -355,6 +355,7 @@ const MODEL_COHERENCE = [
   { concept: 'captcha_challenges', docs: ['DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-020' },
   { concept: 'SECURITY_QUESTIONS_ENABLED', docs: ['DATA_MODEL.md', 'SECURITY.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-023' },
   { concept: 'no email address and no mobile number', docs: ['PRODUCT_REQUIREMENTS.md', 'DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-019' },
+  { concept: 'ADR-025', docs: ['ARCHITECTURE.md', 'SECURITY.md', 'development/01-development-environment.md', 'development/02-dependency-policy.md'], adr: 'ADR-025' },
 ];
 
 /**
@@ -377,6 +378,16 @@ const RETIRED_WORDING = [
     pattern: /\bmembership\b/i,
     label: 'membership',
     adr: 'ADR-016 (a category is an assignment carried as a profile attribute, never a group a user belongs to)',
+  },
+  // ADR-025 closed the server-runtime question: Node 24 LTS runs in production and Bun is the
+  // development toolchain, so the runtime can no longer be described as a candidate or pending.
+  {
+    phrase: 'candidate server runtime',
+    adr: 'ADR-025 (Node 24 LTS is the production runtime; Bun is the development package manager and script runner)',
+  },
+  {
+    phrase: 'server runtime pending',
+    adr: 'ADR-025 (the server runtime is decided; what remains a toolchain question is Bun compatibility)',
   },
   // ADR-019 removed every notification path that delivered to an address the product does not store.
   {

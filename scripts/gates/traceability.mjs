@@ -79,6 +79,7 @@ const PHASE_RULES = [
   ['GOV', 87, 87, 0],   // phase-affiliation and prioritization rule (delivered by this review)
   ['GOV', 88, 88, 0],   // pull-forward rule and gate flexibility (delivered by this review)
   ['GOV', 89, 89, 0],   // documentation language variety, enforced by gate check 12 (this review)
+  ['GOV', 90, 90, 1],   // client builds independent of the backend runtime, pinned toolchain and frozen lockfile
 
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 7, 2],
@@ -157,6 +158,7 @@ const PHASE_RULES = [
   ['OPS', 28, 79, 1],   // packages, performance, configuration, operations, environment
   ['OPS', 80, 80, 5],   // SOS dispatch applies the category filter through service APIs
   ['OPS', 81, 83, 8],   // runbooks, backup/restore, and the availability objective land with hardening (OPS-81 has a declared early slice)
+  ['OPS', 84, 84, 1],   // deployment documentation for the pinned runtime ships with the first deployable artefact
 
   // Plugin/service contracts
   ['PLG', 1, 3, 1],
@@ -201,6 +203,7 @@ const PHASE_RULES = [
   ['QA', 117, 117, 0],  // documentation gate: phase-status agreement between README and ROADMAP
   ['QA', 118, 118, 0],  // documentation gate: diagram integrity and state-set coherence
   ['QA', 119, 122, 0],  // documentation gate: cross-references, one variety of English, review dates, review-record consistency
+  ['QA', 123, 123, 1],  // runtime compatibility and portability check runs with the first built artefact
 
   // Data model invariants
   ['DATA', 1, 1, 2],

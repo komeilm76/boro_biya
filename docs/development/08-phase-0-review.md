@@ -1,6 +1,6 @@
 # Phase 0 Review Record
 
-Sixteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§21](#21-sixteenth-pass--six-owner-answers-written-into-the-pack-2026-10-14).
+Seventeen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§22](#22-seventeenth-pass--the-production-runtime-decided-and-the-documents-re-read-against-it-2026-10-14).
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -1153,3 +1153,63 @@ Counts after this pass: identifiers 671 → 676 (`ADM-06`, `ADM-07`, `AUTH-39`, 
 - **Production thresholds are not chosen here.** `ADR-022` fixes the policy and the development values; the stricter production set is a Phase 9 review item, and `.env.example` says so.
 - **No stronger recovery factor is planned or scaffolded.** `ADR-023` says not approved, and the pack no longer uses the word "planned" for one, so nothing implies work that has no owner.
 - **The login flow's uniform timing class** (`AUTH-05`, `SEC-12`) is unchanged: a self-hosted challenge adds work to the login path, and its timing behaviour is a Phase 2 measurement, not a Phase 0 claim.
+
+## 22. Seventeenth pass — the production runtime decided, and the documents re-read against it (2026-10-14)
+
+`Q-16` was the last open question that a **phase** was waiting on: the Phase 1 exit gate named it, the Phase 1 checklist carried it, and the dependency policy, the security baseline, and the contributor guide each described the server runtime as undecided. The owner answered it — Node.js 24 LTS in production, Bun as the development toolchain, portability as a rule with adapters at the edges — and the answer is [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain).
+
+The owner also asked for the pack to be re-read, because answers to earlier questions can leave earlier language behind. That is what this pass did, and it found the usual two kinds of residue: **arguments that no longer hold** (Bun's built-in Argon2id was a reason to make Bun the runtime; with Node as the runtime it is no longer a reason for anything) and **gates that checked the wrong thing** (the build gates proved artefacts built, never that they build and start on the runtime they ship on).
+
+### 22.1 Defects found and fixed
+
+| # | Defect | Where | Fix |
+| --- | --- | --- | --- |
+| 1 | ADR-007 still said the server-runtime question was open and that a spike must run "before Bun can be the server runtime" | [DECISIONS](../DECISIONS.md) ADR-007 | Amended: Node 24 LTS is the production runtime, the spike now verifies the **toolchain**, and the reopen condition names only the toolchain half |
+| 2 | `GOV-82`'s spike list required "native-free Argon2id" and container size/startup "versus Node" — both were arguments for a Bun production runtime that is no longer planned | [dependency policy](02-dependency-policy.md) §4 | Rewritten: no Bun-only runtime API without owner approval and an adapter, portability checked in CI (`QA-123`), and the spike verifies Vitest/Vite/workspace install under Bun |
+| 3 | `SEC-05` preferred `Bun.password` "where the runtime decision (Q-16) selects Bun" and ended with a stale superseded tail | [SECURITY](../SECURITY.md) §2 | Rewritten: the maintained `argon2` binding on Node 24 LTS, behind the password-hashing adapter, with the native dependency accepted explicitly ([GOV-79](02-dependency-policy.md#2-how-verification-is-performed)) |
+| 4 | The dependency policy's unverified list asked for the `argon2` binding only "if Node is the server runtime" | [dependency policy](02-dependency-policy.md) §7 | It is the production path now, and is listed as a Phase 1 verification item with advisory history and benchmarked parameters |
+| 5 | Bun was still described as a `candidate server runtime` in two documents, and its table row was justified by the Argon2id it provides | [development environment](01-development-environment.md) §2, [dependency policy](02-dependency-policy.md) §3 | Both restated as the development toolchain; `candidate server runtime` and `server runtime pending` are now retired wording the gate fails on |
+| 6 | No gate verified that a production artefact **runs** on the runtime it ships on, and nothing failed on a Bun-only API reached from application code | [QUALITY_GATES](../QUALITY_GATES.md) §1, [CI and gates](03-ci-and-gates.md) §2, §4 | `QA-123` added: build + container start + health/smoke on the pinned runtime, plus a portability scan; new row in the phase activation table, a CI design bullet, and a step in the release plan's verification |
+| 7 | Deployment documentation named the runtime and the tested versions nowhere | [ARCHITECTURE](../ARCHITECTURE.md) §7 | `OPS-84` added: the runtime, the exact versions each artefact was built and tested with, the portability constraints, and how a runtime change is made |
+| 8 | "The web client and Android build independently of the backend runtime" existed as intent but not as a requirement | [dependency policy](02-dependency-policy.md) §4 | `GOV-90` added: independent client pipelines, pinned toolchain, frozen lockfile, artefacts verified on the pinned runtime |
+| 9 | The Phase 1 exit gate and checklist still demanded that the runtime decision **be recorded** | [ROADMAP](../ROADMAP.md) Phase 1, [checklist](05-phase-gate-checklist.md) row 8 | Restated as the baseline being in force: artefacts build and start on Node 24 LTS, Bun is the toolchain, no Bun-only API is reachable |
+| 10 | `REFERENCES` told contributors to "verify Bun-only APIs before relying on them" — weaker than the rule the owner set | [REFERENCES](../REFERENCES.md) | Aligned with [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain): the toolchain may use Bun freely; application code may not |
+
+Checked and found correct, so left alone: the gate scripts themselves (dependency-free Node, [GOV-45](00-repository-conventions.md) §1); `docs-gates.yml` (already Node 24); the workspace list in [ARCHITECTURE](../ARCHITECTURE.md) §5, which never assumed a runtime; `MASTER_PROJECT_PROMPT`'s version-pinning rules; and the `.env.example` template, which contains no runtime setting.
+
+### 22.2 Mutation tests (seventeenth pass)
+
+```
+T24a development/01 stops citing ADR-025
+     - [model] `ADR-025` (ADR-025) is not mentioned in
+       development/01-development-environment.md                            exit 1
+
+T24b the dependency policy calls Bun a candidate server runtime again
+     - [model] retired wording "candidate server runtime" in
+       development/02-dependency-policy.md:70                               exit 1
+
+T24c SEC-05 says "the server runtime pending a decision"
+     - [model] retired wording "server runtime pending" in SECURITY.md:30   exit 1
+
+T24d the QA-123 phase rule is dropped from the traceability generator
+     - no phase rule covers QA-123 (QUALITY_GATES.md §1. Required gates)    exit 1
+
+all mutations restored from the pre-test copies                           exit 0
+```
+
+### 22.3 Evidence (seventeenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 14 checks, exit 0
+node scripts/gates/traceability.mjs           # 679 requirements, 120 groups, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+Counts after this pass: identifiers 676 → 679 (`GOV-90`, `OPS-84`, `QA-123`); decisions `ADR-001 … ADR-025`; the register holds 26 questions with **10 resolved** and 16 open.
+
+### 22.4 Deliberately not done
+
+- **The Phase 1 spike itself.** `ADR-025` decides the runtime; verifying Vitest, Vite, and workspace installs under Bun is Phase 1 work, and the checklist row says so.
+- **Production thresholds and hosting.** Unchanged: the abuse thresholds are reviewed before release ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) and the deployment target is still [Q-19](../DECISIONS.md#open-questions).
+- **A runtime-swap plan.** `OPS-84` requires the documentation to describe how a runtime change is made; the change itself would be a new decision, and no work is scheduled for one.

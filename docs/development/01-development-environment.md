@@ -22,8 +22,8 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Tool | Version policy | Purpose | Verify with |
 | --- | --- | --- | --- |
 | Git | current stable | Source control, LF enforcement via `.gitattributes` | `git --version` |
-| Node.js | 24 LTS (primary CI baseline) | Repository tooling, gate scripts, and the tooling that must run on Node | `node --version` |
-| Bun | 1.4.x (pinned in Phase 1) | Preferred package manager and script runner; candidate server runtime (see dependency policy, Q-16) | `bun --version` |
+| Node.js | 24 LTS (primary CI baseline; **production runtime**, [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Repository tooling, gate scripts, the tooling that must run on Node, and the runtime every production artefact runs on | `node --version` |
+| Bun | 1.4.x (pinned in Phase 1) | Preferred package manager and script runner; **not** a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | `bun --version` |
 | Docker + Compose v2 | current stable | PostgreSQL and full-stack local run | `docker compose version` |
 | Editor | VS Code (recommended) | `.editorconfig` and workspace recommendations are committed | — |
 
@@ -50,7 +50,10 @@ docker compose up -d db            # PostgreSQL 18 (container only)
 bun run db:migrate                 # apply versioned migrations
 bun run dev                        # web app + core API + both services
 bun run gate                       # all gates that are active in the current phase
+bun run check:runtime              # runtime compatibility and portability check (QA-123)
 ```
+
+Production runs these artefacts on **Node 24 LTS** (`node dist/…`), not on Bun: Bun is the development toolchain and package manager ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). The Docker path below builds and starts the same artefacts on the pinned Node version, which is what the compatibility check verifies.
 
 Docker-first alternative (no local Node required beyond the gate scripts):
 
@@ -84,6 +87,7 @@ See [`.env.example`](../../.env.example) for the current placeholder list.
 | Ports already in use on Windows | WSL2 or another service holds the port | Stop the conflicting service or change the host port mapping; application ports are configurable. |
 | Slow file operations under WSL2 | Repository on the Windows filesystem | Clone into the WSL filesystem (`~/boro_biya`). |
 | Slow installs on Windows | Real-time antivirus scanning `node_modules` | Exclude the repository directory from real-time scanning. |
+| `bun run …` fails but `node` works (or the reverse) | A script reached a runtime-specific API, or Bun is incompatible with a pinned tool | Run the same script under Node 24 with `node`; if that passes, the script is relying on a Bun-only behaviour and must not be used from application code ([GOV-82](02-dependency-policy.md#4-runtime-baseline)). |
 
 ## 8. Contribution flow
 

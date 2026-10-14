@@ -116,6 +116,7 @@ Rules:
 - **[OPS-56]** Configuration that changes security behaviour (rate limits, lockout thresholds, CORS origins, feature flags such as location sharing) is validated, documented, and safe by default.
 - **[OPS-57]** Documented commands exist for Windows and Linux, with Docker as the consistent path. Native setup requirements (Node/Bun versions) are stated explicitly for contributors who choose it.
 - **[OPS-58]** Production deployment target is an open decision ([DECISIONS](DECISIONS.md) Q-19) and must be resolved before Phase 9; local and CI environments must not assume a specific cloud vendor.
+- **[OPS-84]** Production runs **Node.js 24 LTS** ([DECISIONS](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) ADR-025); Bun is a development toolchain only. Deployment documentation states the runtime and the exact versions each artefact was built and tested with, keeps the portability constraints in one place (standard TypeScript, Web APIs, Node-compatible libraries, no Bun-only runtime API outside an approved adapter), and describes how the runtime is changed without rewriting the application. A runtime compatibility and portability check runs in CI before release ([QA-123](QUALITY_GATES.md#1-required-gates)).
 
 ## 8. Operational endpoints
 

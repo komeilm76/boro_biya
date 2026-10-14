@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **676** across 120 groups.
+Total requirements: **679** across 120 groups.
 
 ## Declared pull-forwards
 
@@ -26,7 +26,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | Phase | Requirements |
 | --- | --- |
 | 0 (foundation) | 26 |
-| 1 | 280 |
+| 1 | 283 |
 | 2 | 124 |
 | 3 | 41 |
 | 4 | 66 |
@@ -54,7 +54,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `GOV-68 … GOV-70` | 3 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 6. Dependency changes |
 | 1 | `GOV-71 … GOV-73` | 3 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 7. Documentation maintenance |
 | 1 | `GOV-74 … GOV-80` | 7 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
-| 1 | `GOV-81 … GOV-83` | 3 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
+| 1 | `GOV-81 … GOV-90` | 4 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
 | 1 | `GOV-84 … GOV-86` | 3 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
 | 1 | `UI-01 … UI-07` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
 | 1 | `SEC-01 … SEC-03` | 3 | [SECURITY.md](../SECURITY.md) | 1. Security baseline |
@@ -67,7 +67,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `OPS-17 … OPS-20` | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
 | 1 | `OPS-28 … OPS-43` | 16 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
 | 1 | `OPS-44 … OPS-52` | 9 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
-| 1 | `OPS-53 … OPS-58` | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| 1 | `OPS-53 … OPS-84` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
 | 1 | `OPS-59 … OPS-64` | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
 | 1 | `OPS-65 … OPS-66` | 2 | [development/01-development-environment.md](../development/01-development-environment.md) | 1. Supported platforms |
 | 1 | `OPS-67 … OPS-70` | 4 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
@@ -76,7 +76,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `PLG-01 … PLG-03` | 3 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | 1 | `API-01 … API-09` | 9 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
 | 1 | `API-10 … API-37` | 12 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
-| 1 | `QA-02 … QA-19` | 12 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 1 | `QA-02 … QA-123` | 13 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 1 | `QA-37 … QA-47` | 11 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
 | 1 | `QA-48 … QA-54` | 7 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
 | 1 | `QA-55 … QA-56` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 6. Gate exceptions |
@@ -254,6 +254,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | GOV-87 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | GOV-88 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | GOV-89 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| GOV-90 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
 | ADM-01 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-02 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
@@ -597,6 +598,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | OPS-81 | 8 | [operations/README.md](../operations/README.md) | Rules |
 | OPS-82 | 8 | [operations/README.md](../operations/README.md) | Rules |
 | OPS-83 | 8 | [operations/README.md](../operations/README.md) | Rules |
+| OPS-84 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
 | PLG-01 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-02 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-03 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
@@ -814,6 +816,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | QA-120 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-121 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-122 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-123 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | DATA-01 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-02 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-03 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

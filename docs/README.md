@@ -41,7 +41,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-14 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-14 |
 | [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-14 |
-| [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-13 |
+| [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-14 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-14 |
 
@@ -84,8 +84,8 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 
 | Area | Scope | Identifiers | Range |
 | --- | --- | --- | --- |
-| `GOV` | Repository governance, documentation, phases, dependency policy | 89 | `1 … 89` |
-| `QA` | Quality gates, CI, testing, release process | 122 | `1 … 122` |
+| `GOV` | Repository governance, documentation, phases, dependency policy | 90 | `1 … 90` |
+| `QA` | Quality gates, CI, testing, release process | 123 | `1 … 123` |
 | `API` | API contracts, OpenAPI, validation, realtime contracts, session refresh | 38 | `1 … 38` |
 | `AUTH` | Identity, authentication, recovery, account lifecycle | 40 | `1 … 40` |
 | `ADM` | Roles and administrative capabilities | 7 | `1 … 7` |
@@ -96,11 +96,11 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
 | `SEC` | Platform security controls | 73 | `1 … 74` |
 | `PRIV` | Location privacy and data lifecycle | 31 | `1 … 31` |
-| `OPS` | Architecture, operations, configuration, performance, observability | 83 | `1 … 83` |
+| `OPS` | Architecture, operations, configuration, performance, observability | 84 | `1 … 84` |
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **676** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **679** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 

@@ -2,7 +2,7 @@
 
 How versions are cut, what is published, how an artefact moves from a commit to production, and how a release is undone. The gate set that must pass is defined in [QUALITY_GATES](../QUALITY_GATES.md); the phase that enables each part is in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-13. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
+Owner: Engineering. Reviewed: 2026-10-14. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
 
 ## 1. Versioning
 
@@ -17,7 +17,7 @@ Owner: Engineering. Reviewed: 2026-10-13. This plan is exercised for the first t
 | Artefact | Produced in | Contents |
 | --- | --- | --- |
 | Web/PWA bundle | Phase 1+ | Static assets, service worker, build metadata, immutable filenames |
-| Container images | Phase 1+ | Core API, Relation Service, SOS Service, each built from a pinned base image, non-root, with a health check |
+| Container images | Phase 1+ | Core API, Relation Service, SOS Service, each built from a pinned base image on the pinned production runtime (Node 24 LTS, [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)), non-root, with a health check |
 | Database migrations | Phase 1+ | Versioned, ordered, reversible where practical, with a dry-run path |
 | OpenAPI document and typed client | Phase 2+ | Generated contract plus the client used by the web app |
 | Plugin package and image | Phase 7+ | Signed package, manifest, digest, configuration schema |
@@ -30,7 +30,7 @@ Owner: Engineering. Reviewed: 2026-10-13. This plan is exercised for the first t
 1. **Freeze scope** — the release contains merged, reviewed changes only. No work is merged to `main` during the final gate run except a fix for a failure found by the run itself.
 2. **Run the gates** — the full active set on the exact commit, with exit statuses recorded.
 3. **Build once** — artefacts are built from the tagged commit, never rebuilt later from a different tree.
-4. **Verify the artefacts** — checksums, image scan, SBOM, migration dry-run, and a smoke deployment of the candidate.
+4. **Verify the artefacts** — checksums, image scan, SBOM, migration dry-run, the runtime compatibility and portability check on the pinned runtime (`QA-123`), and a smoke deployment of the candidate.
 5. **Rehearse the database step** — migrations applied and reversed on a copy restored from a backup, plus a restore rehearsal for release candidates ([QUALITY_GATES](../QUALITY_GATES.md) §1, migration gate).
 6. **Promote the same artefacts** — staging then production, using the identical digests; configuration differs, binaries do not.
 7. **Verify in production** — health/readiness endpoints, a synthetic smoke check of login and the map shell, and a check that no new error class appears in logs.

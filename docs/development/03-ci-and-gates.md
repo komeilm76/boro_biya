@@ -25,6 +25,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Dependency audit and licence check | inactive | active | active | active | active | active |
 | Secret scanning | active (docs) | active | active | active | active | active |
 | Production builds | inactive | active | active | active | active | active |
+| Runtime compatibility and portability checks (`QA-123`) | inactive | active | active | active | active | active |
 | PWA checks | inactive | inactive | inactive | active | active | active |
 | Localization checks (no hard-coded strings, catalogue keys) | inactive | inactive | active | active | active | active |
 | Accessibility checks (axe plus manual review) | inactive | inactive | inactive | active | active | active |
@@ -87,6 +88,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 - **[QA-74]** Concurrency cancels superseded runs on the same branch.
 - **[QA-75]** Caches are used only for package-manager caches, never for build outputs that must be reproducible.
 - **[QA-76]** Timeouts are set on jobs so a hung step cannot consume the entire pipeline budget.
+- **Runtime compatibility and portability.** `QA-123` is the gate: the job builds each artefact image and starts it on the pinned Node version (ADR-025, `OPS-84`), then runs a health and smoke check; a separate source scan fails when a Bun-only runtime API is reachable from application code outside an approved adapter (`GOV-82`). It runs wherever the build gates run, and a runtime change is not merged while it is red. The equivalent local command (`bun run check:runtime`) is added with the workspace in Phase 1.
 - **[QA-77]** Required checks for branch protection: the documentation gate in Phase 0; the full active set from Phase 1 onward. The concrete expectations are recorded in §5 of this document, and a release is not cut while a required check is missing or bypassable ([release plan](06-release-plan.md) §3, step 2).
 
 ## 5. Branch protection expectations
