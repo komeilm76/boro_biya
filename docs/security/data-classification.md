@@ -81,15 +81,15 @@ Two kinds of expiry are distinguished, and only the first is active today:
 | Expired sessions and revoked tokens | Removed within 30 days of expiry once enforcement is enabled (an auditable summary may remain) | Scheduled cleanup, gated by the enforcement switch |
 | Login attempt, lockout, and rate-limit counters | Rolling 15-minute window; lockout state until it expires ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) | Counter expiry |
 | CAPTCHA challenges and tokens (`captcha_challenges`) | Minutes: the challenge TTL plus a short cleanup grace; consumed rows are deleted and never kept for analytics ([ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) | Short TTL + cleanup job; no third-party copy exists |
-| Recovery challenges and grants | Minutes (short-lived), deleted or marked consumed after use | `consumed_at` + cleanup |
-| Idempotency records | Long enough to cover client retries (typically 24 hours to 7 days, per operation) | TTL column + cleanup |
-| Live location points | Only the current point; superseded points removed promptly | Unique row per user, TTL |
+| Recovery challenges and grants | Minutes (short-lived); consumed on use is functional | `consumed_at` marks it unusable; row cleanup follows the enforcement switch |
+| Idempotency records | Long enough to cover client retries (typically 24 hours to 7 days, per operation) | Functional expiry (a stale key stops being honoured) plus cleanup once enforcement is enabled |
+| Live location points | Only the current point is kept; superseded points are never retained — this is minimization by design, not a retention window, because keeping them would build an unconsented trail | Unique row per user; the previous point is overwritten |
 | Live-sharing sessions and grants | Session and grant rows are kept as an audit record for the audit retention window; no coordinates are stored on them | Audit retention policy |
 | History-share grants | Kept while granted plus the audit retention window after revoke | Revoke flag + audit retention policy |
 | Location history | Bounded retention window chosen by the owner within the server maximum (the default window is [Q-22](../DECISIONS.md#open-questions)), enforced per row | `expires_at` per row + TTL purge; immediate delete on user request |
 | Last-known location | Owner-defined retention window, decided in [Q-06](../DECISIONS.md#open-questions), then expired | TTL column; must be labelled with age |
 | SOS alerts and attachments | Retained while the operational or legal need exists, which the operator defines ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)); attachments may be deleted earlier than metadata | Deletion job + owner/admin action, both audited |
-| Notifications | Days to weeks, per event type | TTL and read-state cleanup |
+| Notifications | Days to weeks, per event type | Retention deletion, gated by the enforcement switch; read-state is functional |
 | Audit events | Long retention (typically 1–2 years as a starting point), set by the operator's audit policy and applied only when enforcement is enabled | Append-only storage; no silent truncation, and no automatic deletion by default |
 | Uploaded plugin packages | Retained while installed plus a rollback window | Explicit deletion on uninstall |
 | Backups | Rolling window with a documented restore procedure ([OPS-82](../operations/README.md)) | Encrypted; a deletion in the live store does **not** reach an existing backup — the interaction is documented in the temporary policy below |
