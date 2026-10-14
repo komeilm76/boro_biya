@@ -24,7 +24,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-12]** PWA checks| Manifest validity, offline shell, installability, no stale service worker | Lighthouse-style audit plus explicit service-worker unit tests (Phase 3) |
 | **[QA-13]** Android build| Buildable, signed, permission-audited Android artifact | Gradle/ Capacitor build in CI where the environment supports it (Phase 8) |
 | **[QA-14]** Container image and configuration checks| No `latest` tags, non-root user, health checks, no embedded secrets, vulnerability scan | Image scanner plus configuration assertions (Phase 1+) |
-| **[QA-15]** Database migration tests and backup/restore smoke test| Migrations apply and reverse; backups restore | Migration runner in CI against a disposable database; restore rehearsal for release candidates (Phase 1, extended Phase 9) |
+| **[QA-15]** Database migration tests and backup/restore smoke test| Migrations apply and reverse; backups restore | Migration runner in CI against a disposable database (Phase 1); restore rehearsal from Phase 8 and required for release candidates in Phase 9 |
 | **[QA-16]** Accessibility checks| Keyboard, focus, labels, contrast, reduced motion | Automated axe checks in component/browser tests plus a manual review checklist (Phase 3+) |
 | **[QA-17]** Localisation checks| No hard-coded user-facing strings, no missing keys, RTL sanity | Lint rule over components plus a message-catalogue test (Phase 2+, when the first user-facing strings exist) |
 

@@ -69,7 +69,7 @@ See [`.env.example`](../../.env.example) for the current placeholder list.
 
 ## 6. Editor and repository hygiene
 
-- **[OPS-71]** `.editorconfig` — UTF-8, LF, final newline, 2-space indentation, space-based indentation everywhere.
+- **[OPS-71]** `.editorconfig` — UTF-8, LF, final newline, 2-space indentation, space indentation everywhere except where a file format requires tabs (the `Makefile` rule sets tabs, because make does not accept spaces).
 - **[OPS-72]** `.gitattributes` — normalises line endings to LF on checkout and commit so Windows contributors cannot introduce CRLF churn.
 - **[OPS-73]** Formatting and linting are automated in Phase 1 (Prettier + ESLint). Until then, follow [repository conventions](00-repository-conventions.md) §4.
 - **[OPS-74]** Recommended VS Code extensions are recorded in Phase 1 as `.vscode/extensions.json` (Vue, ESLint, Prettier, Tailwind IntelliSense, Docker, EditorConfig).

@@ -7,18 +7,18 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **647** across 112 groups.
+Total requirements: **647** across 116 groups.
 
 | Phase | Requirements |
 | --- | --- |
 | 0 (foundation) | 18 |
 | 1 | 278 |
-| 2 | 112 |
-| 3 | 49 |
-| 4 | 68 |
-| 5 | 53 |
+| 2 | 113 |
+| 3 | 46 |
+| 4 | 63 |
+| 5 | 55 |
 | 6 | 13 |
-| 7 | 54 |
+| 7 | 59 |
 | 8 | 1 |
 | 9 | 1 |
 
@@ -75,6 +75,7 @@ Total requirements: **647** across 112 groups.
 | 1 | `QA-107 … QA-111` | 5 | [performance/README.md](../performance/README.md) | Rules |
 | 1 | `DATA-15` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 2 | `ADM-01 … ADM-05` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| 2 | `UI-10` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 2 | `UI-21 … UI-22` | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 2 | `AUTH-01 … AUTH-06` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
 | 2 | `AUTH-07 … AUTH-12` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
@@ -94,7 +95,7 @@ Total requirements: **647** across 112 groups.
 | 2 | `QA-07 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 2 | `QA-20 … QA-28` | 9 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 2 | `DATA-01 … DATA-10` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
-| 3 | `UI-10 … UI-15` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| 3 | `UI-11 … UI-13` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 3 | `UI-16 … UI-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 3 | `MAP-01 … MAP-23` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 3 | `MAP-11 … MAP-21` | 11 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
@@ -109,12 +110,12 @@ Total requirements: **647** across 112 groups.
 | 4 | `PRIV-13 … PRIV-29` | 8 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 4 | `OPS-21 … OPS-27` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
 | 4 | `PLG-35 … PLG-40` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
-| 4 | `PLG-41 … PLG-46` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| 4 | `PLG-41` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 4 | `API-31 … API-35` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
 | 4 | `QA-112 … QA-113` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 4 | `DATA-02 … DATA-18` | 8 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 4 | `DATA-26` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
-| 5 | `UI-09` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| 5 | `UI-09 … UI-14` | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 5 | `SOS-01 … SOS-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
 | 5 | `SOS-07 … SOS-29` | 14 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
 | 5 | `SOS-16 … SOS-20` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
@@ -123,14 +124,17 @@ Total requirements: **647** across 112 groups.
 | 5 | `PRIV-07 … PRIV-26` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | 5 | `PRIV-16 … PRIV-30` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 5 | `OPS-80` | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| 5 | `PLG-42` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 5 | `DATA-06 … DATA-21` | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 5 | `DATA-25` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
 | 6 | `NAV-01 … NAV-13` | 13 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| 7 | `UI-15` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 7 | `SEC-29 … SEC-39` | 11 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
 | 7 | `PLG-04 … PLG-14` | 11 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
 | 7 | `PLG-15 … PLG-28` | 14 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
 | 7 | `PLG-29 … PLG-34` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| 7 | `PLG-43 … PLG-46` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 7 | `PLG-47 … PLG-50` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
 | 7 | `PLG-51 … PLG-56` | 6 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
 | 7 | `DATA-11 … DATA-13` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

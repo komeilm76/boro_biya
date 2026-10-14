@@ -230,4 +230,58 @@ node scripts/gates/phase0.mjs                 # 8 checks, exit 0 (check 2/3 dele
 # restored  ->  exit 0
 ```
 
+## 9. Fourth review pass: every document re-read against the files it describes
+
+### 9.1 What this pass added
+
+Rounds 1–3 read the documents against each other. This pass read them against the **repository** (workflow, dotfiles, environment template, route inventory), re-checked the affiliation decisions made in round 3 with fresh eyes, and compared every phase's exit gate with that phase's own deliverable list.
+
+| Sweep | How | Result |
+| --- | --- | --- |
+| Documented files versus real files | Compare each claim about `.editorconfig`, `.gitattributes`, `.gitignore`, `.github/workflows/docs-gates.yml` with the file it describes | One mismatch (§9.2.1); every other claim about the workflow (matrix, pinned SHAs, least privilege, concurrency, timeout) verified true |
+| Phase deliverable versus its exit gate | For each phase, list what it delivers and check the gate can prove it | Six gates were missing evidence for their own deliverables (§9.2.6) |
+| Affiliation re-check of round 3's work | Re-read the moved requirements and the rules that were *not* moved | Three UI requirements and five plugin requirements were still riding in blanket rules (§9.2.4, §9.2.5) |
+| Register cells | Every open-question row must name exactly one decide-by phase | One row named two (§9.2.2) |
+| Environment template | Every variable has a placeholder and a description; every documented bound exists as a variable | Clean (70 variables) |
+| Route inventory | Every path mentioned in any document resolves to an inventory route, an infrastructure note, or a known directory | Clean |
+| Header/index agreement, section references, numeric claims | Scripted | Clean (one known false positive recorded in §7.2) |
+
+### 9.2 Defects found and fixed
+
+**9.2.1 `OPS-71` described `.editorconfig` inaccurately.** The requirement said "space-based indentation everywhere"; the committed `.editorconfig` sets `indent_style = tab` for `Makefile`, because make does not accept spaces. A requirement that contradicts the file it governs is exactly the kind of drift this pack treats as a defect. Reworded to name the exception.
+
+**9.2.2 `Q-15`'s decide-by cell named two phases.** Round 3 moved the *decision* to Phase 2 and recorded "Phase 3 delivers the locale and text-direction settings UI" inside the same cell. The register contract is one phase per row; the extra sentence belongs in the effect column. Fixed, and the Phase 3 note now lives where it explains a consequence rather than a deadline.
+
+**9.2.3 Phase 0 claimed more than it delivered.** The Phase 0 evidence table listed "Docker-based startup" as a delivered item, but Phase 0 ships the *documented contract* — the Compose stack is a Phase 1 deliverable, and the same document says so. The checklist row had the same overclaim. Both now say "the Docker-based startup contract Phase 1 must satisfy". In the same area, Phase 1's deliver list did not name the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`) even though `UI-01 … UI-07` are affiliated with Phase 1; the list now does.
+
+**9.2.4 Three UI requirements were riding in a blanket Phase 3 block.** `UI-10` (sessions and account-state settings) belongs with the account lifecycle in Phase 2; `UI-14` (notification preferences) belongs where notifications exist, Phase 5; `UI-15` (plugin settings appear only when a plugin is installed and healthy) belongs to Phase 7. Phase 3 keeps appearance, locale, permission status, accessibility, and offline behaviour.
+
+**9.2.5 The same class in the plugin rules.** A blanket "capability and failure behaviour" rule put `PLG-41 … PLG-46` in Phase 4. Four of them are plugin-lifecycle rules — disable/uninstall with credential revocation (`PLG-43`), upgrades with rollback (`PLG-44`), capability re-evaluation when health changes (`PLG-45`), and lifecycle auditing (`PLG-46`) — and one is SOS-specific (`PLG-42`, SOS unavailable). They are now Phase 7 and Phase 5 respectively; Phase 4 keeps `PLG-41` (Relation unavailable fails closed) and names it in its gate, Phase 5 names the SOS case, and Phase 7 names capability re-evaluation and the lifecycle audit trail.
+
+**9.2.6 Six phase exit gates were missing evidence for their own deliverables.** A gate that cannot prove what the phase delivers is not a gate:
+
+- Phase 2 now requires the auth OpenAPI contract to validate (the contract gate activates in Phase 2) and the abuse controls to be exercised.
+- Phase 3 now requires the geospatial prototype **measurements** — without them `ADR-005` cannot be decided in Phase 4, which is what previously put a Phase 4 prerequisite behind a Phase 3 exit.
+- Phase 4 now requires retention purge evidence for the last-known row and for history rows.
+- Phase 5 now requires the SOS lifecycle in the audit trail and proof that creation and dispatch work with realtime disconnected.
+- Phase 7 now requires capability re-evaluation and the lifecycle audit to be demonstrated.
+- Phase 8 now requires permissions and secure token storage verified on a device.
+- `QA-15` said the restore rehearsal extends "Phase 9"; the activation table activates it in Phase 8. The gate text now matches the table.
+
+### 9.3 Gate change: no phase gate may cite later-phase work
+
+`traceability.mjs` gained a second affiliation audit implementing `GOV-87` consequence 4 mechanically: no roadmap phase section may cite a requirement affiliated with a later phase. Round 1 found one instance of this by hand (Phase 3 requiring Relation Service work); from now on it fails the gate with the phase, the requirement, and its real phase.
+
+Negative test: `PLG-41` was temporarily re-affiliated with Phase 7 while the Phase 4 section cites it → exit 1, "the Phase 4 section cites PLG-41, which is affiliated with Phase 7 — the gate would demand work a later phase delivers". Restored from the pre-test copy → exit 0.
+
+### 9.4 Evidence (fourth pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 647 requirements, 116 groups
+node scripts/gates/traceability.mjs           # exit 0
+node scripts/gates/phase0.mjs                 # 8 checks, exit 0
+```
+
+The group count moved from 112 to 116 because three blanket phase rules were split into eight narrower ones (§9.2.4, §9.2.5); requirement counts per phase changed accordingly: Phase 2 +1 (UI-10), Phase 3 −3 (UI-10, UI-14, UI-15 leave), Phase 4 −5 (PLG-42 and PLG-43 … PLG-46 leave), Phase 5 +2 (PLG-42, UI-14), Phase 7 +5 (PLG-43 … PLG-46, UI-15). The sum is unchanged at 647. The traceability file is the authority; any older count quoted in this record describes the pass that produced it.
+
 

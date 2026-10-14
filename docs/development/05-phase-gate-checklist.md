@@ -25,7 +25,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-016 | Met |
 | 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
-| 9 | Windows and Linux workflows are documented, including Docker-based startup | [development environment](01-development-environment.md) | Met |
+| 9 | Windows and Linux workflows are documented, including the Docker-based startup contract Phase 1 must satisfy | [development environment](01-development-environment.md) §4 | Met |
 | 10 | Environment configuration template contains placeholders only | `.env.example`; gate check 7 | Met |
 | 11 | Gate catalogue, phase activation, and exception process are defined | [QUALITY_GATES](../QUALITY_GATES.md), [CI and gates](03-ci-and-gates.md) | Met |
 | 12 | Documentation gates run locally and in CI on Linux and Windows | `.github/workflows/docs-gates.yml`; commands in §1 above | Met |

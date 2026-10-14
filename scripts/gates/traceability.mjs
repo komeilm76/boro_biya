@@ -6,12 +6,17 @@
  * identifier to exactly one delivery phase, and writes `docs/development/07-traceability.md`.
  *
  * Usage:
- *   node scripts/gates/traceability.mjs           # verify the committed file is current (exit 1 if stale)
+ *   node scripts/gates/traceability.mjs           # verify the committed file is current, and audit
+ *                                                 # requirement/question and roadmap/gate affiliation
  *   node scripts/gates/traceability.mjs --write   # regenerate the file
  *
  * The phase mapping below is the source of truth for "which phase must deliver which
  * requirement". Every identifier must be covered by exactly one rule; a missing or
  * overlapping rule is a hard failure, so a new requirement cannot be added silently.
+ *
+ * A second affiliation check inspects the roadmap itself: a phase's deliver or exit-gate text must
+ * not cite a requirement affiliated with a later phase (GOV-87 consequence 4 — no gate may demand
+ * work a later phase delivers).
  *
  * Check, in addition to coverage: an "affiliation audit" (GOV-87). A requirement must not cite
  * an open question whose decide-by phase is later than the requirement's own phase — that is the
@@ -76,7 +81,11 @@ const PHASE_RULES = [
   ['UI', 1, 7, 1],      // route namespaces established with the application shell
   ['UI', 8, 8, 4],      // location-sharing settings ship with the sharing pipeline (Relation Service)
   ['UI', 9, 9, 5],      // SOS settings (suggestion preference, assistance category) ship with the SOS Service
-  ['UI', 10, 20, 3],    // remaining settings, accessibility, offline behaviour
+  ['UI', 10, 10, 2],    // sessions/account-state settings land with the account lifecycle
+  ['UI', 11, 13, 3],    // appearance, locale, and permission status (map phase)
+  ['UI', 14, 14, 5],    // notification preferences ship with notifications
+  ['UI', 15, 15, 7],    // plugin settings appear only once plugins exist
+  ['UI', 16, 20, 3],    // accessibility, empty/error states, offline behaviour
   ['UI', 21, 22, 2],    // message catalogue and RTL scaffolding, before user-facing screens ship
   ['UI', 23, 24, 3],    // contrast/state rules reviewed with the accessibility gate
 
@@ -140,7 +149,9 @@ const PHASE_RULES = [
   ['PLG', 1, 3, 1],
   ['PLG', 4, 34, 7],    // manifest, upload/install workflow, configuration form
   ['PLG', 35, 40, 4],   // service lifecycle and API contract (first used by Relation/SOS)
-  ['PLG', 41, 46, 4],   // capability and failure behaviour
+  ['PLG', 41, 41, 4],   // Relation unavailable: private location fails closed
+  ['PLG', 42, 42, 5],   // SOS unavailable: SOS actions hidden or disabled
+  ['PLG', 43, 46, 7],   // plugin disable/uninstall, upgrades, capability re-evaluation, lifecycle audit
   ['PLG', 47, 50, 7],   // resource controls for untrusted containers
   ['PLG', 51, 56, 7],   // prohibited shortcuts in the plugin threat model
 
@@ -275,6 +286,32 @@ function auditAffiliation(reqs, phases) {
   return problems;
 }
 
+/**
+ * GOV-87 consequence 4: a phase section in ROADMAP.md must not cite a requirement that belongs to
+ * a later phase. Ranges are checked at both endpoints; the middle of a range is covered by the
+ * phase-rules overlap check.
+ */
+function auditRoadmapGates(phases) {
+  const problems = [];
+  const roadmap = readFileSync(join(DOCS, 'ROADMAP.md'), 'utf8');
+  const sections = roadmap.split(/^## Phase (\d)/m);
+  for (let i = 1; i < sections.length; i += 2) {
+    const phase = Number(sections[i]);
+    const body = sections[i + 1];
+    const seen = new Set();
+    for (const match of body.matchAll(new RegExp(`\\b(${AREA_ALT})-(\\d{2,3})\\b`, 'g'))) {
+      const id = `${match[1]}-${String(Number(match[2])).padStart(2, '0')}`;
+      const own = phases.get(id);
+      if (own === undefined || own <= phase || seen.has(id)) continue;
+      seen.add(id);
+      problems.push(
+        `affiliation: the Phase ${phase} section cites ${id}, which is affiliated with Phase ${own} — the gate would demand work a later phase delivers`,
+      );
+    }
+  }
+  return problems;
+}
+
 /** Map every requirement to a phase, failing on overlap or missing coverage. */
 function assignPhases(reqs) {
   const problems = [];
@@ -363,6 +400,7 @@ function main() {
   const { reqs, duplicates } = collectRequirements();
   const { phases, problems } = assignPhases(reqs);
   problems.push(...auditAffiliation(reqs, phases));
+  problems.push(...auditRoadmapGates(phases));
   const errors = [...duplicates.map((d) => `duplicate id: ${d}`), ...problems];
   if (errors.length) {
     console.error('traceability check failed:');
