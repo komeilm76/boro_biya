@@ -20,9 +20,10 @@
  *      documents that govern them, and wording retired by a decision is gone.
  *   9. Phase status — every phase has a status row in docs/README.md and a status line in
  *      docs/ROADMAP.md, and the two agree (they are the only phase-status surfaces).
- *  10. Diagrams — code fences are closed, every Mermaid diagram names the requirements it
- *      draws, and the four declared state machines agree with the requirement text that
- *      defines them.
+ *  10. Diagrams, states, and vocabulary — code fences are closed; every Mermaid diagram names
+ *      the requirements it draws; the four declared state machines agree with the sentence that
+ *      declares them and with the section the state table names; and the glossary defines each
+ *      term once, naming the document that owns it.
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -333,6 +334,13 @@ const RETIRED_WORDING = [
   { phrase: 'live-sharing session is running', adr: 'ADR-013 (grants, not sessions, gate a viewer)' },
   { phrase: 'category membership', adr: 'ADR-016 (a category is a single assignment, never a role or membership)' },
   { phrase: 'membership changes', adr: 'ADR-015 (assignments change: set, change, clear, verify)' },
+  // The bare noun, wherever it appears: ADR-016 makes a category one assignment carried as a profile
+  // attribute, so the phrase list alone let the retired concept back in one word at a time.
+  {
+    pattern: /\bmembership\b/i,
+    label: 'membership',
+    adr: 'ADR-016 (a category is an assignment carried as a profile attribute, never a group a user belongs to)',
+  },
 ];
 
 function checkModelCoherence() {
@@ -359,9 +367,11 @@ function checkModelCoherence() {
         // As in check 5, text inside inline code documents the rule instead of violating it,
         // so a review record may quote a retired phrase without failing the gate.
         const prose = line.replace(/`[^`]*`/g, '');
-        for (const { phrase, adr } of RETIRED_WORDING) {
-          if (prose.includes(phrase)) {
-            failures.push(`[model] retired wording "${phrase}" in ${rel}:${index + 1} — superseded by ${adr}`);
+        for (const entry of RETIRED_WORDING) {
+          const hit = entry.pattern ? entry.pattern.test(prose) : prose.includes(entry.phrase);
+          if (hit) {
+            const label = entry.label || entry.phrase;
+            failures.push(`[model] retired wording "${label}" in ${rel}:${index + 1} — superseded by ${entry.adr}`);
           }
         }
       });
@@ -527,13 +537,29 @@ function checkDiagrams() {
     }
   }
 
-  // The declared state machines: requirement text, table, and drawing must agree.
+  // The declared state machines: the declaring sentence, the table, and the section the table names.
   const tableStates = new Map();
+  const tableSections = new Map();
   for (const line of lines) {
-    const row = /^\|\s*`([^`]+)`\s*\|([^|]*)\|/.exec(line);
-    if (row) tableStates.set(row[1].trim(), new Set(stateNames(row[2], ',')));
+    const row = /^\|\s*`([^`]+)`\s*\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    if (row) {
+      tableStates.set(row[1].trim(), new Set(stateNames(row[2], ',')));
+      tableSections.set(row[1].trim(), row[4].trim());
+    }
   }
-  const drawn = new Set(blocks.flatMap((block) => block.code.split(/[^A-Za-z0-9_-]+/)));
+  // Section number -> the first diagram in that section, so "Drawn in §7.3" is a checked claim.
+  const headings = [];
+  lines.forEach((line, index) => {
+    const m = /^(#{2,6})\s+(\d+(?:\.\d+)?)\b/.exec(line);
+    if (m) headings.push({ number: m[2], level: m[1].length, line: index + 1 });
+  });
+  const sectionDiagram = new Map();
+  for (const heading of headings) {
+    const next = headings.find((h) => h.line > heading.line && h.level <= heading.level);
+    const limit = next ? next.line : lines.length + 1;
+    const block = blocks.find((b) => b.start > heading.line && b.start < limit);
+    if (block) sectionDiagram.set(heading.number, block);
+  }
   for (const { machine, source, pattern, separator } of STATE_MACHINES) {
     const match = pattern.exec(read(join(ROOT, source)));
     if (!match) {
@@ -544,20 +570,52 @@ function checkDiagrams() {
     const listed = tableStates.get(machine);
     if (!listed) {
       failures.push(`[diagrams] ${DIAGRAMS_DOC} has no state-table row for "${machine}"`);
-    } else {
-      const missing = [...declared].filter((state) => !listed.has(state)).sort();
-      const extra = [...listed].filter((state) => !declared.has(state)).sort();
-      if (missing.length || extra.length) {
-        failures.push(
-          `[diagrams] ${machine}: ${source} declares ${declared.size} states, ${DIAGRAMS_DOC} lists ${listed.size}` +
-            `${missing.length ? ` (missing ${missing.join(', ')})` : ''}${extra.length ? ` (not declared: ${extra.join(', ')})` : ''}`,
-        );
-      }
+      continue;
     }
-    const notDrawn = [...declared].filter((state) => !drawn.has(state)).sort();
-    for (const state of notDrawn) {
-      failures.push(`[diagrams] ${machine}: state "${state}" is declared in ${source} but drawn in no diagram`);
+    const missing = [...declared].filter((state) => !listed.has(state)).sort();
+    const extra = [...listed].filter((state) => !declared.has(state)).sort();
+    if (missing.length || extra.length) {
+      failures.push(
+        `[diagrams] ${machine}: ${source} declares ${declared.size} states, ${DIAGRAMS_DOC} lists ${listed.size}` +
+          `${missing.length ? ` (missing ${missing.join(', ')})` : ''}${extra.length ? ` (not declared: ${extra.join(', ')})` : ''}`,
+      );
     }
+    const reference = /§(\d+(?:\.\d+)?)/.exec(tableSections.get(machine) || '');
+    if (!reference) {
+      failures.push(`[diagrams] ${machine}: the state table row for "${machine}" names no "Drawn in" section`);
+      continue;
+    }
+    const drawn = sectionDiagram.get(reference[1]);
+    if (!drawn) {
+      failures.push(`[diagrams] ${machine}: §${reference[1]} in ${DIAGRAMS_DOC} draws no diagram`);
+      continue;
+    }
+    const tokens = new Set(drawn.code.split(/[^A-Za-z0-9_-]+/));
+    for (const state of [...declared].filter((s) => !tokens.has(s)).sort()) {
+      failures.push(`[diagrams] ${machine}: state "${state}" is declared in ${source} but §${reference[1]} does not draw it`);
+    }
+  }
+
+  // Glossary structure: one entry per term, each naming the document or identifier that owns it.
+  const glossary = join(ROOT, 'docs', 'GLOSSARY.md');
+  if (existsSync(glossary)) {
+    const seen = new Map();
+    read(glossary)
+      .split('\n')
+      .forEach((line, index) => {
+        const row = /^\|\s*\*\*(.+?)\*\*\s*\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+        if (!row) return;
+        const term = row[1].trim();
+        const authority = row[3].trim();
+        if (seen.has(term)) {
+          failures.push(`[glossary] term "${term}" is defined twice in docs/GLOSSARY.md (lines ${seen.get(term)} and ${index + 1})`);
+        } else {
+          seen.set(term, index + 1);
+        }
+        if (!/\[|\b[A-Z]{2,4}-\d{1,3}\b/.test(authority)) {
+          failures.push(`[glossary] entry "${term}" names no document and no requirement — a definition must say who owns it`);
+        }
+      });
   }
 
   if (blocks.length) notes.push(`diagrams: ${blocks.length} Mermaid blocks, ${STATE_MACHINES.length} state machines cross-checked`);
@@ -567,7 +625,7 @@ const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams).');
+  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
@@ -600,5 +658,5 @@ console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
 console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
 console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
-console.log(' 10. code fences closed, every diagram cites its requirements, and the declared state machines agree with the text');
+console.log(' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once');
 for (const note of notes) console.log(`  · ${note}`);

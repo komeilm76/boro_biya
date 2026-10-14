@@ -63,7 +63,7 @@ After the audience change, `SECURITY.md` and the API inventory implied that an a
 `scripts/gates/phase0.mjs` gained an eighth check so §2.2 cannot recur silently. It has two lists, both maintained in the script:
 
 - **Governed concepts.** Each table or capability introduced by a decision must be mentioned in the documents that govern it. `live_share_grants`, for example, must appear in the data model, in `SECURITY.md`, and in the data-classification retention table. A document that loses it fails the gate with the concept and the decision that introduced it.
-- **Retired wording.** Phrasings replaced by a decision are listed with the decision that replaced them; any occurrence fails the gate with file, line, and the superseding decision. Current entries cover the session-wide sharing model, follower-wide history access, multi-category assignments, and category-as-membership vocabulary.
+- **Retired wording.** Phrasings replaced by a decision are listed with the decision that replaced them; any occurrence fails the gate with file, line, and the superseding decision. Current entries cover the session-wide sharing model, follower-wide history access, multi-category assignments, and vocabulary that treated a category as a group a user belongs to.
 
 The check exists because structure and truth are different properties: the pack that produced §2.2 had perfect identifiers and links. Its limitation is honest and stated: it can only catch drift for concepts and phrasings that someone remembered to list. Adding an entry is part of changing a model, which the conventions document now requires alongside the requirement IDs.
 
@@ -404,7 +404,7 @@ Fixed by separating the invariant from the mechanism. `SEC-08` now requires the 
 
 ### 12.2 Vocabulary residue: half-propagated category wording
 
-Round 3 replaced "membership" language for the single-category model in `SOS-25`, `SOS-27`, and `SOS-28`, but eight other places still used it: `ADM-01`, `DATA-21`, `QA-115`, `PRIV-30`, `ADR-015`, `ADR-016` (including its heading), `MASTER_PROJECT_PROMPT`, and the API inventory. "Membership" implies a group a user belongs to and can hold several of; the model is exactly one assignment per user, carried as a profile attribute and never a permission.
+Round 3 replaced the older vocabulary for the single-category model in `SOS-25`, `SOS-27`, and `SOS-28`, but eight other places still used it: `ADM-01`, `DATA-21`, `QA-115`, `PRIV-30`, `ADR-015`, `ADR-016` (including its heading), `MASTER_PROJECT_PROMPT`, and the API inventory. The retired noun implied a group a user belongs to and can hold several of; the model is exactly one assignment per user, carried as a profile attribute and never a permission.
 
 Fixed: every site now uses category/assignment vocabulary, the ADR-016 heading became "an assistance category is not a role" (its anchor was referenced nowhere, and the one internal link that used the old anchor was updated), and two entries were added to the gate's retired-wording list — `category membership` and `membership changes` — so the same half-propagation fails the gate next time instead of waiting for a review pass. The gate caught three further occurrences immediately on the next run, including one I had missed in the review record itself.
 
@@ -524,7 +524,7 @@ The user guide remains an outline on purpose: its pages are published as feature
 
 ### 14.5 Tests
 
-Each mutation was applied to a scratch copy of [DIAGRAMS](../DIAGRAMS.md), the gate was run, and the file was restored from that copy — never from git.
+Each mutation was applied to a scratch copy of [DIAGRAMS](../DIAGRAMS.md), the gate was run, and the file was restored from that copy — never from git. (The line numbers below refer to the file as it stood at this pass; later edits shift them, and §15.4 quotes the current ones.)
 
 ```
 A state added to the table only (the requirement text untouched)
@@ -563,3 +563,103 @@ node /tmp/mmv/check.mjs docs/DIAGRAMS.md      # scratch parser, not a repository
 ```
 
 The requirement total moved from 649 to 650 because `QA-118` is itself a requirement, mapped to Phase 0 like the other gate rules.
+
+## 15. Tenth pass — reviewing the diagrams and the glossary (2026-10-14)
+
+The two documents added in §14 were reviewed the way the rest of the pack is reviewed: every claim checked against the document that owns it, every diagram re-parsed, and every definition re-read against the requirement it summarises. Nothing structural was wrong — the checks in §14.3 held — but fifteen statements were, and one of them was a defect the previous pass had claimed to have fixed everywhere.
+
+### 15.1 The diagrams: fifteen defects
+
+| # | Defect | Fix |
+| --- | --- | --- |
+| 1 | The topology drew `outbox events` from the core API to the Relation Service. The only outbox table defined in the pack belongs to the **SOS** Service schema, so the arrow asserted a publisher that does not exist and hid the one that does. | Arrow removed; the constraint now reads: where cross-service delivery must be reliable it uses an outbox table — the one defined today belongs to the SOS Service schema, and its consumers are idempotent (`OPS-19`, `DATA_MODEL`). |
+| 2 | §6.3 drew `recording → purged → off`, implying that **deleting the location trail turns history sharing off**. It does not: deleting is a data operation (`MAP-22`, `PRIV-24`) and leaves the setting as it was. | The diagram models the setting (`off`/`on`); the note states that deleting the trail removes rows immediately and leaves the setting as it was. |
+| 3 | §6.2 mixed two subjects in one machine: `off` conflated the owner's **master switch** with "no grant names this viewer", and `ended → off` implied that one grant's expiry stops the owner's sharing. | Redrawn as one grant to one viewer (`none → active → ended`), with the master switch, the live share session, and the individual revoke rule in the note (`MAP-08`, `PRIV-04`, `REL-07`, `PRIV-23`). |
+| 4 | The database node said "one cluster", while `OPS-17` **permits** services to share a cluster. | "one shared cluster, one schema and one least-privilege role per service (`OPS-17`, `OPS-18`)", repeated in the prose constraints. |
+| 5 | The repository map said dependency directions are enforced by an automated check, without saying the check does not exist yet. | The prose now adds that the check arrives with the packages in Phase 1 (`OPS-40`). |
+| 6 | The recovery sequence did not name the endpoints it describes, so it did not match the API inventory it will become. | It now calls `POST /auth/password/recover/questions` and `POST /auth/password/recover/verify` ([API inventory](04-api-inventory.md) §1). |
+| 7 | `dispatch or policy cancels it` invented a cancellation verb for suggestions that no requirement defines. | "the owning flow cancels it — for example when the alert is cancelled first" (`SOS-06`, `SOS-11`). |
+| 8 | `the user becomes eligible again only while holding no other active task` said the opposite of what it meant. | "eligibility returns only if the user holds no other active task" (`SOS-19`). |
+| 9 | The plugin note explained a failed upgrade but not how a successful one behaves. | An upgrade stages a new version against the recorded `previous_version`, and the running version keeps serving until the new one is activated (`PLG-28`, `PLG-44`). |
+| 10 | §9 claimed the four vocabularies "also appear in requirement text". For the plugin states that is false — they are declared in `PLUGIN_SYSTEM` §5 prose. | The intro now names the declaring documents and sections; the plugin row cites `PLG-15 … PLG-46` instead of `PLG-04 … PLG-46`. |
+| 11 | "Two orthogonal facts are deliberately not status values" — the second (a task's recorded reason) is metadata, not state. | Reworded: the setup flags are orthogonal state; the reason is metadata on the event (`AUTH-27`, `SOS-17`, `SOS-20`). |
+| 12 | The release diagram drew the rollback edge out of `record`, i.e. a failure while writing the release notes. | The edge leaves `prod` — "a failure that has shipped" — with a sentence noting that a release failing before promotion is simply not released (`QA-92 … QA-95`). |
+| 13 | §10.3 listed the documentation gate's checks inline, a list that changes whenever a check is added. | Replaced with a pointer to the checks in [CI and gates](03-ci-and-gates.md) §3. |
+| 14 | The repository map's `docs/` label predated the two documents it was describing. | It now names diagrams and glossary alongside the rest. |
+| 15 | The blocking note said blocking "removes **both** users from search". `REL-05` hides the blocked user from the blocker's search results; it does not claim the reverse. | Both the note and the glossary entry now state exactly what `REL-05` states, and the glossary adds the retention reason the requirement gives. |
+
+### 15.2 The glossary: seven definitions needed correcting — and the sweep found a real residue
+
+| # | Defect | Fix |
+| --- | --- | --- |
+| 1 | **The retired noun was still alive outside the glossary.** Checking the "Assistance category" entry against its sources turned up `Membership is a profile attribute…` in [DATA_MODEL](../DATA_MODEL.md) §1 (`user_categories`) and `…verified that user's membership` in ADR-015's Decision text. §12 claimed every site had been converted, and the gate agreed — because its retired-wording entries banned the two phrases `category membership` and `membership changes`, not the noun itself. | Both reworded to assignment vocabulary; the gate now also carries a pattern entry for the bare noun, so the concept cannot come back one word at a time. |
+| 2 | **Open question** was defined with "an affected area". The register's columns are owner, decide-by phase, and the effect of leaving it open. | Definition corrected to the register's own columns. |
+| 3 | **ADR** listed context, consequences, and alternatives but omitted the decision and the revisit trigger the template requires. | Definition now follows the template: context, decision, alternatives with reasons, consequences, revisit trigger. |
+| 4 | **Follow request** claimed "no notifications beyond the request itself" — unsupported by `REL-02`, which says only that the request grants no access. | Replaced with what the requirement supports: no profile data, no location, no access to the other side's activity. |
+| 5 | **Outbox event** did not say where the table lives or what it replaces. | It names the SOS Service schema (`DATA_MODEL`) and the rule it exists to avoid — cross-service table writes (`OPS-18`). |
+| 6 | **Data class** said the labels are "assigned in the data inventory" while linking to the section that defines them. | Now names §1 for the classes and §3 for the per-item assignment. |
+| 7 | **Block** said blocking "hides both users from search", the same over-claim as defect 15 in §15.1. | Matches `REL-05`, and names the reason the block record is retained. |
+
+The glossary's other thirty-two entries were checked line by line and stand as written.
+
+### 15.3 The gate learned three things
+
+Check 10 was extended rather than duplicated, following the gate-change procedure (`QA-82 … QA-86`), so its identifier (`QA-118`) and the requirement count are unchanged:
+
+1. **The `Drawn in` column is now a checked claim.** The gate reads the section number from the state table, finds that section's diagram, and requires every declared state to appear in it. Before this, a table row could point at the wrong section — or at a section with no diagram at all — and nothing noticed; the drawings were only required to contain the states *somewhere*.
+2. **The glossary has structure checks**: each term defined exactly once, and every entry names a document or a requirement that owns it. A second definition of the same word is how two documents begin to disagree about it.
+3. **The retired vocabulary is enforced by concept, not by phrase**: the bare noun is banned case-insensitively, with inline code still exempt so a document can quote what it retired.
+
+### 15.4 Tests
+
+Six new mutations, each applied to a copy, run, and restored from that copy — never from git. Tests A, C, D, and E from §14 were re-run against the edited file and still fail, with the line numbers moved by the edits:
+
+```
+A  a state added to the state table only — "declares 5 states, docs/DIAGRAMS.md lists 6"  exit 1
+C  the last closing fence removed — "docs/DIAGRAMS.md:399 code fence is never closed"     exit 1
+D  a Cited line removed — "docs/DIAGRAMS.md:253 diagram has no Cited line naming ..."    exit 1
+E  a non-existent identifier cited — "docs/DIAGRAMS.md:353 cites unknown identifier"      exit 1
+```
+
+```
+F  the task state row points at §7.2 instead of §7.3
+   - [diagrams] sos_tasks.status: state "assigned" is declared in docs/PRODUCT_REQUIREMENTS.md
+     but §7.2 does not draw it                                                    exit 1
+
+G  the plugin state row points at §9, which has no diagram
+   - [diagrams] plugin_installations.status: §9 in docs/DIAGRAMS.md draws no diagram  exit 1
+
+H  a state renamed inside the section the table names (en_route -> enroute)
+   - [diagrams] sos_tasks.status: state "en_route" is declared in docs/PRODUCT_REQUIREMENTS.md
+     but §7.3 does not draw it                                                    exit 1
+
+I  a term defined twice in the glossary
+   - [glossary] term "Grant (live-share grant)" is defined twice in docs/GLOSSARY.md
+     (lines 36 and 56)                                                            exit 1
+
+J  a glossary entry with no owner
+   - [glossary] entry "Block" names no document and no requirement — a definition
+     must say who owns it                                                         exit 1
+
+K  the retired noun reintroduced into DATA_MODEL §1 (the defect found in §15.2)
+   - [model] retired wording "<the noun>" in DATA_MODEL.md:19 — superseded by ADR-016  exit 1
+
+all mutations restored from the pre-test copies                                   exit 0
+```
+
+The gate prints the offending word verbatim; it is shown here as `<the noun>` because this record is itself scanned by the check it is describing — the same reason a document quotes retired wording in inline code.
+
+### 15.5 Evidence (tenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 10 checks, exit 0
+node scripts/gates/traceability.mjs           # 650 requirements, 116 groups, 5 pull-forwards, exit 0
+#   · diagrams: 16 Mermaid blocks, 4 state machines cross-checked
+
+node /tmp/mmv/check.mjs docs/DIAGRAMS.md      # scratch parser, not a repository dependency
+#   fence balance: ok
+#   mermaid blocks: 16   (mermaid 12.2.0)
+#   every block: OK
+```
+
+No requirement was added or moved: `QA-118` already owns the check that was extended, so the total stays at 650 and the traceability file is unchanged apart from the documents it cites.
