@@ -20,6 +20,9 @@
  *      documents that govern them, and wording retired by a decision is gone.
  *   9. Phase status — every phase has a status row in docs/README.md and a status line in
  *      docs/ROADMAP.md, and the two agree (they are the only phase-status surfaces).
+ *  10. Diagrams — code fences are closed, every Mermaid diagram names the requirements it
+ *      draws, and the four declared state machines agree with the requirement text that
+ *      defines them.
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -49,6 +52,8 @@ const REQUIRED_DOCS = [
   'docs/ROADMAP.md',
   'docs/DECISIONS.md',
   'docs/REFERENCES.md',
+  'docs/DIAGRAMS.md',
+  'docs/GLOSSARY.md',
   'docs/development/00-repository-conventions.md',
   'docs/development/01-development-environment.md',
   'docs/development/02-dependency-policy.md',
@@ -395,11 +400,174 @@ function checkSecrets() {
   }
 }
 
+// --------------------------------------- check 10: diagrams and state coherence
+const DIAGRAMS_DOC = 'docs/DIAGRAMS.md';
+
+/**
+ * State machines whose vocabulary must agree in three places: the requirement text that
+ * declares it, the state table in docs/DIAGRAMS.md §9, and the drawing itself. Each entry
+ * names the declaring document and the sentence that lists the states, so a failure points
+ * at the text rather than at the gate.
+ */
+const STATE_MACHINES = [
+  {
+    machine: 'account_status',
+    source: 'docs/PRODUCT_REQUIREMENTS.md',
+    pattern: /`account_status` has exactly four values:\s*([^.\n]+)\./,
+    separator: ',',
+  },
+  {
+    machine: 'sos_suggestions.status',
+    source: 'docs/PRODUCT_REQUIREMENTS.md',
+    pattern: /Suggestions carry the states\s*([^.\n]+?), and/,
+    separator: ',',
+  },
+  {
+    machine: 'sos_tasks.status',
+    source: 'docs/PRODUCT_REQUIREMENTS.md',
+    pattern: /Use a server-validated state machine, for example:\s*`([^`]+)`/,
+    separator: '->',
+  },
+  {
+    machine: 'plugin_installations.status',
+    source: 'docs/PLUGIN_SYSTEM.md',
+    pattern: /Plugin lifecycle states:\s*([^.\n]+)\./,
+    separator: ',',
+  },
+];
+
+/** Extract state names from prose, from a table cell, or from an arrow chain. */
+function stateNames(text, separator) {
+  return text
+    .split(separator === '->' ? '->' : ',')
+    .map((token) => token.replace(/[`*\s]/g, ''))
+    .filter((token) => /^[A-Za-z][A-Za-z0-9_]*$/.test(token));
+}
+
+/** Mermaid blocks of a file, with the line their fence opens on. */
+function mermaidBlocks(file) {
+  const out = [];
+  let open = null;
+  let start = 0;
+  let inFence = false;
+  read(file)
+    .split('\n')
+    .forEach((line, index) => {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith('```')) {
+        if (!inFence) {
+          inFence = true;
+          start = index + 1;
+          open = trimmed.slice(3).trim() === 'mermaid' ? [] : null;
+        } else {
+          inFence = false;
+          if (open) out.push({ start, code: open.join('\n') });
+          open = null;
+        }
+        return;
+      }
+      if (inFence && open) open.push(line);
+    });
+  return out;
+}
+
+function checkDiagrams() {
+  const rel = (file) => relative(ROOT, file).split('\\').join('/');
+
+  // Every code fence is closed. An unclosed fence silently swallows the rest of a
+  // document, including links, which is how a broken document passes review.
+  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md')])) {
+    let inFence = false;
+    let opened = 0;
+    read(file)
+      .split('\n')
+      .forEach((line, index) => {
+        if (line.trimStart().startsWith('```')) {
+          if (!inFence) {
+            inFence = true;
+            opened = index + 1;
+          } else {
+            inFence = false;
+          }
+        }
+      });
+    if (inFence) failures.push(`[diagrams] ${rel(file)}:${opened} code fence is never closed`);
+  }
+
+  if (!existsSync(join(ROOT, DIAGRAMS_DOC))) return; // check 1 reports the missing document
+
+  // Every diagram names the requirements it draws, and each identifier named exists.
+  const defined = new Set();
+  for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
+    for (const match of read(file).matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g)) defined.add(match[1]);
+  }
+  const decisions = new Set();
+  for (const match of read(join(ROOT, 'docs', 'DECISIONS.md')).matchAll(/^#{2,6}\s+(ADR-\d{3})\b/gm)) decisions.add(match[1]);
+  const diagrams = read(join(ROOT, DIAGRAMS_DOC));
+  const lines = diagrams.split('\n');
+  const blocks = mermaidBlocks(join(ROOT, DIAGRAMS_DOC));
+  for (const block of blocks) {
+    let above = '';
+    for (let i = block.start - 2; i >= 0; i -= 1) {
+      if (lines[i].trim() !== '') {
+        above = lines[i];
+        break;
+      }
+    }
+    const cited = above.match(/[A-Z]{2,4}-\d{1,3}|ADR-\d{3}/g) || [];
+    if (!cited.length) {
+      failures.push(`[diagrams] ${DIAGRAMS_DOC}:${block.start} diagram has no "Cited:" line naming the requirements it draws`);
+    }
+    for (const id of cited) {
+      const known = id.startsWith('ADR-') ? decisions.has(id) : defined.has(id);
+      if (!known) {
+        const kind = id.startsWith('ADR-') ? 'decision' : 'requirement';
+        failures.push(`[diagrams] ${DIAGRAMS_DOC}:${block.start} cites unknown ${kind} identifier "${id}"`);
+      }
+    }
+  }
+
+  // The declared state machines: requirement text, table, and drawing must agree.
+  const tableStates = new Map();
+  for (const line of lines) {
+    const row = /^\|\s*`([^`]+)`\s*\|([^|]*)\|/.exec(line);
+    if (row) tableStates.set(row[1].trim(), new Set(stateNames(row[2], ',')));
+  }
+  const drawn = new Set(blocks.flatMap((block) => block.code.split(/[^A-Za-z0-9_-]+/)));
+  for (const { machine, source, pattern, separator } of STATE_MACHINES) {
+    const match = pattern.exec(read(join(ROOT, source)));
+    if (!match) {
+      failures.push(`[diagrams] ${machine}: the state list is missing from ${source} — the gate cannot verify it`);
+      continue;
+    }
+    const declared = new Set(stateNames(match[1], separator));
+    const listed = tableStates.get(machine);
+    if (!listed) {
+      failures.push(`[diagrams] ${DIAGRAMS_DOC} has no state-table row for "${machine}"`);
+    } else {
+      const missing = [...declared].filter((state) => !listed.has(state)).sort();
+      const extra = [...listed].filter((state) => !declared.has(state)).sort();
+      if (missing.length || extra.length) {
+        failures.push(
+          `[diagrams] ${machine}: ${source} declares ${declared.size} states, ${DIAGRAMS_DOC} lists ${listed.size}` +
+            `${missing.length ? ` (missing ${missing.join(', ')})` : ''}${extra.length ? ` (not declared: ${extra.join(', ')})` : ''}`,
+        );
+      }
+    }
+    const notDrawn = [...declared].filter((state) => !drawn.has(state)).sort();
+    for (const state of notDrawn) {
+      failures.push(`[diagrams] ${machine}: state "${state}" is declared in ${source} but drawn in no diagram`);
+    }
+  }
+
+  if (blocks.length) notes.push(`diagrams: ${blocks.length} Mermaid blocks, ${STATE_MACHINES.length} state machines cross-checked`);
+}
+
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets, model coherence, phase status).');
+  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
@@ -413,6 +581,7 @@ checkAudience();
 checkSecrets();
 checkModelCoherence();
 checkPhaseStatus();
+checkDiagrams();
 
 if (failures.length) {
   console.error(`\nPhase 0 documentation gate FAILED with ${failures.length} problem(s):\n`);
@@ -431,4 +600,5 @@ console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
 console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
 console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
+console.log(' 10. code fences closed, every diagram cites its requirements, and the declared state machines agree with the text');
 for (const note of notes) console.log(`  · ${note}`);

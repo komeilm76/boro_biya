@@ -186,6 +186,7 @@ const PHASE_RULES = [
   ['QA', 114, 115, 5],  // SOS category enforcement and category-as-metadata
   ['QA', 116, 116, 0],  // documentation gate: model coherence and retired wording
   ['QA', 117, 117, 0],  // documentation gate: phase-status agreement between README and ROADMAP
+  ['QA', 118, 118, 0],  // documentation gate: diagram integrity and state-set coherence
 
   // Data model invariants
   ['DATA', 1, 1, 2],

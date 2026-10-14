@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 ## 1. Commands
 
 ```bash
-node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence, phase status
+node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence, phase status, diagrams
 node scripts/gates/traceability.mjs  # Traceability file is current (run with --write to update)
 ```
 
@@ -33,6 +33,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 14 | No placeholders (`TODO`/`TBD`/`FIXME`) remain in normative documents | Gate check 5 | Met |
 | 15 | No secret material is present in the repository | Gate check 7 | Met |
 | 16 | Phase 0 gate passes at the phase commit | Exit status of the command in §1, recorded in the phase report | Met |
+| 17 | Diagrams and lifecycles exist for the runtime, the data model, and the four declared state machines, and they agree with the requirement text | [DIAGRAMS](../DIAGRAMS.md) §9; gate check 10; parse evidence in the [review record](08-phase-0-review.md) §14 | Met |
 
 ## 3. Phase 1 checklist (template, to be completed when Phase 1 ends)
 

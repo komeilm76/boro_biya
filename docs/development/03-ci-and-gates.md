@@ -53,12 +53,15 @@ It enforces, in order:
 8. **[QA-116]** **Model coherence** — every data concept introduced by a decision is reflected in the documents that govern it (data model, privacy rules, requirement that promises it), and wording retired by a decision no longer appears anywhere in the documentation set, except where a document quotes it inside inline code to explain the change. Both lists are maintained in `scripts/gates/phase0.mjs`.
 
 9. **[QA-117]** **Phase status agreement** — every phase has a status row in `docs/README.md` and a `**Status:` line in its [ROADMAP](../ROADMAP.md) section, and the two agree. Phase status is the one fact that lives in two documents, so it is the one fact the gate cross-checks.
+10. **[QA-118]** **Diagram integrity and state coherence** — every code fence in the documentation set is closed, so a document cannot silently swallow its own tail; every Mermaid diagram in [DIAGRAMS](../DIAGRAMS.md) is preceded by a `Cited:` line naming the requirements it draws, and every identifier named there exists; and each state machine declared in [DIAGRAMS](../DIAGRAMS.md) §9 lists exactly the states its governing text declares, every one of them drawn.
+
+Check 10 exists because a diagram is the most convincing place for a stale model to hide: it is read faster than the prose it summarises and is rarely re-derived by hand. The gate reads the state lists out of [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3 and §7 and [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5, compares them with the table and the drawings, and fails on a rename, an addition, or a removal — so the picture cannot drift away from the requirement it illustrates.
 
 Check 9 exists because phase status is the one fact recorded in two documents; cross-checking it removes the only place where "which phase is active" could quietly disagree.
 
 Check 8 exists because structure alone does not keep documents truthful: a pack can pass every inventory, link, and ID check while one document still describes a superseded model ([ADR-011](../DECISIONS.md#adr-011--documentation-architecture-and-requirement-identifiers)). Each entry in its retired-wording list names the decision that replaced the wording, so a failure explains itself.
 
-The gate is dependency-free Node.js so it runs on Linux and Windows with no install step.
+The gate is dependency-free Node.js so it runs on Linux and Windows with no install step. Mermaid syntax itself is verified when a diagram is authored, with the parser and version recorded in the review record; the structural checks above stay inside the dependency-free gate.
 
 ## 4. CI workflow design
 

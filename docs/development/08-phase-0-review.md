@@ -441,7 +441,7 @@ Three questions were asked of the pack: whether the files and structure exist fo
 
 ### 13.1 Files and structure
 
-**Present now:** 30 documents under `/docs` (index, requirements, architecture, security, data model, plugin system, API, quality gates, roadmap, decisions, references, threat models, data classification, conventions, development guides, performance policy, user guide), two dependency-free gate scripts, the CI workflow with pinned actions, the environment template, and the repository dotfiles. Everything Phase 0 promises exists and is enforced by the gate.
+**Present now:** 26 documents under `/docs` (index, requirements, architecture, security, data model, plugin system, API, quality gates, roadmap, decisions, references, threat models, data classification, conventions, development guides, performance policy, user guide), two dependency-free gate scripts, the CI workflow with pinned actions, the environment template, and the repository dotfiles. Everything Phase 0 promises exists and is enforced by the gate.
 
 **Deliberately absent:** the code tree — `apps/web`, `apps/api`, `apps/android`, `services/relation`, `services/sos`, `packages/contracts`, `packages/validation`, `packages/api-client`, `packages/config`, `packages/ui`, `packages/test-utils` — is specified ([ARCHITECTURE](../ARCHITECTURE.md) §5, `OPS-28 … OPS-43`) with dependency-direction rules, and created in Phase 1. That is `ADR-010`: Phase 0 is documentation-only, and the Phase 0 checklist row "no feature implementation is present" depends on the tree not existing yet.
 
@@ -483,6 +483,83 @@ node scripts/gates/phase0.mjs                 # 9 checks, exit 0
 
 The requirement total moved from 648 to 649 because `QA-117` is itself a requirement, mapped to Phase 0 like the gate rules it joins.
 
+## 14. Ninth pass — diagrams, lifecycles, and orientation resources (2026-10-14)
 
+Three more questions about the pack: do we have the diagrams, do we have the cycles, and do we have the resources that explain how to use the project? The first two had no answer in the repository at all, and the third had a gap in the middle. All three were closed, and the diagrams that closed the first two are now checked by a gate.
 
+### 14.1 Diagrams — none existed
 
+`grep -rn 'mermaid\|diagram\|flowchart' docs/` returned one hit in the entire pack: the sentence in [DATA_MODEL](../DATA_MODEL.md) §1 promising an ER diagram *in the phase that builds each domain*. Topology, the request path, every state transition, and the shape of the repository were prose only, so a reader — human or agent — had to reconstruct each of them from sentences and hope the reconstruction matched.
+
+Added [DIAGRAMS](../DIAGRAMS.md) as a first-class document: **16 Mermaid blocks**, each preceded by a `Cited:` line naming the requirements it draws — the repository map, the system topology and schema ownership, the request path, the account states, password recovery, follow requests and blocking, live grants, location history, the SOS flow from alert to resolution, suggestion states, task states, the plugin lifecycle, and the four cycles (phase, decision, documentation, release) that govern the work itself. §9 of the document holds the four state vocabularies; §1 states the rule that matters most: **the requirement text is normative and the diagram is derived**, so a disagreement is a defect fixed in the same change.
+
+Verification was not assumed. Every block parses with **Mermaid 12.2.0** (npm registry, installed in an isolated scratch environment — it is not a repository dependency), recorded in [REFERENCES](../REFERENCES.md) and in §14.6 below. GitHub remains the renderer of record; a renderer check in CI waits for Phase 1, when dependencies are allowed, and is recorded as such rather than claimed ([QA-60](03-ci-and-gates.md) §1).
+
+### 14.2 Cycles — the lifecycles existed only as scattered prose
+
+Four state machines were declared in prose across three documents — account states ([PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3), suggestion states and task transitions (§7), plugin installation states ([PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5) — and the follow-request, blocking, live-grant, history, and recovery lifecycles were described the same way. Nothing showed them together, and nothing could tell whether a later edit renamed a state in one place and missed the other.
+
+Closed in the same document: §5–§8 draw the domain lifecycles, §9 tabulates the four checked vocabularies, and §10 draws the project's own cycles — the phase cycle (deliver, evidence, gate, owner approval, next phase), the decision cycle (question, owner, decide-by phase, ADR, and what an unresolved question blocks), the documentation cycle (requirement, identifier, traceability row, gate), and the release cycle (freeze, gates, build once, verify, rehearse, promote, record, announce, roll back).
+
+### 14.3 A gate for diagrams and state coherence — check 10, `QA-118`
+
+The pack now contains 16 diagrams and four declared state sets, which is exactly the kind of material that drifts silently: a picture is read faster than the prose it summarises and is rarely re-derived. So check 10 was added to the documentation gate, following the gate-change procedure (`QA-82 … QA-86`): it fails loudly with file and line, the catalogue row and the pull-request path were updated, the defect demonstration is in §14.5, and no existing gate was weakened.
+
+It checks three things:
+
+1. **Every code fence is closed.** An unclosed fence silently swallows the rest of a document — and because the link check ignores fenced content, the swallowed links were never checked either. A document could therefore pass every other check while rendering as one long code block.
+2. **Every diagram cites existing requirements.** The line above each Mermaid block must name requirement identifiers, and each identifier must exist — requirement IDs are resolved against their definitions, `ADR-` ids against the headings in [DECISIONS](../DECISIONS.md). A citation of `OPS-99` fails, and so does a renamed ADR.
+3. **The declared state machines agree with requirement text.** For `account_status`, `sos_suggestions.status`, `sos_tasks.status`, and `plugin_installations.status`, the gate extracts the states from the sentence that declares them, compares them with the table in DIAGRAMS §9, and requires every declared state to be drawn in some diagram. The requirement text is the source; the table and the picture are downstream.
+
+### 14.4 Resources for using the project — a glossary was missing, and nothing pointed at the new material
+
+Orientation resources already existed and were checked: the [documentation index](../README.md) with an audience and a read-when column, the root [README](../../README.md) "Where to start", [CONTRIBUTING](../../CONTRIBUTING.md), the [development environment](01-development-environment.md), and the [conventions](00-repository-conventions.md). Two things were missing:
+
+- **Vocabulary.** Terms that this project uses in its own way — grant versus session, suggestion versus task, assignment versus role, master switch versus audience, pull-forward versus gate exception, retired wording, effective access — had no single definition. A reader had to infer each from the document that used it. Added [GLOSSARY](../GLOSSARY.md): 39 entries in three tables (process and governance, data and access model, product and safety), each naming the document that owns the definition, with the rule that a disagreement is a defect in the glossary.
+- **Pointers.** Neither index mentioned diagrams or vocabulary. Added: rows 4 and 5 of the index's "Start here" table, an "Orientation" section in the document map, the owner-facing line in the root README, step 5 of CONTRIBUTING, and the pointer in [MASTER_PROJECT_PROMPT](../MASTER_PROJECT_PROMPT.md) that agents read first.
+
+**Correction:** §13.1 claimed 30 documents under `/docs`. The count at that commit was 26 (the 30 included the root `README.md`, `CONTRIBUTING.md`, and the pull-request template). §13.1 now reads 26, and the pack stands at 28 documents under `/docs` — 31 Markdown files in the repository.
+
+The user guide remains an outline on purpose: its pages are published as features ship, and no feature may be described as available before it is (`GOV-43`, and the guide's own maintenance rules). That is a deliberate state, not a missing resource, and this pass did not change it.
+
+### 14.5 Tests
+
+Each mutation was applied to a scratch copy of [DIAGRAMS](../DIAGRAMS.md), the gate was run, and the file was restored from that copy — never from git.
+
+```
+A state added to the table only (the requirement text untouched)
+  - [diagrams] sos_suggestions.status: docs/PRODUCT_REQUIREMENTS.md declares 5 states,
+    docs/DIAGRAMS.md lists 6 (not declared: reopened)                                  exit 1
+
+B state renamed in the drawing only (en_route -> enroute)
+  - [diagrams] sos_tasks.status: state "en_route" is declared in docs/PRODUCT_REQUIREMENTS.md
+    but drawn in no diagram                                                            exit 1
+
+C the closing fence of the last diagram removed
+  - [diagrams] docs/DIAGRAMS.md:390 code fence is never closed                         exit 1
+
+D the "Cited:" line above a diagram removed
+  - [diagrams] docs/DIAGRAMS.md:247 diagram has no "Cited:" line naming the
+    requirements it draws                                                              exit 1
+
+E a plausible but non-existent identifier cited (OPS-99)
+  - [diagrams] docs/DIAGRAMS.md:344 cites unknown requirement identifier "OPS-99"      exit 1
+
+# every mutation restored from the pre-test copy                                    exit 0
+```
+
+### 14.6 Evidence (ninth pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 650 requirements, 116 groups, 5 pull-forwards
+node scripts/gates/phase0.mjs                 # 10 checks, exit 0
+#   · traceability ok: 650 requirements mapped to phases
+#   · diagrams: 16 Mermaid blocks, 4 state machines cross-checked
+
+node /tmp/mmv/check.mjs docs/DIAGRAMS.md      # scratch parser, not a repository dependency
+#   fence balance: ok
+#   mermaid blocks: 16   (mermaid 12.2.0)
+#   every block: OK
+```
+
+The requirement total moved from 649 to 650 because `QA-118` is itself a requirement, mapped to Phase 0 like the other gate rules.

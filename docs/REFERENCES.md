@@ -16,6 +16,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | 2026-10-13 | Runtime versions and support windows | Node 24 Active LTS (maintenance from 2026-10-20, EOL 2028-04-30); Node 26 becomes Active LTS 2026-10-28 (EOL 2029-04-30); Node 22 EOL 2027-04-30; Node 20 already EOL. |
 | 2026-10-13 | PostgreSQL support | Current major is **18** (released 2025-09-25, EOL November 2030); latest minor is **18.6** (released 2026-08-13), and 18.5 was never shipped because a regression was found after the release was wrapped (source: https://www.postgresql.org/docs/release/18.6/). PostgreSQL 14 EOL November 2026; 15/16/17 supported to 2027/2028/2029. |
 | 2026-10-13 | npm package baselines | Vue 3.5.44, Vite 8.3.4, Vuetify 4.2.4, Tailwind 4.3.3, Pinia 4.0.3, VueUse 15.0.0, `@vueuse/motion` 3.0.3, MapLibre GL JS 6.14.0, Ionic Vue 9.0.7, Capacitor 8.5.3, Fastify 5.12.7, Zod 4.6.7, Vitest 5.0.4, ESLint 10.12.0, Prettier 3.9.10, TypeScript 6.0.3 (7.0.2 exists but is outside `typescript-eslint`'s supported peer range). Recorded with sources in the [dependency policy](development/02-dependency-policy.md). |
+| 2026-10-14 | Mermaid diagram syntax | Every diagram in [DIAGRAMS](DIAGRAMS.md) parses with `mermaid@12.2.0` from the npm registry (installed in an isolated scratch environment, not a repository dependency). GitHub renders the fences; the repository does not pin the renderer version, so a diagram is re-parsed when it changes. |
 | 2026-10-13 | CI action pins | `actions/checkout` v7.0.1 (`3d3c42e5aac5ba805825da76410c181273ba90b1`), `actions/setup-node` v7.1.0 (`949feb2413d6458794dcd2491c4babbbce0c15c1`) — pinned by SHA in `.github/workflows/docs-gates.yml`. |
 
 **Environment note:** the Phase 0 workspace could reach only `github.com`, `codeload.github.com`, `api.github.com`, `registry.npmjs.org`, `pypi.org`, and `files.pythonhosted.org`. Links to other hosts below were therefore checked against version evidence (registry metadata, repository contents, mirrored documentation) rather than by direct HTTP fetch, and each link must be re-fetched from an unrestricted environment at the next phase boundary. Anything that could not be verified is marked as such rather than assumed correct.
@@ -52,6 +53,11 @@ Owner: Engineering. Reviewed: 2026-10-13.
 - MapLibre routing is provided by external routing integrations/services, not by the renderer alone. Example integration documentation: https://developers.arcgis.com/maplibre-gl-js/route-and-directions/ — this link was not verified from the Phase 0 environment; treat the page as an example only and prefer the chosen provider's own documentation.
 - Before choosing a map provider, read its current terms for tile use, attribution, geocoding, routing, caching, traffic, rate limits, and production use. Provider selection is blocked by [Q-10](DECISIONS.md#open-questions).
 - OpenStreetMap data licence (ODbL) and attribution requirements, when OSM-derived tiles or data are used: https://www.openstreetmap.org/copyright
+
+## Documentation rendering
+
+- Mermaid (diagram syntax used by the diagrams in [DIAGRAMS](DIAGRAMS.md)): https://mermaid.js.org/ — GitHub renders Mermaid in Markdown, so the source stays reviewable; syntax is verified with the parser when a diagram changes.
+- GitHub Flavored Markdown specification (tables, anchors, fenced code): https://github.github.com/gfm/ — the dialect the documentation gate's link and anchor checks assume.
 
 ## Project packages and frameworks
 

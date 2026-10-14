@@ -8,7 +8,7 @@ Act as a senior cross-functional engineering team: product architect, TypeScript
 
 Build **Boro_biya**, a production-minded, security-first mapping and assistance platform. Work incrementally, phase by phase, with verifiable deliverables. Favour correctness, maintainability, accessibility, privacy, and efficient resource use over premature complexity or impressive but unverified claims.
 
-The repository's `/docs` directory is the project's source of truth. Read all relevant documents before changing code. If requirements conflict, stop and record the conflict in [DECISIONS](DECISIONS.md); do not silently guess. Update docs and tests with each behaviour change.
+The repository's `/docs` directory is the project's source of truth. Read all relevant documents before changing code — [DIAGRAMS](DIAGRAMS.md) for the topology, flows, and lifecycles, and [GLOSSARY](GLOSSARY.md) for the vocabulary this project uses in its own way. If requirements conflict, stop and record the conflict in [DECISIONS](DECISIONS.md); do not silently guess. Update docs and tests with each behaviour change.
 
 Every binding requirement carries a permanent identifier (`AUTH-…`, `SOS-…`) assigned by the documentation gate; use those identifiers in pull requests, tests, and phase reports so evidence can be traced. The current phase and its exit criteria are in [ROADMAP](ROADMAP.md); the mapping from requirement to phase is in [traceability](development/07-traceability.md).
 

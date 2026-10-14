@@ -24,6 +24,7 @@ Deliverables and evidence:
 | Requirement identifiers with full phase coverage | [traceability](development/07-traceability.md), generated and verified by the documentation gate |
 | Phase gate checklist, runnable locally and in CI | [phase gate checklist](development/05-phase-gate-checklist.md); `node scripts/gates/phase0.mjs` |
 | Privacy defaults, release plan, performance policy | [SECURITY](SECURITY.md) §5, [release plan](development/06-release-plan.md), [performance](performance/README.md) |
+| Diagrams, lifecycles, and shared vocabulary | [DIAGRAMS](DIAGRAMS.md), [glossary](GLOSSARY.md) |
 | Documentation reviewed for defects, not only for structure | [Phase 0 review record](development/08-phase-0-review.md) — two passes, with the defects, the fixes, and the gate evidence |
 
 Exit gate: documentation reviewed by the owner; every critical design question either resolved or explicitly deferred with owner, phase, and risk (see [DECISIONS](DECISIONS.md) open-questions table); documentation gates pass locally and in CI; no feature implementation present. Per [ADR-010](DECISIONS.md#adr-010--phase-0--phase-1-gate-boundary), the Phase 0 CI job runs documentation gates only.

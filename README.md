@@ -8,7 +8,7 @@ Owner: Repo owner. Reviewed: 2026-10-13.
 
 ## Where to start
 
-- **Everyone:** [docs/README.md](docs/README.md) — the documentation index, normative language, requirement scheme, and phase status.
+- **Everyone:** [docs/README.md](docs/README.md) — the documentation index, normative language, requirement scheme, and phase status; [docs/DIAGRAMS.md](docs/DIAGRAMS.md) for the topology, flows, and lifecycles; [docs/GLOSSARY.md](docs/GLOSSARY.md) for the vocabulary.
 - **Agents and engineers:** [docs/MASTER_PROJECT_PROMPT.md](docs/MASTER_PROJECT_PROMPT.md) — the canonical instructions.
 - **Contributors:** [CONTRIBUTING.md](CONTRIBUTING.md) — workflow, gate command, and review rules.
 - **Users:** [docs/user/README.md](docs/user/README.md) — the user guide (content ships with the features; nothing is documented before it exists).
@@ -21,7 +21,7 @@ Phase 0 is verified by one dependency-free command that runs on Linux, Windows, 
 node scripts/gates/phase0.mjs
 ```
 
-It checks that every required document exists, that every requirement identifier is unique and covered by the traceability file, that all internal links and anchors resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, and that no credential material is present.
+It checks that every required document exists, that every requirement identifier is unique and covered by the traceability file, that all internal links and anchors resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that code fences are closed and every diagram cites its requirements, and that the declared state machines still match the requirement text.
 
 ```bash
 node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase coverage
@@ -31,7 +31,7 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 
 | Path | Contents |
 | --- | --- |
-| `docs/` | Normative documentation: requirements, architecture, security, decisions, roadmap, guides |
+| `docs/` | Normative documentation: requirements, architecture, diagrams and lifecycles, glossary, security, decisions, roadmap, guides |
 | `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
 | `docs/security/` | Threat model, data classification, plugin threat model |
 | `docs/user/` | End-user documentation |

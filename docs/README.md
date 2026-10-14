@@ -11,16 +11,25 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | 1 | [MASTER_PROJECT_PROMPT.md](MASTER_PROJECT_PROMPT.md) | Agents, engineers | You are about to change anything — the canonical instructions |
 | 2 | [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) | Everyone | You need functional scope and acceptance criteria |
 | 3 | [ARCHITECTURE.md](ARCHITECTURE.md) | Engineers | You need deployment, service boundaries, performance, and technology decisions |
-| 4 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping |
-| 5 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
-| 6 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
-| 7 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
-| 8 | [QUALITY_GATES.md](QUALITY_GATES.md) | Everyone | You need the gate catalogue, test strategy, or release criteria |
-| 9 | [ROADMAP.md](ROADMAP.md) | Everyone | You need phases, deliverables, and phase exit criteria |
-| 10 | [DECISIONS.md](DECISIONS.md) | Everyone | You need a recorded decision, the ADR template, or the open-question register |
-| 11 | [REFERENCES.md](REFERENCES.md) | Engineers | You are verifying external versions, standards, or provider terms |
+| 4 | [DIAGRAMS.md](DIAGRAMS.md) | Everyone | You want the picture: topology, the request path, the lifecycles, and how work moves through the phases |
+| 5 | [GLOSSARY.md](GLOSSARY.md) | Everyone | A term is used in a way you have not seen before |
+| 6 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping |
+| 7 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
+| 8 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
+| 9 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
+| 10 | [QUALITY_GATES.md](QUALITY_GATES.md) | Everyone | You need the gate catalogue, test strategy, or release criteria |
+| 11 | [ROADMAP.md](ROADMAP.md) | Everyone | You need phases, deliverables, and phase exit criteria |
+| 12 | [DECISIONS.md](DECISIONS.md) | Everyone | You need a recorded decision, the ADR template, or the open-question register |
+| 13 | [REFERENCES.md](REFERENCES.md) | Engineers | You are verifying external versions, standards, or provider terms |
 
 ## Documentation map
+
+### Orientation
+
+| Document | Purpose | Owner | Reviewed |
+| --- | --- | --- | --- |
+| [DIAGRAMS.md](DIAGRAMS.md) | Topology, data ownership, the request path, the account, relation, SOS, and plugin lifecycles, and the project's own cycles — every diagram citing the requirements it draws | Engineering | 2026-10-14 |
+| [GLOSSARY.md](GLOSSARY.md) | The project's specific vocabulary, one line each, naming the document that owns each definition | Engineering | 2026-10-14 |
 
 ### Development (engineers and agents)
 
@@ -103,7 +112,7 @@ Rules:
 ## Running the documentation gate
 
 ```bash
-node scripts/gates/phase0.mjs          # verify inventory, IDs, links, placeholders, audience, secrets, model coherence, phase status
+node scripts/gates/phase0.mjs          # verify inventory, IDs, links, placeholders, audience, secrets, model coherence, phase status, diagrams
 node scripts/gates/traceability.mjs    # verify coverage is current (--write to regenerate)
 ```
 
