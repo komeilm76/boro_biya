@@ -10,7 +10,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 
 | Gate | Purpose | Tool (planned unless noted) |
 | --- | --- | --- |
-| **[QA-01]** Documentation gate — **active now**| Document inventory (owner and review date per document, matching the index), requirement-ID uniqueness and reference resolution, coverage, internal links and anchors, placeholders, audience separation, secret patterns, model coherence and retired wording | `node scripts/gates/phase0.mjs` (available today) |
+| **[QA-01]** Documentation gate — **active now**| Document inventory (owner and review date per document, matching the index), requirement-ID uniqueness and reference resolution, coverage, internal links and anchors, placeholders, audience separation, secret patterns, model coherence and retired wording, and phase-status agreement between the README table and the ROADMAP | `node scripts/gates/phase0.mjs` (available today) |
 | **[QA-02]** Formatting check| Consistent formatting | Prettier `--check` (Phase 1) |
 | **[QA-03]** Static lint| Code defects and unsafe patterns | ESLint with Vue and TypeScript plugins (Phase 1) |
 | **[QA-04]** Strict type check| No implicit `any`, no unchecked access | `tsc --noEmit` per workspace with the strict flags in [repository conventions](development/00-repository-conventions.md) §4 (Phase 1) |

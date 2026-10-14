@@ -185,6 +185,7 @@ const PHASE_RULES = [
   ['QA', 112, 113, 4],  // live-sharing grant expiry, stream closure, history authorization
   ['QA', 114, 115, 5],  // SOS category enforcement and category-as-metadata
   ['QA', 116, 116, 0],  // documentation gate: model coherence and retired wording
+  ['QA', 117, 117, 0],  // documentation gate: phase-status agreement between README and ROADMAP
 
   // Data model invariants
   ['DATA', 1, 1, 2],

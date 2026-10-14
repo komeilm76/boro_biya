@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **648** across 116 groups.
+Total requirements: **649** across 116 groups.
 
 ## Declared pull-forwards
 
@@ -24,7 +24,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 19 |
+| 0 (foundation) | 20 |
 | 1 | 277 |
 | 2 | 114 |
 | 3 | 39 |
@@ -40,7 +40,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 0 | `GOV-19 … GOV-26` | 8 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
 | 0 | `GOV-87 … GOV-88` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
-| 0 | `QA-62 … QA-116` | 8 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| 0 | `QA-62 … QA-117` | 9 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
 | 1 | `GOV-27 … GOV-35` | 9 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
 | 1 | `GOV-36 … GOV-40` | 5 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |

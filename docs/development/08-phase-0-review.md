@@ -201,7 +201,7 @@ A phase mapping is a plan, and a plan can be internally consistent while being i
 - **`Q-15` (languages and RTL) moved from Phase 3 to Phase 2.** The audit caught this as a contradiction the moment `UI-22` moved: RTL scaffolding in Phase 2 cannot be built before the decision that says whether RTL is required. Waiting until Phase 3 would mean deciding layout direction after every authentication string exists. This is the one place where the *decision* moved earlier so the *work* is not blocked, and Phase 2's exit gate now requires it.
 - **`QA-07` text corrected** from "(Phase 1/2)" to "(Phase 2)", matching the CI activation table, which has contract tests inactive in Phase 1.
 - **The administrative-location check moved from the Phase 4 exit gate to the Phase 5 gate**, because `PRIV-07` is affiliated with the phase that first gives an administrator a location view (the SOS admin map).
-- **The critical path is now stated** in [phase gate checklist](05-phase-gate-checklist.md) §5: Phase 4 → Phase 5 is the only hard chain (the SOS Service dispatches on the Relation Service); the plugin lifecycle can run in parallel from the Phase 2 gate with one exception (permission-vocabulary tests need Phase 4's location scopes); the Android shell can be prepared once the PWA exists. Nothing in Phases 3–6 blocks the plugin workstream.
+- **The critical path is now stated** in [phase gate checklist](05-phase-gate-checklist.md) §6: Phase 4 → Phase 5 is the only hard chain (the SOS Service dispatches on the Relation Service); the plugin lifecycle can run in parallel from the Phase 2 gate with one exception (permission-vocabulary tests need Phase 4's location scopes); the Android shell can be prepared once the PWA exists. Nothing in Phases 3–6 blocks the plugin workstream.
 
 ### 8.5 Gate change: the affiliation audit
 
@@ -434,6 +434,55 @@ node scripts/gates/traceability.mjs           # exit 0, 648 requirements, 5 pull
 ```
 
 No affiliation or count changes in this pass — the total stays 648 and every phase holds the counts recorded in §11.5.
+
+## 13. Eighth review pass: do we have the files, the task breakdown, and status management?
+
+Three questions were asked of the pack: whether the files and structure exist for the tasks, whether the phases and tasks are broken down, and how task status is managed. The answers were checked against the repository, and three gaps were closed.
+
+### 13.1 Files and structure
+
+**Present now:** 30 documents under `/docs` (index, requirements, architecture, security, data model, plugin system, API, quality gates, roadmap, decisions, references, threat models, data classification, conventions, development guides, performance policy, user guide), two dependency-free gate scripts, the CI workflow with pinned actions, the environment template, and the repository dotfiles. Everything Phase 0 promises exists and is enforced by the gate.
+
+**Deliberately absent:** the code tree — `apps/web`, `apps/api`, `apps/android`, `services/relation`, `services/sos`, `packages/contracts`, `packages/validation`, `packages/api-client`, `packages/config`, `packages/ui`, `packages/test-utils` — is specified ([ARCHITECTURE](../ARCHITECTURE.md) §5, `OPS-28 … OPS-43`) with dependency-direction rules, and created in Phase 1. That is `ADR-010`: Phase 0 is documentation-only, and the Phase 0 checklist row "no feature implementation is present" depends on the tree not existing yet.
+
+### 13.2 Task breakdown — what was missing
+
+Phases were broken down (deliver line and exit gate per phase) and requirements were mapped to phases (649 identifiers, each with exactly one owning phase), but **task-level checklists existed only for Phase 0 (completed) and Phase 1 (template)**. Phases 2–9 had exit gates and no checklists, so work in those phases had no working task list to report against.
+
+Added §4 of [phase gate checklist](05-phase-gate-checklist.md): **checklists for phases 2 through 9**, derived row by row from each phase's deliver list and exit gate — 10 rows for Phase 2, 10 for Phase 3, 10 for Phase 4, 10 for Phase 5, 8 for Phase 6, 8 for Phase 7, 9 for Phase 8, 8 for Phase 9. Each row names the criterion, the requirement identifiers it proves, and the evidence that will prove it. No new requirements were created: the rows restate existing commitments so they can be worked and reported one at a time.
+
+### 13.3 Status management — what was missing
+
+Status had two surfaces that could disagree and no rule governing either: `docs/README.md` carried a phase table that collapsed phases 2–9 into one row, and `docs/ROADMAP.md` carried a status line for Phase 0 only. Changes to status were unconstrained by any rule.
+
+Closed in three parts:
+
+1. **One row per phase.** The README table now lists phases 0–9 individually, and every ROADMAP phase section carries a `**Status:` line (`Not started` for 1–9; Phase 1 additionally notes that it requires Phase 0 approval).
+2. **A stated status model.** §7 of the checklist document defines the three status surfaces (phase status, task status, decision status), who updates each, the status vocabulary (`Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `Exception`), and six rules — the important ones being that only evidence changes a status, that a requirement identifier is not a status, and that an exception needs an owner and an expiry.
+3. **A gate that keeps the two phase-status surfaces in agreement** — check 9, registered as `QA-117`: every phase must have a status row in the README and a `**Status:` line in its ROADMAP section, and the two must agree after normalisation. Phase status is the one fact deliberately recorded in two places, so it is the one fact the gate cross-checks.
+
+### 13.4 Tests
+
+```
+# negative 1: README says "In progress" for Phase 3 while ROADMAP says "Not started"
+  - [phase-status] Phase 3: README says "In progress", ROADMAP says "Not started."      exit 1
+
+# negative 2: a ROADMAP phase section loses its status line
+  - [phase-status] docs/ROADMAP.md Phase 2 has no "**Status: …**" line                 exit 1
+
+# both restored from pre-test copies                                                        exit 0
+```
+
+### 13.5 Evidence (eighth pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 649 requirements, 116 groups, 5 pull-forwards
+node scripts/gates/traceability.mjs           # exit 0
+node scripts/gates/phase0.mjs                 # 9 checks, exit 0
+```
+
+The requirement total moved from 648 to 649 because `QA-117` is itself a requirement, mapped to Phase 0 like the gate rules it joins.
+
 
 
 

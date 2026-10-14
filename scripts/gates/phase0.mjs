@@ -18,6 +18,8 @@
  *      contains placeholders only.
  *   8. Model coherence — data concepts introduced by a decision are reflected in the
  *      documents that govern them, and wording retired by a decision is gone.
+ *   9. Phase status — every phase has a status row in docs/README.md and a status line in
+ *      docs/ROADMAP.md, and the two agree (they are the only phase-status surfaces).
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -185,6 +187,37 @@ function checkIndexAgreement() {
     }
     if (date.trim() !== header[2] && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
       failures.push(`[inventory] index date "${date.trim()}" does not match "${header[2]}" in docs/${rel}`);
+    }
+  }
+}
+
+/** Check 9: the two phase-status surfaces must exist for every phase and agree. */
+function checkPhaseStatus() {
+  const readme = read(join(ROOT, 'docs', 'README.md'));
+  const roadmap = read(join(ROOT, 'docs', 'ROADMAP.md'));
+  const rows = new Map();
+  for (const line of readme.split('\n')) {
+    const m = /^\|\s*(\d)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$/.exec(line);
+    if (m) rows.set(Number(m[1]), m[3]);
+  }
+  const statuses = new Map();
+  const sections = roadmap.split(/^## Phase (\d)/m);
+  for (let i = 1; i < sections.length; i += 2) {
+    const m = /\*\*Status:\s*([^*\n]+?)\*\*/.exec(sections[i + 1]);
+    if (m) statuses.set(Number(sections[i]), m[1].trim());
+  }
+  const norm = (value) => value.toLowerCase().replace(/[*`]/g, '').trim().split(/[,—(.]/)[0].trim();
+  for (let phase = 0; phase <= 9; phase += 1) {
+    if (!rows.has(phase)) {
+      failures.push(`[phase-status] docs/README.md has no status row for Phase ${phase}`);
+      continue;
+    }
+    if (!statuses.has(phase)) {
+      failures.push(`[phase-status] docs/ROADMAP.md Phase ${phase} has no "**Status: …**" line`);
+      continue;
+    }
+    if (norm(rows.get(phase)) !== norm(statuses.get(phase))) {
+      failures.push(`[phase-status] Phase ${phase}: README says "${rows.get(phase)}", ROADMAP says "${statuses.get(phase)}"`);
     }
   }
 }
@@ -366,7 +399,7 @@ const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets, model coherence).');
+  console.log('links, placeholders, audience separation, secrets, model coherence, phase status).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
@@ -379,6 +412,7 @@ checkPlaceholders();
 checkAudience();
 checkSecrets();
 checkModelCoherence();
+checkPhaseStatus();
 
 if (failures.length) {
   console.error(`\nPhase 0 documentation gate FAILED with ${failures.length} problem(s):\n`);
@@ -396,4 +430,5 @@ console.log('  5. no placeholders in normative documents');
 console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
 console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
+console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
 for (const note of notes) console.log(`  · ${note}`);

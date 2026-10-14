@@ -66,7 +66,7 @@ Rules:
 
 ## 7. Documentation maintenance
 
-- **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory (including each document's owner and review date), requirement-ID uniqueness and reference resolution, traceability coverage, internal links and anchors, absence of placeholders, audience separation, secret patterns, and model coherence (no retired wording).
+- **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory (including each document's owner and review date), requirement-ID uniqueness and reference resolution, traceability coverage, internal links and anchors, absence of placeholders, audience separation, secret patterns, model coherence (no retired wording), and phase-status agreement (the README table and the ROADMAP status lines).
 - **[GOV-72]** Requirement IDs are permanent. Once assigned, an ID is never reused or renumbered; withdrawn requirements are marked `Withdrawn` in the phase report instead of deleted.
 - **[GOV-73]** External references ([REFERENCES](../REFERENCES.md)) are re-verified at each phase boundary and before release, and the verification log is updated with the date and result.
 

@@ -30,11 +30,17 @@ Exit gate: documentation reviewed by the owner; every critical design question e
 
 ## Phase 1 — Skeleton and developer experience
 
+
+**Status: Not started — requires Phase 0 approval.**
+
 Deliver: workspace and package setup with pinned dependencies and a committed lockfile; minimal Vue application with the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`), guards that never substitute for server authorization, and the safe not-found page (UI-01 … UI-07); Fastify API, PostgreSQL migration framework, and the two service skeletons; Docker-based startup on Windows and Linux; liveness/readiness endpoints; structured logging with the shared redaction layer (SEC-57, PRIV-10); validated configuration; the skeleton-level privacy default of no analytics or telemetry dependency (PRIV-19); strict TypeScript; test examples; application CI (format, lint, typecheck, unit, integration); the Bun-versus-Node runtime spike ([Q-16](DECISIONS.md#open-questions)); performance budget definitions ([Q-12](DECISIONS.md#open-questions)).
 
 Exit gate: a clean clone starts and passes every gate active in Phase 1 using only the documented commands, on both Windows and Linux; the runtime decision (Q-16) is recorded and load-test budgets (Q-12) are defined; the default build contains no analytics, telemetry, or tracker dependency and invalid configuration fails startup (OPS-53, PRIV-19); no authentication or map features exist yet.
 
 ## Phase 2 — Authentication and account lifecycle
+
+
+**Status: Not started.**
 
 Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; authentication and negative-case tests; OpenAPI contract for auth endpoints; the message catalogue and layout-direction scaffolding the first user-facing screens need, so no user-facing string is hard-coded ([GOV-87](development/00-repository-conventions.md), UI-21/UI-22); the audit event store and the first alerts on real signals (SEC-58 … SEC-60).
 
@@ -42,11 +48,17 @@ Exit gate: security and negative-case tests pass (including cross-user and repla
 
 ## Phase 3 — Map foundation and user settings
 
+
+**Status: Not started.**
+
 Deliver: MapLibre map, tile and geocoding provider adapters (MAP-11, MAP-12) with documented terms and attribution, the adapter rules (MAP-16 … MAP-21), address search and manual coordinates, permission UX, presence and stale-fix display, theme, locale, and accessibility settings, PWA baseline, PostGIS prototype ([ADR-005](DECISIONS.md#adr-005--geospatial-database)) — including a prototype migration of the location row (DATA-04, DATA-05) so proximity is benchmarked on the real shape, with no API, service logic, or retention job (declared pull-forward, [GOV-88](development/00-repository-conventions.md) §8).
 
 Exit gate: denied-permission, unavailable-GPS, stale-fix, and manual-coordinate flows work and are labelled truthfully; no coordinates are served to another user — nothing accepts or returns another user's location yet, and the sharing pipeline is Phase 4 (its defaults are proven there, not claimed here); provider terms review recorded; consent and preference changes are recorded as audit events with actor and time (PRIV-09); the geospatial prototype is complete with its measurements recorded — spatial index behaviour, query plans for bounded radius searches, and the non-PostGIS alternative benchmarked (DATA-22 … DATA-24) — so ADR-005 can be decided in Phase 4; decisions Q-06 and Q-10 (map/search) resolved and the stronger-recovery build permitted by Q-05 either implemented or explicitly deferred with the owner's agreement.
 
 ## Phase 4 — Relation Service
+
+
+**Status: Not started.**
 
 Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences with the visual and textual distinction between them (MAP-06) and the revoke controls that stop publishing promptly (MAP-08), service capability declaration and the fail-closed behaviour when the service is unavailable (PLG-35 … PLG-41), time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates, and the location-sharing settings screens (remaining time per grant, "end now", history window, delete history, access list).
 
@@ -54,11 +66,17 @@ Exit gate: cross-user privacy tests and revocation tests pass (single-grant revo
 
 ## Phase 5 — SOS Service
 
+
+**Status: Not started.**
+
 Deliver: SOS creation with at least one category and optional image, category catalogue and single-category management (including SOS settings: the assistance-suggestion preference, notification preferences, and the user's category with its verification state), admin map and list, category-matched nearby eligible user search, suggestions, notifications, atomic task claiming, task state machine, audit events, resilience when realtime is disconnected, and the degraded behaviour when the SOS Service is unavailable (PLG-42).
 
 Exit gate: concurrent claim tests prove exactly one assignee; task-transition and privacy tests pass; attachment access is authorization-tested; dispatch tests prove a user without a matching category is never suggested and that the matched category is recorded; SOS-unavailable behaviour hides or disables SOS actions and never pretends an alert was created or dispatched (PLG-42); suggestion opt-in is honoured and notification defaults are proven (in-app only, push opt-in); the SOS lifecycle (creation, dispatch, suggestion, claim, transition, resolution) appears in the audit trail (SEC-58); creation and dispatch work with realtime disconnected, and no SOS action depends on an open stream; the assistance category is never exposed as a listing; administrative access to a location is purpose-scoped, role-limited, and audited (PRIV-07); Q-07, Q-08, Q-09, Q-11, Q-23 resolved.
 
 ## Phase 6 — Routing and navigation
+
+
+**Status: Not started.**
 
 Deliver: routing provider adapter (MAP-13) with car/bicycle/foot alternatives, route selection, navigation UI, instructions and voice data where supported (MAP-15), distance and ETA, and speed limits and traffic only from licensed provider data (MAP-14).
 
@@ -66,17 +84,26 @@ Exit gate: documented provider limits with graceful fallback; mobile performance
 
 ## Phase 7 — Secure plugin lifecycle
 
+
+**Status: Not started.**
+
 Deliver: manifest and configuration schema, upload quarantine, archive validation, provenance and signature policy, isolated build/run environment, permission model, resource limits, health checks, enable/disable/upgrade/rollback with credential revocation and a lifecycle audit trail, capability re-evaluation when health changes, and the dynamic configuration UI (PLG-43 … PLG-46).
 
 Exit gate: adversarial archive tests and the container-isolation review pass; the plugin threat-model tests exist and pass; capability re-evaluation on a health change and the lifecycle audit trail are demonstrated (PLG-45, PLG-46); Q-13 resolved. ZIP-driven installation remains disabled in production until this gate passes.
 
 ## Phase 8 — Android hardening and scale
 
+
+**Status: Not started.**
+
 Deliver: Capacitor Android build, permission review, secure token storage, deep links and lifecycle behaviour, load tests, profiling, database/index tuning, observability, backup/restore, operational runbooks.
 
 Exit gate: supported device/OS matrix and measured resource targets documented; permissions and secure token storage verified on a real or emulated device (nothing sensitive in plain storage, no permission requested that the build cannot justify); backup and restore rehearsal succeeds; Q-19 resolved.
 
 ## Phase 9 — Production release
+
+
+**Status: Not started.**
 
 Deliver: release artifacts with checksums, SBOM where practical, changelog, migration plan, backups, monitoring/alerts, rollback plan, incident-response guide, security review with a resolved or accepted risk register.
 

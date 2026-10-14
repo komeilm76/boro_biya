@@ -31,7 +31,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-13 |
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-13 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-13 |
-| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist and reported evidence format | Engineering | 2026-10-13 |
+| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-13 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artifacts, promotion, rollback, and release evidence | Engineering | 2026-10-13 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-13 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-13 |
@@ -103,7 +103,7 @@ Rules:
 ## Running the documentation gate
 
 ```bash
-node scripts/gates/phase0.mjs          # verify inventory, IDs, links, placeholders, audience, secrets, model coherence
+node scripts/gates/phase0.mjs          # verify inventory, IDs, links, placeholders, audience, secrets, model coherence, phase status
 node scripts/gates/traceability.mjs    # verify coverage is current (--write to regenerate)
 ```
 
@@ -115,7 +115,14 @@ Both are dependency-free Node scripts and run in CI on Linux and Windows.
 | --- | --- | --- |
 | 0 | Repository foundation and documentation | Complete, awaiting owner approval (2026-10-13) |
 | 1 | Skeleton and developer experience | Not started — requires Phase 0 approval |
-| 2–9 | See [ROADMAP](ROADMAP.md) | Not started |
+| 2 | Authentication and account lifecycle | Not started |
+| 3 | Map foundation and user settings | Not started |
+| 4 | Relation Service | Not started |
+| 5 | SOS Service | Not started |
+| 6 | Routing and navigation | Not started |
+| 7 | Secure plugin lifecycle | Not started |
+| 8 | Android hardening and scale | Not started |
+| 9 | Production release | Not started |
 
 ## Important implementation rule
 

@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 ## 1. Commands
 
 ```bash
-node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence
+node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence, phase status
 node scripts/gates/traceability.mjs  # Traceability file is current (run with --write to update)
 ```
 
@@ -50,7 +50,126 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Not started |
 | 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Not started |
 
-## 4. Phase affiliation audit (every phase)
+## 4. Phase checklists 2–9 (templates, completed when the phase ends)
+
+Each phase's checklist is authored **before the phase starts** from its deliver list and exit gate in [ROADMAP](../ROADMAP.md), and it is the working task list for that phase: work that is not on the checklist is either a defect or a row added in the same change as the plan. Rows carry no new requirements — every row cites the requirement identifiers and the evidence that will prove it. A row changes status only in the same change as its evidence.
+
+Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, and `Exception` (recorded with owner and expiry in [QUALITY_GATES](../QUALITY_GATES.md) §6). Every row starts `Not started`; only the evidence named in the row makes it `Met`. Phase 0's completed checklist is §2 and Phase 1's is §3.
+
+### Phase 2 — Authentication and account lifecycle
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Registration, login, logout, and session management implemented and session-revocable by the owner | Integration tests; `AUTH-01 … AUTH-14`, `UI-10`, `PRIV-21` | Not started |
+| 2 | Admin-created accounts with forced first-login setup (password, then security questions) | Account-state matrix test; `AUTH-25 … AUTH-29`, `DATA-10` | Not started |
+| 3 | Security-question recovery end to end, short-lived and single-use, with attempt limits | Security tests; `AUTH-30 … AUTH-38`, `DATA-09` | Not started |
+| 4 | Lockout, ban, deactivation, and reactivation with distinct reasons and audit events | Abuse-control tests; `SEC-14 … SEC-19` | Not started |
+| 5 | Account-state matrix tested: every state against every protected route class | Test output naming each state × route decision; `AUTH-31 … AUTH-33` | Not started |
+| 6 | Auth OpenAPI contract validates and the generated client matches the implementation | `zopia validate` + contract tests; `QA-07`, `API-20 … API-30` | Not started |
+| 7 | Audit event store live; alerting proven on the authentication and rate-limit signals | Alert rule plus a triggered signal; `SEC-58 … SEC-60` | Not started |
+| 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | Not started |
+| 9 | Message catalogue and RTL scaffolding in place; localisation checks active | Lint over components + catalogue test; `UI-21`, `UI-22`, `QA-17` | Not started |
+| 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-01 … Q-05`, `Q-14` (user data), `Q-15`, `Q-17` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+
+### Phase 3 — Map foundation and user settings
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Map renders with tile and geocoding adapters; required attribution displayed | Recorded run + attribution assertion; `MAP-01`, `MAP-11`, `MAP-12`, `MAP-16` | Not started |
+| 2 | Permission flows truthful: denied, dismissed, unavailable, timeout, stale fix, inaccurate coordinates | Test per flow; `MAP-02 … MAP-04`, `UI-13` | Not started |
+| 3 | Manual coordinate entry available and labelled as manual | Test; `MAP-05` | Not started |
+| 4 | Settings: theme, language and text direction, accessibility, offline and degraded states | Component tests + axe checks; `UI-11`, `UI-12`, `UI-16 … UI-20`, `QA-16` | Not started |
+| 5 | PWA baseline passes its checks (manifest, offline shell, no stale worker) | `QA-12` audit output | Not started |
+| 6 | Provider terms review recorded; no provider integrated before `Q-10` (map/search) resolves | [REFERENCES](../REFERENCES.md) verification log; `MAP-17 … MAP-21` | Not started |
+| 7 | Geospatial prototype complete **with measurements** so `ADR-005` can be decided in Phase 4 | Benchmark output: spatial index, bounded radius query plans, non-PostGIS alternative; `DATA-22 … DATA-24` | Not started |
+| 8 | No coordinates are served to another user: nothing accepts or returns another user's location yet | Negative test; `PRIV-02` (sharing pipeline is Phase 4) | Not started |
+| 9 | Consent and preference changes recorded as audit events with actor and time | Audit query; `PRIV-09` | Not started |
+| 10 | Decisions resolved: `Q-06`, `Q-10` (map/search); the stronger-recovery build permitted by `Q-05` implemented or deferred with owner agreement | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+
+### Phase 4 — Relation Service
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Service live with user search, follow requests, accept/reject/unfollow, and blocks | Integration tests; `REL-01 … REL-06`, `REL-08` | Not started |
+| 2 | Live sharing is per-follower and time-boxed: grants, expiry, single revoke, end-now, remaining time shown per grant | Grant lifecycle tests; `MAP-09`, `PRIV-01`, `DATA-16` | Not started |
+| 3 | Live and last-known remain distinct and correctly labelled, with last-known gated on preference only | Display + API tests; `MAP-06`, `PRIV-02`, `PRIV-03`, `DATA-05` | Not started |
+| 4 | History sharing works per follower grant: window, paginated reads, full delete, per-request re-authorization | Authorization tests; `MAP-22`, `PRIV-24`, `PRIV-25`, `DATA-17`, `DATA-26` | Not started |
+| 5 | Every revocation path closes open streams: single-grant revoke, session end, unfollow, block, disable sharing, expiry | Stream closure assertions per path; `PRIV-04`, `SEC-27`, `OPS-24`, `OPS-27` | Not started |
+| 6 | Relation-unavailable behaviour fails closed with an explanation, never an implied grant | Outage test; `PLG-41` | Not started |
+| 7 | Retention purges evidenced for the last-known row and for history rows past their window | Purge run + query evidence; `DATA-17`, `PRIV-05` | Not started |
+| 8 | Sharing defaults proven off in a fresh account; consent and sharing change trail queryable | Fresh-account test + audit query; `PRIV-13`, `PRIV-14`, `PRIV-17`, `PRIV-22` | Not started |
+| 9 | Owner-facing sharing history (when, with whom, how long) and rate-limited share starts | API test; `MAP-10` | Not started |
+| 10 | `ADR-004` accepted; `ADR-005` decided, implemented, and benchmarked; decisions `Q-20`, `Q-21`, `Q-22` resolved | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+
+### Phase 5 — SOS Service
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Alert creation with at least one category, optional coordinates and image, idempotent under retry | Integration tests; `SOS-01 … SOS-06`, `DATA-19`, `SEC-…` upload rules as applicable | Not started |
+| 2 | Category catalogue and single-category management, including verification state, plus the SOS settings screen | Admin + user flows tested; `SOS-24 … SOS-29`, `DATA-21`, `UI-09` | Not started |
+| 3 | Dispatch matches category before distance and records the matched category | Dispatch tests; `SOS-25`, `SOS-26`, `DATA-20`, `OPS-80` | Not started |
+| 4 | Suggestions: states, expiry, opt-in honoured, no routine override of a disabled preference | Suggestion lifecycle tests; `SOS-10 … SOS-12`, `SOS-15` | Not started |
+| 5 | Claim is atomic and exactly one assignee; one active task per user; transitions validated, audited, idempotent | Concurrency tests; `SOS-13`, `SOS-16 … SOS-20`, `DATA-06 … DATA-08` | Not started |
+| 6 | Attachments authorization-checked per request, EXIF stripped, keys non-enumerable | Access + metadata tests; `SOS-03`, `SOS-04`, `SEC-50 … SEC-56` | Not started |
+| 7 | Notifications and realtime: persisted before delivery, best-effort, reconciled offline; SOS works with realtime disconnected | Offline-path test; `SOS-21`, `SOS-22` | Not started |
+| 8 | SOS lifecycle appears in the audit trail; SOS-unavailable behaviour degrades honestly | Audit query + outage test; `SEC-58`, `PLG-42` | Not started |
+| 9 | Administrative access to a location is purpose-scoped, role-limited, and audited | Admin path test; `PRIV-07`, `PRIV-20` | Not started |
+| 10 | Decisions resolved: `Q-07`, `Q-08`, `Q-09`, `Q-11`, `Q-23` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+
+### Phase 6 — Routing and navigation
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Routing adapter behind the provider interface; car, bicycle, and foot alternatives | Adapter contract tests; `NAV-01`, `NAV-02`, `MAP-13` | Not started |
+| 2 | Route selection, geometry, distance remaining, and ETA | Recorded run; `NAV-01`, `NAV-03` | Not started |
+| 3 | Turn-by-turn instructions, and voice only when the stack produces it — never synthesised | Test with a stack that lacks voice; `NAV-02`, `NAV-13`, `MAP-15` | Not started |
+| 4 | Speed limits and traffic only from licensed provider data; nothing inferred or fabricated | Provider-data review + UI assertion; `NAV-05`, `NAV-06`, `MAP-14` | Not started |
+| 5 | Degraded routing: map still usable, point selection and distance-to-point still work | Outage test; `NAV-11`, `MAP-20` | Not started |
+| 6 | Routing attribution displayed where the provider requires it | Screenshot + assertion; `NAV-10`, `MAP-16` | Not started |
+| 7 | Mobile performance measured against the Phase 1 budgets | Measurement record with commit, environment, dataset, command; `QA-29 … QA-33` | Not started |
+| 8 | `Q-10` resolved for routing, traffic, and speed-limit providers | [DECISIONS](../DECISIONS.md) register row updated | Not started |
+
+### Phase 7 — Secure plugin lifecycle
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Package lifecycle end to end: quarantine, validation, signature and trust policy, staged deploy, activate, disable, rollback, uninstall | Lifecycle test per state; `PLG-04 … PLG-34`, `DATA-11`, `DATA-13` | Not started |
+| 2 | Adversarial archive tests pass: traversal, symlinks, bombs, collisions, oversized and nested members | Security suite; `QA-26`, `SEC-29 … SEC-39`, `PT-01 … PT-06` | Not started |
+| 3 | Container-isolation review passes: no host secrets, no Docker socket, bounded network and resources | Review record + tests; `QA-27`, `PLG-47 … PLG-50`, `PLG-51 … PLG-56` | Not started |
+| 4 | Permission model enforced server-side, with capability re-evaluation when a plugin's health changes | Capability tests incl. a health-change case; `PLG-21 … PLG-24`, `PLG-45` | Not started |
+| 5 | Plugin host runs out of process with a service identity, explicit timeouts, bounded retries, and an authenticated channel | The pull-forward slices (`PLG-36`, `PLG-37`, `PLG-39`) completed and verified here | Not started |
+| 6 | Lifecycle audit trail demonstrated for install, configure, enable, disable, upgrade, rollback, uninstall | Audit query; `PLG-46` | Not started |
+| 7 | Dynamic configuration form validated against the strict schema; secrets write-only | Config submission tests; `DATA-13`, API inventory §7 | Not started |
+| 8 | `Q-13` resolved; ZIP-driven installation stays disabled in production until this gate passes | [DECISIONS](../DECISIONS.md) register row + configuration evidence | Not started |
+
+### Phase 8 — Android hardening and scale
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Capacitor Android build configured; permission review proves every requested permission is justified | Build output + permission list; `QA-13` | Not started |
+| 2 | Secure token storage on device; nothing sensitive in plain storage | Device/emulator inspection record | Not started |
+| 3 | Deep links and lifecycle behaviour verified (cold start, background, resume, killed process) | Device test notes | Not started |
+| 4 | Load tests and profiling against the Phase 1 budgets, with measured resource targets documented | Measurement record; `QA-29 … QA-33` | Not started |
+| 5 | Database and index tuning applied; query plans recorded | Query plan output; `DATA-23`, `DATA-24`, `DATA-26` | Not started |
+| 6 | Observability in production shape: logs, metrics, alerts for the deployed topology | Dashboard/alert checklist with the signals named in `SEC-60` | Not started |
+| 7 | Backup and restore rehearsal succeeds from an isolated environment | Rehearsal transcript; `QA-15` | Not started |
+| 8 | Operational runbooks started: backup/restore now, incident response drafted for Phase 9 | Runbook files present | Not started |
+| 9 | `Q-19` resolved (production hosting target) | [DECISIONS](../DECISIONS.md) register row updated | Not started |
+
+### Phase 9 — Production release
+
+| # | Criterion | Evidence that will prove it | Status |
+| --- | --- | --- | --- |
+| 1 | Release artifacts produced: checksums, SBOM where practical, changelog, migration plan | Artifact digests; `QA-50`, `QA-87 … QA-91` | Not started |
+| 2 | Full gate set passes on the exact tagged commit, exit statuses recorded | Gate transcript per command; `QA-95 … QA-97` | Not started |
+| 3 | Migration dry-run and restore rehearsal complete on a restored backup | Rehearsal record; `QA-102` | Not started |
+| 4 | Rollback path stated and rehearsed where risky; production verification (health, smoke login and map shell) | Rollback note + smoke output; `QA-92 … QA-94`, `QA-103`, `QA-104` | Not started |
+| 5 | Monitoring and alerts cover replication and backup failures; incident-response procedure exists and was exercised once | Exercise record; `SEC-60`, `SEC-61` | Not started |
+| 6 | Security review complete with a resolved or accepted risk register; no unresolved critical findings | Risk register; `SEC-63 … SEC-71` | Not started |
+| 7 | `Q-14` resolved for audit retention, deletion, and export obligations | [DECISIONS](../DECISIONS.md) register row updated | Not started |
+| 8 | Owner production-readiness sign-off recorded, with the release record (approver, digests, accepted risks) | Signed phase report | Not started |
+
+## 5. Phase affiliation audit (every phase)
 
 Before a phase gate is reported, the requirements affiliated with that phase are re-checked against the reason the phase exists. The generated table is the record; the audit is the evidence that the record is still true.
 
@@ -81,7 +200,7 @@ Some issues cannot wait for their phase: a prototype that must benchmark the rea
 
 A gate that cannot run yet is recorded as an exception with owner, justification, and expiry ([QUALITY_GATES](../QUALITY_GATES.md) §6); a pull-forward never weakens a gate.
 
-## 5. Sequencing and parallel work
+## 6. Sequencing and parallel work
 
 Phases are sequential for *approval*, not for *all* work: a phase starts only after the previous gate passes, but work inside a phase may run in any order, and one workstream may be prepared early when it touches no shared contract. The dependencies that actually constrain order are:
 
@@ -93,7 +212,26 @@ Phases are sequential for *approval*, not for *all* work: a phase starts only af
 | SOS service (Phase 5) | Phase 4 gate passes | Relation Service (eligibility, blocks, location) and the category catalogue it dispatches on. This is the real critical path: every later phase inherits its contract. |
 | Release engineering (Phase 9) | Phase 8 gate passes | Everything above; the release plan is exercised earlier with a non-production tag ([release plan](06-release-plan.md)). |
 
-## 6. Reporting the gate result
+## 7. How task status is managed
+
+Status has three surfaces, each with one owner and one location. Nothing else records task status, and a status change is made in the same change as the evidence that justifies it ([GOV-42](00-repository-conventions.md) §1).
+
+| Surface | Where | What it answers | Who updates it |
+| --- | --- | --- | --- |
+| Phase status | The table in [`docs/README.md`](../README.md) §Phase status, mirrored by a `**Status:` line in each [ROADMAP](../ROADMAP.md) phase section | Which phase is active, complete, or awaiting approval | The phase reporter, with the phase report |
+| Task status | The active phase's checklist rows in this document (§2–§4) | Which criteria of the active phase are done, in progress, or not started | Whoever produces the evidence, in the same pull request |
+| Decision status | The open-questions register in [DECISIONS](../DECISIONS.md) | Which questions are open, who owns them, by which phase they must be answered | The owner who answers the question |
+
+Rules:
+
+1. **Only evidence changes a status.** A checklist row moves to `Met` when the row's own evidence column has been produced, with the command and its exit status recorded in the phase report. An intention, a plan, or a code review is not evidence.
+2. **Phase status and the README table must agree**; gate check 9 fails when they do not. A phase is `Complete` only after the owner approves the phase report, and the transition is recorded in both places in the same change.
+3. **A phase's checklist is its working task list.** Before a phase starts, its checklist exists as a template (§4) derived from the phase deliver list and exit gate; during the phase, rows are the unit of work; at the gate, every row is `Met`, `Withdrawn`, or an `Exception` recorded with owner and expiry.
+4. **Requirement identifiers are not status.** The [traceability](07-traceability.md) table records where a requirement belongs (and any declared pull-forward), never whether it is done; requirement completion is claimed only in a phase report, and only for the requirements that phase owns.
+5. **An exception is not a status you can keep.** An `Exception` row carries an owner and an expiry date, and an expired exception fails the phase gate ([QUALITY_GATES](../QUALITY_GATES.md) §6).
+6. **Questions do not expire silently.** A decision that is not resolved by its decide-by phase blocks that phase's exit gate; the register row, the phase report, and the checklist row are updated together.
+
+## 8. Reporting the gate result
 
 The phase report states, in this order:
 

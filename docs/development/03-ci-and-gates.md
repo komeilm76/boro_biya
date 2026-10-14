@@ -52,6 +52,9 @@ It enforces, in order:
 7. **[QA-68]** **Secret patterns** — no private-key blocks, common token prefixes, or credential-looking assignments anywhere in the repository.
 8. **[QA-116]** **Model coherence** — every data concept introduced by a decision is reflected in the documents that govern it (data model, privacy rules, requirement that promises it), and wording retired by a decision no longer appears anywhere in the documentation set, except where a document quotes it inside inline code to explain the change. Both lists are maintained in `scripts/gates/phase0.mjs`.
 
+9. **[QA-117]** **Phase status agreement** — every phase has a status row in `docs/README.md` and a `**Status:` line in its [ROADMAP](../ROADMAP.md) section, and the two agree. Phase status is the one fact that lives in two documents, so it is the one fact the gate cross-checks.
+
+Check 9 exists because phase status is the one fact recorded in two documents; cross-checking it removes the only place where "which phase is active" could quietly disagree.
 
 Check 8 exists because structure alone does not keep documents truthful: a pack can pass every inventory, link, and ID check while one document still describes a superseded model ([ADR-011](../DECISIONS.md#adr-011--documentation-architecture-and-requirement-identifiers)). Each entry in its retired-wording list names the decision that replaced the wording, so a failure explains itself.
 
