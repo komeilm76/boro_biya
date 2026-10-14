@@ -72,7 +72,7 @@ Admins can upload and install plugin packages through a controlled workflow. Do 
 - Keep secrets out of source control and images. Provide `.env.example` with non-secret placeholders.
 - Use structured logs, health/readiness endpoints, metrics, request IDs, and privacy-aware audit logs.
 - Design for graceful degradation when map, routing, geocoding, push notification, or realtime services are unavailable.
-- Optimize from measurements. Establish resource budgets and load-test targets rather than promising unlimited scale.
+- Optimize from measurements. Establish resource budgets and load-test targets rather than promising `unlimited scale`.
 - Treat the single-replica constraint ([ADR-008](DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)) as a correctness requirement until a shared-state design is accepted.
 
 ## Engineering rules

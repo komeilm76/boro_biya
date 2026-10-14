@@ -84,8 +84,8 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 
 | Area | Scope | Identifiers | Range |
 | --- | --- | --- | --- |
-| `GOV` | Repository governance, documentation, phases, dependency policy | 90 | `1 … 90` |
-| `QA` | Quality gates, CI, testing, release process | 123 | `1 … 123` |
+| `GOV` | Repository governance, documentation, phases, dependency policy | 91 | `1 … 91` |
+| `QA` | Quality gates, CI, testing, release process | 125 | `1 … 125` |
 | `API` | API contracts, OpenAPI, validation, realtime contracts, session refresh | 38 | `1 … 38` |
 | `AUTH` | Identity, authentication, recovery, account lifecycle | 40 | `1 … 40` |
 | `ADM` | Roles and administrative capabilities | 7 | `1 … 7` |
@@ -95,12 +95,12 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `SOS` | SOS Service | 31 | `1 … 31` |
 | `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
 | `SEC` | Platform security controls | 73 | `1 … 74` |
-| `PRIV` | Location privacy and data lifecycle | 31 | `1 … 31` |
-| `OPS` | Architecture, operations, configuration, performance, observability | 84 | `1 … 84` |
+| `PRIV` | Location privacy, retention, and data lifecycle | 35 | `1 … 35` |
+| `OPS` | Architecture, operations, configuration, performance, observability | 87 | `1 … 87` |
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **679** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **689** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 
@@ -120,7 +120,7 @@ Rules:
 ## Running the documentation gate
 
 ```bash
-node scripts/gates/phase0.mjs          # verify inventory and index registration, IDs, links, placeholders, audience, secrets, model coherence, phase status, diagrams, cross-references, one variety of English, review dates, review-record consistency
+node scripts/gates/phase0.mjs          # verify inventory and index registration, IDs, links, placeholders, audience, secrets, model coherence, phase status, diagrams, cross-references, one variety of English, review dates, review-record consistency, forbidden claims
 node scripts/gates/traceability.mjs    # verify coverage is current (--write to regenerate)
 ```
 

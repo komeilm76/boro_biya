@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **679** across 120 groups.
+Total requirements: **689** across 124 groups.
 
 ## Declared pull-forwards
 
@@ -25,22 +25,22 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 26 |
-| 1 | 283 |
-| 2 | 124 |
+| 0 (foundation) | 27 |
+| 1 | 288 |
+| 2 | 126 |
 | 3 | 41 |
 | 4 | 66 |
 | 5 | 58 |
 | 6 | 16 |
 | 7 | 60 |
-| 8 | 4 |
-| 9 | 1 |
+| 8 | 5 |
+| 9 | 2 |
 
 | Phase | Requirement range | Count | Document | Section |
 | --- | --- | --- | --- | --- |
 | 0 | `GOV-19 … GOV-26` | 8 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
 | 0 | `GOV-87 … GOV-88` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
-| 0 | `GOV-89` | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| 0 | `GOV-89 … GOV-91` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 0 | `QA-62 … QA-122` | 14 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
@@ -61,7 +61,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `SEC-57 … SEC-73` | 3 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
 | 1 | `SEC-63 … SEC-71` | 9 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
 | 1 | `PRIV-10 … PRIV-12` | 3 | [security/data-classification.md](../security/data-classification.md) | 2. Handling rules by class |
-| 1 | `PRIV-19` | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 1 | `PRIV-19 … PRIV-35` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 1 | `OPS-01 … OPS-09` | 9 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
 | 1 | `OPS-10 … OPS-16` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
 | 1 | `OPS-17 … OPS-20` | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
@@ -73,10 +73,12 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `OPS-67 … OPS-70` | 4 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
 | 1 | `OPS-71 … OPS-74` | 4 | [development/01-development-environment.md](../development/01-development-environment.md) | 6. Editor and repository hygiene |
 | 1 | `OPS-75 … OPS-79` | 5 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| 1 | `OPS-85` | 1 | [operations/README.md](../operations/README.md) | Rules |
+| 1 | `OPS-86` | 1 | [performance/README.md](../performance/README.md) | Rules |
 | 1 | `PLG-01 … PLG-03` | 3 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | 1 | `API-01 … API-09` | 9 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
 | 1 | `API-10 … API-37` | 12 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
-| 1 | `QA-02 … QA-123` | 13 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 1 | `QA-02 … QA-124` | 14 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 1 | `QA-37 … QA-47` | 11 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
 | 1 | `QA-48 … QA-54` | 7 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
 | 1 | `QA-55 … QA-56` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 6. Gate exceptions |
@@ -103,11 +105,11 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 2 | `SEC-40 … SEC-49` | 10 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
 | 2 | `SEC-58 … SEC-74` | 4 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
 | 2 | `PRIV-08` | 1 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 2 | `PRIV-15 … PRIV-31` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 2 | `PRIV-15 … PRIV-33` | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 2 | `API-20 … API-24` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
 | 2 | `API-25 … API-30` | 6 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
 | 2 | `API-38` | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
-| 2 | `QA-07 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| 2 | `QA-07 … QA-125` | 4 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 2 | `QA-20 … QA-28` | 9 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 2 | `DATA-01 … DATA-27` | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 3 | `UI-11 … UI-13` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
@@ -156,8 +158,10 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 7 | `PLG-51 … PLG-56` | 6 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
 | 7 | `DATA-11 … DATA-13` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 8 | `OPS-81 … OPS-83` | 3 | [operations/README.md](../operations/README.md) | Rules |
+| 8 | `OPS-87` | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
 | 8 | `QA-13` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 9 | `SEC-61` | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| 9 | `PRIV-34` | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 
 ## Identifier index
 
@@ -255,6 +259,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | GOV-88 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | GOV-89 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | GOV-90 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
+| GOV-91 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | ADM-01 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-02 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
@@ -515,6 +520,10 @@ Every identifier the documents define, with the phase that must deliver it and t
 | PRIV-29 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | PRIV-30 | 5 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | PRIV-31 | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-32 | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-33 | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-34 | 9 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-35 | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | OPS-01 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
 | OPS-02 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
 | OPS-03 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
@@ -599,6 +608,9 @@ Every identifier the documents define, with the phase that must deliver it and t
 | OPS-82 | 8 | [operations/README.md](../operations/README.md) | Rules |
 | OPS-83 | 8 | [operations/README.md](../operations/README.md) | Rules |
 | OPS-84 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-85 | 1 | [operations/README.md](../operations/README.md) | Rules |
+| OPS-86 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| OPS-87 | 8 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
 | PLG-01 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-02 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-03 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
@@ -817,6 +829,8 @@ Every identifier the documents define, with the phase that must deliver it and t
 | QA-121 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-122 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-123 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-124 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-125 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | DATA-01 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-02 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-03 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

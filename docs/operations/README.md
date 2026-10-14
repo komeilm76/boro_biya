@@ -8,6 +8,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 - **[OPS-81]** Every failure mode named in [ARCHITECTURE](../ARCHITECTURE.md) §2–§3, [security/threat-model](../security/threat-model.md), and [security/plugin-threat-model](../security/plugin-threat-model.md) is covered by a row in the register below; rows may group closely related modes, and a mode introduced later is added in the same change as the work that introduces it. Each entry states: how the failure is detected (alert, health endpoint, or log signal), containment, the exact steps or commands, how to verify that the system is healthy again, who is told, and the follow-up (post-incident review, or a decision/requirement change). Runbooks are versioned with the code, and a change that alters a service's failure modes updates its runbook in the same change.
 - **[OPS-82]** Every stateful store is backed up automatically, encrypted, and copied off the host; the backup schedule sets the recovery point objective and the restore rehearsal measures the recovery time objective, both recorded below once the hosting decision (Q-19) is made. A failed backup job alerts ([SECURITY](../SECURITY.md) §9), restoration access is authorized and audited, and a restore never resurrects data past the retention window or a completed deletion in [data classification](../security/data-classification.md) §4 — that property is tested, not assumed.
+- **[OPS-85]** Each deployment has a **deployment profile** — a filled-in record of the operating organization, the applicable jurisdictions, where each data store physically resides, the privacy requirements, and the retention, deletion, export, audit-log, and location-data policies its operator has approved, together with the list of settings that must be reviewed for that deployment. The profile is a required review artefact before a production deployment ([ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction)) and starts from the template in this document, with every unresolved item marked as unresolved rather than left blank.
 - **[OPS-83]** An availability objective and an error-budget policy are recorded below before the Phase 9 gate, using the measurement rules of the [performance policy](../performance/README.md) (QA-107 … QA-111): objective, measurement point, exclusions (declared maintenance windows), and what happens when the budget is exhausted. No availability, uptime, or response-time figure is published anywhere before it is measured with its commit, environment, dataset, and command recorded.
 
 OPS-81 exists because a runbook written during an incident is a guess. The failure modes are already enumerated — the threat models and the service-boundary sections name them — so the register below is the checklist that keeps the two ends of the project honest: every named failure mode has an answer, and every answer names the failure mode it covers.
@@ -20,7 +21,7 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | --- | --- | --- | --- |
 | Database unavailable and restore from backup | datastore loss, corruption, failed migration | 8 | not yet |
 | Failed migration and rollback | schema change that cannot complete | 1 | not yet |
-| Disk full or volume growth | uploads, logs, or location history exhaust storage | 8 | not yet |
+| Disk full or volume growth | uploads, logs, or location history exhaust storage — and, by design, retained data grows until an approved policy deletes it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | 8 | not yet |
 | Certificate expiry and TLS failure | expired or mis-issued certificate at the edge | 9 | not yet |
 | Secret and credential rotation | leaked or aged secret, plugin credential revocation | 7 | not yet |
 | Provider outage | map tiles, geocoding, routing, or traffic provider down or rate-limited | 3 | not yet |
@@ -47,7 +48,7 @@ The targets are recorded here rather than in a deployment script, because a targ
 | Encryption and key custody | at rest, and who can decrypt | set with the hosting decision (Q-19); never a repository-stored key |
 | Off-host copy | a backup that survives the host | required; destination set with Q-19 |
 | Recovery time objective | how long a restore may take, measured by rehearsal | measured in the Phase 8 rehearsal, not estimated |
-| Retention window | how long backups are kept, and how it interacts with the retention rules in [data classification](../security/data-classification.md) §4 | bounded by the data retention rules; a restore must not resurrect purged location history or a completed account deletion |
+| Retention window | how long backups are kept, and how it interacts with the retention rules in [data classification](../security/data-classification.md) §4 | bounded by the operator's approved retention policy; a restore must not resurrect purged location history or a completed account deletion |
 | Failure alerting | who hears about a failed job and how | [SEC-60](../SECURITY.md) alerting covers replication and backup failures |
 | Access | who may restore, and what is recorded | role-limited and audited ([SEC-58](../SECURITY.md), [SEC-59](../SECURITY.md)); a restore that is not audited is not permitted |
 | Reporting format | what a rehearsal records | date, commit SHA, environment, dataset, exact command, elapsed time, and what the rehearsal did **not** cover (QA-110) |
@@ -56,12 +57,30 @@ The targets are recorded here rather than in a deployment script, because a targ
 
 | Field | Meaning | Value |
 | --- | --- | --- |
-| Objective | the availability the deployment is held to, per surface (client-facing API, realtime delivery, admin surface) | not set yet — set with the workload budget (Q-12) and the hosting decision (Q-19), before the Phase 9 gate |
+| Objective | the availability the deployment is held to, per surface (client-facing API, realtime delivery, admin surface) | not set yet — set against the deployment's approved capacity targets ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)) and the hosting decision ([Q-19](../DECISIONS.md#open-questions)), before the Phase 9 gate |
 | Measurement point | where availability is observed (edge, health endpoints, synthetic checks), and the command that produces the number | not set yet |
 | Exclusions | declared maintenance windows and how they are announced | none declared |
 | Error-budget policy | what stops when the budget is exhausted, and who decides | not set yet |
 | Degraded mode | which features remain usable when a dependency is down | per dependency; fail-closed rules are [PLG-41](../PLUGIN_SYSTEM.md) and [PLG-42](../PLUGIN_SYSTEM.md), and the client behaviour for unavailable features is [UI-19](../PRODUCT_REQUIREMENTS.md) |
 | Burn alerting | how fast budget consumption is noticed | [SEC-60](../SECURITY.md) alerting |
+
+## Deployment profile
+
+The product is installed inside an operator's own environment, so the legal and operational questions belong to that operator and are answered per deployment, not in this repository ([ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction)). The template below is filled in for each deployment; **a field left unresolved is written as unresolved**, so a reviewer can see what is still owed.
+
+| Field | What it records | Status until filled |
+| --- | --- | --- |
+| Operating organization | The legal entity that runs the deployment and is the data controller or equivalent | unresolved in development |
+| Applicable jurisdictions | The legal regimes that apply to the operator, the users, and the stored data | unresolved in development |
+| Data residency | Where each store physically lives: database, object storage, log/metric sink, backups, and any provider called at runtime | unresolved in development |
+| Privacy requirements | What the operator must provide (notice, rights, retention limits, breach handling) and where it is published | unresolved in development |
+| Retention, deletion, export policies | The approved windows and procedures, including the backup treatment of a deletion ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | not approved; enforcement stays off until they are |
+| Audit-log policy | Retention window, access roles, and export rules for audit records | not approved |
+| Location-data handling | Which location data may be stored, for how long, who may see it, and under what legal basis | not approved |
+| Reviewed settings | The configuration keys reviewed for this deployment ([`.env.example`](../../.env.example) groups them), including the retention switch and every window it applies | none reviewed |
+| Approval record | Who approved which policy, on what date, and where the signed version lives | empty |
+
+Enabling automated retention enforcement is a deployment action that follows an approved policy, never a default ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)).
 
 ## Support and reporting route
 

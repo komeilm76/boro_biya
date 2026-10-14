@@ -68,10 +68,17 @@ Cross-cutting rules:
 
 ## 4. Retention and deletion
 
-| Data | Retention | Mechanism |
+**Candidate policy, not an enforced schedule.** Retention enforcement is **disabled by default** ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)): with `RETENTION_AUTOMATED_DELETION_ENABLED` false, nothing below is deleted on a schedule, because the obligations differ per deployment ([ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction)) and an irreversible deletion cannot be repaired by a later policy. The windows are the values a deployment adopts when its operator approves a policy and enables enforcement; they are drafted so that enabling enforcement is a configuration change, not a redesign.
+
+Two kinds of expiry are distinguished, and only the first is active today:
+
+- **Functional expiry** — an expired session, a consumed recovery grant, a rate-limit window. The record stops being honoured (and cannot authenticate anything) as soon as it expires; whether the row is later removed is a retention decision. Functional expiry is required for correctness and stays active.
+- **Retention deletion** — removing a record that is still correct because a policy says it should no longer be kept. **Disabled by default.**
+
+| Data | Candidate retention (applied only when enforcement is enabled) | Mechanism |
 | --- | --- | --- |
 | Active session and refresh-token records | Until expiry or revocation; a reused refresh token revokes its family; bounded maximum age ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android)) | Row TTL/cleanup job |
-| Expired sessions and revoked tokens | Purged within 30 days of expiry (auditable summary may remain) | Scheduled cleanup |
+| Expired sessions and revoked tokens | Removed within 30 days of expiry once enforcement is enabled (an auditable summary may remain) | Scheduled cleanup, gated by the enforcement switch |
 | Login attempt, lockout, and rate-limit counters | Rolling 15-minute window; lockout state until it expires ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) | Counter expiry |
 | CAPTCHA challenges and tokens (`captcha_challenges`) | Minutes: the challenge TTL plus a short cleanup grace; consumed rows are deleted and never kept for analytics ([ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) | Short TTL + cleanup job; no third-party copy exists |
 | Recovery challenges and grants | Minutes (short-lived), deleted or marked consumed after use | `consumed_at` + cleanup |
@@ -79,16 +86,40 @@ Cross-cutting rules:
 | Live location points | Only the current point; superseded points removed promptly | Unique row per user, TTL |
 | Live-sharing sessions and grants | Session and grant rows are kept as an audit record for the audit retention window; no coordinates are stored on them | Audit retention policy |
 | History-share grants | Kept while granted plus the audit retention window after revoke | Revoke flag + audit retention policy |
-| Location history | Bounded retention window chosen by the owner within the server maximum (default window is Q-22), enforced per row | `expires_at` per row + TTL purge; immediate delete on user request |
-| Last-known location | Owner-defined retention window, decided in Q-06, then expired | TTL column; must be labelled with age |
-| SOS alerts and attachments | Retained while the operational/legal need exists, defined in Q-14; attachments may be deleted earlier than metadata | Deletion job + owner/admin action, both audited |
+| Location history | Bounded retention window chosen by the owner within the server maximum (the default window is [Q-22](../DECISIONS.md#open-questions)), enforced per row | `expires_at` per row + TTL purge; immediate delete on user request |
+| Last-known location | Owner-defined retention window, decided in [Q-06](../DECISIONS.md#open-questions), then expired | TTL column; must be labelled with age |
+| SOS alerts and attachments | Retained while the operational or legal need exists, which the operator defines ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)); attachments may be deleted earlier than metadata | Deletion job + owner/admin action, both audited |
 | Notifications | Days to weeks, per event type | TTL and read-state cleanup |
-| Audit events | Long retention (typically 1–2 years), defined in Q-14 | Append-only storage; no silent truncation |
+| Audit events | Long retention (typically 1–2 years as a starting point), set by the operator's audit policy and applied only when enforcement is enabled | Append-only storage; no silent truncation, and no automatic deletion by default |
 | Uploaded plugin packages | Retained while installed plus a rollback window | Explicit deletion on uninstall |
-| Backups | Rolling window with documented restore procedure | Encrypted; deletion of a record does not silently survive in backups beyond the window |
+| Backups | Rolling window with a documented restore procedure ([OPS-82](../operations/README.md)) | Encrypted; a deletion in the live store does **not** reach an existing backup — the interaction is documented in the temporary policy below |
 | Application logs | Short (days to weeks), redacted | Rotation policy; no C3 content by construction |
 
-Account deletion: the account, its credentials, security answers, sessions, preferences, the category assignment, the immediate location row, live-sharing sessions and their grants, history-share grants, and the full location history (`user_location_history`) are deleted or irreversibly anonymized. Records that must be retained (audit events, abuse evidence where legally required) are retained in a form that no longer identifies the user beyond what the obligation requires. The deletion outcome is recorded as an audit event that does not itself contain C2/C3 data. The exact obligations are defined in Q-14.
+### Account deletion and data export: designed for, not implemented
+
+**No account-deletion feature exists, and none is exposed to administrators** ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet), `PRIV-33`). What administrators have is deactivation: the account is blocked, its sessions are revoked, and **every record it owns is kept** — deactivation and deletion are separate operations, and the second one is not available. A user's own location-history deletion (MAP-22, `PRIV-28`) is a data-shape operation inside the sharing feature, not account deletion, and is unaffected.
+
+What the design reserves, so that deletion and export can be added without a rewrite when a deployment's obligations require them:
+
+| Reserved capability | What exists now | What adding the workflow means |
+| --- | --- | --- |
+| Account erasure | Every row is owned by a user identifier with foreign keys that cascade or are explicitly restated; credentials, answers, sessions, preferences, category, grants, and history are enumerable from one schema | Implement the erasure path, decide what is anonymized rather than removed, and record it as an audit event that contains no C2/C3 data |
+| Export | Authorization already resolves "this user's own records" per object; response envelopes and pagination are uniform (API-11, API-12) | Add an authenticated, audited endpoint that assembles the user's own data in a machine-readable form; a recorded location trail stays inside the same audited channel and is never exported in bulk by a third party |
+| Backup treatment | Backups are encrypted and restore-tested for recovery, not for erasure (OPS-82) | State, per deployment, whether a deletion request also covers existing backups; a restore can resurrect rows deleted after the backup was taken |
+
+### Current temporary retention policy (development)
+
+Everything below is the honest present state, written down because "we will decide later" is not a policy a reviewer can check:
+
+| Question | Current answer |
+| --- | --- |
+| What is deleted automatically today? | Nothing. Automated retention enforcement is disabled by default ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)); only functional expiry applies (sessions stop authenticating, consumed grants cannot be reused, counters age out of their window) |
+| Which data categories exist? | The classes and inventory in §1 and §3 of this document: identity and credentials, security answers, sessions and tokens, login/abuse counters, CAPTCHA challenges, location (live, last-known, history), relations and blocks, SOS alerts and attachments, notifications, audit events, consent records, preferences, plugin records, logs and metrics |
+| Where does it live? | Core and service PostgreSQL schemas (identity, relations, SOS, plugin registry); object storage for attachments; the deployment's log and metric sink; backups of the database and object store, off host |
+| What do backups mean for deletion? | A record deleted from the live store persists in every backup taken before the deletion, and a restore returns it. Backup retention is a deployment decision ([OPS-82](../operations/README.md)); a deletion workflow must therefore state its backup treatment rather than assume erasure |
+| What happens to audit records? | They are appended, never edited, and not deleted automatically; the operator's audit policy sets the window and is approved before production (`PRIV-34`) |
+| What is unresolved? | The export workflow, the deletion workflow, the per-deployment legal requirements and residency duties, the backup treatment of deletions, and the production retention windows — each waiting on the operator's approval ([ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction)) |
+| What may never be claimed? | That a particular retention period is universally acceptable, that data may be kept `indefinitely` without an approved policy, or that the deployment is `legally compliant` because the software is used as intended |
 
 Data-subject export: a user can obtain their own profile, preferences, relationships, immediate location row, category assignment, live-sharing session and grant history, SOS records, and notifications in a machine-readable format through an authenticated endpoint. A recorded location trail is exported only through the same authenticated, audited channel and never in bulk by a third party. Export generation is audited and the artefact is short-lived.
 
@@ -110,4 +141,8 @@ These defaults are binding unless the user explicitly changes them, and each is 
 12. **[PRIV-28]** Location history is never exportable in bulk, is readable only by granted viewers inside their window, and the owner can delete it in full at any time with immediate effect.
 13. **[PRIV-29]** A follower sees live or historical location only while that follower's grant is active and the relationship is accepted; revoking one grant stops that access immediately, including for open streams.
 14. **[PRIV-30]** A user's assistance category is visible to its owner and to administrators for administration, is used server-side for dispatch matching, and is never exposed as a public profile list.
-15. **[PRIV-31]** A plain-language privacy notice is published with the first user-facing release and linked from the sign-up screen and from settings; it states what is collected and why, the retention windows actually configured rather than the policy maximum, who can see what, and how to delete data or end sharing, and it is updated in the same change as any behaviour it describes. It never claims a retention, deletion, or visibility behaviour the code does not implement (obligations are set by [Q-14](../DECISIONS.md#open-questions); location-privacy rules live in [SECURITY](../SECURITY.md) §5).
+15. **[PRIV-32]** **Nothing user-related is deleted automatically by default.** Automated retention enforcement is configuration, disabled by default, and every window in §4 is candidate policy until a deployment approves it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)); enabling enforcement applies only the approved windows, and a change to them is an operator decision, audited like any other configuration change.
+16. **[PRIV-33]** **Deactivation is not deletion, and the application provides no administrator-facing account-deletion feature**: an administrator deactivates, bans, and reactsivates ([AUTH-34](../PRODUCT_REQUIREMENTS.md#account-states)), and no role can destroy a user's records through the API. Erasure and export are reserved capabilities of the design (§4) and are added only when a deployment's obligations require them, never by an administrator acting alone.
+17. **[PRIV-34]** **Before a production deployment, the responsible operator defines and approves the retention, deletion, export, and audit-log policies**, together with the handling of location data; the deployment records where each policy lives, and the privacy notice states the values actually configured for that deployment rather than a universal default. Data-subject requests are answered according to the deployment's approved procedure — which today means a documented manual path, because no automated workflow exists.
+18. **[PRIV-35]** **Legal regime, jurisdiction, and data residency are deployment configuration, not product properties.** The software assumes no jurisdiction, stores nothing that presumes one, and documents which settings must be reviewed for each deployment ([OPS-85](../operations/README.md)); until an operator approves them, these questions stay marked unresolved in the deployment profile and in this document.
+19. **[PRIV-31]** A plain-language privacy notice is published with the first user-facing release and linked from the sign-up screen and from settings; it states what is collected and why, the retention windows actually configured rather than the policy maximum, who can see what, and how to delete data or end sharing, and it is updated in the same change as any behaviour it describes. It never claims a retention, deletion, or visibility behaviour the code does not implement (obligations are set by [Q-14](../DECISIONS.md#open-questions); location-privacy rules live in [SECURITY](../SECURITY.md) §5).

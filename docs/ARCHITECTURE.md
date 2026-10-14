@@ -98,17 +98,20 @@ Rules:
 
 ## 6. Performance and resource management
 
-- **[OPS-44]** Measured budgets are established for memory, CPU, container image size, API latency, concurrent SSE/WebSocket connections, and map rendering on target devices. Budgets live in [docs/performance](performance/README.md) with the measurement method that produced them.
+- **[OPS-44]** Measured budgets are established for memory, CPU, container image size, API latency, concurrent SSE/WebSocket connections, and map rendering on target devices. The pack fixes the **shape** of a budget and the baseline profile for development and CI; the **values are per deployment**, measured on its own hardware ([ADR-028](DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)). Budgets and their measurements live in [docs/performance](performance/README.md) with the measurement method that produced them.
 - **[OPS-45]** All data endpoints are bounded: pagination, viewport bounding boxes, clustering, and server-side spatial queries. Loading all users, alerts, or POIs at once is prohibited.
 - **[OPS-46]** PostGIS usage is decided by prototype and benchmark ([DECISIONS](DECISIONS.md) ADR-005); unbounded full-table distance scans are never acceptable, and the fallback strategy (bounded bounding-box candidates, then exact distance) is documented and tested.
 - **[OPS-47]** Indexes are added from query plans (`EXPLAIN (ANALYZE, BUFFERS)` in a safe environment), not guesses.
 - **[OPS-48]** Connection pools are bounded; requests, uploads, and provider calls have explicit timeouts; per-route payload, concurrency, and rate limits are configured.
 - **[OPS-49]** I/O is asynchronous, and CPU-heavy work (image processing, archive inspection, hashing) runs off the request thread with bounded concurrency and memory.
-- **[OPS-50]** Retention/TTL is set for transient sessions, recovery challenges, idempotency records, notification events, temporary uploads, and location points.
+- **[OPS-50]** **Functional expiry** is set for transient sessions, recovery challenges, idempotency records, notification events, temporary uploads, and location points: the record stops being honoured when it expires. This is not the retention policy — removing a correct record is a policy decision, disabled by default ([ADR-026](DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)).
+- **[OPS-87]** **Scaling is a deployed attribute, not an assumed one.** No resource limit or performance target is hard-coded where configuration can carry it; the deployment documentation states the prerequisites for vertical growth (CPU, memory, disk on the same host) and for horizontal growth (more replicas, which requires shared state under [ADR-008](DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists), plus a proxy, health-checked rollout, and the runbook entries that go with them). Capacity can be raised or lowered by configuration, and a deployment that changes its capacity validates the result against its own approved targets ([ADR-028](DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement), [OPS-86](performance/README.md)).
 - **[OPS-51]** Cold start, idle footprint, and load behaviour are measured before adding Redis, a queue, or another component; the workload that justifies each new component is documented.
 - **[OPS-52]** Containers declare CPU/memory limits and health checks; these complement, and never replace, application-level bounds.
 
 ## 7. Configuration and environments
+
+Deployment identity is configuration as well: the operating organization, the applicable jurisdictions, data residency, and the approved retention and privacy policies are recorded per deployment ([ADR-027](DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction), [OPS-85](operations/README.md)) and never assumed by the code. `.env.example` carries the keys, and the deployment profile records the values.
 
 - **[OPS-53]** All environment variables are validated with Zod at process start, and invalid or missing required configuration fails fast with a clear, non-secret diagnostic.
 - **[OPS-54]** `.env.example` contains placeholders only and is committed; `.env` is ignored ([development environment](development/01-development-environment.md) §5).

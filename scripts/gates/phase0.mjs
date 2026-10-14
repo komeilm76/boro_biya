@@ -17,7 +17,8 @@
  *   7. Secrets — no credential material or token-looking strings, and .env.example
  *      contains placeholders only.
  *   8. Model coherence — data concepts introduced by a decision are reflected in the
- *      documents that govern them, and wording retired by a decision is gone.
+ *      documents that govern them, wording retired by a decision is gone, and no document
+ *      claims capacity, compliance, or indefinite retention without a basis (GOV-91).
  *   9. Phase status — every phase has a status row in docs/README.md and a status line in
  *      docs/ROADMAP.md, and the two agree (they are the only phase-status surfaces).
  *  10. Diagrams, states, and vocabulary — code fences are closed; every Mermaid diagram names
@@ -356,6 +357,44 @@ const MODEL_COHERENCE = [
   { concept: 'SECURITY_QUESTIONS_ENABLED', docs: ['DATA_MODEL.md', 'SECURITY.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-023' },
   { concept: 'no email address and no mobile number', docs: ['PRODUCT_REQUIREMENTS.md', 'DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-019' },
   { concept: 'ADR-025', docs: ['ARCHITECTURE.md', 'SECURITY.md', 'development/01-development-environment.md', 'development/02-dependency-policy.md'], adr: 'ADR-025' },
+  { concept: 'ADR-026', docs: ['security/data-classification.md', 'operations/README.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-026' },
+  { concept: 'ADR-027', docs: ['security/data-classification.md', 'operations/README.md', 'ARCHITECTURE.md'], adr: 'ADR-027' },
+  { concept: 'ADR-028', docs: ['performance/README.md', 'ARCHITECTURE.md', 'operations/README.md'], adr: 'ADR-028' },
+];
+
+/**
+ * Claims that need a basis the pack does not have. Capacity is measured per deployment
+ * (ADR-028), legal compliance is the operator's determination for its own deployment
+ * (ADR-027), and retention needs an approved policy (ADR-026) — so a sentence that claims
+ * any of them is a defect wherever it appears (GOV-91). The phrase a document quotes while
+ * forbidding it belongs in inline code, like retired wording.
+ */
+const FORBIDDEN_CLAIMS = [
+  {
+    pattern: /\bunlimited\s+(?:scal\w*|capacity|concurren\w*)/i,
+    label: 'unlimited scalability',
+    reason: 'capacity is an attribute of a deployment, measured on its own hardware (ADR-028, GOV-91)',
+  },
+  {
+    pattern: /\bguaranteed\s+(?:capacity|uptime|availability|latency)\b/i,
+    label: 'guaranteed capacity',
+    reason: 'a capacity or availability figure is a measurement, never a promise (ADR-028, GOV-91)',
+  },
+  {
+    pattern: /\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b[^.\n]{0,40}\bcompliant\b|\bcompliant\b[^.\n]{0,40}\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b/i,
+    label: 'compliance claim',
+    reason: "compliance is the operator's determination for its own deployment (ADR-027, GOV-91)",
+  },
+  {
+    pattern: /\blegally compliant\b/i,
+    label: 'legal-compliance claim',
+    reason: "the project makes no legal-compliance claim; that determination belongs to the operator (ADR-027, GOV-91)",
+  },
+  {
+    pattern: /\b(?:retained|kept|stored)\s+indefinitely\b/i,
+    label: 'indefinite retention',
+    reason: 'retention follows an approved policy; none is universally acceptable (ADR-026, GOV-91)',
+  },
 ];
 
 /**
@@ -442,6 +481,11 @@ function checkModelCoherence() {
         }
         if (inFence) return;
         const prose = line.replace(/`[^`]*`/g, '');
+        for (const entry of FORBIDDEN_CLAIMS) {
+          if (entry.pattern.test(prose)) {
+            failures.push(`[claims] ${rel}:${index + 1} claims "${entry.label}" — ${entry.reason}`);
+          }
+        }
         for (const entry of RETIRED_WORDING) {
           const hit = entry.pattern ? entry.pattern.test(prose) : prose.includes(entry.phrase);
           if (hit) {
@@ -1128,7 +1172,7 @@ console.log('  4. internal links and anchors resolve');
 console.log('  5. no placeholders in normative documents');
 console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
-console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
+console.log('  8. models introduced by a decision are coherent across documents, with no retired wording and no claim lacking a basis');
 console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
 console.log(' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once');
 console.log(' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists');

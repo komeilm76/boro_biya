@@ -80,6 +80,7 @@ const PHASE_RULES = [
   ['GOV', 88, 88, 0],   // pull-forward rule and gate flexibility (delivered by this review)
   ['GOV', 89, 89, 0],   // documentation language variety, enforced by gate check 12 (this review)
   ['GOV', 90, 90, 1],   // client builds independent of the backend runtime, pinned toolchain and frozen lockfile
+  ['GOV', 91, 91, 0],   // no claim without a basis: compliance, capacity, retention (enforced by the gate)
 
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 7, 2],
@@ -151,6 +152,10 @@ const PHASE_RULES = [
   ['PRIV', 27, 29, 4],  // history authorization and revocation
   ['PRIV', 30, 30, 5],  // category visibility for administrators
   ['PRIV', 31, 31, 2],  // privacy notice lands with the first user-facing screens
+  ['PRIV', 32, 32, 1],  // automated deletion disabled by default, from the first stored record
+  ['PRIV', 33, 33, 2],  // deactivation is not deletion; no administrator erasure path, with accounts and admin surface
+  ['PRIV', 34, 34, 9],  // each operator approves its retention/deletion/export/audit policies before production
+  ['PRIV', 35, 35, 1],  // no jurisdiction is assumed; deployment identity is configuration from the skeleton
 
   // Architecture and operations
   ['OPS', 1, 20, 1],    // topology, service boundaries, database ownership
@@ -159,6 +164,9 @@ const PHASE_RULES = [
   ['OPS', 80, 80, 5],   // SOS dispatch applies the category filter through service APIs
   ['OPS', 81, 83, 8],   // runbooks, backup/restore, and the availability objective land with hardening (OPS-81 has a declared early slice)
   ['OPS', 84, 84, 1],   // deployment documentation for the pinned runtime ships with the first deployable artefact
+  ['OPS', 85, 85, 1],   // the deployment-profile template ships with the first deployable artefact
+  ['OPS', 86, 86, 1],   // the baseline load profile is fixed in the phase that builds the skeleton
+  ['OPS', 87, 87, 8],   // scaling prerequisites and adjustable capacity are documented with the hardening phase
 
   // Plugin/service contracts
   ['PLG', 1, 3, 1],
@@ -204,6 +212,8 @@ const PHASE_RULES = [
   ['QA', 118, 118, 0],  // documentation gate: diagram integrity and state-set coherence
   ['QA', 119, 122, 0],  // documentation gate: cross-references, one variety of English, review dates, review-record consistency
   ['QA', 123, 123, 1],  // runtime compatibility and portability check runs with the first built artefact
+  ['QA', 124, 124, 1],  // load/stress/recovery testing against the baseline profile, from the skeleton
+  ['QA', 125, 125, 2],  // retention and deletion defaults, with the account lifecycle and admin surface
 
   // Data model invariants
   ['DATA', 1, 1, 2],

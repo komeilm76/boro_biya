@@ -1,6 +1,6 @@
 # Phase 0 Review Record
 
-Seventeen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§22](#22-seventeenth-pass--the-production-runtime-decided-and-the-documents-re-read-against-it-2026-10-14).
+Eighteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§23](#23-eighteenth-pass--retention-legal-regime-and-capacity-decided-2026-10-14).
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -1213,3 +1213,85 @@ Counts after this pass: identifiers 676 → 679 (`GOV-90`, `OPS-84`, `QA-123`); 
 - **The Phase 1 spike itself.** `ADR-025` decides the runtime; verifying Vitest, Vite, and workspace installs under Bun is Phase 1 work, and the checklist row says so.
 - **Production thresholds and hosting.** Unchanged: the abuse thresholds are reviewed before release ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) and the deployment target is still [Q-19](../DECISIONS.md#open-questions).
 - **A runtime-swap plan.** `OPS-84` requires the documentation to describe how a runtime change is made; the change itself would be a new decision, and no work is scheduled for one.
+
+## 23. Eighteenth pass — retention, legal regime, and capacity decided (2026-10-14)
+
+Three more answers arrived: `Q-14` (retention, deletion, export), `Q-26` (jurisdiction and legal regime), and `Q-12` (capacity and load-test targets). Together they decide the same thing from three directions — **the deployment owns the policy, the software supplies the mechanism** — and the pack had drifted in the other direction: it described deletion windows as if they were enforced, described account deletion and data export as if they existed, and left "performance targets" as a question a phase would one day answer with numbers nobody could verify.
+
+They are now [ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet), [ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction), and [ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement).
+
+### 23.1 Defects found and fixed
+
+| # | Defect | Where | Fix |
+| --- | --- | --- | --- |
+| 1 | **The retention table read as an enforced schedule.** "Purged within 30 days", "Long retention (typically 1–2 years), defined in Q-14" — nothing enforced it, and nothing said so | [data classification](../security/data-classification.md) §4 | Reframed as **candidate policy**: enforcement disabled by default, functional expiry distinguished from retention deletion, and every row's mechanism marked as gated by the switch |
+| 2 | **Account deletion and data export were written as implemented workflows** — "are deleted or irreversibly anonymized", "a user can obtain …through an authenticated endpoint" | [data classification](../security/data-classification.md) §4 | Rewritten as **designed for, not implemented**: no administrator erasure path, deactivation keeps every record, and a table says what each reserved capability needs when it is built |
+| 3 | **No temporary policy existed.** The owner asked for the current state in writing; a reader had to infer it from a table that described the future | [data classification](../security/data-classification.md) §4 | "Current temporary retention policy (development)" added: what is deleted today, the data categories, where data lives, what backups mean for a deletion, what is unresolved, and what may never be claimed |
+| 4 | Backup retention "bounded by the data retention rules" implied a deletion reaches backups | [operations](../operations/README.md) | Corrected: a deletion in the live store does not reach an existing backup; the backup's own retention is the operator's decision, and a deletion workflow must state its backup treatment |
+| 5 | **Nothing said who owns the legal questions**, and the pack's silence invited a reader to assume a jurisdiction | everywhere | `PRIV-34`, `PRIV-35`, `GOV-91`, and a **deployment profile** ([OPS-85](../operations/README.md)) listing the fields each operator must fill in and approve; unresolved items are written as unresolved |
+| 6 | "Performance budgets" waited on a question with no measurable criterion, so CI could not fail on a regression | [performance](../performance/README.md), [QUALITY_GATES](../QUALITY_GATES.md) §3 | Baseline profile defined (fields filled in Phase 1) with an explicit pass/fail rule; per-deployment production targets from the same fields; availability objective now references approved capacity targets |
+| 7 | Nothing stated the scaling prerequisites, and `ADR-008`'s single-replica constraint was not connected to capacity work | [ARCHITECTURE](../ARCHITECTURE.md) §6, [performance](../performance/README.md) | `OPS-87` added: vertical and horizontal paths documented per deployment, shared state named as the first horizontal prerequisite, capacity adjustable by configuration |
+| 8 | **The pack had no rule against claims it cannot support** — capacity, compliance, indefinite retention | [conventions](00-repository-conventions.md) §1 | `GOV-91` added, and the documentation gate now fails a forbidden claim (`[claims]`), listed in check 8's maintained lists |
+| 9 | Phase gates still demanded that `Q-14`, `Q-26`, and `Q-12` "be resolved" rather than that their outcomes hold | [ROADMAP](../ROADMAP.md) Phases 1, 2, 9; [checklist](05-phase-gate-checklist.md) rows 9 and 10, Phase 9 row 7 | Restated as verifiable outcomes: baseline profile green in CI, retention defaults tested, deployment profile approved |
+| 10 | `TH-22` left the audit-retention and export policy as an open question, and `.env.example` had no retention switch to turn anything on | [threat model](../security/threat-model.md), [`.env.example`](../../.env.example) | `TH-22` points at ADR-026; the retention section carries the enforcement switch, both retention windows, and the deployment-profile path |
+| 11 | **ADR-025 was filed in the wrong place** — inserted between ADR-017 and ADR-018 by the previous pass, so the log's numbering and its order disagreed | [DECISIONS](../DECISIONS.md) | Moved to its numeric position; the three new ADRs follow it, and the log now runs `ADR-001 … ADR-028` in order |
+
+### 23.2 The claim gate
+
+`GOV-91` says a claim that cannot point at a measurement or an approving operator is a defect. To make that checkable rather than aspirational, check 8 now carries a third maintained list — **forbidden claims** — and fails with `[claims]` plus the reason:
+
+```
+unlimited scalability          capacity is measured per deployment (ADR-028)
+guaranteed capacity/uptime     a figure is a measurement, never a promise (ADR-028)
+compliance claims              compliance is the operator's determination (ADR-027)
+legally compliant              no legal-compliance claim is made (ADR-027)
+retained indefinitely          retention needs an approved policy (ADR-026)
+```
+
+A document that must quote one of these phrases — to forbid it, as `MASTER_PROJECT_PROMPT` does — puts it in inline code, exactly as retired wording works.
+
+### 23.3 Mutation tests (eighteenth pass)
+
+```
+T25a "scales to unlimited concurrency" in the glossary
+     - [claims] GLOSSARY.md:25 claims "unlimited scalability"                 exit 1
+
+T25b "GDPR compliant … HIPAA compliant" in the requirements
+     - [claims] PRODUCT_REQUIREMENTS.md:30 claims "compliance claim"          exit 1
+
+T25c "guaranteed availability of 99.99%" in the operations document
+     - [claims] operations/README.md:60 claims "guaranteed capacity"          exit 1
+
+T25d "User data is retained indefinitely." in the retention document
+     - [claims] security/data-classification.md:121 claims "indefinite
+       retention"                                                             exit 1
+
+T25e the deployment profile stops citing ADR-026
+     - [model] `ADR-026` (ADR-026) is not mentioned in operations/README.md   exit 1
+
+all mutations restored from the pre-test copies                           exit 0
+```
+
+### 23.4 Evidence (eighteenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 14 checks, exit 0
+node scripts/gates/traceability.mjs           # 689 requirements, 124 groups, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+Counts after this pass: identifiers 679 → 689 (`PRIV-32` … `PRIV-35`, `OPS-85` … `OPS-87`, `QA-124`, `QA-125`, `GOV-91`); decisions `ADR-001 … ADR-028`; the register holds 26 questions with **13 resolved** and 13 open.
+
+### 23.5 What this changes for the reader
+
+- **An operator** now has a checklist to satisfy before production: the deployment profile, with its jurisdictions, residency, and approved policies named individually.
+- **A developer** sees no numeric target that belongs to somebody else's hardware, and a CI baseline that fails on a regression.
+- **A user** sees a privacy notice that states what their deployment actually configured, and is told plainly, on a deactivated account, that the data is retained and no deletion action exists.
+- **Nobody** can read a claim of `unlimited scale`, `guaranteed capacity`, `legal compliance`, or `indefinite retention` out of this pack without the gate rejecting it first.
+
+### 23.6 Deliberately not done
+
+- **No export or deletion workflow is designed beyond its boundary.** The obligations that shape them are the operator's (ADR-027), and building either now would be reworked.
+- **No retention window is switched on.** Enabling enforcement is the deployment's decision, and it follows its approved policy.
+- **No production capacity number is stated.** There are no measurements yet; the baseline profile's values are Phase 1 work.
