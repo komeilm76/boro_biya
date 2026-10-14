@@ -2,7 +2,7 @@
 
 Planned endpoints, grouped by area, with the access level and the phase that delivers them. This is a planning inventory: nothing here exists yet. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are not part of this inventory and are documented in [ARCHITECTURE](../ARCHITECTURE.md) §8.
 
@@ -50,7 +50,7 @@ Categories are core data ([ARCHITECTURE](../ARCHITECTURE.md) §2, OPS-10/OPS-12)
 | --- | --- | --- | --- |
 | GET | `/users/me/category` | auth | Own assistance category with its verification state |
 | PUT | `/users/me/category` | auth | Set the single category (changing is allowed, rate-limited); unknown or inactive categories rejected; audited |
-| GET | `/categories` | auth | Active catalogue for selection UIs (key, localised label, verification requirement) |
+| GET | `/categories` | auth | Active catalogue for selection UIs (key, localized label, verification requirement) |
 | GET | `/admin/categories` | admin | Full catalogue including inactive entries |
 | POST | `/admin/categories` | admin | Create a category; audited |
 | PATCH | `/admin/categories/:id` | admin | Rename, reorder, (de)activate, set verification requirement; deactivation blocks new selection and keeps history |

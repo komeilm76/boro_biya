@@ -2,7 +2,7 @@
 
 Focused threat model for the untrusted-package (ZIP) lifecycle defined in [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §2–§7 and the controls in [SECURITY](../SECURITY.md) §6. This is the highest-severity surface in the product: it converts an admin upload form into an execution path.
 
-Owner: Security. Reviewed: 2026-10-13. Re-review before the Phase 7 gate and after any change to the extraction, validation, signing, or isolation code.
+Owner: Security. Reviewed: 2026-10-14. Re-review before the Phase 7 gate and after any change to the extraction, validation, signing, or isolation code.
 
 ## 1. Why this is treated as hostile input
 
@@ -16,10 +16,10 @@ Host and container runtime, the core API process and its credentials, the databa
 
 | ID | Attack path | Control (must be implemented before Phase 7 passes) | Verification |
 | --- | --- | --- | --- |
-| PT-01 | Path traversal (`../../etc/...`) or absolute path in an archive member | Normalise and reject any member whose resolved path escapes the extraction root; reject absolute paths, drive letters, backslashes used as separators, and NUL bytes | Adversarial fixtures: `../`, `..\\`, `C:\\`, `/etc/passwd`, `a/../../b`, percent-encoded traversal, overlong UTF-8 |
+| PT-01 | Path traversal (`../../etc/...`) or absolute path in an archive member | Normalize and reject any member whose resolved path escapes the extraction root; reject absolute paths, drive letters, backslashes used as separators, and NUL bytes | Adversarial fixtures: `../`, `..\\`, `C:\\`, `/etc/passwd`, `a/../../b`, percent-encoded traversal, overlong UTF-8 |
 | PT-02 | Symlink/hardlink escape | Reject link members entirely (no link extraction); never follow links when walking the archive | Fixtures containing symlinks and hardlinks, including links to files inside the archive |
 | PT-03 | Zip bomb / decompression bomb | Enforce maximum compressed size, uncompressed size, per-member size, member count, nesting depth, and compression ratio before and during extraction; enforce a wall-clock and memory budget | Fixtures with a high-ratio member, a nested archive, thousands of tiny members, and a deeply nested tree |
-| PT-04 | Duplicate or colliding member paths (case-insensitive collisions on some filesystems) | Reject duplicate normalized paths and case-only collisions; extract to a fresh directory | Fixtures with `a.txt`/`A.TXT`, `./a.txt`/`a.txt`, Unicode-normalisation collisions |
+| PT-04 | Duplicate or colliding member paths (case-insensitive collisions on some filesystems) | Reject duplicate normalized paths and case-only collisions; extract to a fresh directory | Fixtures with `a.txt`/`A.TXT`, `./a.txt`/`a.txt`, Unicode-normalization collisions |
 | PT-05 | Malicious manifest (over-broad permissions, absurd resource ceilings, unexpected fields, command entrypoints) | Strict schema: reject unknown fields, reject permission names outside the closed vocabulary, clamp resource ceilings to server maxima, reject any host-command entrypoint, validate semver and API compatibility | Schema tests with each invalid case; a test asserting ceilings cannot be raised above the server maximum |
 | PT-06 | Unsigned or tampered package presented as trusted | Require a detached signature over the archive digest from a key in the configured trust store, or an explicit trusted-source policy; record digest, signer, and trust decision | Signature tests: valid, wrong key, tampered byte, expired/revoked key, missing signature when policy requires one |
 | PT-07 | Dependency confusion or a malicious transitive dependency | Review declared dependencies, licence, advisories, and install scripts; forbid postinstall scripts and network access during build; build from a lockfile | Build log review, advisory scan, install-script rejection test |
@@ -38,7 +38,7 @@ Host and container runtime, the core API process and its credentials, the databa
 
 These are defects, not trade-offs:
 
-- **[PLG-51]** Extracting an archive with a library that follows links or normalises paths silently.
+- **[PLG-51]** Extracting an archive with a library that follows links or normalizes paths silently.
 - **[PLG-52]** Running plugin code (including "validation scripts", "install hooks", or health checks) inside the core API process or on the host.
 - **[PLG-53]** Passing a shell string built from package contents or manifest values to any process.
 - **[PLG-54]** Mounting the Docker socket, a host directory, or the application's `.env` into a plugin container.

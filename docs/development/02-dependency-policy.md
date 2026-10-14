@@ -34,11 +34,11 @@ Frontend:
 | `vuetify` | 4.2.4 | MIT | Vuetify 4 is the current major (Material components + own SASS utilities) |
 | `tailwindcss` | 4.3.3 | MIT | Tailwind 4; CSS-first configuration |
 | `pinia` | 4.0.3 | MIT | Pinia 4 is the current major |
-| `vue-i18n` | 11.4.14 | MIT | peer: `vue ^3.0.0`; the message catalogue and per-locale formatting for the two required locales ([ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)) |
+| `vue-i18n` | 11.4.14 | MIT | peer: `vue ^3.0.0`; the message catalogue and per-locale formatting for the two required locales ([ADR-017](../DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)) |
 | `@vueuse/core` | 15.0.0 | MIT | Node `>=22` |
 | `@vueuse/motion` | 3.0.3 | MIT | Motion presets for Vue |
 
-The `vue-i18n` row was added on 2026-10-14 together with [ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together); every other version in this table carries the 2026-10-13 verification.
+The `vue-i18n` row was added on 2026-10-14 together with [ADR-017](../DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together); every other version in this table carries the 2026-10-13 verification.
 | `maplibre-gl` | 6.14.0 | BSD-3-Clause | Node `>=16.14`; attribution requirements apply |
 | `@ionic/vue` | 9.0.7 | MIT | Used only in the Android shell ([ADR-009](../DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android)) |
 | `@capacitor/core` | 8.5.3 | MIT | Android packaging |

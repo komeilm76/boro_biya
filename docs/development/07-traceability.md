@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **666** across 118 groups.
+Total requirements: **670** across 119 groups.
 
 ## Declared pull-forwards
 
@@ -25,7 +25,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 21 |
+| 0 (foundation) | 25 |
 | 1 | 280 |
 | 2 | 119 |
 | 3 | 41 |
@@ -40,8 +40,9 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | --- | --- | --- | --- | --- |
 | 0 | `GOV-19 … GOV-26` | 8 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
 | 0 | `GOV-87 … GOV-88` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
+| 0 | `GOV-89` | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
-| 0 | `QA-62 … QA-118` | 10 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| 0 | `QA-62 … QA-121` | 13 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
 | 1 | `GOV-27 … GOV-35` | 9 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
 | 1 | `GOV-36 … GOV-40` | 5 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
@@ -123,7 +124,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 4 | `PRIV-13 … PRIV-29` | 7 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 4 | `OPS-21 … OPS-27` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
 | 4 | `PLG-35 … PLG-40` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
-| 4 | `PLG-41` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| 4 | `PLG-41` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
 | 4 | `API-31 … API-35` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
 | 4 | `QA-112 … QA-113` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 4 | `DATA-02 … DATA-18` | 8 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
@@ -138,7 +139,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 5 | `PRIV-07 … PRIV-26` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | 5 | `PRIV-16 … PRIV-30` | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 5 | `OPS-80` | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
-| 5 | `PLG-42` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| 5 | `PLG-42` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
 | 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 5 | `DATA-06 … DATA-21` | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 5 | `DATA-25` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
@@ -149,7 +150,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 7 | `PLG-04 … PLG-14` | 11 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
 | 7 | `PLG-15 … PLG-28` | 14 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
 | 7 | `PLG-29 … PLG-57` | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
-| 7 | `PLG-43 … PLG-46` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| 7 | `PLG-43 … PLG-46` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
 | 7 | `PLG-47 … PLG-50` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
 | 7 | `PLG-51 … PLG-56` | 6 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
 | 7 | `DATA-11 … DATA-13` | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
@@ -251,6 +252,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | GOV-86 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
 | GOV-87 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | GOV-88 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
+| GOV-89 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | ADM-01 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-02 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
@@ -630,12 +632,12 @@ Every identifier the documents define, with the phase that must deliver it and t
 | PLG-38 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
 | PLG-39 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
 | PLG-40 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
-| PLG-41 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
-| PLG-42 | 5 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
-| PLG-43 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
-| PLG-44 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
-| PLG-45 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
-| PLG-46 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-41 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
+| PLG-42 | 5 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
+| PLG-43 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
+| PLG-44 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
+| PLG-45 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
+| PLG-46 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behaviour |
 | PLG-47 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
 | PLG-48 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
 | PLG-49 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
@@ -802,6 +804,9 @@ Every identifier the documents define, with the phase that must deliver it and t
 | QA-116 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-117 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-118 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-119 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-120 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-121 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | DATA-01 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-02 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-03 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

@@ -1,6 +1,6 @@
 # CI and Gate Design
 
-This document explains how gates are organised, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
+This document explains how gates are organized, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -26,7 +26,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Secret scanning | active (docs) | active | active | active | active | active |
 | Production builds | inactive | active | active | active | active | active |
 | PWA checks | inactive | inactive | inactive | active | active | active |
-| Localisation checks (no hard-coded strings, catalogue keys) | inactive | inactive | active | active | active | active |
+| Localization checks (no hard-coded strings, catalogue keys) | inactive | inactive | active | active | active | active |
 | Accessibility checks (axe plus manual review) | inactive | inactive | inactive | active | active | active |
 | Container image checks | inactive | active | active | active | active | active |
 | Migration tests, backup/restore | inactive | active (migrations) | active | active | active | active (restore rehearsal) |
@@ -55,7 +55,17 @@ It enforces, in order:
 9. **[QA-117]** **Phase status agreement** — every phase has a status row in `docs/README.md` and a `**Status:` line in its [ROADMAP](../ROADMAP.md) section, and the two agree. Phase status is the one fact that lives in two documents, so it is the one fact the gate cross-checks.
 10. **[QA-118]** **Diagram, state, and glossary integrity** — every code fence in the documentation set is closed, so a document cannot silently swallow its own tail; every Mermaid diagram in [DIAGRAMS](../DIAGRAMS.md) is preceded by a `Cited:` line naming the requirements it draws, and every identifier named there exists; each machine in [DIAGRAMS](../DIAGRAMS.md) §9 lists exactly the states its governing sentence declares, and every one of them is drawn in the section the table names; and [GLOSSARY](../GLOSSARY.md) defines each term exactly once, with every entry naming the document or the requirement that owns it.
 
-Check 10 exists because a diagram is the most convincing place for a stale model to hide: it is read faster than the prose it summarises and is rarely re-derived by hand. The gate reads the state lists out of [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3 and §7 and [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5, compares them with the table, and then follows the table's own `Drawn in` reference into the section it names — so a rename, an addition, a removal, or a cross-reference pointing at the wrong section fails the build instead of surviving review. The glossary half is the same idea one level up: a term defined twice, or defined without saying who owns it, is how two documents start disagreeing about the same word.
+11. **[QA-119]** **Cross-references** — every requirement, decision, and open-question identifier mentioned anywhere in the pack resolves to a definition, and every section citation names a section that exists in the document it points at, whether it is written as a link ([SECURITY](../SECURITY.md) §6), as a name in prose (`QUALITY_GATES` §1), or bare inside a document that numbers its own sections. An identifier that deliberately has no definition — a hole in an area's sequence, or a review example — must say so on the line where it appears.
+12. **[QA-120]** **Documentation language** — one variety of English across the pack: British spelling with `-ize`/`-ization` endings, `licence` as a noun, and `behaviour`, `catalogue`, `artefact`, `defence` ([repository conventions](00-repository-conventions.md) §1, `GOV-89`). Code identifiers keep their own spelling: a word inside backticks or a fenced block is never read as prose, so quoting a defect does not re-introduce it.
+13. **[QA-121]** **Review dates** — a document changed since the date in its `Owner: … Reviewed:` header fails until that header is updated: the date is a claim about the text as it now stands, and this is what keeps the claim true. The comparison uses git history — the last commit that touched the file, or the working tree when the copy differs from it — so an unmerged branch or a machine in another timezone cannot fail the check, and where history is unavailable or shallow the check prints a note instead of guessing.
+
+Check 13 exists because a review date that survives a change is worse than no date at all: it certifies text nobody re-read. The rule is one line of arithmetic — the last change to a document updates its review line — and it is the only way a reader can tell a reviewed sentence from a rewritten one.
+
+Check 12 exists because the pack is read as one document: a reader who meets `behaviour` in one file and `behavior` in the next cannot tell a house style from a mistake. The variety is declared once ([repository conventions](00-repository-conventions.md) §1) and enforced mechanically, which is also why the check reads prose only — the `normalization_version` column and the `Authorization` header keep the spelling they are written with.
+
+Check 11 exists because a citation is a promise that the named section exists and says what the sentence claims. A renamed heading, a section moved to another document, or an identifier typed from memory each produce a sentence that reads correctly and points nowhere; resolving mentions that are *not* links as well catches the reverse error, an identifier no registry defines.
+
+Check 10 exists because a diagram is the most convincing place for a stale model to hide: it is read faster than the prose it summarizes and is rarely re-derived by hand. The gate reads the state lists out of [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3 and §7 and [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5, compares them with the table, and then follows the table's own `Drawn in` reference into the section it names — so a rename, an addition, a removal, or a cross-reference pointing at the wrong section fails the build instead of surviving review. The glossary half is the same idea one level up: a term defined twice, or defined without saying who owns it, is how two documents start disagreeing about the same word.
 
 Check 9 exists because phase status is the one fact recorded in two documents; cross-checking it removes the only place where "which phase is active" could quietly disagree.
 

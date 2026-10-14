@@ -70,7 +70,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 6 | Auth OpenAPI contract validates and the generated client matches the implementation, with the timestamp and prose-language conventions applied | `zopia validate` + contract tests; `QA-07`, `API-20 … API-30`, `API-36`, `API-37` | Not started |
 | 7 | Audit event store live; alerting proven on the authentication and rate-limit signals | Alert rule plus a triggered signal; `SEC-58 … SEC-60` | Not started |
 | 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | Not started |
-| 9 | Message catalogue and RTL scaffolding in place with **both locales complete** (Persian and English), a language switch reachable before sign-in, and localisation checks active | Hard-coded-string lint, catalogue-parity test comparing the key sets, pre-sign-in switch test; `UI-21`, `UI-22`, `UI-28`, `QA-17` | Not started |
+| 9 | Message catalogue and RTL scaffolding in place with **both locales complete** (Persian and English), a language switch reachable before sign-in, and localization checks active | Hard-coded-string lint, catalogue-parity test comparing the key sets, pre-sign-in switch test; `UI-21`, `UI-22`, `UI-28`, `QA-17` | Not started |
 | 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-01 … Q-05`, `Q-14` (user data), `Q-15`, `Q-17` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 
@@ -127,7 +127,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | --- | --- | --- | --- |
 | 1 | Routing adapter behind the provider interface; car, bicycle, and foot alternatives | Adapter contract tests; `NAV-01`, `NAV-02`, `MAP-13` | Not started |
 | 2 | Route selection, geometry, distance remaining, and ETA | Recorded run; `NAV-01`, `NAV-03` | Not started |
-| 3 | Turn-by-turn instructions, and voice only when the stack produces it — never synthesised | Test with a stack that lacks voice; `NAV-02`, `NAV-13`, `MAP-15` | Not started |
+| 3 | Turn-by-turn instructions, and voice only when the stack produces it — never synthesized | Test with a stack that lacks voice; `NAV-02`, `NAV-13`, `MAP-15` | Not started |
 | 4 | Speed limits and traffic only from licensed provider data; nothing inferred or fabricated | Provider-data review + UI assertion; `NAV-05`, `NAV-06`, `MAP-14` | Not started |
 | 5 | Degraded routing: map still usable, point selection and distance-to-point still work | Outage test; `NAV-11`, `MAP-20` | Not started |
 | 6 | Routing attribution displayed where the provider requires it | Screenshot + assertion; `NAV-10`, `MAP-16` | Not started |
@@ -166,7 +166,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 
 | # | Criterion | Evidence that will prove it | Status |
 | --- | --- | --- | --- |
-| 1 | Release artifacts produced: checksums, SBOM where practical, changelog, migration plan | Artifact digests; `QA-50`, `QA-87 … QA-91` | Not started |
+| 1 | Release artefacts produced: checksums, SBOM where practical, changelog, migration plan | Artefact digests; `QA-50`, `QA-87 … QA-91` | Not started |
 | 2 | Full gate set passes on the exact tagged commit, exit statuses recorded | Gate transcript per command; `QA-95 … QA-97` | Not started |
 | 3 | Migration dry-run and restore rehearsal complete on a restored backup | Rehearsal record; `QA-102` | Not started |
 | 4 | Rollback path stated and rehearsed where risky; production verification (health, smoke login and map shell) | Rollback note + smoke output; `QA-92 … QA-94`, `QA-103`, `QA-104` | Not started |

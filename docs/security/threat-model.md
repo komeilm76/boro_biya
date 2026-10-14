@@ -2,7 +2,7 @@
 
 Method: asset-driven review with STRIDE-style threat identification plus abuse cases for the product's social and safety features. Controls reference [SECURITY](../SECURITY.md), [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md), and [ARCHITECTURE](../ARCHITECTURE.md) sections; requirement-level identifiers live in those documents and are tracked in [traceability](../development/07-traceability.md).
 
-Owner: Security. Reviewed: 2026-10-13.
+Owner: Security. Reviewed: 2026-10-14.
 
 **Review cadence:** at each phase boundary, before each release, and whenever a new data flow, provider, or deployment target is introduced. The owner of this document is Security.
 
@@ -70,7 +70,7 @@ Trust boundaries: browser ↔ API; mobile shell ↔ API; API ↔ services; servi
 | TH-14 | Malicious plugin archive | Plugin upload | Quarantine, structural validation, signature/trust policy, isolated staged container, resource limits, no Docker socket, disabled in production until the Phase 7 gate passes (SECURITY §6, plugin threat model) | Highest-severity surface; see the dedicated threat model |
 | TH-15 | Plugin escalates to host or reads secrets | Plugin runtime | Non-root, read-only filesystem, dropped capabilities, seccomp/AppArmor, no host mounts, egress denied by default, scoped credentials only (SECURITY §6) | Kernel-level escapes are out of scope; container runtime patching is an ops duty |
 | TH-16 | Service-to-service impersonation or replay | Internal APIs | mTLS or short-lived signed service tokens with audience and scope, request IDs, idempotency for retried operations (PLUGIN_SYSTEM §5) | Key rotation is a Phase 7 deliverable (Q-13) |
-| TH-17 | SQL injection or unsafe query construction | Database access | Parameterised queries, allowlisted sort/filter fields, repository layer, no string-built SQL (SECURITY §7) | — |
+| TH-17 | SQL injection or unsafe query construction | Database access | Parameterized queries, allowlisted sort/filter fields, repository layer, no string-built SQL (SECURITY §7) | — |
 | TH-18 | SSRF through provider or URL handling | Server-side fetches | Fixed host allowlists, redirects disabled, private address ranges blocked (SECURITY §7) | New providers require an allowlist update and review |
 | TH-19 | Account lockout used as a weapon against a victim | Login throttling | Bounded, self-expiring lockout with a recovery path; per-origin limits separate from per-account counters (SECURITY §3) | Requires integration test proving a victim recovers without admin action |
 | TH-20 | Rate limits and session revocation silently bypassed by scaling out | Deployment | Single-replica constraint until a shared store exists (ADR-008); scaling requires an accepted ADR (ARCHITECTURE §3) | The constraint must be asserted in deployment documentation and load tests |

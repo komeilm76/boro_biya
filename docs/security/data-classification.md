@@ -23,19 +23,19 @@ Rule: when in doubt, classify higher. A new field without a stated class is trea
 | Encryption at rest | Not required | Recommended | Required (volume/disk encryption) | Required (volume encryption; application-level protection for secrets) |
 | Access | Anyone | Authenticated staff/operators | Owner, authorized roles, or explicit policy | Owner and narrowly scoped authorized roles only |
 | Logging | Allowed | Allowed | Identifier-only, never full values; redaction layer required | **Never logged**. No full coordinates, no answers, no tokens, no photo contents, not even at debug level |
-| Analytics/telemetry | Allowed | Allowed | Pseudonymised only | Forbidden |
+| Analytics/telemetry | Allowed | Allowed | Pseudonymized only | Forbidden |
 | Error messages and stack traces | — | — | Generic messages only | Generic messages only, never echoed back |
 | URLs, query strings, referrers | — | — | Forbidden | Forbidden — precise coordinates or tokens in a URL are a defect |
 | Backups | Not required | Optional | Included, encrypted, access-controlled | Included only where required; encrypted; restore access audited |
 | Test fixtures and screenshots | Free | Free | Synthetic data only | Synthetic data only; never real values, never a real coordinate |
 | Third-party sharing | Allowed | Allowed | Only with documented purpose and provider terms review | Only the minimum required by a reviewed provider (for example a geocoding request), never with user identity attached |
 | Export (user request) | — | — | Provided to the owner on request | Provided to the owner on request, in a machine-readable format, through an authenticated channel |
-| Deletion | n/a | Best effort | Deleted or anonymised on account deletion | Deleted or anonymised on account deletion; see §4 |
+| Deletion | n/a | Best effort | Deleted or anonymized on account deletion | Deleted or anonymized on account deletion; see §4 |
 
 Cross-cutting rules:
 
 - **[PRIV-10]** Redaction happens in one shared layer before data reaches any sink (logs, metrics, error reporting). Per-call-site redaction is not an acceptable control.
-- **[PRIV-11]** Precise coordinates are reduced before storage or transmission whenever the feature works with a coarser value (generalised area instead of a point), and are never attached to a query sent to a provider unless required for that provider's function.
+- **[PRIV-11]** Precise coordinates are reduced before storage or transmission whenever the feature works with a coarser value (generalized area instead of a point), and are never attached to a query sent to a provider unless required for that provider's function.
 - **[PRIV-12]** Secrets never appear in configuration files, fixtures, CI logs, or the plugin registry; only references to a secret store are stored ([DATA_MODEL](../DATA_MODEL.md) `plugin_configs`).
 
 ## 3. Data inventory
@@ -87,7 +87,7 @@ Cross-cutting rules:
 | Backups | Rolling window with documented restore procedure | Encrypted; deletion of a record does not silently survive in backups beyond the window |
 | Application logs | Short (days to weeks), redacted | Rotation policy; no C3 content by construction |
 
-Account deletion: the account, its credentials, security answers, sessions, preferences, the category assignment, the immediate location row, live-sharing sessions and their grants, history-share grants, and the full location history (`user_location_history`) are deleted or irreversibly anonymised. Records that must be retained (audit events, abuse evidence where legally required) are retained in a form that no longer identifies the user beyond what the obligation requires. The deletion outcome is recorded as an audit event that does not itself contain C2/C3 data. The exact obligations are defined in Q-14.
+Account deletion: the account, its credentials, security answers, sessions, preferences, the category assignment, the immediate location row, live-sharing sessions and their grants, history-share grants, and the full location history (`user_location_history`) are deleted or irreversibly anonymized. Records that must be retained (audit events, abuse evidence where legally required) are retained in a form that no longer identifies the user beyond what the obligation requires. The deletion outcome is recorded as an audit event that does not itself contain C2/C3 data. The exact obligations are defined in Q-14.
 
 Data-subject export: a user can obtain their own profile, preferences, relationships, immediate location row, category assignment, live-sharing session and grant history, SOS records, and notifications in a machine-readable format through an authenticated endpoint. A recorded location trail is exported only through the same authenticated, audited channel and never in bulk by a third party. Export generation is audited and the artefact is short-lived.
 

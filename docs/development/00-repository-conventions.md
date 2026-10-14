@@ -1,14 +1,15 @@
 # Repository Conventions
 
-Normative rules for this repository: how work is organised, named, reviewed, and kept honest. Requirement identifiers referenced here (`GOV-…`, `QA-…`) are defined in the requirement registry — see [Documentation index](../README.md#requirement-ids).
+Normative rules for this repository: how work is organized, named, reviewed, and kept honest. Requirement identifiers referenced here (`GOV-…`, `QA-…`) are defined in the requirement registry — see [Documentation index](../README.md#requirement-ids).
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. Language and documents
 
 - **[GOV-41]** The normative documentation of this project lives in `/docs`. Code, scripts, comments, JSDoc, commit messages, branch names, and file names are written in English.
 - **[GOV-42]** Documentation and behaviour change in the **same commit**. A commit that changes behaviour without updating the affected document is incomplete.
 - **[GOV-43]** Two audiences are kept separate: `/docs/user/` is written for people who use the product and must never reference phase numbers, requirement IDs, ADRs, or internal test identifiers; `/docs/development/` and `/docs/security/` are written for engineers and agents.
+- **[GOV-89]** One variety of English is used across the pack: British spelling with `-ize`/`-ization` endings (`authorization`, `internationalization`, `localization`, `normalized`), `licence` as a noun (`licensed` stays a verb), and `behaviour`, `catalogue`, `artefact`, `defence`. Literal identifiers and external names keep the spelling they are written with — the `normalization_version` column, the `Authorization` header, a quoted external title — and a defect quoted inside inline code stays as it was written. Gate check 12 (`QA-120`) enforces this.
 - **[GOV-44]** Every document has an H1 title, opens with a one-line header naming its owner and its review date in the form `Owner: <role>. Reviewed: YYYY-MM-DD.`, and is listed in the index table in [`docs/README.md`](../README.md). An unlisted document, or one without that header, is a defect and fails gate check 1, as does an index row whose owner or date disagrees with the document. Markdown that is not a document — the pull-request template — is exempt.
 
 ## 2. Repository layout
@@ -60,13 +61,13 @@ Rules:
 
 ## 6. Dependency changes
 
-- **[GOV-68]** Every new dependency is justified against [dependency policy](02-dependency-policy.md): need, runtime cost, maintenance status, license, security posture, and alternatives considered.
+- **[GOV-68]** Every new dependency is justified against [dependency policy](02-dependency-policy.md): need, runtime cost, maintenance status, licence, security posture, and alternatives considered.
 - **[GOV-69]** Versions are pinned exactly in application manifests and the lockfile is committed. Renovation happens through reviewed pull requests, never automatic merges of major versions.
-- **[GOV-70]** A dependency that fails the license policy or has an unresolved critical advisory is not merged.
+- **[GOV-70]** A dependency that fails the licence policy or has an unresolved critical advisory is not merged.
 
 ## 7. Documentation maintenance
 
-- **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory (including each document's owner and review date), requirement-ID uniqueness and reference resolution, traceability coverage, internal links and anchors, absence of placeholders, audience separation, secret patterns, model coherence (no retired wording), and phase-status agreement (the README table and the ROADMAP status lines), and diagram, state, and vocabulary integrity ([DIAGRAMS](../DIAGRAMS.md): closed code fences, a `Cited:` line above every diagram, the declared state machines matching the sentence that declares them and drawn in the section the table names; [GLOSSARY](../GLOSSARY.md): one entry per term, each naming its owner).
+- **[GOV-71]** `node scripts/gates/phase0.mjs` must pass before a documentation change is merged. It verifies document inventory (including each document's owner and review date), requirement-ID uniqueness and reference resolution, traceability coverage, internal links and anchors, absence of placeholders, audience separation, secret patterns, model coherence (no retired wording), and phase-status agreement (the README table and the ROADMAP status lines), diagram, state, and vocabulary integrity ([DIAGRAMS](../DIAGRAMS.md): closed code fences, a `Cited:` line above every diagram, the declared state machines matching the sentence that declares them and drawn in the section the table names; [GLOSSARY](../GLOSSARY.md): one entry per term, each naming its owner), resolution of every identifier mention and section citation, one variety of English (§1), and a review date that is current for every document whose text changed.
 - **[GOV-72]** Requirement IDs are permanent. Once assigned, an ID is never reused or renumbered; withdrawn requirements are marked `Withdrawn` in the phase report instead of deleted.
 - **[GOV-73]** External references ([REFERENCES](../REFERENCES.md)) are re-verified at each phase boundary and before release, and the verification log is updated with the date and result.
 

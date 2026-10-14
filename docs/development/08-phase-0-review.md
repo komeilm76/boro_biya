@@ -118,7 +118,7 @@ Fixed: the three owner-accepted ADRs are now `Accepted (owner decision, 2026-10-
 **7.2.5 `DATA_MODEL.md` contained four statements that cannot all be true.**
 
 - The `user_locations` row said a history trail "if ever approved (`Q-06`) requires a new table" while `ADR-014` had already approved history sharing and the same document defines `user_location_history` two rows above.
-- The `live_share_grants` row required "at most one active grant per `(owner, viewer)`" enforced by a partial unique index — on a table that did not carry an `owner` column, so the index could not be created. The owner is now denormalised onto the grant row and the index is written on that table alone.
+- The `live_share_grants` row required "at most one active grant per `(owner, viewer)`" enforced by a partial unique index — on a table that did not carry an `owner` column, so the index could not be created. The owner is now denormalized onto the grant row and the index is written on that table alone.
 - `DATA-15` required `created_at` **and** `updated_at` on every mutable record, which contradicts three tables in the same document (append-only audit, insert-only history, immutable alert categories) and its own `user_preferences` row, which omitted `created_at`. The invariant now distinguishes records updated in place from append-only and event records, and the row is complete.
 - `sos_alert_categories` described the catalogue as "snapshotted" with a `matched_at` column, although the accepted model deactivates categories rather than deleting them and never rewrites an alert. The row now reads `assigned_at` and references the catalogue by ID, `matched_category_id` is documented as the eligibility reason that makes dispatch auditable, and `ADR-015` uses the same vocabulary instead of "snapshotted".
 
@@ -193,7 +193,7 @@ A phase mapping is a plan, and a plan can be internally consistent while being i
 | `SEC-58`, `SEC-59`, `SEC-60` | 1 | 2 | Audit events, the tamper-evident audit store, and alerting need something to audit and alert on. Phase 1 has no authentication, so a gate requiring alerts on authentication anomalies could never pass honestly. Phase 1 keeps the structured logging and redaction baseline (`SEC-57`, `SEC-62`). |
 | `SEC-61` | 1 | 9 | The incident-response procedure is stored in the operational runbook; the requirement's own text already said Phase 8/9, and Phase 9's deliverable list names the incident-response guide. |
 | `UI-21`, `UI-22` | 3 | 2 | Message catalogue and layout-direction scaffolding are the cheapest possible work before the first screen and a rewrite afterwards. Phase 2 ships the first user-facing screens. |
-| `QA-17` | 3 | 2 | The localisation check activates when user-facing strings first exist — which is when they can first be hard-coded. `QA-16` (accessibility) stays in Phase 3 with the full screen set. |
+| `QA-17` | 3 | 2 | The localization check activates when user-facing strings first exist — which is when they can first be hard-coded. `QA-16` (accessibility) stays in Phase 3 with the full screen set. |
 | `DATA-04`, `DATA-05` | 3 | 4 | Sharing defaults and last-known labelling constraints live in the Relation schema; Phase 3 has no such table. |
 
 ### 8.4 Prioritization moved, not just affiliation
@@ -214,7 +214,7 @@ The audit earned its place immediately: the first run failed on `UI-22` dependin
 Three requirement texts name a phase that differs from their mapping, and each is correct as written — recorded so a future audit does not "fix" them:
 
 - `QA-10` (secret scanning, Phase 1) says the documentation gate already applies the same pattern check **in Phase 0**. That is a statement about earlier coverage, not a second affiliation.
-- `QA-50` (release artifact set, Phase 1) lists plugin packages as Phase 7+ and the Android artifact as Phase 8+. The requirement is the artifact *catalogue*; the phases named are the artefacts' own.
+- `QA-50` (release artefact set, Phase 1) lists plugin packages as Phase 7+ and the Android artefact as Phase 8+. The requirement is the artefact *catalogue*; the phases named are the artefacts' own.
 - `PLG-02` (third-party plugin scope, Phase 1) says the lifecycle is delivered in Phase 7. The requirement defines what a third-party plugin *is*, which Phase 1 must know in order to draw the boundary.
 
 ### 8.7 Evidence (third pass)
@@ -357,7 +357,7 @@ Fixed: `MAP-11` and `MAP-12` (tiles, geocoding) stay with the map in Phase 3, `M
 
 ### 11.2 Conflicts
 
-**11.2.1 The category endpoints were scheduled two phases early.** Nine endpoints — `/users/me/category`, `/categories`, the `/admin/categories` set, and the per-user category assignment and verification routes — sat in the "Users and administration (Phase 2, admin parts Phase 2–3)" section. Categories are Phase 5 in every other document: the catalogue and single-category management are in the Phase 5 deliver line, `SOS-24 … SOS-29`, `DATA-19 … DATA-21`, and `PRIV-26`/`PRIV-30` are all Phase 5, and there is no category catalogue before the SOS phase produces one. Fixed: the rows moved into a new section, §2a "Assistance categories (Phase 5, served by the Core API)", which also records why they are core endpoints delivered late (`OPS-10`/`OPS-12` own the data; the SOS phase creates it). The section-2 heading no longer claims "admin parts Phase 2–3", which had been stale since round 3.
+**11.2.1 The category endpoints were scheduled two phases early.** Nine endpoints — `/users/me/category`, `/categories`, the `/admin/categories` set, and the per-user category assignment and verification routes — sat in the "Users and administration (Phase 2, admin parts Phase 2–3)" section. Categories are Phase 5 in every other document: the catalogue and single-category management are in the Phase 5 deliver line, `SOS-24 … SOS-29`, `DATA-19 … DATA-21`, and `PRIV-26`/`PRIV-30` are all Phase 5, and there is no category catalogue before the SOS phase produces one. Fixed: the rows moved into a new section, the [API inventory](04-api-inventory.md) §2a "Assistance categories (Phase 5, served by the Core API)", which also records why they are core endpoints delivered late (`OPS-10`/`OPS-12` own the data; the SOS phase creates it). The section-2 heading no longer claims "admin parts Phase 2–3", which had been stale since round 3.
 
 **11.2.2 The inventory listed `PUT /relation/preferences` twice** with different notes, and `GET /streams/events` twice — once in §4 (added in round 2 to make the revocation behaviour visible) and once in §6 where it is defined. The duplicate rows are gone; the merged preferences row carries both facts, and §4 now points at §6 in a sentence instead of restating the endpoint. The inventory's own rule — an endpoint appears once, with its access level and phase — is true again.
 
@@ -459,7 +459,7 @@ Closed in three parts:
 
 1. **One row per phase.** The README table now lists phases 0–9 individually, and every ROADMAP phase section carries a `**Status:` line (`Not started` for 1–9; Phase 1 additionally notes that it requires Phase 0 approval).
 2. **A stated status model.** §7 of the checklist document defines the three status surfaces (phase status, task status, decision status), who updates each, the status vocabulary (`Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `Exception`), and six rules — the important ones being that only evidence changes a status, that a requirement identifier is not a status, and that an exception needs an owner and an expiry.
-3. **A gate that keeps the two phase-status surfaces in agreement** — check 9, registered as `QA-117`: every phase must have a status row in the README and a `**Status:` line in its ROADMAP section, and the two must agree after normalisation. Phase status is the one fact deliberately recorded in two places, so it is the one fact the gate cross-checks.
+3. **A gate that keeps the two phase-status surfaces in agreement** — check 9, registered as `QA-117`: every phase must have a status row in the README and a `**Status:` line in its ROADMAP section, and the two must agree after normalization. Phase status is the one fact deliberately recorded in two places, so it is the one fact the gate cross-checks.
 
 ### 13.4 Tests
 
@@ -489,7 +489,7 @@ Three more questions about the pack: do we have the diagrams, do we have the cyc
 
 ### 14.1 Diagrams — none existed
 
-`grep -rn 'mermaid\|diagram\|flowchart' docs/` returned one hit in the entire pack: the sentence in [DATA_MODEL](../DATA_MODEL.md) §1 promising an ER diagram *in the phase that builds each domain*. Topology, the request path, every state transition, and the shape of the repository were prose only, so a reader — human or agent — had to reconstruct each of them from sentences and hope the reconstruction matched.
+`grep -rn 'mermaid\|diagram\|flowchart' docs/` returned one hit in the entire pack: the opening sentence of [DATA_MODEL](../DATA_MODEL.md) promising an ER diagram *in the phase that builds each domain*. Topology, the request path, every state transition, and the shape of the repository were prose only, so a reader — human or agent — had to reconstruct each of them from sentences and hope the reconstruction matched.
 
 Added [DIAGRAMS](../DIAGRAMS.md) as a first-class document: **16 Mermaid blocks**, each preceded by a `Cited:` line naming the requirements it draws — the repository map, the system topology and schema ownership, the request path, the account states, password recovery, follow requests and blocking, live grants, location history, the SOS flow from alert to resolution, suggestion states, task states, the plugin lifecycle, and the four cycles (phase, decision, documentation, release) that govern the work itself. §9 of the document holds the four state vocabularies; §1 states the rule that matters most: **the requirement text is normative and the diagram is derived**, so a disagreement is a defect fixed in the same change.
 
@@ -503,12 +503,12 @@ Closed in the same document: §5–§8 draw the domain lifecycles, §9 tabulates
 
 ### 14.3 A gate for diagrams and state coherence — check 10, `QA-118`
 
-The pack now contains 16 diagrams and four declared state sets, which is exactly the kind of material that drifts silently: a picture is read faster than the prose it summarises and is rarely re-derived. So check 10 was added to the documentation gate, following the gate-change procedure (`QA-82 … QA-86`): it fails loudly with file and line, the catalogue row and the pull-request path were updated, the defect demonstration is in §14.5, and no existing gate was weakened.
+The pack now contains 16 diagrams and four declared state sets, which is exactly the kind of material that drifts silently: a picture is read faster than the prose it summarizes and is rarely re-derived. So check 10 was added to the documentation gate, following the gate-change procedure (`QA-82 … QA-86`): it fails loudly with file and line, the catalogue row and the pull-request path were updated, the defect demonstration is in §14.5, and no existing gate was weakened.
 
 It checks three things:
 
 1. **Every code fence is closed.** An unclosed fence silently swallows the rest of a document — and because the link check ignores fenced content, the swallowed links were never checked either. A document could therefore pass every other check while rendering as one long code block.
-2. **Every diagram cites existing requirements.** The line above each Mermaid block must name requirement identifiers, and each identifier must exist — requirement IDs are resolved against their definitions, `ADR-` ids against the headings in [DECISIONS](../DECISIONS.md). A citation of `OPS-99` fails, and so does a renamed ADR.
+2. **Every diagram cites existing requirements.** The line above each Mermaid block must name requirement identifiers, and each identifier must exist — requirement IDs are resolved against their definitions, `ADR-` ids against the headings in [DECISIONS](../DECISIONS.md). A citation of an identifier that does not exist — `OPS-99`, say — fails, and so does a renamed ADR.
 3. **The declared state machines agree with requirement text.** For `account_status`, `sos_suggestions.status`, `sos_tasks.status`, and `plugin_installations.status`, the gate extracts the states from the sentence that declares them, compares them with the table in DIAGRAMS §9, and requires every declared state to be drawn in some diagram. The requirement text is the source; the table and the picture are downstream.
 
 ### 14.4 Resources for using the project — a glossary was missing, and nothing pointed at the new material
@@ -566,15 +566,15 @@ The requirement total moved from 649 to 650 because `QA-118` is itself a require
 
 ## 15. Tenth pass — reviewing the diagrams and the glossary (2026-10-14)
 
-The two documents added in §14 were reviewed the way the rest of the pack is reviewed: every claim checked against the document that owns it, every diagram re-parsed, and every definition re-read against the requirement it summarises. Nothing structural was wrong — the checks in §14.3 held — but fifteen statements were, and one of them was a defect the previous pass had claimed to have fixed everywhere.
+The two documents added in §14 were reviewed the way the rest of the pack is reviewed: every claim checked against the document that owns it, every diagram re-parsed, and every definition re-read against the requirement it summarizes. Nothing structural was wrong — the checks in §14.3 held — but fifteen statements were, and one of them was a defect the previous pass had claimed to have fixed everywhere.
 
 ### 15.1 The diagrams: fifteen defects
 
 | # | Defect | Fix |
 | --- | --- | --- |
 | 1 | The topology drew `outbox events` from the core API to the Relation Service. The only outbox table defined in the pack belongs to the **SOS** Service schema, so the arrow asserted a publisher that does not exist and hid the one that does. | Arrow removed; the constraint now reads: where cross-service delivery must be reliable it uses an outbox table — the one defined today belongs to the SOS Service schema, and its consumers are idempotent (`OPS-19`, `DATA_MODEL`). |
-| 2 | §6.3 drew `recording → purged → off`, implying that **deleting the location trail turns history sharing off**. It does not: deleting is a data operation (`MAP-22`, `PRIV-24`) and leaves the setting as it was. | The diagram models the setting (`off`/`on`); the note states that deleting the trail removes rows immediately and leaves the setting as it was. |
-| 3 | §6.2 mixed two subjects in one machine: `off` conflated the owner's **master switch** with "no grant names this viewer", and `ended → off` implied that one grant's expiry stops the owner's sharing. | Redrawn as one grant to one viewer (`none → active → ended`), with the master switch, the live share session, and the individual revoke rule in the note (`MAP-08`, `PRIV-04`, `REL-07`, `PRIV-23`). |
+| 2 | [DIAGRAMS](../DIAGRAMS.md) §6.3 drew `recording → purged → off`, implying that **deleting the location trail turns history sharing off**. It does not: deleting is a data operation (`MAP-22`, `PRIV-24`) and leaves the setting as it was. | The diagram models the setting (`off`/`on`); the note states that deleting the trail removes rows immediately and leaves the setting as it was. |
+| 3 | [DIAGRAMS](../DIAGRAMS.md) §6.2 mixed two subjects in one machine: `off` conflated the owner's **master switch** with "no grant names this viewer", and `ended → off` implied that one grant's expiry stops the owner's sharing. | Redrawn as one grant to one viewer (`none → active → ended`), with the master switch, the live share session, and the individual revoke rule in the note (`MAP-08`, `PRIV-04`, `REL-07`, `PRIV-23`). |
 | 4 | The database node said "one cluster", while `OPS-17` **permits** services to share a cluster. | "one shared cluster, one schema and one least-privilege role per service (`OPS-17`, `OPS-18`)", repeated in the prose constraints. |
 | 5 | The repository map said dependency directions are enforced by an automated check, without saying the check does not exist yet. | The prose now adds that the check arrives with the packages in Phase 1 (`OPS-40`). |
 | 6 | The recovery sequence did not name the endpoints it describes, so it did not match the API inventory it will become. | It now calls `POST /auth/password/recover/questions` and `POST /auth/password/recover/verify` ([API inventory](04-api-inventory.md) §1). |
@@ -592,7 +592,7 @@ The two documents added in §14 were reviewed the way the rest of the pack is re
 
 | # | Defect | Fix |
 | --- | --- | --- |
-| 1 | **The retired noun was still alive outside the glossary.** Checking the "Assistance category" entry against its sources turned up `Membership is a profile attribute…` in [DATA_MODEL](../DATA_MODEL.md) §1 (`user_categories`) and `…verified that user's membership` in ADR-015's Decision text. §12 claimed every site had been converted, and the gate agreed — because its retired-wording entries banned the two phrases `category membership` and `membership changes`, not the noun itself. | Both reworded to assignment vocabulary; the gate now also carries a pattern entry for the bare noun, so the concept cannot come back one word at a time. |
+| 1 | **The retired noun was still alive outside the glossary.** Checking the "Assistance category" entry against its sources turned up `Membership is a profile attribute…` in the `user_categories` entry of [DATA_MODEL](../DATA_MODEL.md) and `…verified that user's membership` in ADR-015's Decision text. §12 claimed every site had been converted, and the gate agreed — because its retired-wording entries banned the two phrases `category membership` and `membership changes`, not the noun itself. | Both reworded to assignment vocabulary; the gate now also carries a pattern entry for the bare noun, so the concept cannot come back one word at a time. |
 | 2 | **Open question** was defined with "an affected area". The register's columns are owner, decide-by phase, and the effect of leaving it open. | Definition corrected to the register's own columns. |
 | 3 | **ADR** listed context, consequences, and alternatives but omitted the decision and the revisit trigger the template requires. | Definition now follows the template: context, decision, alternatives with reasons, consequences, revisit trigger. |
 | 4 | **Follow request** claimed "no notifications beyond the request itself" — unsupported by `REL-02`, which says only that the request grants no access. | Replaced with what the requirement supports: no profile data, no location, no access to the other side's activity. |
@@ -749,13 +749,13 @@ node scripts/gates/traceability.mjs --write   # regenerated; the committed file 
 
 Phase totals moved where the additions landed: Phase 1 277 → 279 (`API-36`, `SEC-73`), Phase 2 114 → 118 (`UI-25`, `DATA-27`, `SEC-74`, `PRIV-31`), Phase 3 39 → 41 (`UI-26`, `UI-27`), Phase 5 56 → 58 (`SOS-30`, `SOS-31`), Phase 8 1 → 4 (`OPS-81` … `OPS-83`). Phase 8 was the thinnest phase in the pack — one requirement for a phase whose deliverables included load tests, backup, runbooks, and observability — and it remains modest, but it is no longer a phase without a backup or an availability requirement of its own.
 
-## 17. Twelfth pass — internationalisation made explicit (2026-10-14)
+## 17. Twelfth pass — internationalization made explicit (2026-10-14)
 
 The owner directed that the product must use i18n and must ship **Persian and English**. That is a product decision, so it was recorded the way this pack records decisions — as an accepted ADR with the alternatives and the consequences — rather than as a passing note, and the documents that had been waiting on it were brought into line in the same change.
 
 ### 17.1 The decision, and the question it closes
 
-[ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together) records it: two complete locales in the first release, Persian (`fa`, right-to-left) and English (`en`, left-to-right), no surface shipped in one language only, one message catalogue per locale, direction, calendar, numerals, and formatters following the locale, and the language chosen before sign-in. It closes [Q-15](../DECISIONS.md#open-questions), which had been open since Phase 0 with the note that the answer was needed before the first screen existed.
+[ADR-017](../DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together) records it: two complete locales in the first release, Persian (`fa`, right-to-left) and English (`en`, left-to-right), no surface shipped in one language only, one message catalogue per locale, direction, calendar, numerals, and formatters following the locale, and the language chosen before sign-in. It closes [Q-15](../DECISIONS.md#open-questions), which had been open since Phase 0 with the note that the answer was needed before the first screen existed.
 
 One question the directive does not answer, and which no document should guess: **which language is the default on first use, and in what order the fallback runs** (device language, saved preference, `Accept-Language`). That is now [Q-24](../DECISIONS.md#open-questions), owned by the repository owner, due by Phase 2 — the phase that builds the first screens — with the concrete risk written down: a first-time user landing in a language they cannot read on the sign-in and recovery screens.
 
@@ -766,14 +766,14 @@ One question the directive does not answer, and which no document should guess: 
 | [DECISIONS](../DECISIONS.md) | ADR-017 added; Q-15 marked resolved with a pointer, kept for traceability; Q-24 added |
 | [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) | `UI-28` added — both catalogues complete, key-set parity, the switch reachable before sign-in; `UI-12` states both languages and the direction; `UI-22` and `UI-25` now cite ADR-017 instead of the closed question |
 | [API_AND_OPENAPI](../API_AND_OPENAPI.md) | `API-37` added — prose is never the contract: clients render from the stable `code` and their own catalogue, and any server-composed sentence is negotiated and labelled |
-| [QUALITY_GATES](../QUALITY_GATES.md) | The localisation gate (`QA-17`) now requires both catalogues to hold the same key set, so a key present in one locale and missing from the other fails the build |
+| [QUALITY_GATES](../QUALITY_GATES.md) | The localization gate (`QA-17`) now requires both catalogues to hold the same key set, so a key present in one locale and missing from the other fails the build |
 | [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) | `PLG-57` added — plugin-contributed interface text is declared per locale and never merged into the host catalogue |
 | [development/02-dependency-policy](02-dependency-policy.md) | `vue-i18n` 11.4.14 (MIT, peer `vue ^3.0.0`) added to the verified frontend baseline, verified against the registry on 2026-10-14 |
 | [MASTER_PROJECT_PROMPT](../MASTER_PROJECT_PROMPT.md) | Core objectives state the two required languages; the technology direction names the catalogue library |
 | [ROADMAP](../ROADMAP.md) | Phase 2 delivers both catalogues complete and its exit gate keeps the parity check and the pre-sign-in switch, with Q-24 in place of the closed Q-15; Phase 3 verifies the settings screen in both directions |
 | [phase gate checklist](05-phase-gate-checklist.md) | Phase 2 rows 6 and 9 carry the new identifiers and the parity evidence; the Phase 0 register ranges move to ADR-017 and Q-24 |
 | [user guide](../user/README.md) | The contents list states the two languages and when the language can be changed |
-| [GLOSSARY](../GLOSSARY.md) | "Internationalisation (i18n)" and "Message catalogue" defined, with ADR-017 and `UI-21` as their owners |
+| [GLOSSARY](../GLOSSARY.md) | "Internationalization (i18n)" and "Message catalogue" defined, with ADR-017 and `UI-21` as their owners |
 
 No schema change was needed: `user_preferences` already carried `locale` and `text_direction` ([DATA_MODEL](../DATA_MODEL.md)), the preferences endpoint was already inventoried, and `GOV-63` already forbade hard-coded user-facing strings. The decision turned three loose ends — direction, calendar and numerals, and catalogue completeness — into requirements with a phase and a proof.
 
@@ -850,3 +850,122 @@ node scripts/gates/phase0.mjs | grep traceability
 ```
 
 No requirement was added, moved, or renumbered by this pass: the identifier set is unchanged at 666, and the only new statements are about how it is displayed and checked.
+
+## 19. Fourteenth pass — every document read line by line (2026-10-14)
+
+The instruction for this pass was literal: read every file under `docs/` line by line and fix what is wrong. The reading was extended to the files outside `docs/` that make claims about it — the root `README.md`, `CONTRIBUTING.md`, `.env.example`, both gate scripts, and the CI workflow — because a stale claim is equally wrong on either side of the directory boundary. Each line was asked two questions: *is this true*, and *does it agree with every other line that states the same fact*. Fifteen defects were found and all fifteen are fixed below; three of them became gate checks rather than one-off fixes, because they are the kinds of defect a reader skips past: a reference that resolves to nothing, two spellings of one word, and a review date that outlives the text it certifies.
+
+### 19.1 What the reading found
+
+| # | Defect | Where it was | Fix |
+| --- | --- | --- | --- |
+| 1 | Requirement identifiers were described as `assigned by the documentation gate`. They are not: a person writes the identifier with the requirement, and the gate validates it. As written, the gate appeared to be the author of the requirement set. | `ARCHITECTURE.md` ¶2, `PRODUCT_REQUIREMENTS.md` ¶2, `QUALITY_GATES.md` ¶2, `SECURITY.md` ¶2, `MASTER_PROJECT_PROMPT.md`, `DECISIONS.md` ([ADR-011](../DECISIONS.md#adr-011--documentation-architecture-and-requirement-identifiers)) | All six now state that an identifier is *assigned when the requirement is written and validated by the documentation gate*. The retired phrase became a gate entry in the same change, so the claim cannot return one file at a time (check 8, `QA-116`). |
+| 2 | A section of the *API inventory* was cited as a bare `§2a`, which exists in no section of this record. | §11 | The document is named: [API inventory](04-api-inventory.md) §2a. |
+| 3 | Two citations pointed into `../DATA_MODEL.md §1`, and that document numbers no sections, so the number was decoration. | §14, §15 | Both name the part of the document instead — *the opening sentence* and *the `user_categories` entry*. |
+| 4 | `§6.3` and `§6.2` were cited bare inside a table, where they read as sections of this record. | §15 | Both name [DIAGRAMS](../DIAGRAMS.md). |
+| 5 | An example identifier (`OPS-99`) appeared in prose with nothing to distinguish it from a typo: no registry defines it, and a reader could only guess that the sentence was hypothetical. | §12 | The sentence now says the identifier does not exist before using it as the example. Check 11 requires that: an unassigned identifier must be explained on the line where it appears, and the phantom in §12 stays exactly where it is, deliberately. |
+| 6 | A requirement pointed at the wrong section of the right document: the provider-outage rule cited the routing section for map behaviour. | [ARCHITECTURE](../ARCHITECTURE.md), `MAP-20` | It now cites the map rules and the navigation-degradation requirement by identifier (`NAV-11`). A citation that resolves is not the same as a citation that is correct — this is the one class in this table no automated check can decide. |
+| 7 | The new citation check rejected `PLUGIN_SYSTEM §2–§7`: the second `§` started a second, bare citation. Both sections exist, and the range was right, so the **checker** was wrong. | `scripts/gates/phase0.mjs` | The range pattern accepts `–§M`, and a range is now read as what it claims to be — a contiguous block, with every section inside it verified, not just the two ends. |
+| 8 | The gate resolved links but not **mentions**: an identifier typed into prose — or a section cited by name rather than link — could be wrong anywhere, and `SEC-999`, an identifier that does not exist, passed the whole gate. | `scripts/gates/phase0.mjs` | Check 11 (`QA-119`) resolves every requirement, decision, and open-question mention, and every section citation, whether linked, named, or bare inside a document that numbers its own sections. Mutation T10 in §19.5 is that hole closed. |
+| 9 | The pack used two varieties of English at once: `behaviour`, `licence`, `catalogue`, and `artefact` beside `-isation` endings, and `artifact`, `behavior`, `defense`, `license` (noun) in 34 files. A reader could not tell the house style from a mistake, and the gate had no opinion. | 24 files across `docs/`, `README.md`, `CONTRIBUTING.md` | One variety is now declared ([repository conventions](00-repository-conventions.md) §1, `GOV-89`): British spelling with `-ize`/`-ization` endings, `licence` as a noun. 59 `-is-` forms were converted across 24 files, including the ADR-017 heading and its eleven inbound anchors, plus `artefacts`, `behaviour`, `defence`, and `licence`. The first run of the sweep dropped the capital letter from nine words that begin a sentence, a heading, or a table label (`Parameterized queries`, `Pseudonymized only`, `Localization checks`, the ADR-017 title, and five more); all nine were restored by comparing the result against the pre-review text word by word — which is the point of reading the output of a mechanical change rather than trusting it. The same sweep was briefly run over the gate script itself, where it rewrote the retired-spelling pattern into the spellings the pattern exists to catch; the pattern was restored, and §19.5 now tests it in both directions (T15, T16) instead of trusting it. Code identifiers keep their own spelling. Check 12 (`QA-120`) enforces it. |
+| 10 | Eight documents had changed since the date in their own review line, so the date certified text nobody had re-read. | `ARCHITECTURE.md`, `docs/README.md`, `REFERENCES.md`, [repository conventions](00-repository-conventions.md), [development environment](01-development-environment.md), [API inventory](04-api-inventory.md), root `README.md`, `CONTRIBUTING.md` | Each review line was moved to the day of the change its history records, and the matching index rows moved with it — check 1 verifies the pair, so half a bump fails. Check 13 (`QA-121`) now enforces the rule. |
+| 11 | **The new review-date check was skipping itself.** It declines to run in a shallow clone, and every shallow checkout — the sandbox and the CI default — is shallow, so the gate printed a note and stayed green while the eight documents above were stale. | `.github/workflows/docs-gates.yml` | The workflow checks out the full history (`fetch-depth: 0`), so the check runs where it matters, and its note names what a caller must do when history is genuinely unavailable. |
+| 12 | Three checks ran in the gate with **no requirement, no catalogue entry, and no declared rule**: the gate catalogue listed ten checks, the script ran thirteen. A gate that enforces an undeclared rule is indistinguishable from a gate that is wrong. | [CI and gates](03-ci-and-gates.md) §3, `QA-01` row in [QUALITY_GATES](../QUALITY_GATES.md) §1, `GOV-71`, `docs/README.md`, root `README.md` | Checks 11–13 are catalogued as `QA-119`, `QA-120`, `QA-121`, the language variety is declared as `GOV-89` in §1 of the conventions, and the four places that summarize the gate now name all thirteen checks. |
+| 13 | The record's own opening paragraph still described a document of two passes, while it held thirteen. | this document, ¶1 | It now describes the record as it is: successive passes, the latest being §19. |
+| 14 | The root `README.md` was stale in two places: the gate paragraph listed ten of thirteen checks, and the repository-layout table had no row for `docs/operations/` or `docs/performance/` — two directories the pack itself requires. | root `README.md` §2, §4 | Both extended. |
+| 15 | `CONTRIBUTING.md` said *English everywhere*, which a contributor can read as contradicting [ADR-017](../DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together) (the product ships in Persian and English), and its workflow step did not mention the review-date bump that gate check 13 enforces. | `CONTRIBUTING.md` §Workflow, §Style | The rule now distinguishes the repository's language from the product's localization and links the ADR; the workflow step names the review line. |
+
+### 19.2 The three checks, and the rule each one states
+
+Checks 11–13 were written in this pass for the defects above, and each is registered the way checks 1–10 are: a rule in the conventions, a requirement identifier, a catalogue entry, and a mutation test (§19.5).
+
+- **Check 11 — cross-references (`QA-119`).** Every `AREA-NN` identifier, every `ADR-`, and every `Q-` mention in the pack resolves to a definition; every section citation names a section that exists in the document it points at; and a document that numbers its own sections cannot cite one that does not exist. A deliberately unassigned identifier (`SEC-72`, a hole in the span; `OPS-99`, the phantom of §12) is allowed when the line explains it.
+- **Check 12 — documentation language (`QA-120`).** One variety of English, declared in §1 of the conventions (`GOV-89`), enforced across every Markdown file, `.env.example`, and both root files. Prose only: inline code and fenced blocks are never read as prose, so a defect quoted as history does not re-enter the pack.
+- **Check 13 — review dates (`QA-121`).** A document whose text has changed since the date in its `Owner: … Reviewed:` header fails until that line moves with it — for an uncommitted change against today, and for committed history against the last commit that touched the file. It never compares against a clock it cannot see, and says so when git history is missing or shallow.
+
+### 19.3 Deliberately not defects
+
+Recorded because each was suspected during the reading and then disproved — a review that only lists its hits leaves the next reader to re-open the same questions:
+
+- **`PLUGIN_SYSTEM §2–§7`.** Both sections exist (§2 *Plugin manifest*, §7 *Resource controls*), so the citation was right and the checker was wrong. Fixed in the checker, not in the document.
+- **`ARCHITECTURE.md` §5 in the root `README.md`.** §5 is the workspace layout, so the pointer was correct where a note written earlier in this session doubted it.
+- **The *Start here* table in `docs/README.md`.** It lists DIAGRAMS and GLOSSARY as items 4 and 5; nothing was missing.
+- **`package.json` / `engines.node`.** The repository contains no `package.json` at all — it is documentation, tooling, and configuration. The `engines: node >= 20` line in the [dependency policy](02-dependency-policy.md) is the external `zopia` package's own metadata, quoted correctly as such.
+- **`# 8 checks`, `# 9 checks`, `# 10 checks` in the evidence blocks above.** They are the historical record of what the gate ran in that pass, not current claims; the counts in this section are 13 and 670.
+- **`SEC-72`.** A number inside the `SEC` span that was never assigned, reported as a note by every run, and never to be "fixed" by inventing a requirement for it.
+
+### 19.4 What the pass changed in the gate itself
+
+| Change | Why |
+| --- | --- |
+| Check 11 added (`QA-119`), with range expansion and a named/bare/attached citation resolver | Defect 7 and 8: a citation is a promise, and a range is a promise about everything between its ends |
+| Check 12 added (`QA-120`) over Markdown, `.env.example`, and the two root files | Defect 9: one variety of English, declared before it is enforced |
+| Check 13 added (`QA-121`), with a working-tree branch and a shallow-clone note | Defects 10 and 11: the review line is a claim, and a check that skips itself everywhere is not a check |
+| `PLUGIN_SYSTEM`-style ranges, `–§M` continuations | Defect 7 |
+| `fetch-depth: 0` in `docs-gates.yml` | Defect 11 |
+| `GOV-89` (language variety), `GOV-71` and the `QA-01` row extended, catalogue items 11–13 | Defect 12: the rule, its requirement, and its documentation land together |
+| `PHASE_RULES` in the traceability generator: `GOV-89`, `QA-119 … QA-121` affiliated with Phase 0 | The gate rules themselves are Phase 0 deliverables, as `QA-62 … QA-68` and `QA-116 … QA-118` already were |
+
+### 19.5 Mutation tests (fourteenth pass)
+
+Each mutation was applied to a copy of the real file, the gate was run, and the file was restored from the copy — never with `git checkout`. Every mutation that should fail did fail, and the restored tree passed.
+
+```
+T10 `SEC-999` typed into docs/GLOSSARY.md, a requirement no document defines
+    - [references] docs/GLOSSARY.md:25 mentions undefined requirement "SEC-999" —
+      define it, or say on the line why it is deliberately absent                 exit 1
+
+T11 [SECURITY](SECURITY.md) §99 added to docs/GLOSSARY.md (a section that does not exist)
+    - [references] docs/GLOSSARY.md:25 cites SECURITY.md §99, but docs/SECURITY.md has no §99   exit 1
+
+T12 one word moved back to the other variety: "behaviour" -> "behavior" in PLUGIN_SYSTEM §6
+    - [language] docs/PLUGIN_SYSTEM.md:73 uses the American spelling "behavior" —
+      the pack uses the British form                                            exit 1
+
+T13a a sentence appended to a committed document with no review-line change
+    - [review-dates] docs/development/06-release-plan.md has uncommitted changes but its
+      review date still reads 2026-10-13; update it to 2026-10-14               exit 1
+
+T13b the same sentence, the review line bumped, the index row left behind
+    - [inventory] index date "2026-10-13" does not match "2026-10-14" in
+      docs/development/06-release-plan.md                                       exit 1
+
+T13c the same change with the index row moved as well                            exit 0
+
+T15 "normalisation" added to GLOSSARY.md — the retired form of a word the pack now spells the other way
+    - [language] docs/GLOSSARY.md:23 uses "Normalisation" — the pack is written in one variety:
+      use the -ize form                                                          exit 1
+
+T16 "normalization" added to GLOSSARY.md, one word later in the same row — the form the pack uses
+                                                                                 exit 0
+
+T14 §5 of PLUGIN_SYSTEM renamed, leaving a hole inside the range cited as §2–§7
+    - [references] docs/security/plugin-threat-model.md:3 cites ../PLUGIN_SYSTEM.md §5,
+      but docs/PLUGIN_SYSTEM.md has no §5                                       exit 1
+    (six further citations of §5 across the pack failed in the same run)
+
+all mutations restored from the pre-test copies                                  exit 0
+```
+
+T14 is the one to keep: without range expansion it would have passed, because sections 2 and 7 still existed. The check now reads a range as a promise about a block, which is what a reader takes it to mean.
+
+T15 and T16 are the pair for check 12: the same word in its two spellings, one failing and one passing, so the pattern is shown to discriminate rather than merely to exist.
+
+### 19.6 Evidence (fourteenth pass)
+
+The same script, before and after the fixes in this section, on the same tree:
+
+```
+node scripts/gates/phase0.mjs                 # before: 76 [language], 6 [model], 7 [references]   exit 1
+node scripts/gates/phase0.mjs                 # after:  13 checks, no failures                     exit 0
+node scripts/gates/traceability.mjs           # 670 requirements, 119 groups, 6 pull-forwards, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches the documents
+node scripts/gates/phase0.mjs
+#   · review dates: every changed document carries a current review date
+#   · diagrams: 16 Mermaid blocks, 4 state machines cross-checked
+```
+
+The identifier total moved 666 → 670: `GOV-89` (the language variety) and `QA-119`, `QA-120`, `QA-121` (the three checks). The area table in [docs/README.md](../README.md#requirement-ids) was recomputed by the gate in the same change — `GOV` 88 → 89, `QA` 118 → 121 — because the gate reads that table out of the documents and fails on a stale count, which it did on the first run of this pass.
+
+No requirement was renumbered, no identifier was reused, and nothing outside Phase 0 changed: this pass corrected what the documents said, not what the product is.

@@ -6,7 +6,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Plugins add capabilities without coupling their release cycle to the core.
 
-- **[PLG-01]** **Relation Service** and **SOS Service** are the first two services. Per [ADR-012](DECISIONS.md#adr-012--relation-and-sos-are-first-party-services-not-third-party-plugins) they are **first-party** services: shipped from this repository, reviewed as source, deployed from `.env`-driven configuration, and never uploaded as untrusted ZIP packages. They MUST follow the API, permission, health, versioning, and failure contracts defined here, because those contracts are what the plugin boundary will later generalise.
+- **[PLG-01]** **Relation Service** and **SOS Service** are the first two services. Per [ADR-012](DECISIONS.md#adr-012--relation-and-sos-are-first-party-services-not-third-party-plugins) they are **first-party** services: shipped from this repository, reviewed as source, deployed from `.env`-driven configuration, and never uploaded as untrusted ZIP packages. They MUST follow the API, permission, health, versioning, and failure contracts defined here, because those contracts are what the plugin boundary will later generalize.
 - **[PLG-02]** **Third-party plugins** are the packaged, admin-uploadable case described in §2–§7. That lifecycle is delivered in [ROADMAP](ROADMAP.md) Phase 7 and remains disabled in production until its exit gate passes.
 - **[PLG-03]** Each service is independently deployable and usable through documented APIs. A standalone deployment still uses the documented identity integration contract and MUST NOT create a second, incompatible user database.
 
@@ -70,7 +70,7 @@ Plugin lifecycle states: `uploaded`, `validating`, `staged`, `installed`, `disab
 - **[PLG-39]** Core and services communicate over private networks or authenticated channels; shared database writes across service boundaries are forbidden.
 - **[PLG-40]** A plugin or service cannot block sign-in, session validation, or authorization decisions: those paths are core-only.
 
-## 6. Capability and failure behavior
+## 6. Capability and failure behaviour
 
 - **[PLG-41]** Relation not installed, unhealthy, or disabled: private location is not exposed, follower access is not implied, and the UI explains that the feature is unavailable.
 - **[PLG-42]** SOS not installed, unhealthy, or disabled: SOS-only preferences and actions are hidden or clearly disabled, and the UI never pretends an SOS was created or dispatched.

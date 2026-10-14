@@ -2,13 +2,13 @@
 
 Verify all links and current guidance during implementation and before every release. Search results, package versions, and standards editions change.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## Verification log
 
 | Date | Verified | Result |
 | --- | --- | --- |
-| 2026-10-13 | OWASP Top 10 current edition | **Top 10:2025** is the current released edition (released late 2025, finalised January 2026). The 2021 edition is superseded. New categories in this edition: A03 Software Supply Chain Failures, A10 Mishandling of Exceptional Conditions; SSRF folded into A01. |
+| 2026-10-13 | OWASP Top 10 current edition | **Top 10:2025** is the current released edition (released late 2025, finalized January 2026). The 2021 edition is superseded. New categories in this edition: A03 Software Supply Chain Failures, A10 Mishandling of Exceptional Conditions; SSRF folded into A01. |
 | 2026-10-13 | OWASP ASVS version | Latest stable is **5.0.0** (2025-05-30, Global AppSec EU Barcelona); repository release tag `v5.0.0_release` confirmed via the GitHub API. Cite requirements as `v5.0.0-x.y.z`. |
 | 2026-10-13 | OWASP API Security Top 10 | **2023 edition** is still the latest published edition; no 2024/2025/2026 edition exists. Re-check before each release. |
 | 2026-10-13 | `km-api` package | `km-api@0.4.1`, MIT, published on npm; peer dependency `zod ^4.3.6`; documented as an OpenAPI **3.0**-compatible endpoint/schema builder (Zod validation, `makeApiConfig`, Axios/Fetch/Alova adapters). Not a Fastify plugin. |

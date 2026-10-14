@@ -78,6 +78,7 @@ const PHASE_RULES = [
   ['GOV', 41, 86, 1],   // repository conventions, environment, dependency policy, docs maintenance
   ['GOV', 87, 87, 0],   // phase-affiliation and prioritization rule (delivered by this review)
   ['GOV', 88, 88, 0],   // pull-forward rule and gate flexibility (delivered by this review)
+  ['GOV', 89, 89, 0],   // documentation language variety, enforced by gate check 12 (this review)
 
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 5, 2],
@@ -185,7 +186,7 @@ const PHASE_RULES = [
   ['QA', 13, 13, 8],    // Android build
   ['QA', 14, 15, 1],    // container checks, migration/backup
   ['QA', 16, 16, 3],    // accessibility checks activate with the first full screen set
-  ['QA', 17, 17, 2],    // localisation checks activate when user-facing strings first exist
+  ['QA', 17, 17, 2],    // localization checks activate when user-facing strings first exist
   ['QA', 18, 19, 1],
   ['QA', 20, 28, 2],    // security/negative test matrix
   ['QA', 29, 36, 3],    // performance tests
@@ -198,6 +199,7 @@ const PHASE_RULES = [
   ['QA', 116, 116, 0],  // documentation gate: model coherence and retired wording
   ['QA', 117, 117, 0],  // documentation gate: phase-status agreement between README and ROADMAP
   ['QA', 118, 118, 0],  // documentation gate: diagram integrity and state-set coherence
+  ['QA', 119, 121, 0],  // documentation gate: cross-references, one variety of English, review dates
 
   // Data model invariants
   ['DATA', 1, 1, 2],

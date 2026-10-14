@@ -1,15 +1,15 @@
 # Architecture and Runtime Design
 
-Requirement identifiers (`OPS-…`, `MAP-…`) are permanent handles assigned by the documentation gate.
+Requirement identifiers (`OPS-…`, `MAP-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. High-level topology
 
 Start with:
 
 - **[OPS-01]** **Web/PWA**: Vue 3, Vite, Vuetify + Tailwind, Pinia, VueUse, `@vueuse/motion`, MapLibre GL JS. **Android shell**: Capacitor, with Ionic Vue confined to shell affordances ([DECISIONS](DECISIONS.md) ADR-009).
-- **[OPS-02]** **Core API**: TypeScript + Fastify, organised as a modular monolith.
+- **[OPS-02]** **Core API**: TypeScript + Fastify, organized as a modular monolith.
 - **[OPS-03]** **Relation Service**: independently deployable TypeScript/Fastify service with its own bounded domain and API.
 - **[OPS-04]** **SOS Service**: independently deployable TypeScript/Fastify service with its own bounded domain and API.
 - **[OPS-05]** **PostgreSQL**: durable relational state, constraints, migrations, and transaction support. PostgreSQL 18 is the target major (supported to November 2030); PostGIS is evaluated for geospatial queries ([DECISIONS](DECISIONS.md) ADR-005).
@@ -69,7 +69,7 @@ Rules:
 - **[MAP-17]** Public tile/geocoding services are never scraped, and usage limits are respected by design (caching only where the provider's terms allow it).
 - **[MAP-18]** Personal identity is not attached to geospatial queries unless strictly necessary; provider calls are made from the server where that reduces client-side leakage of user identity and keys.
 - **[MAP-19]** Provider credentials are server-side secrets, never shipped to the browser where the provider allows a server-mediated call.
-- **[MAP-20]** A provider outage produces a documented degraded mode (see [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) §5), not a broken map screen.
+- **[MAP-20]** A provider outage produces a documented degraded mode — the map rules of [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) §4 and the navigation degradation of [NAV-11](PRODUCT_REQUIREMENTS.md#5-routing-and-navigation) — not a broken map screen.
 - **[MAP-21]** No provider is integrated before [DECISIONS](DECISIONS.md) Q-10 resolves licensing, coverage, privacy, and budget, and the review is recorded in [REFERENCES](REFERENCES.md).
 
 ## 5. Shared packages

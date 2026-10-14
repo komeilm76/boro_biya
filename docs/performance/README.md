@@ -2,19 +2,19 @@
 
 This directory holds performance budgets and the measurements that support them. No performance claim is published anywhere in this project — including in the user guide, release notes, or a pull request description — unless it names the commit, the environment, the dataset, and the exact command that produced it.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## Rules
 
 - **[QA-107]** A measurement is only valid for the exact commit SHA and configuration it was taken with. Re-measuring after a change is required before reusing the number.
 - **[QA-108]** Never compare results taken on different hardware, dataset sizes, or warm-up conditions and present the difference as a regression or an improvement.
-- **[QA-109]** Budgets are defined before optimisation begins, and a change that breaches a budget is reported as a breach rather than explained away.
+- **[QA-109]** Budgets are defined before optimization begins, and a change that breaches a budget is reported as a breach rather than explained away.
 - **[QA-110]** Results that are not reproducible are deleted, not archived.
 - **[QA-111]** Load tests run against a disposable environment with synthetic data. No production or user data is used.
 
 ## Budgets
 
-Budgets are established in Phase 1 ([ROADMAP](../ROADMAP.md)) once target hardware and traffic profiles are agreed (see [DECISIONS](../DECISIONS.md) open question Q-12). Until then, no numeric budget exists, and no optimisation work may claim to satisfy one.
+Budgets are established in Phase 1 ([ROADMAP](../ROADMAP.md)) once target hardware and traffic profiles are agreed (see [DECISIONS](../DECISIONS.md) open question Q-12). Until then, no numeric budget exists, and no optimization work may claim to satisfy one.
 
 Each budget entry must state:
 

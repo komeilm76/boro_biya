@@ -1,6 +1,6 @@
 # Quality Gates, CI, Testing, and Release
 
-Requirement identifiers (`QA-…`) are permanent handles assigned by the documentation gate. Which gates are active in which phase is defined in [CI and gates](development/03-ci-and-gates.md); a gate that cannot yet run must be declared inactive for that phase rather than reported as passing.
+Requirement identifiers (`QA-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate. Which gates are active in which phase is defined in [CI and gates](development/03-ci-and-gates.md); a gate that cannot yet run must be declared inactive for that phase rather than reported as passing.
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -10,7 +10,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 
 | Gate | Purpose | Tool (planned unless noted) |
 | --- | --- | --- |
-| **[QA-01]** Documentation gate — **active now**| Document inventory (owner and review date per document, matching the index), requirement-ID uniqueness and reference resolution, coverage, internal links and anchors, placeholders, audience separation, secret patterns, model coherence and retired wording, phase-status agreement between the README table and the ROADMAP, and diagram, state, and glossary integrity (closed fences, cited diagrams, state machines matching the requirement text and drawn where the table says, one entry per glossary term) | `node scripts/gates/phase0.mjs` (available today) |
+| **[QA-01]** Documentation gate — **active now**| Document inventory (owner and review date per document, matching the index), requirement-ID uniqueness and reference resolution, coverage, internal links and anchors, placeholders, audience separation, secret patterns, model coherence and retired wording, phase-status agreement between the README table and the ROADMAP, diagram, state, and glossary integrity (closed fences, cited diagrams, state machines matching the requirement text and drawn where the table says, one entry per glossary term), resolution of every identifier mention and section citation, one variety of English across the pack, and a review date that is current for every document that changed | `node scripts/gates/phase0.mjs` (available today) |
 | **[QA-02]** Formatting check| Consistent formatting | Prettier `--check` (Phase 1) |
 | **[QA-03]** Static lint| Code defects and unsafe patterns | ESLint with Vue and TypeScript plugins (Phase 1) |
 | **[QA-04]** Strict type check| No implicit `any`, no unchecked access | `tsc --noEmit` per workspace with the strict flags in [repository conventions](development/00-repository-conventions.md) §4 (Phase 1) |
@@ -20,13 +20,13 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-08]** Security tests| Auth, authorization, account states, recovery, plugin archives, location privacy | Vitest security suites plus dedicated adversarial fixtures (Phase 2+) |
 | **[QA-09]** Dependency vulnerability audit and licence policy| Known CVEs and licence compliance | Registry advisory scan + licence allowlist from the [dependency policy](development/02-dependency-policy.md) (Phase 1) |
 | **[QA-10]** Secret scanning| No credentials in the repository or history | Secret scanner in CI plus the documentation gate's pattern check (Phase 0 for docs) |
-| **[QA-11]** Production builds| Web, API, and service artifacts build reproducibly | Vite build, API build, container builds (Phase 1+) |
+| **[QA-11]** Production builds| Web, API, and service artefacts build reproducibly | Vite build, API build, container builds (Phase 1+) |
 | **[QA-12]** PWA checks| Manifest validity, offline shell, installability, no stale service worker | Lighthouse-style audit plus explicit service-worker unit tests (Phase 3) |
-| **[QA-13]** Android build| Buildable, signed, permission-audited Android artifact | Gradle/ Capacitor build in CI where the environment supports it (Phase 8) |
+| **[QA-13]** Android build| Buildable, signed, permission-audited Android artefact | Gradle/ Capacitor build in CI where the environment supports it (Phase 8) |
 | **[QA-14]** Container image and configuration checks| No `latest` tags, non-root user, health checks, no embedded secrets, vulnerability scan | Image scanner plus configuration assertions (Phase 1+) |
 | **[QA-15]** Database migration tests and backup/restore smoke test| Migrations apply and reverse; backups restore | Migration runner in CI against a disposable database (Phase 1); restore rehearsal from Phase 8 and required for release candidates in Phase 9 |
 | **[QA-16]** Accessibility checks| Keyboard, focus, labels, contrast, reduced motion | Automated axe checks in component/browser tests plus a manual review checklist (Phase 3+) |
-| **[QA-17]** Localisation checks| No hard-coded user-facing strings; **both catalogues complete and identical in key set** (Persian and English, [ADR-017](DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)), so a key present in one locale and missing from the other fails the build; RTL sanity (direction, logical properties, mirrored icons) | Lint rule over components plus a catalogue-parity test comparing the two locales key by key (Phase 2+, when the first user-facing strings exist) |
+| **[QA-17]** Localization checks| No hard-coded user-facing strings; **both catalogues complete and identical in key set** (Persian and English, [ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)), so a key present in one locale and missing from the other fails the build; RTL sanity (direction, logical properties, mirrored icons) | Lint rule over components plus a catalogue-parity test comparing the two locales key by key (Phase 2+, when the first user-facing strings exist) |
 
 - **[QA-18]** CI actions are pinned to immutable commit SHAs, workflow permissions are least-privilege, and secrets are never exposed to untrusted pull-request code.
 - **[QA-19]** Release signing credentials live outside source control and outside normal CI logs.
@@ -35,7 +35,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 
 ### Unit
 
-Pure domain rules, validation schemas, account-state transitions, task state machine, permission policies, route/provider adapters, configuration parsing, and formatting/normalisation helpers.
+Pure domain rules, validation schemas, account-state transitions, task state machine, permission policies, route/provider adapters, configuration parsing, and formatting/normalization helpers.
 
 ### Integration
 
@@ -45,7 +45,7 @@ PostgreSQL constraints and transactions, login throttling, lockout windows, reco
 
 Registration, first-login setup, login/logout, password change and reset, account lockout, admin user management, follower privacy, live-sharing grant expiry and revoke, history-sharing boundaries, SOS creation and category-matched dispatch/claim/resolve, plugin install/disable/rollback, and map permission-denied and manual-coordinate flows.
 
-### Accessibility and localisation
+### Accessibility and localization
 
 Automated axe checks on primary routes, keyboard-only walkthrough of critical flows, reduced-motion verification, and a message-catalogue check that fails on hard-coded strings or missing keys.
 
@@ -103,8 +103,8 @@ Mirrored in the repository template [`.github/pull_request_template.md`](../.git
 ## 5. Release process
 
 - **[QA-48]** SemVer for released packages and services; the changelog records user-visible changes and breaking changes.
-- **[QA-49]** Artifacts are built once, versioned, tagged to the exact commit, and promoted between environments — never rebuilt from untracked changes at deployment time.
-- **[QA-50]** Artifact set: web/PWA bundle, API and service container images, plugin image/package (Phase 7+), Android APK/AAB (Phase 8+), migrations, checksums, and an SBOM where practical.
+- **[QA-49]** Artefacts are built once, versioned, tagged to the exact commit, and promoted between environments — never rebuilt from untracked changes at deployment time.
+- **[QA-50]** Artefact set: web/PWA bundle, API and service container images, plugin image/package (Phase 7+), Android APK/AAB (Phase 8+), migrations, checksums, and an SBOM where practical.
 - **[QA-51]** Signing keys and production credentials stay outside source control and CI logs.
 - **[QA-52]** Migration, rollback, and backup/restore checks run before production deployment, and the results are attached to the release record.
 - **[QA-53]** Deployment, health verification, rollback steps, and incident contacts are documented in the [release plan](development/06-release-plan.md) and its runbook.

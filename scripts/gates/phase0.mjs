@@ -24,6 +24,16 @@
  *      the requirements it draws; the four declared state machines agree with the sentence that
  *      declares them and with the section the state table names; and the glossary defines each
  *      term once, naming the document that owns it.
+ *  11. Cross-references — every requirement, decision, and open-question identifier mentioned
+ *      anywhere is defined, and every section citation names a section that exists. An identifier
+ *      that is deliberately undefined must be explained on the line that uses it.
+ *  12. Documentation language — the pack is written in one variety of English: British spelling
+ *      with -ize/-ization endings, "licence" for the noun, and the British forms of the words this
+ *      project uses (behaviour, catalogue, artefact, defence). Code identifiers keep their own
+ *      spelling (see docs/development/00-repository-conventions.md §1).
+ *  13. Review dates — a change to a document updates its "Owner: … Reviewed:" line, so the date
+ *      cannot silently describe text that has since changed. Skipped when git history is absent
+ *      (a source download, or a shallow clone).
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -360,6 +370,14 @@ const RETIRED_WORDING = [
     label: 'membership',
     adr: 'ADR-016 (a category is an assignment carried as a profile attribute, never a group a user belongs to)',
   },
+  // Round 7 established that identifiers are assigned by the person writing the requirement and
+  // only validated by this gate. "Assigned by the documentation gate" reverses that and invites a
+  // reader to wait for a handle instead of choosing the next free number.
+  {
+    pattern: /assigned (mechanically )?by the documentation gate/i,
+    label: 'assigned by the documentation gate',
+    adr: 'the manual-assignment rule: an identifier is assigned when the requirement is written, and the gate validates it (repository conventions §7)',
+  },
 ];
 
 function checkModelCoherence() {
@@ -640,11 +658,321 @@ function checkDiagrams() {
   if (blocks.length) notes.push(`diagrams: ${blocks.length} Mermaid blocks, ${STATE_MACHINES.length} state machines cross-checked`);
 }
 
+// -------------------------------------- check 11: cross-references resolve
+/**
+ * A document may not point at something that does not exist. Every requirement, decision,
+ * and open-question identifier mentioned in the pack must be defined, and every section
+ * citation must name a section that exists in the document it points at.
+ *
+ * An identifier that is deliberately undefined — the unassigned number the traceability
+ * check prints as a note, or a phantom used to prove this gate fails — must say so on the
+ * same line, so a reader cannot mistake it for a real handle.
+ *
+ * A "§N" citation is resolved in three forms, in this order:
+ *   1. attached to a link   — `[doc](doc.md) §3`, `[doc](doc.md#anchor) §3, §5`;
+ *   2. named in prose       — `SECURITY §3`, `checklist §5`, `` `PLUGIN_SYSTEM` §3 ``;
+ *   3. bare                 — resolved against the document that writes it, which is only
+ *                             meaningful in a document that numbers its own sections.
+ * A document that does not number its sections (DATA_MODEL, DECISIONS, ROADMAP, …) may still
+ * be cited by name; the fix for a bare citation that resolves nowhere is to name the section.
+ */
+const EXPLAINED_UNKNOWN =
+  /(unassigned|never assigned|does not exist|does not resolve|non-existent|nonexistent|unknown|phantom|hypothetical|fabricated|for example)/i;
+
+/** Documents as the pack names them in prose; keys are compared lower-cased. */
+const DOC_NAMES = new Map([
+  ['product requirements', 'PRODUCT_REQUIREMENTS.md'],
+  ['product_requirements', 'PRODUCT_REQUIREMENTS.md'],
+  ['security', 'SECURITY.md'],
+  ['architecture', 'ARCHITECTURE.md'],
+  ['data model', 'DATA_MODEL.md'],
+  ['data_model', 'DATA_MODEL.md'],
+  ['plugin system', 'PLUGIN_SYSTEM.md'],
+  ['plugin_system', 'PLUGIN_SYSTEM.md'],
+  ['api and openapi', 'API_AND_OPENAPI.md'],
+  ['api_and_openapi', 'API_AND_OPENAPI.md'],
+  ['quality gates', 'QUALITY_GATES.md'],
+  ['quality_gates', 'QUALITY_GATES.md'],
+  ['roadmap', 'ROADMAP.md'],
+  ['decisions', 'DECISIONS.md'],
+  ['references', 'REFERENCES.md'],
+  ['diagrams', 'DIAGRAMS.md'],
+  ['glossary', 'GLOSSARY.md'],
+  ['master_project_prompt', 'MASTER_PROJECT_PROMPT.md'],
+  ['threat model', 'security/threat-model.md'],
+  ['plugin threat model', 'security/plugin-threat-model.md'],
+  ['data classification', 'security/data-classification.md'],
+  ['checklist', 'development/05-phase-gate-checklist.md'],
+  ['release plan', 'development/06-release-plan.md'],
+  ['dependency policy', 'development/02-dependency-policy.md'],
+  ['repository conventions', 'development/00-repository-conventions.md'],
+  ['conventions', 'development/00-repository-conventions.md'],
+  ['development environment', 'development/01-development-environment.md'],
+  ['ci and gates', 'development/03-ci-and-gates.md'],
+  ['api inventory', 'development/04-api-inventory.md'],
+  ['traceability', 'development/07-traceability.md'],
+  ['user guide', 'user/README.md'],
+  ['performance', 'performance/README.md'],
+  ['operations', 'operations/README.md'],
+]);
+
+/** Section numbers a document declares, e.g. "## 3. Authorization" -> "3", "§5.1" -> "5.1". */
+function numberedHeadings(file) {
+  const set = new Set();
+  for (const line of read(file).split('\n')) {
+    const match = /^#{1,6}\s+(\d+(?:\.\d+)?[a-z]?)\b/.exec(line);
+    if (match) set.add(match[1]);
+  }
+  return set;
+}
+
+const CITATION_NUMBER = String.raw`\d+(?:\.\d+)?[a-z]?`;
+// "§3", "§2–§4", "§5.1", and a run of them: "§3, §5", "§2 and §4".
+const CITATION_RANGE = String.raw`${CITATION_NUMBER}(?:\s*(?:–|-|—)\s*§?\s*${CITATION_NUMBER})*`;
+const LINK = /\]\(([^)\s]+\.md)(?:#[^)]*)?\)/g;
+const CITATION_LIST = new RegExp(String.raw`^(?:\s*,)?\s*(?:\s*and\s+)?§+\s*(${CITATION_RANGE})`);
+const NAMED_CITATION = new RegExp(
+  String.raw`(?:^|[^\w` + '`' + String.raw`])(` + '`?' + String.raw`[A-Za-z][A-Za-z_-]*(?:\s+[A-Za-z][A-Za-z_-]*){0,2}` + '`?' + String.raw`)\s+§+\s*(${CITATION_RANGE})`,
+  'g',
+);
+const BARE_CITATION = new RegExp(String.raw`§+\s*(${CITATION_RANGE})`, 'g');
+
+function checkReferences() {
+  const docs = walk(DOCS, (file) => file.endsWith('.md'));
+  const scanned = docs.concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md'), join(ROOT, '.env.example')]);
+
+  // Definitions: the requirement handles, the ADR headings, and the open-question rows.
+  const defined = new Set();
+  const decisions = new Set();
+  const questions = new Set();
+  for (const file of docs) {
+    const text = read(file);
+    for (const match of text.matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g)) defined.add(match[1]);
+    if (file.endsWith('DECISIONS.md')) {
+      for (const match of text.matchAll(/^#{2,6}\s+(ADR-\d{3})\b/gm)) decisions.add(match[1]);
+      for (const match of text.matchAll(/^\|\s*(Q-\d{2})\s*\|/gm)) questions.add(match[1]);
+    }
+  }
+
+  // Areas are read from the definitions rather than hard-coded: a token whose prefix the pack
+  // never defines (a threat ID, a plugin-threat ID, an asset class) is not this check's business.
+  const areas = new Set([...defined].map((id) => id.split('-')[0]));
+
+  const headingsCache = new Map();
+  const headingsOf = (file) => {
+    if (!headingsCache.has(file)) headingsCache.set(file, numberedHeadings(file));
+    return headingsCache.get(file);
+  };
+  // "§3", "§6.2", "§3–§7", and a run of them. A dash between two plain integers is a range, so
+  // every section it spans must exist: the citation promises a contiguous block, not two ends.
+  const numbersIn = (text) => {
+    const range = /^(\d+)\s*(?:–|-|—)\s*§?\s*(\d+)$/.exec(text);
+    if (range) {
+      const [first, last] = [Number(range[1]), Number(range[2])];
+      if (first <= last && last - first <= 20) {
+        return Array.from({ length: last - first + 1 }, (_, i) => String(first + i));
+      }
+    }
+    return text.match(/\d+(?:\.\d+)?[a-z]?/g) || [];
+  };
+
+  for (const file of scanned) {
+    const rel = relative(ROOT, file).split('\\').join('/');
+    const self = headingsOf(file);
+    let inFence = false;
+    read(file)
+      .split('\n')
+      .forEach((line, index) => {
+        const lineNo = index + 1;
+        if (line.trimStart().startsWith('```')) {
+          inFence = !inFence;
+          return;
+        }
+        if (inFence) return;
+
+        // Identifiers. Inline code still counts: an identifier in a code span is a reference.
+        const identifier = (id, known, kind) => {
+          if (known || EXPLAINED_UNKNOWN.test(line)) return;
+          failures.push(
+            `[references] ${rel}:${lineNo} mentions undefined ${kind} "${id}" — define it, or say on the line why it is deliberately absent`,
+          );
+        };
+        for (const match of line.matchAll(/\b([A-Z]{2,4})-(\d{1,3})\b/g)) {
+          const [id, prefix] = [match[0], match[1]];
+          if (prefix === 'ADR') identifier(id, decisions.has(id), 'decision');
+          else if (areas.has(prefix)) identifier(id, defined.has(id), 'requirement');
+        }
+        for (const match of line.matchAll(/\b(Q-\d{2})\b/g)) identifier(match[1], questions.has(match[1]), 'open question');
+
+        // Section citations, with the matched spans masked so each one is resolved once.
+        const prose = line.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length));
+        const taken = new Array(prose.length).fill(false);
+
+        for (const link of prose.matchAll(LINK)) {
+          const target = resolve(dirname(file), link[1]);
+          const targetExists = existsSync(target); // the link check reports missing files
+          const targetHeadings = targetExists ? headingsOf(target) : new Set();
+          const targetRel = targetExists ? relative(ROOT, target).split('\\').join('/') : link[1];
+          let position = link.index + link[0].length;
+          for (;;) {
+            const cite = CITATION_LIST.exec(prose.slice(position));
+            if (!cite) break;
+            position += cite[0].length;
+            for (let i = link.index; i < position; i += 1) taken[i] = true;
+            if (!targetExists) continue;
+            for (const number of numbersIn(cite[1])) {
+              if (targetHeadings.has(number)) continue;
+              const why = targetHeadings.size ? `has no §${number}` : 'does not number its sections';
+              failures.push(`[references] ${rel}:${lineNo} cites ${link[1]} §${number}, but ${targetRel} ${why}`);
+            }
+          }
+        }
+
+        for (const match of prose.matchAll(NAMED_CITATION)) {
+          const name = match[1].replace(/`/g, '').trim().toLowerCase();
+          const target = DOC_NAMES.has(name) ? join(DOCS, DOC_NAMES.get(name)) : null;
+          if (!target || !existsSync(target)) continue;
+          for (let i = match.index; i < match.index + match[0].length; i += 1) taken[i] = true;
+          const targetHeadings = headingsOf(target);
+          for (const number of numbersIn(match[2])) {
+            if (targetHeadings.has(number)) continue;
+            const why = targetHeadings.size ? `has no §${number}` : 'does not number its sections';
+            failures.push(`[references] ${rel}:${lineNo} cites "${match[1].trim()}" §${number}, but ${DOC_NAMES.get(name)} ${why}`);
+          }
+        }
+
+        if (!self.size) return; // a document without numbered sections cannot resolve a bare citation
+        for (const match of prose.matchAll(BARE_CITATION)) {
+          if (taken[match.index]) continue;
+          for (const number of numbersIn(match[1])) {
+            if (self.has(number)) continue;
+            failures.push(`[references] ${rel}:${lineNo} cites §${number}, which this document does not have — name the document and section instead`);
+          }
+        }
+      });
+  }
+}
+
+// ------------------------------------- check 12: documentation language
+/**
+ * One variety of English across the pack: British spelling with -ize/-ization endings
+ * ("Oxford spelling" — organize, authorize, normalize, prioritize, internationalize), "licence"
+ * for the noun, and the British forms of the words this project uses (behaviour, catalogue,
+ * artefact, defence, colour). Code identifiers keep their own spelling, so `normalization_version`
+ * and `Authorization` are correct as written. The rule is stated in
+ * docs/development/00-repository-conventions.md §1; this check is what keeps it true.
+ */
+const RETIRED_SPELLINGS = [
+  /\b(internationalis|localis|normalis|organis|minimis|optimis|parameteris|summaris|recognis|finalis|anonymis|centralis|denormalis|deserialis|generalis|sanitis|pseudonymis)[a-z]*\b/i,
+  /\bsynthesis(?:e|ed|es|ing)\b/i,
+];
+const AMERICAN_SPELLINGS = [
+  /\b(artifact|artifacts)\b/i,
+  /\b(defense|defenses)\b/i,
+  /\b(behavior|behaviors|behavioral)\b/i,
+  /\b(color|colors|colored|coloring)\b/i,
+  /\b(center|centers|centered|centering)\b/i,
+  /\b(catalog|catalogs)\b/i,
+  /\b(favorite|favorites)\b/i,
+  /\b(canceled|labeled|labeling|modeling|traveled|traveling|traveler)\b/i,
+];
+
+function checkLanguage() {
+  const files = walk(DOCS, (file) => file.endsWith('.md')).concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.env.example'),
+  ]);
+  for (const file of files) {
+    const rel = relative(ROOT, file).split('\\').join('/');
+    let inFence = false;
+    read(file)
+      .split('\n')
+      .forEach((line, index) => {
+        if (line.trimStart().startsWith('```')) {
+          inFence = !inFence;
+          return;
+        }
+        if (inFence) return;
+        // Code spans and links/identifiers are code, not prose: skip them, as checks 5 and 8 do.
+        const prose = line.replace(/`[^`]*`/g, '');
+        const retired = RETIRED_SPELLINGS.find((pattern) => pattern.test(prose));
+        if (retired) {
+          const found = prose.match(retired)[0];
+          failures.push(`[language] ${rel}:${index + 1} uses "${found}" — the pack is written in one variety: use the -ize form`);
+        }
+        const american = AMERICAN_SPELLINGS.find((pattern) => pattern.test(prose));
+        if (american) {
+          const found = prose.match(american)[0];
+          failures.push(`[language] ${rel}:${index + 1} uses the American spelling "${found}" — the pack uses the British form`);
+        }
+      });
+  }
+}
+
+// ------------------------------------------- check 13: review dates are current
+/**
+ * `Owner: <role>. Reviewed: YYYY-MM-DD.` is a claim that the text as it now stands was reviewed
+ * on that date. The cheapest way to keep it true is the rule enforced here: the last change to a
+ * document updates its review line. The date is not compared with a clock, so a branch that sits
+ * unmerged, or a machine in another timezone, cannot fail the check.
+ *
+ * Skipped when git history is unavailable or shallow (a source download, or the default
+ * one-commit checkout): the gate prints a note instead of guessing. The generated traceability
+ * file is exempt — its header is emitted by the generator, and check 3 verifies its content.
+ */
+const GENERATED_DOCS = new Set(['docs/development/07-traceability.md']);
+
+function checkReviewDates() {
+  const git = (...args) => {
+    try {
+      return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    } catch {
+      return '';
+    }
+  };
+  if (git('rev-parse', '--is-inside-work-tree') !== 'true') {
+    notes.push('review dates: not a git checkout, check skipped');
+    return;
+  }
+  if (git('rev-parse', '--is-shallow-repository') === 'true') {
+    notes.push('review dates: shallow clone, check skipped (fetch full history to enforce it)');
+    return;
+  }
+  const files = walk(DOCS, (file) => file.endsWith('.md')).concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md')]);
+  for (const file of files) {
+    const rel = relative(ROOT, file).split('\\').join('/');
+    if (GENERATED_DOCS.has(rel)) continue;
+    const header = /^Owner:[^\n]*Reviewed:\s*(\d{4}-\d{2}-\d{2})/m.exec(read(file));
+    if (!header) continue; // check 1 reports a missing header
+    const today = new Date().toISOString().slice(0, 10);
+    const dirty = git('status', '--porcelain', '--', rel) !== '';
+    if (dirty && header[1] < today) {
+      failures.push(
+        `[review-dates] ${rel} has uncommitted changes but its review date still reads ${header[1]}; update it to ${today}`,
+      );
+      continue;
+    }
+    const commit = git('log', '-1', '--format=%H', '--', rel);
+    if (!commit) continue; // untracked file: there is no change to compare against
+    const diff = git('show', '--format=', '--unified=0', commit, '--', rel);
+    if (!diff) continue; // the commit does not change this file (merge, or a pure rename)
+    if (/^\+\s*Owner:[^\n]*Reviewed:\s*\d{4}-\d{2}-\d{2}/m.test(diff)) continue;
+    const changed = git('log', '-1', '--format=%cs', commit, '--', rel);
+    if (header[1] >= changed) continue; // already reviewed on or after the day it changed
+    failures.push(
+      `[review-dates] ${rel} was changed on ${changed} (${commit.slice(0, 8)}) without updating its review date, which still reads ${header[1]}`,
+    );
+  }
+  notes.push('review dates: every changed document carries a current review date');
+}
+
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory and index registration, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary).');
+  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary,');
+  console.log('cross-references (identifiers and section citations), documentation language, review dates).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
@@ -659,6 +987,9 @@ checkSecrets();
 checkModelCoherence();
 checkPhaseStatus();
 checkDiagrams();
+checkReferences();
+checkLanguage();
+checkReviewDates();
 
 if (failures.length) {
   console.error(`\nPhase 0 documentation gate FAILED with ${failures.length} problem(s):\n`);
@@ -678,4 +1009,7 @@ console.log('  7. no credential material; .env.example contains placeholders onl
 console.log('  8. models introduced by a decision are coherent across documents, with no retired wording');
 console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
 console.log(' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once');
+console.log(' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists');
+console.log(' 12. one variety of English across the pack, with code identifiers left as they are written');
+console.log(' 13. every document changed since its review date carries a current "Owner: … Reviewed:" line');
 for (const note of notes) console.log(`  · ${note}`);

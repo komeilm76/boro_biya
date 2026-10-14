@@ -2,7 +2,7 @@
 
 A security-first mapping, navigation, social-location, and SOS assistance platform: a responsive web application and installable PWA, an Android application, a core TypeScript API, and two independently deployable services (Relation and SOS).
 
-Owner: Repo owner. Reviewed: 2026-10-13.
+Owner: Repo owner. Reviewed: 2026-10-14.
 
 **Current status: Phase 0 — repository foundation and documentation.** There is no application code yet. Phase 0 is complete pending owner approval; Phase 1 (workspace skeleton and developer experience) starts only after that approval ([ROADMAP](docs/ROADMAP.md)).
 
@@ -21,7 +21,7 @@ Phase 0 is verified by one dependency-free command that runs on Linux, Windows, 
 node scripts/gates/phase0.mjs
 ```
 
-It checks that every required document exists, that every requirement identifier is unique and covered by the traceability file, that all internal links and anchors resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that code fences are closed and every diagram cites its requirements, and that the declared state machines still match the requirement text.
+It checks that every required document exists and is registered with a current owner and review date, that every requirement identifier is unique, defined, and covered by the traceability file, that all internal links, anchors, section citations, and identifier mentions resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that the pack uses one variety of English, that code fences are closed and every diagram cites its requirements, and that the declared state machines still match the requirement text. The three newest checks — cross-references, language, and review dates — are catalogued in [docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md) §3.
 
 ```bash
 node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase coverage
@@ -35,6 +35,8 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
 | `docs/security/` | Threat model, data classification, plugin threat model |
 | `docs/user/` | End-user documentation |
+| `docs/operations/` | Runbook register, backup and restore policy, availability objective |
+| `docs/performance/` | Performance budget and measured results |
 | `scripts/gates/` | Gate runners (dependency-free Node) |
 | `.github/workflows/` | CI workflows |
 

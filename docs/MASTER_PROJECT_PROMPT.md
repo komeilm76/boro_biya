@@ -10,7 +10,7 @@ Build **Boro_biya**, a production-minded, security-first mapping and assistance 
 
 The repository's `/docs` directory is the project's source of truth. Read all relevant documents before changing code — [DIAGRAMS](DIAGRAMS.md) for the topology, flows, and lifecycles, and [GLOSSARY](GLOSSARY.md) for the vocabulary this project uses in its own way. If requirements conflict, stop and record the conflict in [DECISIONS](DECISIONS.md); do not silently guess. Update docs and tests with each behaviour change.
 
-Every binding requirement carries a permanent identifier (`AUTH-…`, `SOS-…`) assigned by the documentation gate; use those identifiers in pull requests, tests, and phase reports so evidence can be traced. The current phase and its exit criteria are in [ROADMAP](ROADMAP.md); the mapping from requirement to phase is in [traceability](development/07-traceability.md).
+Every binding requirement carries a permanent identifier (`AUTH-…`, `SOS-…`), assigned when the requirement is written and validated by the documentation gate; use those identifiers in pull requests, tests, and phase reports so evidence can be traced. The current phase and its exit criteria are in [ROADMAP](ROADMAP.md); the mapping from requirement to phase is in [traceability](development/07-traceability.md).
 
 ## Core objectives
 
@@ -24,7 +24,7 @@ Deliver:
 - Two independently deployable services integrated through a controlled plugin system: **Relation Service** and **SOS Service**.
 - OpenAPI 3.1 API documentation and runtime validation using Zod, with the project's `km-api` and `zopia` tools where their current versions and capabilities are verified.
 - Docker-based local development and production deployment, cross-platform developer setup for Windows and Linux, CI workflows, security/quality gates, and repeatable releases.
-- A product interface in **Persian and English**, both complete, with right-to-left layout as a first-class requirement ([ADR-017](DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)).
+- A product interface in **Persian and English**, both complete, with right-to-left layout as a first-class requirement ([ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)).
 - Clear developer documentation and a practical end-user guide.
 
 ## Required technology direction
@@ -35,7 +35,7 @@ Use TypeScript throughout application code, including frontend, backend, plugin 
 - Backend: Bun as the preferred package manager/tooling runtime where compatibility is verified; Fastify for HTTP APIs; Zod for validation; PostgreSQL for durable data. The runtime baseline and the Bun-versus-Node production decision are governed by [ADR-007](DECISIONS.md#adr-007--runtime-and-toolchain-baseline) and [Q-16](DECISIONS.md#open-questions).
 - Tests: Vitest for unit/integration tests; add browser-level tests when needed (prefer a maintained browser automation tool such as Playwright after validating current compatibility).
 - API: OpenAPI 3.1. Use `km-api` and `zopia` only after verifying their current package APIs, supported Zod version, output fidelity, licence, maintenance, and compatibility — verification results are recorded in [API_AND_OPENAPI](API_AND_OPENAPI.md) §1 and [REFERENCES](REFERENCES.md). Never assume an undocumented API.
-- Delivery: Docker Compose for local development; CI for lint, type checks, tests, security checks, builds, migrations, and release artifacts.
+- Delivery: Docker Compose for local development; CI for lint, type checks, tests, security checks, builds, migrations, and release artefacts.
 
 Use current supported stable versions at implementation time. Do not hard-code guessed versions into this prompt. Verify official release notes, runtime support matrices, package peer dependencies, security advisories, and licences, and record the verified baseline in [dependency policy](development/02-dependency-policy.md). Pin exact versions in manifests and commit the lockfile. Upgrades must be deliberate, tested, and documented.
 
