@@ -2,7 +2,7 @@
 
 Requirement identifiers (`QA-…`) are permanent handles assigned by the documentation gate. Which gates are active in which phase is defined in [CI and gates](development/03-ci-and-gates.md); a gate that cannot yet run must be declared inactive for that phase rather than reported as passing.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. Required gates
 
@@ -26,7 +26,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-14]** Container image and configuration checks| No `latest` tags, non-root user, health checks, no embedded secrets, vulnerability scan | Image scanner plus configuration assertions (Phase 1+) |
 | **[QA-15]** Database migration tests and backup/restore smoke test| Migrations apply and reverse; backups restore | Migration runner in CI against a disposable database (Phase 1); restore rehearsal from Phase 8 and required for release candidates in Phase 9 |
 | **[QA-16]** Accessibility checks| Keyboard, focus, labels, contrast, reduced motion | Automated axe checks in component/browser tests plus a manual review checklist (Phase 3+) |
-| **[QA-17]** Localisation checks| No hard-coded user-facing strings, no missing keys, RTL sanity | Lint rule over components plus a message-catalogue test (Phase 2+, when the first user-facing strings exist) |
+| **[QA-17]** Localisation checks| No hard-coded user-facing strings; **both catalogues complete and identical in key set** (Persian and English, [ADR-017](DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)), so a key present in one locale and missing from the other fails the build; RTL sanity (direction, logical properties, mirrored icons) | Lint rule over components plus a catalogue-parity test comparing the two locales key by key (Phase 2+, when the first user-facing strings exist) |
 
 - **[QA-18]** CI actions are pinned to immutable commit SHAs, workflow permissions are least-privilege, and secrets are never exposed to untrusted pull-request code.
 - **[QA-19]** Release signing credentials live outside source control and outside normal CI logs.

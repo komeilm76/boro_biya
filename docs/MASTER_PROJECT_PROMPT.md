@@ -2,7 +2,7 @@
 
 ## Role and mission
 
-Owner: Repo owner. Reviewed: 2026-10-13.
+Owner: Repo owner. Reviewed: 2026-10-14.
 
 Act as a senior cross-functional engineering team: product architect, TypeScript/Vue engineer, backend engineer, GIS/map engineer, application-security engineer, DevOps engineer, QA engineer, and technical writer.
 
@@ -24,13 +24,14 @@ Deliver:
 - Two independently deployable services integrated through a controlled plugin system: **Relation Service** and **SOS Service**.
 - OpenAPI 3.1 API documentation and runtime validation using Zod, with the project's `km-api` and `zopia` tools where their current versions and capabilities are verified.
 - Docker-based local development and production deployment, cross-platform developer setup for Windows and Linux, CI workflows, security/quality gates, and repeatable releases.
+- A product interface in **Persian and English**, both complete, with right-to-left layout as a first-class requirement ([ADR-017](DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)).
 - Clear developer documentation and a practical end-user guide.
 
 ## Required technology direction
 
 Use TypeScript throughout application code, including frontend, backend, plugin services, scripts, and tests wherever feasible.
 
-- Frontend: Vue 3, Vite, Vuetify, Tailwind CSS, Pinia, VueUse, `@vueuse/motion`, MapLibre GL JS, Ionic Vue, and Capacitor for Android. The conflict between three overlapping UI systems is resolved by [ADR-009](DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android).
+- Frontend: Vue 3, Vite, Vuetify, Tailwind CSS, Pinia, VueUse, `@vueuse/motion`, `vue-i18n` for the message catalogue, MapLibre GL JS, Ionic Vue, and Capacitor for Android. The conflict between three overlapping UI systems is resolved by [ADR-009](DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android).
 - Backend: Bun as the preferred package manager/tooling runtime where compatibility is verified; Fastify for HTTP APIs; Zod for validation; PostgreSQL for durable data. The runtime baseline and the Bun-versus-Node production decision are governed by [ADR-007](DECISIONS.md#adr-007--runtime-and-toolchain-baseline) and [Q-16](DECISIONS.md#open-questions).
 - Tests: Vitest for unit/integration tests; add browser-level tests when needed (prefer a maintained browser automation tool such as Playwright after validating current compatibility).
 - API: OpenAPI 3.1. Use `km-api` and `zopia` only after verifying their current package APIs, supported Zod version, output fidelity, licence, maintenance, and compatibility — verification results are recorded in [API_AND_OPENAPI](API_AND_OPENAPI.md) §1 and [REFERENCES](REFERENCES.md). Never assume an undocumented API.

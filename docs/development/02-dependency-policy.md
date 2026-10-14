@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Reviewed: 2026-10-13. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
+Owner: Engineering. Reviewed: 2026-10-14. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
 
 ## 1. Principles
 
@@ -34,8 +34,11 @@ Frontend:
 | `vuetify` | 4.2.4 | MIT | Vuetify 4 is the current major (Material components + own SASS utilities) |
 | `tailwindcss` | 4.3.3 | MIT | Tailwind 4; CSS-first configuration |
 | `pinia` | 4.0.3 | MIT | Pinia 4 is the current major |
+| `vue-i18n` | 11.4.14 | MIT | peer: `vue ^3.0.0`; the message catalogue and per-locale formatting for the two required locales ([ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together)) |
 | `@vueuse/core` | 15.0.0 | MIT | Node `>=22` |
 | `@vueuse/motion` | 3.0.3 | MIT | Motion presets for Vue |
+
+The `vue-i18n` row was added on 2026-10-14 together with [ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together); every other version in this table carries the 2026-10-13 verification.
 | `maplibre-gl` | 6.14.0 | BSD-3-Clause | Node `>=16.14`; attribution requirements apply |
 | `@ionic/vue` | 9.0.7 | MIT | Used only in the Android shell ([ADR-009](../DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android)) |
 | `@capacitor/core` | 8.5.3 | MIT | Android packaging |

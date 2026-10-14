@@ -2,7 +2,7 @@
 
 This guide is for people who use Boro_biya. It is written to be understood without technical background, and it explains both what the app does and what it cannot do.
 
-Owner: Product. Reviewed: 2026-10-13.
+Owner: Product. Reviewed: 2026-10-14.
 
 **Current status:** no public build has been released yet, so none of the features below are available to use today. This guide is being written ahead of the release so that the wording, limits, and safety statements are reviewed before users depend on them. Pages are only published for features that exist in a released build, and a feature is never described as available before it is.
 
@@ -65,7 +65,7 @@ Owner: Product. Reviewed: 2026-10-13.
 - Keyboard and screen-reader support.
 - Reduced motion and high-contrast preferences.
 - Choosing light, dark, or system appearance.
-- Changing the language of the app.
+- Which languages the app is available in — Persian and English — and how to change the language before or after signing in.
 - Text direction and layout for right-to-left languages.
 
 ### Troubleshooting

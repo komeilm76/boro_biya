@@ -748,3 +748,53 @@ node scripts/gates/traceability.mjs --write   # regenerated; the committed file 
 ```
 
 Phase totals moved where the additions landed: Phase 1 277 → 279 (`API-36`, `SEC-73`), Phase 2 114 → 118 (`UI-25`, `DATA-27`, `SEC-74`, `PRIV-31`), Phase 3 39 → 41 (`UI-26`, `UI-27`), Phase 5 56 → 58 (`SOS-30`, `SOS-31`), Phase 8 1 → 4 (`OPS-81` … `OPS-83`). Phase 8 was the thinnest phase in the pack — one requirement for a phase whose deliverables included load tests, backup, runbooks, and observability — and it remains modest, but it is no longer a phase without a backup or an availability requirement of its own.
+
+## 17. Twelfth pass — internationalisation made explicit (2026-10-14)
+
+The owner directed that the product must use i18n and must ship **Persian and English**. That is a product decision, so it was recorded the way this pack records decisions — as an accepted ADR with the alternatives and the consequences — rather than as a passing note, and the documents that had been waiting on it were brought into line in the same change.
+
+### 17.1 The decision, and the question it closes
+
+[ADR-017](../DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together) records it: two complete locales in the first release, Persian (`fa`, right-to-left) and English (`en`, left-to-right), no surface shipped in one language only, one message catalogue per locale, direction, calendar, numerals, and formatters following the locale, and the language chosen before sign-in. It closes [Q-15](../DECISIONS.md#open-questions), which had been open since Phase 0 with the note that the answer was needed before the first screen existed.
+
+One question the directive does not answer, and which no document should guess: **which language is the default on first use, and in what order the fallback runs** (device language, saved preference, `Accept-Language`). That is now [Q-24](../DECISIONS.md#open-questions), owned by the repository owner, due by Phase 2 — the phase that builds the first screens — with the concrete risk written down: a first-time user landing in a language they cannot read on the sign-in and recovery screens.
+
+### 17.2 What the documents now say
+
+| Document | Change |
+| --- | --- |
+| [DECISIONS](../DECISIONS.md) | ADR-017 added; Q-15 marked resolved with a pointer, kept for traceability; Q-24 added |
+| [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) | `UI-28` added — both catalogues complete, key-set parity, the switch reachable before sign-in; `UI-12` states both languages and the direction; `UI-22` and `UI-25` now cite ADR-017 instead of the closed question |
+| [API_AND_OPENAPI](../API_AND_OPENAPI.md) | `API-37` added — prose is never the contract: clients render from the stable `code` and their own catalogue, and any server-composed sentence is negotiated and labelled |
+| [QUALITY_GATES](../QUALITY_GATES.md) | The localisation gate (`QA-17`) now requires both catalogues to hold the same key set, so a key present in one locale and missing from the other fails the build |
+| [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) | `PLG-57` added — plugin-contributed interface text is declared per locale and never merged into the host catalogue |
+| [development/02-dependency-policy](02-dependency-policy.md) | `vue-i18n` 11.4.14 (MIT, peer `vue ^3.0.0`) added to the verified frontend baseline, verified against the registry on 2026-10-14 |
+| [MASTER_PROJECT_PROMPT](../MASTER_PROJECT_PROMPT.md) | Core objectives state the two required languages; the technology direction names the catalogue library |
+| [ROADMAP](../ROADMAP.md) | Phase 2 delivers both catalogues complete and its exit gate keeps the parity check and the pre-sign-in switch, with Q-24 in place of the closed Q-15; Phase 3 verifies the settings screen in both directions |
+| [phase gate checklist](05-phase-gate-checklist.md) | Phase 2 rows 6 and 9 carry the new identifiers and the parity evidence; the Phase 0 register ranges move to ADR-017 and Q-24 |
+| [user guide](../user/README.md) | The contents list states the two languages and when the language can be changed |
+| [GLOSSARY](../GLOSSARY.md) | "Internationalisation (i18n)" and "Message catalogue" defined, with ADR-017 and `UI-21` as their owners |
+
+No schema change was needed: `user_preferences` already carried `locale` and `text_direction` ([DATA_MODEL](../DATA_MODEL.md)), the preferences endpoint was already inventoried, and `GOV-63` already forbade hard-coded user-facing strings. The decision turned three loose ends — direction, calendar and numerals, and catalogue completeness — into requirements with a phase and a proof.
+
+### 17.3 Tests
+
+```
+T5  API-37 (Phase 1) made to cite Q-24, which is due by Phase 2
+    - affiliation: API-37 is in Phase 1 but depends on Q-24, which is due by Phase 2 — move the
+      requirement, or record it in AFFILIATION_EXEMPT with a reason                          exit 1
+
+mutation restored from the pre-test copy                                                      exit 0
+```
+
+T5 is the one that matters for this pass: the new requirements sit in phases that must not depend on the language decision being made later, and the affiliation rule proves it rather than trusting the author.
+
+### 17.4 Evidence (twelfth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 10 checks, exit 0
+node scripts/gates/traceability.mjs           # 666 requirements, 118 groups, 6 pull-forwards, exit 0
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+The total moved from 663 to 666: `UI-28` (Phase 2), `API-37` (Phase 1), `PLG-57` (Phase 7). Phase 0 remains **complete, awaiting owner approval**; Phase 1 is **not started**.

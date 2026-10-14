@@ -2,7 +2,7 @@
 
 Decisions are recorded here, never inferred from code. An open question is never silently converted into a permanent assumption.
 
-Owner: Repo owner. Reviewed: 2026-10-13.
+Owner: Repo owner. Reviewed: 2026-10-14.
 
 ## Status vocabulary
 
@@ -175,6 +175,15 @@ Owner: Repo owner. Reviewed: 2026-10-13.
 **Revisit when:** Phase 5, if the owner decides verified categories need a distinct operational view.
 
 
+### ADR-017 — Internationalisation: Persian and English ship together
+**Status:** Accepted (owner decision, 2026-10-14)  
+**Date:** 2026-10-14  **Owner:** Repo owner  
+**Context:** [Q-15](#open-questions) asked which languages the first release requires, because the answer decides work that must exist before the first screen: text direction, the message catalogue, the calendar and numerals, the typeface, and the layout rules. The product is built for a Persian-speaking audience while the repository itself is documented in English ([GOV-41](development/00-repository-conventions.md)), and the two languages differ in direction, calendar, numbering, and typography. Retrofitting any of those once the authentication screens exist is precisely the cost the question was raised to avoid.  
+**Decision:** The product ships **two complete locales in the first release**: Persian (`fa`, right-to-left) and English (`en`, left-to-right). No user-facing surface may ship in only one of them; every user-facing string comes from the message catalogue of the active locale ([GOV-63](development/00-repository-conventions.md), UI-21); a missing key fails the build ([QA-17](QUALITY_GATES.md)) instead of falling back silently to the other language; direction, calendar, numerals, and formatters follow the locale (UI-22, UI-25); and the language is chosen before sign-in, changeable at any time, and persisted in `user_preferences.locale` and `text_direction` ([DATA_MODEL](DATA_MODEL.md)), which already carry both fields. The initial language and the fallback order are settled separately ([Q-24](#open-questions)).  
+**Alternatives considered:** Persian only for the first release (rejected by the owner: both languages are required); English first with Persian added later (rejected: RTL layout, catalogue plumbing, and typography are structural and must exist before the first screen); catalogue management through an external translation platform (rejected for v1: two locales, versioned with the code, no translator access management needed yet); a third locale in the first release (rejected for v1: nothing requires it and it multiplies review cost); machine translation at build time (rejected: unreviewed strings in an interface that carries an assistance feature).  
+**Consequences:** Phase 2 delivers two complete catalogues, not one; `vue-i18n` joins the verified frontend baseline ([dependency policy](development/02-dependency-policy.md) §3); every string added later is added in both catalogues in the same change; the typeface must cover Persian glyphs, joining behaviour, and the zero-width non-joiner; text-rendering tests run per locale; a plugin that contributes interface text declares its locales and falls back to its own default ([PLUGIN_SYSTEM](PLUGIN_SYSTEM.md) §4, PLG-57); the repository's own documents stay English — this decision is about the product interface, not about translating the documentation set.  
+**Revisit when:** a third language is requested, or a deployment deliberately ships a single language.
+
 ## Open questions
 
 Each question has an owner and a phase by which it must be answered. Deferring a question is allowed; starting the affected work without answering it is not. "Effect if deferred" states the concrete risk of leaving it open.
@@ -195,7 +204,7 @@ Each question has an owner and a phase by which it must be answered. Deferring a
 | Q-12 | Initial concurrency, event rate, latency SLO, and server CPU/RAM/disk budget for load tests. | Engineering | Phase 1 | Performance work has no target and no pass/fail criterion. |
 | Q-13 | Which plugin publishers are trusted, and how are signing keys managed and rotated? | Repo owner + Security | Phase 7 | The trust store cannot be implemented; install stays disabled indefinitely. |
 | Q-14 | Data retention, deletion, and export obligations for user data and audit logs. | Repo owner + Security | Phase 2 (users), Phase 9 (audit) | Deletion/export requests cannot be answered defensibly. |
-| Q-15 | Which languages are required for the first release (and therefore is RTL required immediately)? | Repo owner | **Phase 2** | Layout, i18n tooling, and font choices are reworked late — after every auth screen has hard-coded strings, which is the expensive case. The locale and text-direction settings *screen* is Phase 3 work, but the answer is needed before the first screen exists. |
+| Q-15 | Which languages are required for the first release (and therefore is RTL required immediately)? — **resolved** by [ADR-017](DECISIONS.md#adr-017--internationalisation-persian-and-english-ship-together) (owner decision, 2026-10-14): Persian and English, both complete, right-to-left from the first screen. Kept here for traceability. | Repo owner | Closed | — |
 | Q-16 | Do the API and services run on Bun in production, or on Node 24 LTS with Bun as the toolchain? | Engineering | Phase 1 (spike) | The runtime decision leaks into code that accidentally depends on Bun-only APIs. |
 | Q-17 | Is a single `admin` role sufficient, or are scoped operational roles required? | Repo owner | Phase 2 | Role checks are written twice (once per interpretation) and permissions drift. |
 | Q-18 | UI framework strategy for web and Android — **resolved** by [ADR-009](#adr-009--ui-framework-strategy-for-web-and-android) (owner decision, 2026-10-13): Vuetify + Tailwind for web, Ionic Vue only in the Android shell. Kept here for traceability. | Repo owner | Closed | — |
@@ -204,3 +213,4 @@ Each question has an owner and a phase by which it must be answered. Deferring a
 | Q-21 | Maximum live-sharing session duration, the default duration offered in the UI, the maximum number of viewers per session, and whether a per-day share limit applies. | Repo owner | Phase 4 | The time box has no enforceable bound; shares could be effectively permanent or unbounded in audience. |
 | Q-22 | Default and maximum location-history retention window (per viewer grant) and the sampling interval. | Repo owner + Security | Phase 4 | History retention is unbounded or so short the feature is useless; both damage trust. |
 | Q-23 | Which categories require verification, who verifies them, what evidence is required, and whether a user may switch category freely. | Repo owner | Phase 5 | Either dispatch is spoofable (no verification) or no one can be verified (no process). |
+| Q-24 | Which language is the default on first use, how is it chosen (device or browser language, a saved preference, `Accept-Language`), and what is the fallback order when neither a preference nor a match exists? | Repo owner | Phase 2 | First-time users land in a language they may not read, on the screens that form the first impression: sign-in, registration, and recovery. |

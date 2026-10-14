@@ -27,6 +27,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 - **[API-18]** Rate-limited responses include a retry hint; deprecated endpoints advertise their removal version in a documented response header.
 - **[API-19]** Responses never include fields the caller is not authorized to see; field-level filtering happens server-side (for example, alert descriptions or coordinates for non-assigned responders).
 - **[API-36]** Timestamps travel as RFC 3339 instants in UTC with the `Z` offset; naive timestamps and non-`Z` offsets are rejected rather than reinterpreted, and a field that carries a date without a time says so explicitly. The server is the clock authority: a client clock, including one carried on a queued offline request, never decides ordering, expiry, or retention — those use server time or a server-generated sequence. A response never requires the caller to guess which zone a timestamp is in.
+- **[API-37]** Prose returned by the API is never the contract: clients render user-facing text from the stable machine-readable `code` and their own catalogue, and a human-readable message is an English diagnostic fallback that no client parses. Where the server must compose a sentence a person will read (a notification body, a recovery instruction), the request declares the languages it accepts, the server answers in the first supported one and falls back to English, and the response states which language it used so a mixed-language screen is visible in review rather than discovered by a user.
 
 ## 3. Validation
 

@@ -21,8 +21,8 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 2 | Documentation is separated by audience, with users never exposed to internal identifiers | `docs/README.md` index, `docs/user/README.md`, enforced by gate check 6 | Met |
 | 3 | Every binding requirement carries a permanent `AREA-NN` identifier | Identifiers present in all registry documents; gate check 2 | Met |
 | 4 | Every identifier is covered by exactly one traceability row, and the file is current | `docs/development/07-traceability.md`; gate checks 3 and 4 | Met |
-| 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-23) | Met |
-| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-016 | Met |
+| 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-24) | Met |
+| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-017 | Met |
 | 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
 | 9 | Windows and Linux workflows are documented, including the Docker-based startup contract Phase 1 must satisfy | [development environment](01-development-environment.md) §4 | Met |
@@ -67,10 +67,10 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 3 | Security-question recovery end to end, short-lived and single-use, with attempt limits | Security tests; `AUTH-30 … AUTH-38`, `DATA-09` | Not started |
 | 4 | Lockout, ban, deactivation, and reactivation with distinct reasons and audit events | Abuse-control tests; `SEC-14 … SEC-19` | Not started |
 | 5 | Account-state matrix tested: every state against every protected route class | Test output naming each state × route decision; `AUTH-31 … AUTH-33` | Not started |
-| 6 | Auth OpenAPI contract validates and the generated client matches the implementation | `zopia validate` + contract tests; `QA-07`, `API-20 … API-30` | Not started |
+| 6 | Auth OpenAPI contract validates and the generated client matches the implementation, with the timestamp and prose-language conventions applied | `zopia validate` + contract tests; `QA-07`, `API-20 … API-30`, `API-36`, `API-37` | Not started |
 | 7 | Audit event store live; alerting proven on the authentication and rate-limit signals | Alert rule plus a triggered signal; `SEC-58 … SEC-60` | Not started |
 | 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | Not started |
-| 9 | Message catalogue and RTL scaffolding in place; localisation checks active | Lint over components + catalogue test; `UI-21`, `UI-22`, `QA-17` | Not started |
+| 9 | Message catalogue and RTL scaffolding in place with **both locales complete** (Persian and English), a language switch reachable before sign-in, and localisation checks active | Hard-coded-string lint, catalogue-parity test comparing the key sets, pre-sign-in switch test; `UI-21`, `UI-22`, `UI-28`, `QA-17` | Not started |
 | 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-01 … Q-05`, `Q-14` (user data), `Q-15`, `Q-17` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 

@@ -37,7 +37,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | --- | --- | --- | --- |
 | [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-13 |
 | [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-13 |
-| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-13 |
+| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-14 |
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-14 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-13 |
 | [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-14 |
@@ -57,7 +57,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-13 |
+| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-14 |
 
 ### Operations
 

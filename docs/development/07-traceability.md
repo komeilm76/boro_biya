@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **663** across 118 groups.
+Total requirements: **666** across 118 groups.
 
 ## Declared pull-forwards
 
@@ -26,13 +26,13 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | Phase | Requirements |
 | --- | --- |
 | 0 (foundation) | 21 |
-| 1 | 279 |
-| 2 | 118 |
+| 1 | 280 |
+| 2 | 119 |
 | 3 | 41 |
 | 4 | 66 |
 | 5 | 58 |
 | 6 | 16 |
-| 7 | 59 |
+| 7 | 60 |
 | 8 | 4 |
 | 9 | 1 |
 
@@ -74,7 +74,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `OPS-75 … OPS-79` | 5 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
 | 1 | `PLG-01 … PLG-03` | 3 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | 1 | `API-01 … API-09` | 9 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
-| 1 | `API-10 … API-36` | 11 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| 1 | `API-10 … API-37` | 12 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
 | 1 | `QA-02 … QA-19` | 12 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 1 | `QA-37 … QA-47` | 11 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
 | 1 | `QA-48 … QA-54` | 7 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
@@ -89,7 +89,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `QA-107 … QA-111` | 5 | [performance/README.md](../performance/README.md) | Rules |
 | 2 | `ADM-01 … ADM-05` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | 2 | `UI-10` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
-| 2 | `UI-21 … UI-25` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| 2 | `UI-21 … UI-28` | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 2 | `AUTH-01 … AUTH-06` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
 | 2 | `AUTH-07 … AUTH-12` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
 | 2 | `AUTH-13 … AUTH-20` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
@@ -148,7 +148,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 7 | `SEC-29 … SEC-39` | 11 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
 | 7 | `PLG-04 … PLG-14` | 11 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
 | 7 | `PLG-15 … PLG-28` | 14 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
-| 7 | `PLG-29 … PLG-34` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| 7 | `PLG-29 … PLG-57` | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
 | 7 | `PLG-43 … PLG-46` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 7 | `PLG-47 … PLG-50` | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
 | 7 | `PLG-51 … PLG-56` | 6 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |

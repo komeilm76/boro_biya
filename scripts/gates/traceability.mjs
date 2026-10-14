@@ -93,6 +93,7 @@ const PHASE_RULES = [
   ['UI', 23, 24, 3],    // contrast/state rules reviewed with the accessibility gate
   ['UI', 25, 25, 2],    // time, calendar, and numeral display land with the message catalogue (UI-21) and Q-15
   ['UI', 26, 27, 3],    // browser matrix and high-contrast support land with the PWA baseline and the accessibility gate
+  ['UI', 28, 28, 2],    // both catalogues complete, language switchable before sign-in (ADR-017)
 
   // Authentication and account lifecycle
   ['AUTH', 1, 38, 2],
@@ -165,12 +166,14 @@ const PHASE_RULES = [
   ['PLG', 43, 46, 7],   // plugin disable/uninstall, upgrades, capability re-evaluation, lifecycle audit
   ['PLG', 47, 50, 7],   // resource controls for untrusted containers
   ['PLG', 51, 56, 7],   // prohibited shortcuts in the plugin threat model
+  ['PLG', 57, 57, 7],   // plugin interface text is declared per locale when the plugin UI exists
 
   // API contracts
   ['API', 1, 19, 1],    // contract-first policy and conventions (tooling + skeleton)
   ['API', 20, 30, 2],   // validation and OpenAPI generation/verification on real endpoints
   ['API', 31, 35, 4],   // realtime contracts
   ['API', 36, 36, 1],   // the timestamp contract belongs to the conventions fixed with the skeleton
+  ['API', 37, 37, 1],   // the prose-language convention is fixed with the error envelope it constrains
 
   // Quality gates: the catalogue rows map to the phase in which each gate activates
   ['QA', 1, 1, 0],      // documentation gate

@@ -2,7 +2,7 @@
 
 ## 1. Design goals
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 Plugins add capabilities without coupling their release cycle to the core.
 
@@ -57,6 +57,7 @@ A ZIP upload MUST NEVER cause arbitrary code to run with core API, host, or data
 - **[PLG-32]** Secrets are write-only: the UI shows a "configured" state and never re-displays a stored secret value. Rotating a secret replaces it; clearing a secret is an explicit action.
 - **[PLG-33]** The server validates the same schema before storing or applying configuration, and rejects unknown fields.
 - **[PLG-34]** Configuration changes are versioned and audited, and a change that fails validation or a health check is rolled back to the previous configuration.
+- **[PLG-57]** Interface text a plugin contributes (labels, descriptions, help) is declared per locale and never merged into the host's message catalogue: the plugin ships a catalogue for each locale it claims, the host renders the active locale when the plugin declares it and the plugin's declared default otherwise, and a missing string never renders as a raw key or as another plugin's text.
 
 ## 5. Service lifecycle and API
 
