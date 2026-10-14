@@ -993,7 +993,7 @@ The owner answered the last question this pack was holding open for them: the **
 
 ### 20.3 The register is now checked
 
-[`traceability.mjs`](../../scripts/gates/traceability.mjs) reads the open-question register already — the affiliation rule takes each question's "decide by" phase from it — but nothing checked the table itself: a row could lose its owner, its deadline, or its "effect if deferred" cell, or claim to be resolved by a decision that does not exist, and the only symptom would be a phase computed from an empty cell. The audit now requires, for every row: a question, an owner, an effect cell, and a deadline that is either a phase (open) or `Closed` (resolved); a resolved row must name an `ADR-` that has a heading in the same document; a duplicate row fails; and the register must not be empty. This is the pass that made it matter — the register is the list the owner reads to decide what is still open.
+[`traceability.mjs`](../../scripts/gates/traceability.mjs) reads the open-question register already — the affiliation rule takes each question's "decide by" phase from it — but nothing checked the table itself: a row could lose its owner, its deadline, or its "effect if deferred" cell, or claim to be resolved by a decision that does not exist, and the only symptom would be a phase computed from an empty cell. The audit now requires, for every row: a question, an owner, an effect cell, and a deadline that is either a phase (open) or `Closed` (resolved); a resolved row must name an `ADR-` that has a heading in the same document; a duplicate row fails; and the register must not be empty. The rows also stay in assignment order: a question opened later is appended at the end, never inserted between earlier ones — this pass wrote `Q-25` and `Q-26` above `Q-24` first, and the check caught it before the commit. This is the pass that made it matter — the register is the list the owner reads to decide what is still open.
 
 ### 20.4 The record's own summary had drifted
 
@@ -1047,6 +1047,11 @@ T21b the fifteenth pass section retitled "Sixteenth pass"
 T21c a new pass section appended without touching the introduction
      - [review-record] the introduction says the record holds 15 passes;
        it holds 16                                                       exit 1
+
+T20g Q-25 inserted above Q-10 in the register
+     - the open-question register is out of assignment order: Q-25 sits
+       above Q-11 — a question is appended at the end, not inserted
+       between earlier rows                                              exit 1
 
 T21d the workflow checks out a single commit again (fetch-depth removed)
      - [review-dates] the CI workflow checks out a shallow clone, so this

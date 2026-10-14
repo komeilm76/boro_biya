@@ -465,10 +465,19 @@ function auditQuestionRegister() {
     if (row) rows.push({ id: row[1], question: row[2].trim(), owner: row[3].trim(), due: row[4].trim(), effect: row[5].trim() });
   }
   if (!rows.length) return ['the open-question register lists no questions'];
+/** The register is appended in assignment order, so a new question is the next number at the end. */
   const seen = new Set();
+  let previous = { number: 0, id: '—' };
+  let orderBroken = false;
   for (const row of rows) {
     if (seen.has(row.id)) problems.push(`${row.id} appears twice in the open-question register`);
     seen.add(row.id);
+    const number = Number(row.id.slice(2));
+    if (!orderBroken && number < previous.number) {
+      problems.push(`the open-question register is out of assignment order: ${previous.id} sits above ${row.id} — a question is appended at the end, not inserted between earlier rows`);
+      orderBroken = true;
+    }
+    if (number > previous.number) previous = { number, id: row.id };
     if (!row.question) problems.push(`${row.id} has no question text`);
     if (!row.owner) problems.push(`${row.id} names no owner — every question has one`);
     if (!row.effect) problems.push(`${row.id} has no "effect if deferred" cell`);
