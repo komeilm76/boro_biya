@@ -2,7 +2,7 @@
 
 This is a logical starting point, not a final migration. It is converted into reviewed migrations and an ER diagram during the phase that builds each domain. Public identifiers use UUIDv7 (time-ordered, non-guessable); authorization never relies on identifier secrecy. Data classes (`C0`–`C3`) and retention rules are defined in [data classification](security/data-classification.md).
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## Core identity
 
@@ -74,6 +74,7 @@ Each invariant names its enforcement mechanism; enforcement is verified by the t
 19. **[DATA-19]** Every SOS alert carries at least one active category, enforced in the creation transaction; an alert with no category cannot be created (integration).
 20. **[DATA-20]** Dispatch suggests only users holding a category that matches the alert, evaluated before distance ordering, and stores the matched category on the suggestion for audit (integration, security).
 21. **[DATA-21]** Category catalogue and assignment changes are audited (set, change, clear, verify), a user holds exactly one category at a time, and a category assignment never grants authorization by itself (integration).
+22. **[DATA-27]** Every instant is stored as `timestamptz` in UTC with no server-local default and no locale-dependent formatting, and no column stores a wall-clock time without a zone; a human-entered date or time is converted to an instant at the boundary using a zone the server supplies, never one guessed from the client's device (schema test).
 
 ## Geospatial design
 

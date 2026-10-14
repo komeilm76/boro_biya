@@ -2,7 +2,7 @@
 
 Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles assigned by the documentation gate. Security requirements are acceptance criteria, not optional cleanup.
 
-Owner: Security. Reviewed: 2026-10-13.
+Owner: Security. Reviewed: 2026-10-14.
 
 ## 1. Security baseline
 
@@ -97,7 +97,7 @@ Never extract an uploaded archive into an executable host path, and never run it
 - **[SEC-42]** SQL is parameterised everywhere; no SQL string is built from user input, including sort and filter allowlists, which are mapped to known column sets.
 - **[SEC-43]** Rate limits are applied by route class and identity, with stricter limits for login, registration, recovery, search, uploads, SOS creation, and plugin operations. Limits return a stable error code and a `Retry-After` hint.
 - **[SEC-44]** CORS is configured to explicit allowed origins; wildcard origins are never combined with credentials.
-- **[SEC-45]** Secure headers and a CSP appropriate to the map/tile sources are applied (no `unsafe-eval`; tile, style, and API hosts explicitly allowlisted).
+- **[SEC-45]** Secure headers and a CSP appropriate to the map/tile sources are applied (no `unsafe-eval`; tile, style, and API hosts explicitly allowlisted). The minimum set is named and tested rather than implied: HSTS with a long max-age on production hosts (`.env.example` claims production enables it), `X-Content-Type-Options: nosniff`, a referrer policy, a permissions policy that denies what the app does not use, and frame protection for authenticated surfaces.
 - **[SEC-46]** Fastify's secure HTTP parser defaults are kept; `insecureHTTPParser` is never enabled.
 - **[SEC-47]** Unsafe deserialisation and dynamic code execution on untrusted input are forbidden, including `eval`, `new Function`, and unbounded `JSON.parse` of large payloads.
 - **[SEC-48]** SSRF is prevented: outbound fetches use fixed provider hosts or an allowlist, with redirects disabled and private address ranges blocked.
@@ -121,6 +121,8 @@ Never extract an uploaded archive into an executable host path, and never run it
 - **[SEC-60]** Alerting covers authentication anomaly rates, repeated authorization failures, rate-limit saturation, upload rejections, plugin health failures, and replication/backup failures.
 - **[SEC-61]** An incident response procedure defines severity levels, contacts, evidence preservation, containment, user notification duties, and post-incident review; it is stored in the operational runbook written in Phase 8 and completed as a Phase 9 deliverable.
 - **[SEC-62]** Log and metric retention is defined in [data classification](security/data-classification.md) §4, and no sensitive location trail is stored in observability systems.
+- **[SEC-73]** One correlation identifier per user action is propagated across every service hop and appears in logs, error responses, audit records, and traces, so a request can be followed end to end without joining on user data; trace attributes carry no payloads, credentials, or coordinates, and trace sampling and retention follow the log and metric rules (SEC-62).
+- **[SEC-74]** A reporting route reaches the operators for a suspected account compromise, abuse, or a security vulnerability: it works without signing in, its contact and the response a reporter should expect are published in the repository's security policy and in the user guide, the repository enables private vulnerability reporting, and the "Account compromise report" runbook in [operations](operations/README.md) is the documented internal path.
 
 ## 10. Security gates
 

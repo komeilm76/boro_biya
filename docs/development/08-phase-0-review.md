@@ -2,7 +2,7 @@
 
 A second pass over the Phase 0 pack, looking for defects rather than deliverables. Everything found was fixed in the same work session as this record; the exit status of the gate at the end of that session is the evidence. The record covers two review passes: §1–§6 are the first (§7.4 carries that pass's evidence), and §7 is the second, exhaustive pass over every document.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. Method
 
@@ -663,3 +663,88 @@ node /tmp/mmv/check.mjs docs/DIAGRAMS.md      # scratch parser, not a repository
 ```
 
 No requirement was added or moved: `QA-118` already owns the check that was extended, so the total stays at 650 and the traceability file is unchanged apart from the documents it cites.
+
+## 16. Eleventh pass — what the pack does not cover (2026-10-14)
+
+Ten passes asked whether what exists is correct. This one asked the opposite question: what is *not* there? The method was blunt — a 40-topic keyword sweep over every document and the two root files, then each owning document re-read for the topics a keyword cannot find, then the reverse direction: every promise the user guide makes checked against the requirement that backs it. Three answers came out: covered, deliberately excluded (now written down in one place), and genuinely missing (now added).
+
+One caveat is recorded because it nearly produced a false finding: case-insensitive sweeps match substrings. "UTC" matched "outcome" in ten files, "SLO" matched "slow", "RPO" matched "purpose". Every "absent" verdict below was re-checked case-sensitively before anything was declared missing.
+
+### 16.1 Thirteen requirements added, in the areas that already own the behaviour
+
+| ID | What was missing | The evidence that it was missing |
+| --- | --- | --- |
+| `API-36` | The wire timestamp contract: RFC 3339 instants in UTC, `Z` only, the server as clock authority | no document stated a time zone at all (case-sensitive sweep over the pack) |
+| `DATA-27` | The storage half of the same contract: `timestamptz` in UTC, no server-local default, no zone guessed from a client device | `DATA-15` required a creation timestamp and said nothing about its zone |
+| `UI-25` | Calendar, numerals, and relative ages: Solar Hijri for `fa`, Persian digits, the user's own zone, no raw value on screen | `UI-21` required locale-aware formatters but named no calendar, and Q-15 leaves the release languages open |
+| `UI-26` | The supported browser matrix and the path for an unsupported browser | the user guide promises "Supported browsers and installing the app on a phone"; no requirement stood behind that page |
+| `UI-27` | High-contrast and forced-colours support | the user guide promises "high-contrast preferences"; `UI-11` covered light, dark, and system only |
+| `SOS-30` | The affirmative statement at creation: who receives an alert, that no response time is guaranteed, that this is not an emergency service | `SOS-23` forbade promises but nothing required the disclosure itself |
+| `SOS-31` | The no-responder state: say plainly that nobody has accepted, and never show a responder or an arrival estimate that does not exist | nothing covered it, and the creator's view is where an implied responder would do the most damage |
+| `SEC-45` (extended in place) | The concrete header set, HSTS first | `.env.example` already claimed production enables HSTS; no requirement named it |
+| `SEC-73` | One correlation identifier across every service hop, into logs, errors, audit records, and traces | `SEC-57` required request IDs in logs and nothing required propagation across seven services |
+| `SEC-74` | A reporting route for a suspected compromise, abuse, or a vulnerability, usable without signing in | the user guide promises that page; only `QA-105` (a release-checklist line) and `SEC-61` (internal contacts) existed |
+| `PRIV-31` | The privacy notice, in plain language, whose stated retention windows are the configured ones | the defaults were specified; nothing told the user what they were |
+| `OPS-82` | Backup and restore as a requirement: encryption, off-host copy, recovery objectives, failure alerting, and the rule that only a rehearsal is evidence | Phase 8 and Phase 9 promised the rehearsal and data classification §4 named a "documented restore procedure"; no requirement owned it and no objective was recorded anywhere |
+| `OPS-83` | An availability objective and error-budget policy with a measurement point and burn alerting | "availability" appeared in prose; there was no objective, no budget, and no exclusion rule |
+| `OPS-81` | The runbook register, and the rule that a runbook changes with the failure mode it covers | Phase 8 promised "operational runbooks" with no owning requirement; `SEC-61` pointed at one |
+
+The table has fourteen rows: thirteen new identifiers plus `SEC-45`, which was extended in place rather than duplicated. The total moved from 650 to 663.
+
+### 16.2 A document the pack did not have
+
+Backups, availability, and runbooks were promised in the roadmap and referred to from three documents, but no document owned them: the pack had no operational home. [operations/README.md](../operations/README.md) now holds the runbook register (fifteen rows, one per named failure mode, each naming the phase that needs it), the backup and restore fields, the availability fields, the support and reporting route, and an honest "current state" section saying that nothing is deployed and nothing has been exercised. It is registered in the [index](../README.md), in the required-document list, and in the traceability registry, and the gate rule below exists so that a future document cannot avoid all three.
+
+### 16.3 The deliberate exclusions are now written down
+
+PRODUCT_REQUIREMENTS §10 lists eleven exclusions with a reason and a reconsider-trigger for each: emergency-service dispatch, an iOS application, offline maps and routing, traffic and speed limits from unlicensed sources, analytics and tracking, a public user directory, more than one concurrent responder, plugin ZIP installation before its gate, email and SMS channels, legal documents beyond the privacy notice, and published availability figures. A pack that states only what it will build invites the reader to assume everything else is intended; a table that says "not in v1, and here is what would change that" is the other half of the same promise.
+
+Four candidates the sweep flagged were already covered and needed no change: pagination and the error envelope (`API-11` … `API-13`), the deprecation window (`API-10`, `API-18`, `QA-88`), contract drift and generated artefacts (`API-25` … `API-30`, `QA-07`, `QA-88`), and export and deletion obligations ([data classification](../security/data-classification.md) §4 with the Q-14 register row).
+
+### 16.4 The gate learned one thing: registration is structural
+
+The inventory check accepted a document that was mentioned anywhere in an index file — including a passing mention in a sentence. It now requires a link inside an index **table row** of [docs/README.md](../README.md) (or a link from [docs/user/README.md](../user/README.md) for a user page), so a file that no index row points at fails the build while passing every other check. The rule is documented with the check it belongs to ([CI and gates](03-ci-and-gates.md) §3, `QA-62`) rather than as a new identifier: it strengthens a check that already existed, which is cheaper to reason about than a second check with the same subject.
+
+### 16.5 A pull-forward, declared rather than smuggled
+
+[OPS-81](../operations/README.md) is Phase 8 work, but the register's first rows belong to earlier phases: the first migration needs a rollback runbook before any data can be lost, and the account-compromise report needs its internal path as soon as accounts exist (with `SEC-74`). That minimal slice is declared as a pull-forward into Phase 1 under [GOV-88](00-repository-conventions.md) §8 — printed in the traceability file with its reason, with the owning phase still delivering the full register and the exercised-runbook rule. It is the first pull-forward declared for documentation work rather than for a schema or a service.
+
+### 16.6 Bookkeeping the review performed on its own pack
+
+Every document re-reviewed in this pass now carries `Reviewed: 2026-10-14`, and every index row that states a date was updated with it — the gate cross-checks the two, so a stale date on one side is a failure. The ROADMAP's description of this record was also stale ("two passes", written in the second pass): it now says eleven, which is the number of passes this file documents.
+
+### 16.7 Tests
+
+Four new mutations, each applied to a copy, run, and restored from that copy — never from git:
+
+```
+T1  the operations document's index row removed from docs/README.md
+    - [inventory] document not registered in a docs/README.md index row: docs/operations/README.md  exit 1
+
+T2  the OPS-81 pull-forward declaration removed while Phase 1 still cites it
+    - affiliation: the Phase 1 section cites OPS-81, which is affiliated with Phase 8 — move the
+      requirement, remove the citation, or declare a pull-forward (GOV-88)                    exit 1
+
+T3  the OPS phase rule narrowed to 81…82, leaving OPS-83 uncovered
+    - no phase rule covers OPS-83 (operations/README.md §Rules)                                exit 1
+
+T4  a new Phase 1 requirement made to cite Q-19, which is due by Phase 8
+    - affiliation: API-36 is in Phase 1 but depends on Q-19, which is due by Phase 8 — move the
+      requirement, or record it in AFFILIATION_EXEMPT with a reason                            exit 1
+
+all four mutations restored from the pre-test copies                                            exit 0
+```
+
+T2 and T4 are the interesting pair: they prove the two affiliation rules are live on the new material, not only on the material that existed when the rules were written.
+
+### 16.8 Evidence (eleventh pass)
+
+```
+node scripts/gates/phase0.mjs                 # 10 checks, exit 0
+node scripts/gates/traceability.mjs           # 663 requirements, 118 groups, 6 pull-forwards, exit 0
+#   · diagrams: 16 Mermaid blocks, 4 state machines cross-checked   (unchanged by this pass)
+
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+Phase totals moved where the additions landed: Phase 1 277 → 279 (`API-36`, `SEC-73`), Phase 2 114 → 118 (`UI-25`, `DATA-27`, `SEC-74`, `PRIV-31`), Phase 3 39 → 41 (`UI-26`, `UI-27`), Phase 5 56 → 58 (`SOS-30`, `SOS-31`), Phase 8 1 → 4 (`OPS-81` … `OPS-83`). Phase 8 was the thinnest phase in the pack — one requirement for a phase whose deliverables included load tests, backup, runbooks, and observability — and it remains modest, but it is no longer a phase without a backup or an availability requirement of its own.

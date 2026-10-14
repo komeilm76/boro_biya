@@ -2,7 +2,7 @@
 
 The checklist a phase must satisfy before the next phase starts. It is runnable locally and in CI, and its results are copied into the phase report described in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. Commands
 
@@ -50,6 +50,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 9 | Performance budgets defined with target hardware and traffic profile | `docs/performance/README.md` budget table | Not started |
 | 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Not started |
 | 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Not started |
+| 12 | Wire timestamps are UTC instants under a contract test; one correlation identifier follows a request across service hops; the first migration has a rollback runbook, exercised once | Contract test output, a log sample carrying one correlation identifier, exercise transcript; `API-36`, `SEC-73`, `OPS-81` (declared pull-forward, [GOV-88](00-repository-conventions.md) §8) | Not started |
 
 ## 4. Phase checklists 2–9 (templates, completed when the phase ends)
 
@@ -71,6 +72,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | Not started |
 | 9 | Message catalogue and RTL scaffolding in place; localisation checks active | Lint over components + catalogue test; `UI-21`, `UI-22`, `QA-17` | Not started |
 | 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-01 … Q-05`, `Q-14` (user data), `Q-15`, `Q-17` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+| 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 
 ### Phase 3 — Map foundation and user settings
 
@@ -86,6 +88,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 8 | No coordinates are served to another user: nothing accepts or returns another user's location yet | Negative test; `PRIV-02` (sharing pipeline is Phase 4) | Not started |
 | 9 | Consent and preference changes recorded as audit events with actor and time | Audit query; `PRIV-09` | Not started |
 | 10 | Decisions resolved: `Q-06`, `Q-10` (map/search); the stronger-recovery build permitted by `Q-05` implemented or deferred with owner agreement | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+| 11 | Supported browser matrix declared and tested, with a plain-language path for an unsupported browser; high-contrast and forced-colours behaviour verified | Matrix table plus detection test, contrast and forced-colours run; `UI-26`, `UI-27` | Not started |
 
 ### Phase 4 — Relation Service
 
@@ -116,6 +119,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 8 | SOS lifecycle appears in the audit trail; SOS-unavailable behaviour degrades honestly | Audit query + outage test; `SEC-58`, `PLG-42` | Not started |
 | 9 | Administrative access to a location is purpose-scoped, role-limited, and audited | Admin path test; `PRIV-07`, `PRIV-20` | Not started |
 | 10 | Decisions resolved: `Q-07`, `Q-08`, `Q-09`, `Q-11`, `Q-23` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+| 11 | The creation screen states who receives an alert, that no response time is guaranteed, and that the app is not an emergency service; an unaccepted alert never shows a responder or an arrival estimate | UI test on the creation screen and on the creator's alert view; `SOS-30`, `SOS-31` | Not started |
 
 ### Phase 6 — Routing and navigation
 
@@ -153,9 +157,10 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 4 | Load tests and profiling against the Phase 1 budgets, with measured resource targets documented | Measurement record; `QA-29 … QA-33` | Not started |
 | 5 | Database and index tuning applied; query plans recorded | Query plan output; `DATA-23`, `DATA-24`, `DATA-26` | Not started |
 | 6 | Observability in production shape: logs, metrics, alerts for the deployed topology | Dashboard/alert checklist with the signals named in `SEC-60` | Not started |
-| 7 | Backup and restore rehearsal succeeds from an isolated environment | Rehearsal transcript; `QA-15` | Not started |
-| 8 | Operational runbooks started: backup/restore now, incident response drafted for Phase 9 | Runbook files present | Not started |
+| 7 | Backup and restore rehearsal succeeds from an isolated environment, with the elapsed restore time recorded and a failed backup job alerting | Rehearsal transcript and alert rule; `QA-15`, `OPS-82` | Not started |
+| 8 | Runbook register complete, with at least one runbook exercised this phase; incident-response procedure drafted for Phase 9 | Runbook files and the exercise record; `OPS-81` | Not started |
 | 9 | `Q-19` resolved (production hosting target) | [DECISIONS](../DECISIONS.md) register row updated | Not started |
+| 10 | Availability objective and error-budget policy recorded with their measurement point; degraded-mode behaviour documented per dependency | [operations](../operations/README.md) fields filled, with the measurement command; `OPS-83`, `SEC-60` | Not started |
 
 ### Phase 9 — Production release
 
@@ -165,7 +170,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 2 | Full gate set passes on the exact tagged commit, exit statuses recorded | Gate transcript per command; `QA-95 … QA-97` | Not started |
 | 3 | Migration dry-run and restore rehearsal complete on a restored backup | Rehearsal record; `QA-102` | Not started |
 | 4 | Rollback path stated and rehearsed where risky; production verification (health, smoke login and map shell) | Rollback note + smoke output; `QA-92 … QA-94`, `QA-103`, `QA-104` | Not started |
-| 5 | Monitoring and alerts cover replication and backup failures; incident-response procedure exists and was exercised once | Exercise record; `SEC-60`, `SEC-61` | Not started |
+| 5 | Monitoring and alerts cover replication and backup failures; incident-response procedure exists and was exercised once; the availability objective is met on the release candidate's deployment or the deviation is recorded | Exercise record and availability measurement; `SEC-60`, `SEC-61`, `OPS-83` | Not started |
 | 6 | Security review complete with a resolved or accepted risk register; no unresolved critical findings | Risk register; `SEC-63 … SEC-71` | Not started |
 | 7 | `Q-14` resolved for audit retention, deletion, and export obligations | [DECISIONS](../DECISIONS.md) register row updated | Not started |
 | 8 | Owner production-readiness sign-off recorded, with the release record (approver, digests, accepted risks) | Signed phase report | Not started |

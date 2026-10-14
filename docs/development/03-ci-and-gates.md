@@ -2,7 +2,7 @@
 
 This document explains how gates are organised, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 ## 1. Gate model
 
@@ -43,7 +43,7 @@ node scripts/gates/phase0.mjs --help
 
 It enforces, in order:
 
-1. **[QA-62]** **Document inventory** — every required document exists, is non-empty, has an H1 title, opens with `Owner: <role>. Reviewed: YYYY-MM-DD.`, and is listed in an index (`docs/README.md`, or `docs/user/README.md` for user pages). Where the index states an owner and a date, they must match the document's own header.
+1. **[QA-62]** **Document inventory and registration** — every required document exists, is non-empty, has an H1 title, opens with `Owner: <role>. Reviewed: YYYY-MM-DD.`, and is registered: an internal document appears as a link inside an index **table row** of `docs/README.md`, and a user page is linked from `docs/user/README.md`. A passing mention in a sentence is not registration, so a document that no index row points at fails the gate. Where an index row states an owner and a date, they must match the document's own header.
 2. **[QA-63]** **Requirement IDs** — every requirement identifier matches `AREA-NN`, is unique across documents, and never appears twice; no identifier is reused; and every identifier **referenced** anywhere in the documentation set resolves to a definition.
 3. **[QA-64]** **Traceability coverage and affiliation** — every identifier is covered by exactly one row of `docs/development/07-traceability.md`, and the committed file is up to date (`--write` regenerates it). The same command audits affiliation ([GOV-87](00-repository-conventions.md) §8): a requirement that cites an open question due later than its own phase fails, and a roadmap phase section that cites a later-phase requirement fails unless the work is a declared pull-forward ([GOV-88](00-repository-conventions.md) §8), whose register is printed in the generated file.
 4. **[QA-65]** **Internal links** — every relative Markdown link resolves to an existing file, and anchor links resolve to an existing heading in the target file.

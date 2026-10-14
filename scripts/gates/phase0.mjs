@@ -68,6 +68,7 @@ const REQUIRED_DOCS = [
   'docs/security/plugin-threat-model.md',
   'docs/user/README.md',
   'docs/performance/README.md',
+  'docs/operations/README.md',
   'README.md',
   'CONTRIBUTING.md',
   '.env.example',
@@ -164,13 +165,31 @@ function checkInventory() {
     if (rel.endsWith('.md') && !/^#\s+\S/m.test(text)) failures.push(`[inventory] no H1 title: ${rel}`);
     if (rel.endsWith('.md')) checkHeader(rel, text);
   }
-  const indexes = ['docs/README.md', 'docs/user/README.md'].map((p) => read(join(ROOT, p))).join('\n');
+  // Registration is structural, not a passing mention: an internal document must appear as a link
+  // inside an index table row of docs/README.md, and a user page must be linked from the user index.
+  // A document named only in a sentence is not registered, and a document added without being
+  // registered is how the pack grows an orphan that no reader is pointed at (QA-62).
+  const packRows = new Set();
+  for (const line of read(join(ROOT, 'docs', 'README.md')).split('\n')) {
+    if (!line.startsWith('|')) continue;
+    for (const match of line.matchAll(/\]\(([^)#]+?)(?:#[^)]*)?\)/g)) {
+      if (match[1].endsWith('.md')) packRows.add(match[1]);
+    }
+  }
+  const userIndex = read(join(ROOT, 'docs', 'user', 'README.md'));
+  const userLinks = new Set(
+    [...userIndex.matchAll(/\]\(([^)#]+?)(?:#[^)]*)?\)/g)].map((m) => m[1]).filter((target) => target.endsWith('.md')),
+  );
   for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
     const rel = relative(ROOT, file).split('\\').join('/');
     if (!REQUIRED_DOCS.includes(rel)) checkHeader(rel, read(file));
     if (rel === 'docs/README.md' || rel === 'docs/user/README.md') continue;
-    const asDockerRelative = rel.replace(/^docs\//, '');
-    if (!indexes.includes(asDockerRelative)) failures.push(`[inventory] document not listed in an index: ${rel}`);
+    const asDocRelative = rel.replace(/^docs\//, '');
+    if (asDocRelative.startsWith('user/')) {
+      if (!userLinks.has(asDocRelative.slice('user/'.length))) failures.push(`[inventory] user page not listed in docs/user/README.md: ${rel}`);
+    } else if (!packRows.has(asDocRelative)) {
+      failures.push(`[inventory] document not registered in a docs/README.md index row: ${rel}`);
+    }
   }
   checkIndexAgreement();
 }
@@ -624,7 +643,7 @@ function checkDiagrams() {
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
-  console.log('Runs the Phase 0 documentation gate (inventory, requirement IDs, traceability,');
+  console.log('Runs the Phase 0 documentation gate (inventory and index registration, requirement IDs, traceability,');
   console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
@@ -649,7 +668,7 @@ if (failures.length) {
 }
 
 console.log('Phase 0 documentation gate passed:');
-console.log('  1. document inventory complete; owner and review date on every document, agreeing with the index');
+console.log('  1. document inventory complete; every document registered in an index row, with owner and review date agreeing with the index');
 console.log('  2. requirement identifiers unique and correctly formatted');
 console.log('  3. traceability coverage complete and up to date');
 console.log('  4. internal links and anchors resolve');

@@ -2,7 +2,7 @@
 
 Every data item handled by Boro_biya is assigned a class and a retention rule. The class determines storage, logging, access, export, and deletion behaviour. This document is the source of truth for "how sensitive is this, and what are we allowed to do with it"; [DATA_MODEL](../DATA_MODEL.md) defines where it lives.
 
-Owner: Security. Reviewed: 2026-10-13. Re-review at each phase boundary and whenever a new data category, provider, or integration is added.
+Owner: Security. Reviewed: 2026-10-14. Re-review at each phase boundary and whenever a new data category, provider, or integration is added.
 
 ## 1. Classes
 
@@ -109,3 +109,4 @@ These defaults are binding unless the user explicitly changes them, and each is 
 12. **[PRIV-28]** Location history is never exportable in bulk, is readable only by granted viewers inside their window, and the owner can delete it in full at any time with immediate effect.
 13. **[PRIV-29]** A follower sees live or historical location only while that follower's grant is active and the relationship is accepted; revoking one grant stops that access immediately, including for open streams.
 14. **[PRIV-30]** A user's assistance category is visible to its owner and to administrators for administration, is used server-side for dispatch matching, and is never exposed as a public profile list.
+15. **[PRIV-31]** A plain-language privacy notice is published with the first user-facing release and linked from the sign-up screen and from settings; it states what is collected and why, the retention windows actually configured rather than the policy maximum, who can see what, and how to delete data or end sharing, and it is updated in the same change as any behaviour it describes. It never claims a retention, deletion, or visibility behaviour the code does not implement (obligations are set by [Q-14](../DECISIONS.md#open-questions); location-privacy rules live in [SECURITY](../SECURITY.md) §5).

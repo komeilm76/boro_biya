@@ -2,7 +2,7 @@
 
 ## 1. Contract-first policy
 
-Owner: Engineering. Reviewed: 2026-10-13.
+Owner: Engineering. Reviewed: 2026-10-14.
 
 - **[API-01]** The published API contract is **OpenAPI 3.1.x**, produced from a single source of truth and validated in CI.
 - **[API-02]** Every public endpoint defines method, path, authentication, authorization, request schema, response schema, error responses, pagination, and examples where useful, plus its requirement IDs.
@@ -26,6 +26,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 - **[API-17]** Admin endpoints stay distinct in authorization policy even when they share a controller with user endpoints.
 - **[API-18]** Rate-limited responses include a retry hint; deprecated endpoints advertise their removal version in a documented response header.
 - **[API-19]** Responses never include fields the caller is not authorized to see; field-level filtering happens server-side (for example, alert descriptions or coordinates for non-assigned responders).
+- **[API-36]** Timestamps travel as RFC 3339 instants in UTC with the `Z` offset; naive timestamps and non-`Z` offsets are rejected rather than reinterpreted, and a field that carries a date without a time says so explicitly. The server is the clock authority: a client clock, including one carried on a queued offline request, never decides ordering, expiry, or retention — those use server time or a server-generated sequence. A response never requires the caller to guess which zone a timestamp is in.
 
 ## 3. Validation
 

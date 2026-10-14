@@ -2,7 +2,7 @@
 
 Requirement identifiers (`AUTH-…`, `SOS-…`) are permanent handles assigned by the documentation gate; they are never renumbered or reused. See [repository conventions](development/00-repository-conventions.md) §7 and the [roadmap](ROADMAP.md) for the phase in which each requirement must be delivered.
 
-Owner: Repo owner. Reviewed: 2026-10-13.
+Owner: Repo owner. Reviewed: 2026-10-14.
 
 ## 1. Roles and access
 
@@ -196,6 +196,12 @@ with explicit cancellation/failed/needs-escalation transitions where product pol
 - **[SOS-22]** Realtime delivery is best-effort. The database is the source of truth; clients reconcile on reconnect and after a missed-event signal.
 - **[SOS-23]** The product MUST NOT promise emergency-service reliability, guaranteed response, or life-safety outcomes. Any escalation process beyond the app requires its own operational design, monitoring, and tested runbook, and only then may be described to users.
 
+
+### Disclosure and the no-responder state
+
+- **[SOS-30]** Before an alert is created, the screen states plainly, in the user's language: who will receive it (administrators and nearby users holding a matching assistance category), that no response and no response time is guaranteed, and that the app is not an emergency service — with the applicable local emergency number shown as text so it can be dialled outside the app. The same statement stays reachable from the alert's own screen afterwards; it is not relegated to a separate page or to the user guide alone.
+- **[SOS-31]** While an alert has no accepted task, the creator's own view says so plainly: how long it has been waiting, and that nobody has accepted it yet. The view never shows a responder, an arrival estimate, or progress that does not exist, and an alert that ends without a completed task states that outcome rather than leaving the creator to infer it.
+
 ## 8. Personal settings
 
 A user settings area exposes preferences whose backing schema/capability is actually available:
@@ -220,3 +226,24 @@ A user settings area exposes preferences whose backing schema/capability is actu
 - **[UI-22]** Right-to-left layout support is designed in from the start (logical CSS properties, direction-aware icons), because at least one expected release language is right-to-left ([DECISIONS](DECISIONS.md) Q-15).
 - **[UI-23]** Colour is never the only carrier of meaning (for example alert priority and sharing state also carry text or iconography), and contrast targets meet WCAG 2.2 AA.
 - **[UI-24]** Offline and degraded-network behaviour is explicit: actions that cannot be performed offline are disabled with an explanation, and queued actions that cannot be guaranteed are not implied.
+- **[UI-25]** Dates, times, durations, numbers, and units are rendered through the locale-aware formatters of UI-21, never by concatenating strings: a Persian (`fa`) interface uses the Solar Hijri (Jalali) calendar with Persian digits, other locales use the Gregorian calendar in that locale's numbering system, exact times are shown in the user's own zone with the underlying instant available on demand, and relative ages ("3 minutes ago") are derived from server timestamps and state their precision. No screen shows a raw UTC value or an unlabelled server timestamp, and no rule here may contradict the storage and transport contract ([API-36](API_AND_OPENAPI.md), [DATA-27](DATA_MODEL.md)); the locale and calendar choice follows Q-15.
+- **[UI-26]** The supported client matrix is declared, and tested per release rather than assumed: the browsers and versions supported for the web app (evergreen, with a stated minimum), the minimum viewport width, and the browser features the app depends on. An unsupported or untested browser receives a plain-language notice naming what is known to work, not a broken screen, and the declaration is published in the user guide before the first release. The Android device and OS matrix is a separate, Phase 8 declaration ([QUALITY_GATES](QUALITY_GATES.md) QA-13).
+- **[UI-27]** High-contrast and forced-colours modes are supported: the operating-system preference is respected in addition to the in-app appearance setting, borders and focus indicators survive colour overrides, and no information disappears when backgrounds, images, or custom colours are suppressed.
+
+## 10. Explicitly out of scope for v1
+
+These are deliberate exclusions, not oversights. Each row says why the item is excluded and what would have to change for it to be reconsidered; anything that is neither in the sections above nor in this table is missing documentation rather than agreed scope.
+
+| Excluded from v1 | Why | Reconsider when |
+| --- | --- | --- |
+| Emergency-service dispatch — calling or notifying police, ambulance, or fire services | The project cannot take responsibility for a life-safety dispatch, and it says so to users (SOS-23, SOS-30) | An operational process exists with its own monitoring, tested runbook, and legal basis (SOS-23, [operations](operations/README.md)) |
+| iOS application | One mobile platform at a time; the Android shell carries the first release ([DECISIONS](DECISIONS.md) ADR-009) | The Android build is released and the PWA proves insufficient for the field |
+| Offline maps and offline routing | Tile and routing providers are licensed for online use; local caching raises licence and storage questions | A provider licence that permits offline storage is agreed (Q-10) |
+| Live traffic and speed limits from anything but a licensed provider | Inferred or fabricated data in a driving context is worse than absent data | A licensed provider supplies them in the release regions (Q-10) |
+| Analytics, advertising, and behavioural tracking | Privacy default: no telemetry or analytics ([PRIV-19](security/data-classification.md)) | A documented purpose, a review, and an honest opt-out exist (PRIV-19) |
+| A public user directory or profile discovery | Account visibility is private by default; search exists to build relationships, not to browse people | Never in v1 — it contradicts the privacy baseline (PRIV-15) |
+| More than one concurrent responder task per alert | v1 delivers exactly one active task per alert and no shortcut may pre-judge the future answer (SOS-14) | Q-09 is resolved and the schema is migrated deliberately |
+| Plugin ZIP installation in production | Disabled until the Phase 7 exit gate passes ([PLUGIN_SYSTEM](PLUGIN_SYSTEM.md) §3) | The Phase 7 exit gate passes |
+| Email and SMS notification channels | Channel and provider decisions are open; in-app and push only until they are answered (UI-14) | Provider and privacy review complete (Q-02, Q-11) |
+| Legal documents beyond the privacy notice — terms of service, records of processing, a formal data-protection assessment | No jurisdiction, hosting target, or operator identity is decided yet; documents written now would describe an unnamed operator | The hosting target (Q-19) and the retention, deletion, and export obligations (Q-14) are decided |
+| Published availability, uptime, or response-time commitments | A figure published before it is measured, with its method, is prohibited | Measured budgets exist and the Phase 9 gate records them ([operations](operations/README.md)) |

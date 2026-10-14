@@ -38,19 +38,19 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-13 |
 | [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-13 |
 | [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-13 |
-| [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-13 |
+| [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-14 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-13 |
-| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-13 |
+| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-14 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artifacts, promotion, rollback, and release evidence | Engineering | 2026-10-13 |
-| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-13 |
-| [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-13 |
+| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
+| [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-14 |
 
 ### Security and privacy
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-13 |
-| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-13 |
+| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-14 |
 | [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-13 |
 
 ### User documentation
@@ -58,6 +58,12 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-13 |
+
+### Operations
+
+| Document | Purpose | Owner | Reviewed |
+| --- | --- | --- | --- |
+| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-14 |
 
 ### Evidence
 
@@ -112,7 +118,7 @@ Rules:
 ## Running the documentation gate
 
 ```bash
-node scripts/gates/phase0.mjs          # verify inventory, IDs, links, placeholders, audience, secrets, model coherence, phase status, diagrams
+node scripts/gates/phase0.mjs          # verify inventory and index registration, IDs, links, placeholders, audience, secrets, model coherence, phase status, diagrams
 node scripts/gates/traceability.mjs    # verify coverage is current (--write to regenerate)
 ```
 
