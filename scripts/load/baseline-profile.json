@@ -1,0 +1,14 @@
+{
+  "name": "phase-1-health-endpoint-baseline",
+  "requests": 400,
+  "concurrency": 20,
+  "route": "GET /healthz",
+  "pass": {
+    "errors": 0,
+    "requestsPerSecondAtLeast": 50,
+    "p95MillisecondsAtMost": 250,
+    "p99MillisecondsAtMost": 500
+  },
+  "dataset": "empty Phase 1 service shell; no user or location records",
+  "eventStreamRate": "not applicable: no event stream is implemented in Phase 1"
+}

@@ -16,7 +16,7 @@ Deliverables and evidence:
 | Repository conventions and code/commit/review rules | [repository conventions](development/00-repository-conventions.md) |
 | Architecture, threat model, data classification, data model, plugin trust model | [ARCHITECTURE](ARCHITECTURE.md), [threat model](security/threat-model.md), [data classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [plugin threat model](security/plugin-threat-model.md) |
 | Architecture decisions and open questions with owner and deadline | [DECISIONS](DECISIONS.md) — ADR-001 … ADR-028, register Q-01 … Q-26 |
-| Version/dependency policy with verified current versions | [dependency policy](development/02-dependency-policy.md) with verification date 2026-10-13 |
+| Version/dependency policy with verified versions | [dependency policy](development/02-dependency-policy.md) with the 2026-10-13 candidate snapshot and the Phase 1 installed-pin review dated 2026-10-14 |
 | Windows/Linux developer workflows and the Docker-based startup contract that Phase 1 must satisfy | [development environment](development/01-development-environment.md) §4 |
 | Environment configuration template | [`.env.example`](../.env.example) |
 | API conventions, inventory, and toolchain verification | [API and OpenAPI](API_AND_OPENAPI.md), [API inventory](development/04-api-inventory.md) |
@@ -33,7 +33,9 @@ Exit gate: documentation reviewed by the owner; every critical design question e
 ## Phase 1 — Skeleton and developer experience
 
 
-**Status: Not started — requires Phase 0 approval.**
+**Status: In progress — Phase 0 owner approval pending.**
+
+Evidence checkpoint: [Phase 1 seven-part report](phase-reports/phase-1.md); update its acceptance results from CI before sign-off.
 
 Deliver: workspace and package setup with pinned dependencies and a committed lockfile; minimal Vue application with the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`), guards that never substitute for server authorization, and the safe not-found page (UI-01 … UI-07); Fastify API, PostgreSQL migration framework, and the two service skeletons; Docker-based startup on Windows and Linux on the pinned production runtime (Node 24 LTS); the runtime compatibility and portability check in CI (`QA-123`); deployment notes naming the runtime and tested versions (`OPS-84`); liveness/readiness endpoints; structured logging with the shared redaction layer (SEC-57, PRIV-10) and correlation identifiers propagated across service hops (SEC-73); validated configuration; the skeleton-level privacy default of no analytics or telemetry dependency (PRIV-19); the timestamp contract for the wire (API-36); strict TypeScript; test examples; application CI (format, lint, typecheck, unit, integration); the rollback runbook for the first migration (declared pull-forward of OPS-81, [GOV-88](development/00-repository-conventions.md) §8); the Bun-toolchain compatibility verification required by [ADR-025](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain); the baseline load profile and its pass/fail rule ([ADR-028](DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement), `OPS-86`).
 
@@ -113,14 +115,12 @@ Exit gate: no unresolved critical findings; the incident-response procedure exis
 
 ## Phase reporting format
 
-For each phase, report:
+For each phase, report these seven parts:
 
-- Goal and scope.
-- Requirement IDs delivered, with the traceability rows they complete.
-- Files changed.
-- Acceptance criteria with pass/fail evidence, naming the command that produced each result.
-- Commands actually executed and their exit status.
-- Security and privacy review.
-- Performance and resource impact.
-- Known issues, deferred work, and any requirement withdrawn or re-scoped (with reason).
-- Whether the phase gate passed, and who approved it.
+1. **Goal, scope, and requirements:** delivered requirement IDs with their traceability rows.
+2. **Files changed:** the material repository changes.
+3. **Acceptance evidence:** each criterion's pass/fail result, exact command, exit status, and CI or owner-machine reference.
+4. **Commands run:** every verification command and its recorded exit status; unavailable checks are marked not run, never inferred.
+5. **Security and privacy:** review results, defaults, and residual risks.
+6. **Performance and resources:** measured evidence, environment, dataset, and explicit limits; otherwise state not measured.
+7. **Open items and phase decision:** known issues, deferred or withdrawn requirements with reasons, gate outcome, and owner approval status.

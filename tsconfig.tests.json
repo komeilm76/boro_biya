@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "composite": false,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@boro/contracts": ["./packages/contracts/src/index.ts"],
+      "@boro/config": ["./packages/config/src/index.ts"],
+      "@boro/logging": ["./packages/logging/src/index.ts"],
+      "@boro/validation": ["./packages/validation/src/index.ts"],
+      "@boro/test-utils": ["./packages/test-utils/src/index.ts"]
+    }
+  },
+  "include": [
+    "apps/**/*.test.ts",
+    "services/**/*.test.ts",
+    "packages/**/*.test.ts",
+    "apps/web/src/env.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

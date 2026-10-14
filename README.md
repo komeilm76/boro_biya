@@ -4,7 +4,7 @@ A security-first mapping, navigation, social-location, and SOS assistance platfo
 
 Owner: Repo owner. Reviewed: 2026-10-14.
 
-**Current status: Phase 0 — repository foundation and documentation.** There is no application code yet. Phase 0 is complete pending owner approval; Phase 1 (workspace skeleton and developer experience) starts only after that approval ([ROADMAP](docs/ROADMAP.md)).
+**Current status: Phase 1 — workspace skeleton and developer experience, in progress.** Phase 0 is complete pending owner approval; this Phase 1 continuation was explicitly requested, but no Phase 0 approval or Phase 1 completion is claimed ([ROADMAP](docs/ROADMAP.md)). The workspace contains infrastructure only: there is no authentication, map, or business-domain feature.
 
 ## Where to start
 
@@ -13,9 +13,9 @@ Owner: Repo owner. Reviewed: 2026-10-14.
 - **Contributors:** [CONTRIBUTING.md](CONTRIBUTING.md) — workflow, gate command, and review rules.
 - **Users:** [docs/user/README.md](docs/user/README.md) — the user guide (content ships with the features; nothing is documented before it exists).
 
-## Documentation-only gate
+## Documentation gate
 
-Phase 0 is verified by one dependency-free command that runs on Linux, Windows, and macOS:
+Phase 0 remains verified by one dependency-free command that runs on Linux, Windows, and macOS:
 
 ```bash
 node scripts/gates/phase0.mjs
@@ -27,20 +27,22 @@ It checks that every required document exists and is registered with a current o
 node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase coverage
 ```
 
+Phase 1 application gates and the local development commands are documented in [docs/development/01-development-environment.md](docs/development/01-development-environment.md) and [docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md). The active workspace gate is `bun run gate`; it does not substitute for the Node 24, Windows, PostgreSQL, Docker Compose, or image-scan CI evidence listed in the phase report.
+
 ## Repository layout
 
-| Path | Contents |
-| --- | --- |
-| `docs/` | Normative documentation: requirements, architecture, diagrams and lifecycles, glossary, security, decisions, roadmap, guides |
-| `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
-| `docs/security/` | Threat model, data classification, plugin threat model |
-| `docs/user/` | End-user documentation |
-| `docs/operations/` | Runbook register, backup and restore policy, deployment profile, availability objective |
-| `docs/performance/` | Baseline load profile, capacity policy, and measured results |
-| `scripts/gates/` | Gate runners (dependency-free Node) |
-| `.github/workflows/` | CI workflows |
+| Path                 | Contents                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `docs/`              | Normative documentation: requirements, architecture, diagrams and lifecycles, glossary, security, decisions, roadmap, guides |
+| `docs/development/`  | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists                                  |
+| `docs/security/`     | Threat model, data classification, plugin threat model                                                                       |
+| `docs/user/`         | End-user documentation                                                                                                       |
+| `docs/operations/`   | Runbook register, backup and restore policy, deployment profile, availability objective                                      |
+| `docs/performance/`  | Baseline load profile, capacity policy, and measured results                                                                 |
+| `scripts/gates/`     | Gate runners (dependency-free Node)                                                                                          |
+| `.github/workflows/` | CI workflows                                                                                                                 |
 
-Application code (`apps/`, `services/`, `packages/`) is introduced in Phase 1, following the layout fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5.
+The Phase 1 infrastructure skeleton lives in `apps/`, `services/`, and `packages/`, following the layout fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5. It deliberately contains no product features.
 
 ## Ground rules
 

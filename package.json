@@ -1,0 +1,61 @@
+{
+  "name": "boro-biya-workspace",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "packageManager": "bun@1.4.3",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "setup:dev": "node scripts/setup-dev.mjs",
+    "db:status": "node scripts/db.mjs status",
+    "db:migrate": "node scripts/db.mjs migrate",
+    "db:rollback": "node scripts/db.mjs rollback",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint apps services packages scripts --max-warnings=0",
+    "typecheck": "tsc --build tsconfig.json && vue-tsc --noEmit --project apps/web/tsconfig.json && tsc --noEmit --project tsconfig.tests.json",
+    "test:unit": "vitest run --config vitest.config.ts --exclude **/*.integration.test.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "build:server": "tsc --build tsconfig.json",
+    "build:web": "vite build --config apps/web/vite.config.ts apps/web",
+    "build": "bun run build:server && bun run build:web",
+    "check:deps": "node scripts/gates/deps.mjs",
+    "check:workspace": "node scripts/gates/workspace.mjs",
+    "check:secrets": "node scripts/gates/secrets.mjs",
+    "check:containers": "node scripts/gates/containers.mjs",
+    "compose:smoke": "node scripts/compose/ci-smoke.mjs",
+    "check:runtime": "node scripts/check-runtime.mjs",
+    "check:runtime:smoke": "node scripts/check-runtime.mjs --smoke",
+    "check:load": "node scripts/load/baseline.mjs",
+    "traceability": "node scripts/gates/traceability.mjs",
+    "check:diagrams": "node scripts/gates/diagrams.mjs",
+    "gate": "node scripts/gates/run.mjs",
+    "ops:exercise-rollback": "node scripts/ops/rollback-exercise.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@vitejs/plugin-vue": "6.0.10",
+    "@vue/test-utils": "2.5.1",
+    "eslint": "10.12.0",
+    "eslint-plugin-vue": "10.11.1",
+    "globals": "17.13.0",
+    "happy-dom": "21.0.1",
+    "mermaid": "12.2.0",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4",
+    "vue-eslint-parser": "10.4.1",
+    "vue-tsc": "3.3.13"
+  }
+}

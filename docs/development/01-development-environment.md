@@ -1,6 +1,6 @@
 # Development Environment
 
-Supported contributor environments, prerequisites, and the commands that exist at each phase. Commands are marked **available** (verified to work in this repository today) or **planned** (specified here, implemented in the named phase, and not yet runnable).
+Supported contributor environments, prerequisites, and the commands implemented for each phase. Platform/runtime completion is claimed only when the corresponding command has run and its evidence is recorded in the phase report.
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -23,7 +23,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | --- | --- | --- | --- |
 | Git | current stable | Source control, LF enforcement via `.gitattributes` | `git --version` |
 | Node.js | 24 LTS (primary CI baseline; **production runtime**, [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Repository tooling, gate scripts, the tooling that must run on Node, and the runtime every production artefact runs on | `node --version` |
-| Bun | 1.4.x (pinned in Phase 1) | Preferred package manager and script runner; **not** a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | `bun --version` |
+| Bun | 1.4.3 (exact pin in `package.json`) | Preferred package manager and development-tool runner; **not** an API/service runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | `bun --version` |
 | Docker + Compose v2 | current stable | PostgreSQL and full-stack local run | `docker compose version` |
 | Editor | VS Code (recommended) | `.editorconfig` and workspace recommendations are committed | — |
 
@@ -37,29 +37,43 @@ cd boro_biya
 node scripts/gates/phase0.mjs      # documentation gate — no dependencies required
 ```
 
-A package-manager script alias (`bun run gate`) is introduced in Phase 1 together with the workspace, so the gate command above stays the single source of truth today.
+The Phase 0 documentation command remains available. The Phase 1 workspace and `bun run gate` are now present; use the commands in §4 when working on application code.
 
-## 4. Getting started (planned — Phase 1)
+## 4. Getting started (Phase 1 workspace)
 
-These commands are the contract Phase 1 must satisfy. They are documented now so the phase has testable acceptance criteria; they do not exist yet.
-
-```bash
-bun install                        # install workspaces (pinned versions, lockfile committed)
-cp .env.example .env               # Windows PowerShell: Copy-Item .env.example .env
-docker compose up -d db            # PostgreSQL 18 (container only)
-bun run db:migrate                 # apply versioned migrations
-bun run dev                        # web app + core API + both services
-bun run gate                       # all gates that are active in the current phase
-bun run check:runtime              # runtime compatibility and portability check (QA-123)
-```
-
-Production runs these artefacts on **Node 24 LTS** (`node dist/…`), not on Bun: Bun is the development toolchain and package manager ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). The Docker path below builds and starts the same artefacts on the pinned Node version, which is what the compatibility check verifies.
-
-Docker-first alternative (no local Node required beyond the gate scripts):
+The Phase 1 commands are implemented. Cross-platform completion is claimed only after the Linux and Windows CI runs recorded in the Phase 1 report; the local sandbox does not provide Docker or Node 24.
 
 ```bash
-docker compose up --build          # web, api, relation, sos, db
+bun install --frozen-lockfile       # exact workspace install from the committed lockfile
+bun run setup:dev                   # create a local .env with a fresh, unprinted dev-only database password
+
+docker compose up -d db             # PostgreSQL 18 (container only)
+bun run db:migrate                  # compile with Node 24 and apply versioned migrations
+bun run dev                         # Node 24 API/services + Vite web dev server; TypeScript rebuilds on change
+bun run gate                        # active formatting, lint, types, tests, audits, build, runtime and load gates
+bun run check:runtime               # portability source scan (QA-123)
+bun run check:runtime:smoke         # built-artifact smoke on Node 24 (QA-123)
 ```
+
+`bun run setup:dev` is cross-platform and never overwrites an existing `.env`; it creates a unique local-only database credential without printing it. It does not replace the committed placeholder-only `.env.example`. The generated development database is named `boro_biya_dev`, and the local service ports are API `3000`, Relation `3001`, SOS `3002`, web `5173`, and PostgreSQL `5432`. Change `API_PORT`, `RELATION_PORT`, `SOS_PORT`, or `WEB_PORT` for the host-run stack; change the corresponding `*_PUBLISHED_PORT` or `POSTGRES_PUBLISHED_PORT` for the Compose host bindings.
+
+**Node.js 24 LTS runs every API and service process**, including the local development processes and production artefacts. Bun 1.4.3 is the package manager and script runner, and runs the Vite development tool; it is not an application-server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). The `dev` command compiles TypeScript with the Node-invoked compiler, starts the built API/services with Node watch mode, and watches for rebuilds. Database commands also compile and execute their CLI on Node 24.
+
+The full-stack Compose path is a separate smoke command. It builds and starts the stack under a unique Compose project name, checks service health, and removes only that smoke project's containers and database volume when finished. It reads published-port overrides from `.env`; it does not stop or delete the normal development project's data:
+
+```bash
+node scripts/compose/ci-smoke.mjs
+```
+
+To leave the full stack running for local work instead:
+
+```bash
+docker compose up -d --build          # web, api, relation, sos, db
+docker compose ps
+docker compose down                   # add --volumes only when the local database may be deleted
+```
+
+The Compose smoke has run in CI only; no local Docker run is claimed for this sandbox.
 
 ## 5. Environment variables
 
@@ -74,7 +88,7 @@ See [`.env.example`](../../.env.example) for the current placeholder list.
 
 - **[OPS-71]** `.editorconfig` — UTF-8, LF, final newline, 2-space indentation, space indentation everywhere except where a file format requires tabs (the `Makefile` rule sets tabs, because make does not accept spaces).
 - **[OPS-72]** `.gitattributes` — normalizes line endings to LF on checkout and commit so Windows contributors cannot introduce CRLF churn.
-- **[OPS-73]** Formatting and linting are automated in Phase 1 (Prettier + ESLint). Until then, follow [repository conventions](00-repository-conventions.md) §4.
+- **[OPS-73]** Formatting and linting are automated in Phase 1 (Prettier + ESLint); `bun run format:check` and `bun run lint` are the canonical commands.
 - **[OPS-74]** Recommended VS Code extensions are recorded in Phase 1 as `.vscode/extensions.json` (Vue, ESLint, Prettier, Tailwind IntelliSense, Docker, EditorConfig).
 
 ## 7. Troubleshooting

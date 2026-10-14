@@ -64,12 +64,14 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-14 |
+| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | Detection, containment, recovery, verification, notification, and exercise limits for failed Phase 1 migrations | Engineering | 2026-10-14 |
 
 ### Evidence
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [performance/README.md](performance/README.md) | Performance budget and measurement policy, plus reported results | Engineering | 2026-10-14 |
+| [phase-reports/phase-1.md](phase-reports/phase-1.md) | Seven-part Phase 1 acceptance report with evidence, limitations, and open sign-off items | Engineering | 2026-10-14 |
 
 ## Normative language
 
@@ -131,7 +133,7 @@ Both are dependency-free Node scripts and run in CI on Linux and Windows.
 | Phase | Name | Status |
 | --- | --- | --- |
 | 0 | Repository foundation and documentation | Complete, awaiting owner approval (2026-10-13) |
-| 1 | Skeleton and developer experience | Not started — requires Phase 0 approval |
+| 1 | Skeleton and developer experience | In progress — Phase 0 owner approval pending |
 | 2 | Authentication and account lifecycle | Not started |
 | 3 | Map foundation and user settings | Not started |
 | 4 | Relation Service | Not started |

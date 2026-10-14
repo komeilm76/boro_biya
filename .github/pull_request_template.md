@@ -12,10 +12,10 @@ Requirement IDs: <!-- e.g. AUTH-13, SEC-22 — see docs/development/07-traceabil
 
 ## Gates actually run
 
-| Gate | Command | Result |
-| --- | --- | --- |
+| Gate                  | Command                         | Result                                               |
+| --------------------- | ------------------------------- | ---------------------------------------------------- |
 | Documentation (QA-01) | `node scripts/gates/phase0.mjs` | <!-- passed / failed / not run, with exit status --> |
-| <!-- gate --> | <!-- command --> | <!-- exit status --> |
+| <!-- gate -->         | <!-- command -->                | <!-- exit status -->                                 |
 
 <!-- A gate that was not run is written as "not run" with the reason. Do not claim a gate passed without an exit status. -->
 

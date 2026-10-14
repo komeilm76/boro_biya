@@ -17,6 +17,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Gate | Phase 0 | Phase 1 | Phase 2 | Phase 3 | Phase 4–7 | Phase 8–9 |
 | --- | --- | --- | --- | --- | --- | --- |
 | Documentation gate | **active** | active | active | active | active | active |
+| Mermaid diagram syntax | inactive | **active** (`bun run gate`) | active | active | active | active |
 | Formatting, lint, type check | inactive | active | active | active | active | active |
 | Unit tests | inactive | active | active | active | active | active |
 | Integration tests (PostgreSQL) | inactive | active | active | active | active | active |
@@ -33,7 +34,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Migration tests, backup/restore | inactive | active (migrations) | active | active | active | active (restore rehearsal) |
 | Android build | inactive | inactive | inactive | inactive | inactive | active |
 
-Phase 0 is documentation-only by design ([ADR-010](../DECISIONS.md#adr-010--phase-0--phase-1-gate-boundary)): the workspace does not exist yet, so application gates cannot run and are not claimed.
+Phase 0 was documentation-only by design ([ADR-010](../DECISIONS.md#adr-010--phase-0--phase-1-gate-boundary)); its documentation workflow remains active. The Phase 1 workspace now exists, and its application gates are active in `phase1-gates.yml`. Phase 0 owner approval is still pending, and this Phase 1 continuation is not a claim that the earlier approval was granted. Phase 1 also parses every Mermaid fence with the pinned Mermaid release via `node scripts/gates/diagrams.mjs`; that syntax check is part of `bun run gate`, not the dependency-free Phase 0 script.
 
 ## 3. Documentation gate (active now)
 
@@ -76,19 +77,20 @@ Check 9 exists because phase status is the one fact recorded in two documents; c
 
 Check 8 exists because structure alone does not keep documents truthful: a pack can pass every inventory, link, and ID check while one document still describes a superseded model ([ADR-011](../DECISIONS.md#adr-011--documentation-architecture-and-requirement-identifiers)). Each entry in its retired-wording list names the decision that replaced the wording, so a failure explains itself. It also carries the claim rule ([GOV-91](00-repository-conventions.md) §1): a sentence that promises capacity, compliance, or indefinite retention is not a style problem — it is a statement the project cannot support, and the deployment that reads it may act on it.
 
-The gate is dependency-free Node.js so it runs on Linux and Windows with no install step. Mermaid syntax itself is verified when a diagram is authored, with the parser and version recorded in the review record; the structural checks above stay inside the dependency-free gate.
+The Phase 0 documentation command remains dependency-free and runs without an install step. Phase 1 also runs the pinned Mermaid syntax check (`node scripts/gates/diagrams.mjs`) through `bun run gate`; this parser is intentionally separate from the Phase 0 documentation gate.
 
 ## 4. CI workflow design
 
-- **[QA-69]** Workflows live in `.github/workflows/`. Phase 0 ships `docs-gates.yml`; application workflows are added in Phase 1 with the code they check.
-- **[QA-70]** Matrix: `ubuntu-latest` and `windows-latest`, so a Windows contributor cannot break the build silently.
+- **[QA-69]** Workflows live in `.github/workflows/`. `docs-gates.yml` keeps the Phase 0 documentation checks active; `phase1-gates.yml` runs application gates on Linux and Windows and a Docker Compose/image-scan job on Linux. The Phase 1 workflow runs on pull requests and manual dispatch; results are linked from the Phase 1 report after execution.
+- **[QA-70]** The application gate matrix is `ubuntu-latest` and `windows-2025` with Node 24, Bun 1.4.3, and disposable PostgreSQL (18.6 on Linux, 17 on Windows); the independent Compose and Trivy job runs on `ubuntu-latest`. The documentation workflow also runs on Linux and Windows.
 - **[QA-71]** Actions are pinned to immutable commit SHAs with the version in a comment; the workflow uses least privilege (`permissions: contents: read` at the top level, elevated only where a job genuinely needs it).
 - **[QA-72]** Secrets are never exposed to pull-request code from forks; no workflow prints an environment dump.
 - **[QA-73]** Jobs are independent where possible so one failure does not hide another, and a failure must show the exact command that failed.
 - **[QA-74]** Concurrency cancels superseded runs on the same branch.
 - **[QA-75]** Caches are used only for package-manager caches, never for build outputs that must be reproducible.
 - **[QA-76]** Timeouts are set on jobs so a hung step cannot consume the entire pipeline budget.
-- **Runtime compatibility and portability.** `QA-123` is the gate: the job builds each artefact image and starts it on the pinned Node version (ADR-025, `OPS-84`), then runs a health and smoke check; a separate source scan fails when a Bun-only runtime API is reachable from application code outside an approved adapter (`GOV-82`). It runs wherever the build gates run, and a runtime change is not merged while it is red. The equivalent local command (`bun run check:runtime`) is added with the workspace in Phase 1.
+- The Linux and Windows jobs install the frozen workspace, generate an ignored local `.env`, apply the migration using Node 24, and run `scripts/dev/smoke.mjs` to exercise the documented `bun run dev` stack against their disposable PostgreSQL service before `bun run gate`. Each job then runs the isolated rollback exercise. The Linux Compose job builds the four images, checks health, tears down its temporary stack/volume, and scans those image tags with Trivy; this is CI evidence only, not a claim of a local Docker run.
+- **Runtime compatibility and portability.** `QA-123` is enforced in both application jobs: the gate scans application source for Bun-only runtime APIs, builds the API/services and web shell, then starts the built artefacts with Node 24 and checks health responses. The separate Linux Compose job builds and starts the four service images. Local entry points are `bun run check:runtime`, `bun run check:runtime:smoke` (Node 24 and a prior build required), and `bun run gate`.
 - **[QA-77]** Required checks for branch protection: the documentation gate in Phase 0; the full active set from Phase 1 onward. The concrete expectations are recorded in §5 of this document, and a release is not cut while a required check is missing or bypassable ([release plan](06-release-plan.md) §3, step 2).
 
 ## 5. Branch protection expectations

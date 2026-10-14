@@ -1,0 +1,166 @@
+# Phase 1 application gates: run the same project gate command on Linux and Windows
+# with Node 24 (production runtime), Bun 1.4.3 (tooling), and disposable PostgreSQL.
+name: phase1-gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase1-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux / Node 24 / Bun 1.4.3 / PostgreSQL 18
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: postgresql://boro_biya:phase1-ci-password@127.0.0.1:5432/boro_biya_ci
+      ROLLBACK_EXERCISE_CONFIRM: disposable
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_DB: boro_biya_ci
+          POSTGRES_USER: boro_biya
+          POSTGRES_PASSWORD: phase1-ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U boro_biya -d boro_biya_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+          --health-start-period 5s
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Install Bun 1.4.3
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.3
+      - name: Verify runtimes
+        run: |
+          node --version
+          bun --version
+          node -e "if (Number(process.versions.node.split('.')[0]) !== 24) process.exit(1)"
+          bun -e "if (Bun.version !== '1.4.3') process.exit(1)"
+      - name: Install frozen workspace
+        run: bun install --frozen-lockfile
+      - name: Create a local development environment
+        run: bun run setup:dev
+      - name: Apply migrations with Node 24
+        run: bun run db:migrate
+      - name: Smoke-test the documented cross-platform development stack
+        run: node scripts/dev/smoke.mjs
+      - name: Run Phase 1 gates
+        run: bun run gate
+      - name: Exercise migration rollback on disposable PostgreSQL
+        run: bun run ops:exercise-rollback
+
+  windows:
+    name: Windows / Node 24 / Bun 1.4.3 / PostgreSQL 17
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: postgresql://postgres:root@127.0.0.1:5432/boro_biya_ci
+      ROLLBACK_EXERCISE_CONFIRM: disposable
+    steps:
+      - name: Start the hosted PostgreSQL 17 service
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $serviceName = 'postgresql-x64-17'
+          Set-Service -Name $serviceName -StartupType Manual
+          Start-Service -Name $serviceName
+          $pgBin = Join-Path $env:ProgramFiles 'PostgreSQL\17\bin'
+          $env:PGPASSWORD = 'root'
+          & (Join-Path $pgBin 'psql.exe') --host=127.0.0.1 --username=postgres --dbname=postgres --command='SELECT 1'
+          if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL 17 did not accept a local connection' }
+          & (Join-Path $pgBin 'createdb.exe') --host=127.0.0.1 --username=postgres boro_biya_ci
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create the disposable CI database' }
+      - name: Checkout full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Install Bun 1.4.3
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.3
+      - name: Verify runtimes
+        run: |
+          node --version
+          bun --version
+          node -e "if (Number(process.versions.node.split('.')[0]) !== 24) process.exit(1)"
+          bun -e "if (Bun.version !== '1.4.3') process.exit(1)"
+      - name: Install frozen workspace
+        run: bun install --frozen-lockfile
+      - name: Create a local development environment
+        run: bun run setup:dev
+      - name: Apply migrations with Node 24
+        run: bun run db:migrate
+      - name: Smoke-test the documented cross-platform development stack
+        run: node scripts/dev/smoke.mjs
+      - name: Run Phase 1 gates
+        run: bun run gate
+      - name: Exercise migration rollback on disposable PostgreSQL
+        run: bun run ops:exercise-rollback
+
+  compose-and-image-scan:
+    name: Docker Compose smoke and image scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Verify container configuration
+        run: node scripts/gates/containers.mjs
+      - name: Start and smoke-test the full Compose stack
+        run: node scripts/compose/ci-smoke.mjs
+      - name: Install Trivy v0.76.0
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.76.0
+          cache: true
+      - name: Scan built images for high and critical vulnerabilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          for image in \
+            boro-biya/api:phase1 \
+            boro-biya/relation:phase1 \
+            boro-biya/sos:phase1 \
+            boro-biya/web:phase1
+          do
+            echo "Scanning $image"
+            if ! trivy image --scanners vuln --exit-code 1 --severity HIGH,CRITICAL "$image"; then
+              failed=1
+            fi
+          done
+          exit "$failed"

@@ -112,7 +112,10 @@ const SECRET_PATTERNS = [
   { name: 'Slack token', re: /\bxox[abprs]-[A-Za-z0-9-]{10,}\b/ },
   { name: 'OpenAI-style key', re: /\bsk-[A-Za-z0-9]{32,}\b/ },
   { name: 'Google API key', re: /\bAIza[0-9A-Za-z_-]{35}\b/ },
-  { name: 'JSON web token', re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/ },
+  {
+    name: 'JSON web token',
+    re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/,
+  },
 ];
 
 function read(file) {
@@ -177,7 +180,8 @@ function checkInventory() {
     }
     const text = read(full);
     if (text.trim().length === 0) failures.push(`[inventory] empty file: ${rel}`);
-    if (rel.endsWith('.md') && !/^#\s+\S/m.test(text)) failures.push(`[inventory] no H1 title: ${rel}`);
+    if (rel.endsWith('.md') && !/^#\s+\S/m.test(text))
+      failures.push(`[inventory] no H1 title: ${rel}`);
     if (rel.endsWith('.md')) checkHeader(rel, text);
   }
   // Registration is structural, not a passing mention: an internal document must appear as a link
@@ -193,7 +197,9 @@ function checkInventory() {
   }
   const userIndex = read(join(ROOT, 'docs', 'user', 'README.md'));
   const userLinks = new Set(
-    [...userIndex.matchAll(/\]\(([^)#]+?)(?:#[^)]*)?\)/g)].map((m) => m[1]).filter((target) => target.endsWith('.md')),
+    [...userIndex.matchAll(/\]\(([^)#]+?)(?:#[^)]*)?\)/g)]
+      .map((m) => m[1])
+      .filter((target) => target.endsWith('.md')),
   );
   for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
     const rel = relative(ROOT, file).split('\\').join('/');
@@ -201,7 +207,8 @@ function checkInventory() {
     if (rel === 'docs/README.md' || rel === 'docs/user/README.md') continue;
     const asDocRelative = rel.replace(/^docs\//, '');
     if (asDocRelative.startsWith('user/')) {
-      if (!userLinks.has(asDocRelative.slice('user/'.length))) failures.push(`[inventory] user page not listed in docs/user/README.md: ${rel}`);
+      if (!userLinks.has(asDocRelative.slice('user/'.length)))
+        failures.push(`[inventory] user page not listed in docs/user/README.md: ${rel}`);
     } else if (!packRows.has(asDocRelative)) {
       failures.push(`[inventory] document not registered in a docs/README.md index row: ${rel}`);
     }
@@ -214,7 +221,9 @@ function checkIndexAgreement() {
   const indexText = read(join(ROOT, 'docs', 'README.md'));
   const rows = indexText.split('\n');
   for (const line of rows) {
-    const match = /^\|\s*\[([^\]]+)\]\(([^)]+\.md)\)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    const match = /^\|\s*\[([^\]]+)\]\(([^)]+\.md)\)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(
+      line,
+    );
     if (!match) continue;
     const [, , rel, , owner, date] = match;
     const target = join(ROOT, 'docs', rel);
@@ -223,10 +232,14 @@ function checkIndexAgreement() {
     const header = /^Owner:\s*(.+?)\.\s*Reviewed:\s*(\d{4}-\d{2}-\d{2})/m.exec(text);
     if (!header) continue; // checkHeader reports the missing header
     if (header[1].trim() !== owner.trim()) {
-      failures.push(`[inventory] index owner "${owner.trim()}" does not match "${header[1].trim()}" in docs/${rel}`);
+      failures.push(
+        `[inventory] index owner "${owner.trim()}" does not match "${header[1].trim()}" in docs/${rel}`,
+      );
     }
     if (date.trim() !== header[2] && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
-      failures.push(`[inventory] index date "${date.trim()}" does not match "${header[2]}" in docs/${rel}`);
+      failures.push(
+        `[inventory] index date "${date.trim()}" does not match "${header[2]}" in docs/${rel}`,
+      );
     }
   }
 }
@@ -246,7 +259,13 @@ function checkPhaseStatus() {
     const m = /\*\*Status:\s*([^*\n]+?)\*\*/.exec(sections[i + 1]);
     if (m) statuses.set(Number(sections[i]), m[1].trim());
   }
-  const norm = (value) => value.toLowerCase().replace(/[*`]/g, '').trim().split(/[,—(.]/)[0].trim();
+  const norm = (value) =>
+    value
+      .toLowerCase()
+      .replace(/[*`]/g, '')
+      .trim()
+      .split(/[,—(.]/)[0]
+      .trim();
   for (let phase = 0; phase <= 9; phase += 1) {
     if (!rows.has(phase)) {
       failures.push(`[phase-status] docs/README.md has no status row for Phase ${phase}`);
@@ -257,7 +276,9 @@ function checkPhaseStatus() {
       continue;
     }
     if (norm(rows.get(phase)) !== norm(statuses.get(phase))) {
-      failures.push(`[phase-status] Phase ${phase}: README says "${rows.get(phase)}", ROADMAP says "${statuses.get(phase)}"`);
+      failures.push(
+        `[phase-status] Phase ${phase}: README says "${rows.get(phase)}", ROADMAP says "${statuses.get(phase)}"`,
+      );
     }
   }
 }
@@ -272,11 +293,15 @@ function checkHeader(rel, text) {
 // ------------------------------------------------------------ check 2/3: identifiers
 function checkIdentifiers() {
   try {
-    const out = execFileSync(process.execPath, [join(ROOT, 'scripts', 'gates', 'traceability.mjs')], {
-      cwd: ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    const out = execFileSync(
+      process.execPath,
+      [join(ROOT, 'scripts', 'gates', 'traceability.mjs')],
+      {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
     notes.push(out.trim());
   } catch (error) {
     const detail = `${error.stdout || ''}${error.stderr || ''}`.trim();
@@ -286,13 +311,17 @@ function checkIdentifiers() {
 
 // ------------------------------------------------------------------- check 4: links
 function checkLinks() {
-  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md')])) {
+  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+  ])) {
     const rel = relative(ROOT, file).split('\\').join('/');
     for (const { target, line } of links(file)) {
       if (/^(https?:|mailto:)/.test(target)) continue;
       const [pathPart, anchor] = target.split('#');
       if (pathPart === '' && anchor) {
-        if (!headings(file).has(anchor)) failures.push(`[links] ${rel}:${line} broken anchor "#${anchor}"`);
+        if (!headings(file).has(anchor))
+          failures.push(`[links] ${rel}:${line} broken anchor "#${anchor}"`);
         continue;
       }
       const targetPath = resolve(dirname(file), decodeURIComponent(pathPart));
@@ -301,7 +330,8 @@ function checkLinks() {
         continue;
       }
       if (anchor && statSync(targetPath).isFile() && targetPath.endsWith('.md')) {
-        if (!headings(targetPath).has(anchor)) failures.push(`[links] ${rel}:${line} broken anchor -> ${target}`);
+        if (!headings(targetPath).has(anchor))
+          failures.push(`[links] ${rel}:${line} broken anchor -> ${target}`);
       }
     }
   }
@@ -317,7 +347,10 @@ function checkPlaceholders() {
         // Text inside inline code spans documents the rule rather than violating it.
         const prose = line.replace(/`[^`]*`/g, '');
         const hit = PLACEHOLDERS.find((pattern) => pattern.test(prose));
-        if (hit) failures.push(`[placeholders] ${rel}:${index + 1} contains "${line.trim().slice(0, 80)}"`);
+        if (hit)
+          failures.push(
+            `[placeholders] ${rel}:${index + 1} contains "${line.trim().slice(0, 80)}"`,
+          );
       });
   }
 }
@@ -332,7 +365,10 @@ function checkAudience() {
       .forEach((line, index) => {
         for (const marker of INTERNAL_MARKERS) {
           const match = marker.exec(line);
-          if (match) failures.push(`[audience] ${rel}:${index + 1} mentions internal identifier "${match[0]}"`);
+          if (match)
+            failures.push(
+              `[audience] ${rel}:${index + 1} mentions internal identifier "${match[0]}"`,
+            );
         }
       });
   }
@@ -347,20 +383,69 @@ function checkAudience() {
  */
 const MODEL_COHERENCE = [
   { concept: 'live_share_sessions', docs: ['DATA_MODEL.md', 'ARCHITECTURE.md'], adr: 'ADR-013' },
-  { concept: 'live_share_grants', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-013' },
-  { concept: 'history_share_grants', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-014' },
-  { concept: 'user_location_history', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-014' },
-  { concept: 'user_categories', docs: ['DATA_MODEL.md', 'PRODUCT_REQUIREMENTS.md', 'SECURITY.md'], adr: 'ADR-015' },
+  {
+    concept: 'live_share_grants',
+    docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'],
+    adr: 'ADR-013',
+  },
+  {
+    concept: 'history_share_grants',
+    docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'],
+    adr: 'ADR-014',
+  },
+  {
+    concept: 'user_location_history',
+    docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'],
+    adr: 'ADR-014',
+  },
+  {
+    concept: 'user_categories',
+    docs: ['DATA_MODEL.md', 'PRODUCT_REQUIREMENTS.md', 'SECURITY.md'],
+    adr: 'ADR-015',
+  },
   { concept: 'sos_alert_categories', docs: ['DATA_MODEL.md', 'ARCHITECTURE.md'], adr: 'ADR-015' },
   { concept: 'role_permissions', docs: ['DATA_MODEL.md', 'SECURITY.md'], adr: 'ADR-024' },
   { concept: 'refresh_token_hash', docs: ['DATA_MODEL.md', 'SECURITY.md'], adr: 'ADR-021' },
-  { concept: 'captcha_challenges', docs: ['DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-020' },
-  { concept: 'SECURITY_QUESTIONS_ENABLED', docs: ['DATA_MODEL.md', 'SECURITY.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-023' },
-  { concept: 'no email address and no mobile number', docs: ['PRODUCT_REQUIREMENTS.md', 'DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-019' },
-  { concept: 'ADR-025', docs: ['ARCHITECTURE.md', 'SECURITY.md', 'development/01-development-environment.md', 'development/02-dependency-policy.md'], adr: 'ADR-025' },
-  { concept: 'ADR-026', docs: ['security/data-classification.md', 'operations/README.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-026' },
-  { concept: 'ADR-027', docs: ['security/data-classification.md', 'operations/README.md', 'ARCHITECTURE.md'], adr: 'ADR-027' },
-  { concept: 'ADR-028', docs: ['performance/README.md', 'ARCHITECTURE.md', 'operations/README.md'], adr: 'ADR-028' },
+  {
+    concept: 'captcha_challenges',
+    docs: ['DATA_MODEL.md', 'security/data-classification.md'],
+    adr: 'ADR-020',
+  },
+  {
+    concept: 'SECURITY_QUESTIONS_ENABLED',
+    docs: ['DATA_MODEL.md', 'SECURITY.md', 'PRODUCT_REQUIREMENTS.md'],
+    adr: 'ADR-023',
+  },
+  {
+    concept: 'no email address and no mobile number',
+    docs: ['PRODUCT_REQUIREMENTS.md', 'DATA_MODEL.md', 'security/data-classification.md'],
+    adr: 'ADR-019',
+  },
+  {
+    concept: 'ADR-025',
+    docs: [
+      'ARCHITECTURE.md',
+      'SECURITY.md',
+      'development/01-development-environment.md',
+      'development/02-dependency-policy.md',
+    ],
+    adr: 'ADR-025',
+  },
+  {
+    concept: 'ADR-026',
+    docs: ['security/data-classification.md', 'operations/README.md', 'PRODUCT_REQUIREMENTS.md'],
+    adr: 'ADR-026',
+  },
+  {
+    concept: 'ADR-027',
+    docs: ['security/data-classification.md', 'operations/README.md', 'ARCHITECTURE.md'],
+    adr: 'ADR-027',
+  },
+  {
+    concept: 'ADR-028',
+    docs: ['performance/README.md', 'ARCHITECTURE.md', 'operations/README.md'],
+    adr: 'ADR-028',
+  },
 ];
 
 /**
@@ -374,7 +459,8 @@ const FORBIDDEN_CLAIMS = [
   {
     pattern: /\bunlimited\s+(?:scal\w*|capacity|concurren\w*)/i,
     label: 'unlimited scalability',
-    reason: 'capacity is an attribute of a deployment, measured on its own hardware (ADR-028, GOV-91)',
+    reason:
+      'capacity is an attribute of a deployment, measured on its own hardware (ADR-028, GOV-91)',
   },
   {
     pattern: /\bguaranteed\s+(?:capacity|uptime|availability|latency)\b/i,
@@ -382,19 +468,22 @@ const FORBIDDEN_CLAIMS = [
     reason: 'a capacity or availability figure is a measurement, never a promise (ADR-028, GOV-91)',
   },
   {
-    pattern: /\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b[^.\n]{0,40}\bcompliant\b|\bcompliant\b[^.\n]{0,40}\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b/i,
+    pattern:
+      /\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b[^.\n]{0,40}\bcompliant\b|\bcompliant\b[^.\n]{0,40}\b(?:GDPR|HIPAA|SOC ?2|ISO ?27001|PCI[- ]DSS)\b/i,
     label: 'compliance claim',
     reason: "compliance is the operator's determination for its own deployment (ADR-027, GOV-91)",
   },
   {
     pattern: /\blegally compliant\b/i,
     label: 'legal-compliance claim',
-    reason: "the project makes no legal-compliance claim; that determination belongs to the operator (ADR-027, GOV-91)",
+    reason:
+      'the project makes no legal-compliance claim; that determination belongs to the operator (ADR-027, GOV-91)',
   },
   {
     pattern: /\b(?:retained|kept|stored)\s+indefinitely\b/i,
     label: 'indefinite retention',
-    reason: 'retention follows an approved policy; none is universally acceptable (ADR-026, GOV-91)',
+    reason:
+      'retention follows an approved policy; none is universally acceptable (ADR-026, GOV-91)',
   },
 ];
 
@@ -406,11 +495,23 @@ const RETIRED_WORDING = [
   { phrase: 'share_session_id', adr: 'ADR-014 (history rows no longer belong to a share)' },
   { phrase: 'scope (`followers`)', adr: 'ADR-013 (a share names individual followers)' },
   { phrase: 'accepted followers with sharing enabled', adr: 'ADR-013 (audience is per-grant)' },
-  { phrase: 'accepted followers the owner shares with', adr: 'ADR-014 (history audience is per-grant)' },
-  { phrase: 'at least one category that the alert carries', adr: 'ADR-015 (single category per user)' },
+  {
+    phrase: 'accepted followers the owner shares with',
+    adr: 'ADR-014 (history audience is per-grant)',
+  },
+  {
+    phrase: 'at least one category that the alert carries',
+    adr: 'ADR-015 (single category per user)',
+  },
   { phrase: 'within the configured maximum', adr: 'ADR-015 (exactly one category per user)' },
-  { phrase: 'live-sharing session is running', adr: 'ADR-013 (grants, not sessions, gate a viewer)' },
-  { phrase: 'category membership', adr: 'ADR-016 (a category is a single assignment, never a role or membership)' },
+  {
+    phrase: 'live-sharing session is running',
+    adr: 'ADR-013 (grants, not sessions, gate a viewer)',
+  },
+  {
+    phrase: 'category membership',
+    adr: 'ADR-016 (a category is a single assignment, never a role or membership)',
+  },
   { phrase: 'membership changes', adr: 'ADR-015 (assignments change: set, change, clear, verify)' },
   // The bare noun, wherever it appears: ADR-016 makes a category one assignment carried as a profile
   // attribute, so the phrase list alone let the retired concept back in one word at a time.
@@ -479,7 +580,9 @@ function checkModelCoherence() {
         continue;
       }
       if (!read(file).includes(concept)) {
-        failures.push(`[model] \`${concept}\` (${adr}) is not mentioned in ${rel} — the model and its governing documents disagree`);
+        failures.push(
+          `[model] \`${concept}\` (${adr}) is not mentioned in ${rel} — the model and its governing documents disagree`,
+        );
       }
     }
   }
@@ -507,7 +610,9 @@ function checkModelCoherence() {
           const hit = entry.pattern ? entry.pattern.test(prose) : prose.includes(entry.phrase);
           if (hit) {
             const label = entry.label || entry.phrase;
-            failures.push(`[model] retired wording "${label}" in ${rel}:${index + 1} — superseded by ${entry.adr}`);
+            failures.push(
+              `[model] retired wording "${label}" in ${rel}:${index + 1} — superseded by ${entry.adr}`,
+            );
           }
         }
       });
@@ -516,13 +621,19 @@ function checkModelCoherence() {
 
 // ----------------------------------------------------------------- check 7: secrets
 function checkSecrets() {
-  for (const file of walk(ROOT, (f) => /\.(md|mjs|js|ts|json|ya?ml|env|example|gitignore|editorconfig|gitattributes)$/.test(f) || f.endsWith('.env.example'))) {
+  for (const file of walk(
+    ROOT,
+    (f) =>
+      /\.(md|mjs|js|ts|json|ya?ml|env|example|gitignore|editorconfig|gitattributes)$/.test(f) ||
+      f.endsWith('.env.example'),
+  )) {
     const rel = relative(ROOT, file).split('\\').join('/');
     if (rel.startsWith('.git/')) continue;
     const text = read(file);
     text.split('\n').forEach((line, index) => {
       for (const pattern of SECRET_PATTERNS) {
-        if (pattern.re.test(line)) failures.push(`[secrets] ${rel}:${index + 1} looks like a ${pattern.name}`);
+        if (pattern.re.test(line))
+          failures.push(`[secrets] ${rel}:${index + 1} looks like a ${pattern.name}`);
       }
     });
   }
@@ -539,7 +650,10 @@ function checkSecrets() {
         }
         const value = trimmed.slice(trimmed.indexOf('=') + 1);
         if (value === '') return;
-        if (!/^<[^>]+>$/.test(value)) failures.push(`[secrets] .env.example:${index + 1} value must be a <placeholder>, found "${value.slice(0, 40)}"`);
+        if (!/^<[^>]+>$/.test(value))
+          failures.push(
+            `[secrets] .env.example:${index + 1} value must be a <placeholder>, found "${value.slice(0, 40)}"`,
+          );
       });
   } else {
     failures.push('[secrets] .env.example is missing');
@@ -622,7 +736,10 @@ function checkDiagrams() {
 
   // Every code fence is closed. An unclosed fence silently swallows the rest of a
   // document, including links, which is how a broken document passes review.
-  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md')])) {
+  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+  ])) {
     let inFence = false;
     let opened = 0;
     read(file)
@@ -645,10 +762,14 @@ function checkDiagrams() {
   // Every diagram names the requirements it draws, and each identifier named exists.
   const defined = new Set();
   for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
-    for (const match of read(file).matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g)) defined.add(match[1]);
+    for (const match of read(file).matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g))
+      defined.add(match[1]);
   }
   const decisions = new Set();
-  for (const match of read(join(ROOT, 'docs', 'DECISIONS.md')).matchAll(/^#{2,6}\s+(ADR-\d{3})\b/gm)) decisions.add(match[1]);
+  for (const match of read(join(ROOT, 'docs', 'DECISIONS.md')).matchAll(
+    /^#{2,6}\s+(ADR-\d{3})\b/gm,
+  ))
+    decisions.add(match[1]);
   const diagrams = read(join(ROOT, DIAGRAMS_DOC));
   const lines = diagrams.split('\n');
   const blocks = mermaidBlocks(join(ROOT, DIAGRAMS_DOC));
@@ -662,13 +783,17 @@ function checkDiagrams() {
     }
     const cited = above.match(/[A-Z]{2,4}-\d{1,3}|ADR-\d{3}/g) || [];
     if (!cited.length) {
-      failures.push(`[diagrams] ${DIAGRAMS_DOC}:${block.start} diagram has no "Cited:" line naming the requirements it draws`);
+      failures.push(
+        `[diagrams] ${DIAGRAMS_DOC}:${block.start} diagram has no "Cited:" line naming the requirements it draws`,
+      );
     }
     for (const id of cited) {
       const known = id.startsWith('ADR-') ? decisions.has(id) : defined.has(id);
       if (!known) {
         const kind = id.startsWith('ADR-') ? 'decision' : 'requirement';
-        failures.push(`[diagrams] ${DIAGRAMS_DOC}:${block.start} cites unknown ${kind} identifier "${id}"`);
+        failures.push(
+          `[diagrams] ${DIAGRAMS_DOC}:${block.start} cites unknown ${kind} identifier "${id}"`,
+        );
       }
     }
   }
@@ -699,7 +824,9 @@ function checkDiagrams() {
   for (const { machine, source, pattern, separator } of STATE_MACHINES) {
     const match = pattern.exec(read(join(ROOT, source)));
     if (!match) {
-      failures.push(`[diagrams] ${machine}: the state list is missing from ${source} — the gate cannot verify it`);
+      failures.push(
+        `[diagrams] ${machine}: the state list is missing from ${source} — the gate cannot verify it`,
+      );
       continue;
     }
     const declared = new Set(stateNames(match[1], separator));
@@ -718,7 +845,9 @@ function checkDiagrams() {
     }
     const reference = /§(\d+(?:\.\d+)?)/.exec(tableSections.get(machine) || '');
     if (!reference) {
-      failures.push(`[diagrams] ${machine}: the state table row for "${machine}" names no "Drawn in" section`);
+      failures.push(
+        `[diagrams] ${machine}: the state table row for "${machine}" names no "Drawn in" section`,
+      );
       continue;
     }
     const drawn = sectionDiagram.get(reference[1]);
@@ -728,7 +857,9 @@ function checkDiagrams() {
     }
     const tokens = new Set(drawn.code.split(/[^A-Za-z0-9_-]+/));
     for (const state of [...declared].filter((s) => !tokens.has(s)).sort()) {
-      failures.push(`[diagrams] ${machine}: state "${state}" is declared in ${source} but §${reference[1]} does not draw it`);
+      failures.push(
+        `[diagrams] ${machine}: state "${state}" is declared in ${source} but §${reference[1]} does not draw it`,
+      );
     }
   }
 
@@ -744,17 +875,24 @@ function checkDiagrams() {
         const term = row[1].trim();
         const authority = row[3].trim();
         if (seen.has(term)) {
-          failures.push(`[glossary] term "${term}" is defined twice in docs/GLOSSARY.md (lines ${seen.get(term)} and ${index + 1})`);
+          failures.push(
+            `[glossary] term "${term}" is defined twice in docs/GLOSSARY.md (lines ${seen.get(term)} and ${index + 1})`,
+          );
         } else {
           seen.set(term, index + 1);
         }
         if (!/\[|\b[A-Z]{2,4}-\d{1,3}\b/.test(authority)) {
-          failures.push(`[glossary] entry "${term}" names no document and no requirement — a definition must say who owns it`);
+          failures.push(
+            `[glossary] entry "${term}" names no document and no requirement — a definition must say who owns it`,
+          );
         }
       });
   }
 
-  if (blocks.length) notes.push(`diagrams: ${blocks.length} Mermaid blocks, ${STATE_MACHINES.length} state machines cross-checked`);
+  if (blocks.length)
+    notes.push(
+      `diagrams: ${blocks.length} Mermaid blocks, ${STATE_MACHINES.length} state machines cross-checked`,
+    );
 }
 
 // -------------------------------------- check 11: cross-references resolve
@@ -831,14 +969,24 @@ const CITATION_RANGE = String.raw`${CITATION_NUMBER}(?:\s*(?:–|-|—)\s*§?\s*
 const LINK = /\]\(([^)\s]+\.md)(?:#[^)]*)?\)/g;
 const CITATION_LIST = new RegExp(String.raw`^(?:\s*,)?\s*(?:\s*and\s+)?§+\s*(${CITATION_RANGE})`);
 const NAMED_CITATION = new RegExp(
-  String.raw`(?:^|[^\w` + '`' + String.raw`])(` + '`?' + String.raw`[A-Za-z][A-Za-z_-]*(?:\s+[A-Za-z][A-Za-z_-]*){0,2}` + '`?' + String.raw`)\s+§+\s*(${CITATION_RANGE})`,
+  String.raw`(?:^|[^\w` +
+    '`' +
+    String.raw`])(` +
+    '`?' +
+    String.raw`[A-Za-z][A-Za-z_-]*(?:\s+[A-Za-z][A-Za-z_-]*){0,2}` +
+    '`?' +
+    String.raw`)\s+§+\s*(${CITATION_RANGE})`,
   'g',
 );
 const BARE_CITATION = new RegExp(String.raw`§+\s*(${CITATION_RANGE})`, 'g');
 
 function checkReferences() {
   const docs = walk(DOCS, (file) => file.endsWith('.md'));
-  const scanned = docs.concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md'), join(ROOT, '.env.example')]);
+  const scanned = docs.concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.env.example'),
+  ]);
 
   // Definitions: the requirement handles, the ADR headings, and the open-question rows.
   const defined = new Set();
@@ -912,19 +1060,24 @@ function checkReferences() {
           if (prefix === 'ADR') identifier(id, decisions.has(id), 'decision');
           else if (areas.has(prefix)) identifier(id, defined.has(id), 'requirement');
         }
-        for (const match of line.matchAll(/\b(Q-\d{2})\b/g)) identifier(match[1], questions.has(match[1]), 'open question');
+        for (const match of line.matchAll(/\b(Q-\d{2})\b/g))
+          identifier(match[1], questions.has(match[1]), 'open question');
 
         // Register ranges: "ADR-001 … ADR-018", "Q-01 … Q-24", "PRIV-23 … PRIV-26" are claims
         // about the register, so both ends must exist: a range that was true in an earlier round
         // cannot survive a new decision or a renumbering.
-        for (const match of line.matchAll(/\b([A-Z]{2,4})-(\d{1,3})\s*…\s*([A-Z]{2,4})-(\d{1,3})\b/g)) {
+        for (const match of line.matchAll(
+          /\b([A-Z]{2,4})-(\d{1,3})\s*…\s*([A-Z]{2,4})-(\d{1,3})\b/g,
+        )) {
           const [claim, first, firstDigits, second, secondDigits] = match;
           if (first !== second) continue;
           const numbers = numbersByPrefix.get(first);
           if (!numbers) continue;
           for (const digits of [firstDigits, secondDigits]) {
             if (numbers.has(Number(digits))) continue;
-            failures.push(`[references] ${rel}:${lineNo} claims the range ${claim.replace(/\s+/g, ' ')}, but ${first}-${digits} does not exist`);
+            failures.push(
+              `[references] ${rel}:${lineNo} claims the range ${claim.replace(/\s+/g, ' ')}, but ${first}-${digits} does not exist`,
+            );
           }
         }
 
@@ -946,8 +1099,12 @@ function checkReferences() {
             if (!targetExists) continue;
             for (const number of numbersIn(cite[1])) {
               if (targetHeadings.has(number)) continue;
-              const why = targetHeadings.size ? `has no §${number}` : 'does not number its sections';
-              failures.push(`[references] ${rel}:${lineNo} cites ${link[1]} §${number}, but ${targetRel} ${why}`);
+              const why = targetHeadings.size
+                ? `has no §${number}`
+                : 'does not number its sections';
+              failures.push(
+                `[references] ${rel}:${lineNo} cites ${link[1]} §${number}, but ${targetRel} ${why}`,
+              );
             }
           }
         }
@@ -961,7 +1118,9 @@ function checkReferences() {
           for (const number of numbersIn(match[2])) {
             if (targetHeadings.has(number)) continue;
             const why = targetHeadings.size ? `has no §${number}` : 'does not number its sections';
-            failures.push(`[references] ${rel}:${lineNo} cites "${match[1].trim()}" §${number}, but ${DOC_NAMES.get(name)} ${why}`);
+            failures.push(
+              `[references] ${rel}:${lineNo} cites "${match[1].trim()}" §${number}, but ${DOC_NAMES.get(name)} ${why}`,
+            );
           }
         }
 
@@ -970,7 +1129,9 @@ function checkReferences() {
           if (taken[match.index]) continue;
           for (const number of numbersIn(match[1])) {
             if (self.has(number)) continue;
-            failures.push(`[references] ${rel}:${lineNo} cites §${number}, which this document does not have — name the document and section instead`);
+            failures.push(
+              `[references] ${rel}:${lineNo} cites §${number}, which this document does not have — name the document and section instead`,
+            );
           }
         }
       });
@@ -1023,12 +1184,16 @@ function checkLanguage() {
         const retired = RETIRED_SPELLINGS.find((pattern) => pattern.test(prose));
         if (retired) {
           const found = prose.match(retired)[0];
-          failures.push(`[language] ${rel}:${index + 1} uses "${found}" — the pack is written in one variety: use the -ize form`);
+          failures.push(
+            `[language] ${rel}:${index + 1} uses "${found}" — the pack is written in one variety: use the -ize form`,
+          );
         }
         const american = AMERICAN_SPELLINGS.find((pattern) => pattern.test(prose));
         if (american) {
           const found = prose.match(american)[0];
-          failures.push(`[language] ${rel}:${index + 1} uses the American spelling "${found}" — the pack uses the British form`);
+          failures.push(
+            `[language] ${rel}:${index + 1} uses the American spelling "${found}" — the pack uses the British form`,
+          );
         }
       });
   }
@@ -1050,7 +1215,11 @@ const GENERATED_DOCS = new Set(['docs/development/07-traceability.md']);
 function checkReviewDates() {
   const git = (...args) => {
     try {
-      return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+      return execFileSync('git', args, {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
     } catch {
       return '';
     }
@@ -1064,15 +1233,25 @@ function checkReviewDates() {
   // skip itself in CI, where it is the only place the rule is enforced.
   const workflow = join(ROOT, '.github/workflows/docs-gates.yml');
   if (!existsSync(workflow)) {
-    failures.push('[review-dates] .github/workflows/docs-gates.yml is missing; the Phase 0 gates documented in 03-ci-and-gates §4 do not run');
-  } else if (!/fetch-depth:\s*0/.test(read(workflow)) && !/git fetch[^\n]*--unshallow/.test(read(workflow))) {
-    failures.push('[review-dates] the CI workflow checks out a shallow clone, so this check skips itself in CI: set "fetch-depth: 0" on the checkout step');
+    failures.push(
+      '[review-dates] .github/workflows/docs-gates.yml is missing; the Phase 0 gates documented in 03-ci-and-gates §4 do not run',
+    );
+  } else if (
+    !/fetch-depth:\s*0/.test(read(workflow)) &&
+    !/git fetch[^\n]*--unshallow/.test(read(workflow))
+  ) {
+    failures.push(
+      '[review-dates] the CI workflow checks out a shallow clone, so this check skips itself in CI: set "fetch-depth: 0" on the checkout step',
+    );
   }
   if (git('rev-parse', '--is-shallow-repository') === 'true') {
     notes.push('review dates: shallow clone, check skipped (fetch full history to enforce it)');
     return;
   }
-  const files = walk(DOCS, (file) => file.endsWith('.md')).concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md')]);
+  const files = walk(DOCS, (file) => file.endsWith('.md')).concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+  ]);
   for (const file of files) {
     const rel = relative(ROOT, file).split('\\').join('/');
     if (GENERATED_DOCS.has(rel)) continue;
@@ -1107,10 +1286,50 @@ function checkReviewDates() {
  * for it; a document that restates it elsewhere would need the same check in that place.
  */
 const REVIEW_RECORD = join(DOCS, 'development/08-phase-0-review.md');
-const COUNT_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
-const PASS_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth',
-  'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth'];
+const COUNT_WORDS = [
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+  'eleven',
+  'twelve',
+  'thirteen',
+  'fourteen',
+  'fifteen',
+  'sixteen',
+  'seventeen',
+  'eighteen',
+  'nineteen',
+  'twenty',
+];
+const PASS_ORDINALS = [
+  'first',
+  'second',
+  'third',
+  'fourth',
+  'fifth',
+  'sixth',
+  'seventh',
+  'eighth',
+  'ninth',
+  'tenth',
+  'eleventh',
+  'twelfth',
+  'thirteenth',
+  'fourteenth',
+  'fifteenth',
+  'sixteenth',
+  'seventeenth',
+  'eighteenth',
+  'nineteenth',
+  'twentieth',
+];
 
 function checkReviewRecord() {
   if (!existsSync(REVIEW_RECORD)) return; // check 1 reports a missing document
@@ -1119,30 +1338,48 @@ function checkReviewRecord() {
   const passes = [];
   // A pass section is titled with its ordinal: "## 7. Second review pass (round 2)". A heading
   // that merely mentions a pass in parentheses ("## 6. Evidence (first pass)") is not one.
-  for (const heading of text.matchAll(/^##\s+\d+\.\s+(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth)\s+[^\n]*\bpass\b[^\n]*$/gim)) {
+  for (const heading of text.matchAll(
+    /^##\s+\d+\.\s+(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth)\s+[^\n]*\bpass\b[^\n]*$/gim,
+  )) {
     const line = heading[0];
     const word = heading[1].toLowerCase();
-    passes.push({ heading: line.replace(/^##\s+/, '').trim(), number: PASS_ORDINALS.indexOf(word) + 1, word });
+    passes.push({
+      heading: line.replace(/^##\s+/, '').trim(),
+      number: PASS_ORDINALS.indexOf(word) + 1,
+      word,
+    });
   }
   if (!passes.length) {
-    failures.push('[review-record] the review record contains no pass sections with an ordinal heading');
+    failures.push(
+      '[review-record] the review record contains no pass sections with an ordinal heading',
+    );
   }
   passes.forEach((pass, index) => {
     const expected = index + 2; // the first pass has no ordinal heading of its own
     if (pass.number !== expected && expected <= PASS_ORDINALS.length) {
-      failures.push(`[review-record] "${pass.heading}" says ${pass.word} pass, but it is the ${PASS_ORDINALS[expected - 1]} pass section in the record`);
+      failures.push(
+        `[review-record] "${pass.heading}" says ${pass.word} pass, but it is the ${PASS_ORDINALS[expected - 1]} pass section in the record`,
+      );
     }
   });
-  const claims = [...intro.matchAll(
-    /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\d+)\s+(?:\w+\s+)?passes\b/gi,
-  )].map((match) => (/^\d+$/.test(match[1]) ? Number(match[1]) : COUNT_WORDS.indexOf(match[1].toLowerCase()) + 1));
+  const claims = [
+    ...intro.matchAll(
+      /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\d+)\s+(?:\w+\s+)?passes\b/gi,
+    ),
+  ].map((match) =>
+    /^\d+$/.test(match[1]) ? Number(match[1]) : COUNT_WORDS.indexOf(match[1].toLowerCase()) + 1,
+  );
   const recorded = passes.length + 1; // the first pass is described rather than titled
   if (!claims.length) {
-    failures.push('[review-record] the introduction does not state how many passes the record holds — write it once, there');
+    failures.push(
+      '[review-record] the introduction does not state how many passes the record holds — write it once, there',
+    );
   }
   for (const claim of claims) {
     if (claim !== recorded) {
-      failures.push(`[review-record] the introduction says the record holds ${claim} passes; it holds ${recorded}`);
+      failures.push(
+        `[review-record] the introduction says the record holds ${claim} passes; it holds ${recorded}`,
+      );
     }
   }
   // The count is not the only moving part in that sentence: the introduction also points at the
@@ -1150,22 +1387,33 @@ function checkReviewRecord() {
   const pointer = /the latest being \[§(\d+)\]/.exec(intro);
   const last = passes.at(-1);
   if (!pointer) {
-    failures.push('[review-record] the introduction does not name the latest pass section — write "the latest being [§N](…)"');
+    failures.push(
+      '[review-record] the introduction does not name the latest pass section — write "the latest being [§N](…)"',
+    );
   } else if (last) {
     const expectedNumber = Number(/^\d+\./.exec(last.heading)[0].slice(0, -1));
     if (Number(pointer[1]) !== expectedNumber) {
-      failures.push(`[review-record] the introduction points at §${pointer[1]} as the latest pass; the record's latest pass is §${expectedNumber}`);
+      failures.push(
+        `[review-record] the introduction points at §${pointer[1]} as the latest pass; the record's latest pass is §${expectedNumber}`,
+      );
     }
   }
-  if (failures.length === 0) notes.push(`review record: ${recorded} passes, in order, and the introduction says so`);
+  if (failures.length === 0)
+    notes.push(`review record: ${recorded} passes, in order, and the introduction says so`);
 }
 
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
-  console.log('Runs the Phase 0 documentation gate (inventory and index registration, requirement IDs, traceability,');
-  console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary,');
-  console.log('cross-references (identifiers and section citations), documentation language, review dates,');
+  console.log(
+    'Runs the Phase 0 documentation gate (inventory and index registration, requirement IDs, traceability,',
+  );
+  console.log(
+    'links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary,',
+  );
+  console.log(
+    'cross-references (identifiers and section citations), documentation language, review dates,',
+  );
   console.log('review-record consistency).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
@@ -1194,18 +1442,32 @@ if (failures.length) {
 }
 
 console.log('Phase 0 documentation gate passed:');
-console.log('  1. document inventory complete; every document registered in an index row, with owner and review date agreeing with the index');
+console.log(
+  '  1. document inventory complete; every document registered in an index row, with owner and review date agreeing with the index',
+);
 console.log('  2. requirement identifiers unique and correctly formatted');
 console.log('  3. traceability coverage complete and up to date');
 console.log('  4. internal links and anchors resolve');
 console.log('  5. no placeholders in normative documents');
 console.log('  6. user documentation free of internal identifiers');
 console.log('  7. no credential material; .env.example contains placeholders only');
-console.log('  8. models introduced by a decision are coherent across documents, with no retired wording and no claim lacking a basis');
-console.log('  9. phase status present for every phase, and the README table agrees with the ROADMAP');
-console.log(' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once');
-console.log(' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists');
-console.log(' 12. one variety of English across the pack, with code identifiers left as they are written');
-console.log(' 13. every document changed since its review date carries a current "Owner: … Reviewed:" line');
+console.log(
+  '  8. models introduced by a decision are coherent across documents, with no retired wording and no claim lacking a basis',
+);
+console.log(
+  '  9. phase status present for every phase, and the README table agrees with the ROADMAP',
+);
+console.log(
+  ' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once',
+);
+console.log(
+  ' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists',
+);
+console.log(
+  ' 12. one variety of English across the pack, with code identifiers left as they are written',
+);
+console.log(
+  ' 13. every document changed since its review date carries a current "Owner: … Reviewed:" line',
+);
 console.log(' 14. the review record states its own pass count and its pass sections run in order');
 for (const note of notes) console.log(`  · ${note}`);

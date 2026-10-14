@@ -1,0 +1,16 @@
+{
+  "name": "@boro/logging",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@boro/contracts": "1.0.0",
+    "pino": "10.4.0"
+  }
+}

@@ -10,35 +10,42 @@ Owner: Engineering. Reviewed: 2026-10-14.
 - **Mermaid source, rendered by GitHub.** Each block is plain text, so it is reviewed, diffed, and linked like the rest of the pack. It also reads acceptably in a terminal, which is where agents without a renderer will meet it.
 - **Every diagram names its requirements.** The line above each block is a `Cited:` line: an unlabelled picture cannot be checked, and it is not evidence.
 - **The declared state machines are cross-checked.** §9 lists the four state vocabularies that are declared in the documents governing them. The documentation gate ([QA-118](development/03-ci-and-gates.md) §3) extracts the states from the sentence that declares them, compares them with §9, requires each one to be drawn in the section §9 names, and fails otherwise — so neither the table, nor the section reference, nor the picture can drift while the prose stays correct.
-- **Syntax is verified when the diagram is authored**, not assumed: every block in this file parsed with Mermaid 12.2.0 on 2026-10-14 (recorded in [REFERENCES](REFERENCES.md) and the [review record](development/08-phase-0-review.md) §14). A renderer check returns to CI in Phase 1 with the repository's other dependencies ([QA-60](development/03-ci-and-gates.md) §1).
+- **Mermaid syntax is verified in CI**, not assumed: `node scripts/gates/diagrams.mjs` parses every Mermaid fence in this file with the exact `mermaid@12.2.0` dependency and a `happy-dom` document. The Phase 1 `bun run gate` includes this check; the result is recorded in the Phase 1 report.
 
-## 2. The repository now, and what Phase 1 adds
+## 2. Repository status and phase boundaries
 
 Cited: `GOV-41` … `GOV-48`, `OPS-28` … `OPS-43`, `ADR-010`.
 
 ```mermaid
 flowchart LR
-  subgraph now["Present in Phase 0"]
+  subgraph repo["Repository foundation"]
     entry["README.md, CONTRIBUTING.md,<br/>.env.example, .editorconfig"]
-    docs["docs/ — the normative pack:<br/>requirements, architecture, security, data model,<br/>decisions, roadmap, diagrams, glossary, guides"]
-    gates["scripts/gates/ — two dependency-free<br/>gate runners"]
-    ci[".github/ — docs-gates.yml and<br/>the pull-request template"]
+    docs["docs/ — requirements, architecture,<br/>security, data model, decisions, roadmap,<br/>diagrams, glossary, and guides"]
+    docgate["Phase 0 documentation gate"]
+    appgate["Phase 1 format, lint, types,<br/>tests, builds, and runtime checks"]
+    ci[".github/workflows — docs-gates.yml<br/>and phase1-gates.yml"]
   end
-  subgraph p1["Introduced in Phase 1"]
-    web["apps/web — Vue PWA"]
-    api["apps/api — core Fastify API"]
-    android["apps/android — Capacitor shell"]
-    relsvc["services/relation"]
-    sossvc["services/sos"]
-    pkgs["packages/ — contracts, validation,<br/>api-client, config, ui, test-utils"]
+  subgraph p1["Phase 1 infrastructure skeleton"]
+    web["apps/web — minimal Vue shell<br/>(not yet a PWA)"]
+    api["apps/api — Fastify and migrations<br/>(no authentication/domain routes)"]
+    relsvc["services/relation — service shell"]
+    sossvc["services/sos — service shell"]
+    pkgs["packages — contracts, config,<br/>logging, validation, test-utils"]
+  end
+  subgraph future["Later-phase work"]
+    android["apps/android — Phase 8"]
+    futurepkgs["api-client and UI packages<br/>(later phases)"]
   end
   entry --> docs
-  docs --> gates
-  gates --> ci
-  docs -.->|"specified, not yet present"| p1
+  docs --> docgate
+  docs --> appgate
+  docgate --> ci
+  appgate --> ci
+  docs --> p1
+  docs -.->|"specified, not yet present"| future
 ```
 
-Package dependency directions are acyclic and enforced by an automated check, not by review alone (`OPS-40`) — the check arrives with the packages in Phase 1; server implementation code never reaches the frontend and frontend code never reaches a service (`OPS-41`).
+Package dependency directions are acyclic and enforced by `node scripts/gates/workspace.mjs` (also run by `bun run gate`), not by review alone (`OPS-40`). Its manifest graph permits only the documented workspace edges, and its source check rejects application/service boundary imports; server implementation code never reaches the frontend and frontend code never reaches a service (`OPS-41`).
 
 ## 3. System topology and data ownership
 

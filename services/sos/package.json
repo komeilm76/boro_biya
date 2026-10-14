@@ -1,0 +1,17 @@
+{
+  "name": "@boro/sos-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch dist/index.js",
+    "build": "tsc --build",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@boro/config": "1.0.0",
+    "@boro/contracts": "1.0.0",
+    "@boro/logging": "1.0.0",
+    "fastify": "5.12.7"
+  }
+}

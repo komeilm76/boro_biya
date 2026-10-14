@@ -15,20 +15,21 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 ## Budgets
 
-The **baseline profile** is fixed in Phase 1 ([ROADMAP](../ROADMAP.md)) and applies to development and CI only: it is a small, reproducible workload whose purpose is to catch a regression, not to describe production capacity. Each deployment then defines its own **production capacity targets** in the same shape, validated by measurement on its own hardware ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)).
+The implemented Phase 1 baseline is fixed in [`scripts/load/baseline-profile.json`](../../scripts/load/baseline-profile.json) and applies only to development and CI. It is a small, reproducible HTTP health-endpoint regression test, not a user-workload or production-capacity benchmark. It runs against the built API with no database, account, location, event-stream, or other domain data. The profile script reports the exact Node version, request rate, error count, and p50/p95/p99 latency; `bun run gate` runs it after the build and returns non-zero on any threshold breach. The exact request mix and policy are:
 
-| Baseline field | Meaning | Value |
+| Baseline field | Meaning | Phase 1 value or coverage |
 | --- | --- | --- |
-| Concurrent users | Synthetic sessions active at once | set in Phase 1 |
-| Request rate | Requests per second across the API, with the mix stated | set in Phase 1 |
-| Event rate | SSE/WebSocket events per second and concurrent streams | set in Phase 1 |
-| Latency SLO | p95/p99 per critical route (login, map data, SOS creation) | set in Phase 1 |
-| Error rate | Failed request ratio that still passes | set in Phase 1 |
-| CPU and memory | Budget per service container on the reference environment | set in Phase 1 |
-| Disk | Growth per thousand events, and the headroom the test expects | set in Phase 1 |
-| Pass/fail rule | CI fails when the baseline is breached on the reference environment, or when the profile cannot complete | any breach fails the run |
+| Concurrent users | Simultaneous synthetic request workers | 20 |
+| Request count and rate | Total `GET /healthz` requests; measured requests per second | 400 requests; at least 50 requests/second |
+| Event rate | SSE/WebSocket events and concurrent streams | Not applicable: Phase 1 implements no event stream; no event-rate claim |
+| Latency SLO | Request latency on the health endpoint | p95 at most 250 ms; p99 at most 500 ms |
+| Error rate | Failed requests allowed | 0 of 400 |
+| Dataset | Records touched by the endpoint | Empty Phase 1 service shell; no user or location records |
+| CPU and memory | Per-service resource utilization/budgets | Not measured by this HTTP profile; no budget or capacity claim is made |
+| Disk | Persistent growth from the workload | Not measured; the GET health workload is not a disk-growth benchmark |
+| Pass/fail | Criteria enforced by `scripts/load/baseline.mjs` | Any request error, rate below 50 requests/second, p95 above 250 ms, p99 above 500 ms, or failure to complete makes the command exit non-zero |
 
-No numeric budget exists yet, and no optimization work may claim to satisfy one until the profile above is filled in.
+Run it after the API build with `bun run check:load`, or run the full active gate with `bun run gate`. A result is recorded only after the command actually completes and must include commit, host/runtime, and the JSON output. The profile does **not** cover authentication, database-intensive routes, map queries, SSE/WebSocket load, stress, recovery, per-process CPU/memory, disk growth, or any production SLO. Those portions of OPS-86/QA-124 remain unverified and are not converted into Phase 1 claims. Each deployment still defines and validates its own **production capacity targets** from the same fields on its own hardware ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)).
 
 ### Capacity and scaling
 
@@ -63,4 +64,4 @@ Limitations:    <what this measurement does NOT cover>
 
 ## Current state
 
-No measurements have been recorded yet, by design: the application does not exist until Phase 1. This file exists so the policy, the budget fields, and the reporting format are fixed before the first number is quoted.
+No Phase 1 performance result is recorded yet. The skeleton and executable profile now exist, but this sandbox has Node 22 rather than the pinned Node 24 runtime; record the first supported-host result from CI or a Node 24 machine in the reporting format above. Until then, the thresholds are policy values, not measured performance claims.

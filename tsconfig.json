@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/contracts" },
+    { "path": "./packages/config" },
+    { "path": "./packages/logging" },
+    { "path": "./packages/validation" },
+    { "path": "./packages/test-utils" },
+    { "path": "./apps/api" },
+    { "path": "./services/relation" },
+    { "path": "./services/sos" }
+  ]
+}
