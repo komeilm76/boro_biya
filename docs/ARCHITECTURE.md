@@ -87,7 +87,11 @@ Workspace layout:
 - **[OPS-36]** `packages/config` — validated configuration schemas and shared non-secret defaults.
 - **[OPS-37]** `packages/ui` — only genuinely reusable UI primitives.
 - **[OPS-38]** `packages/test-utils` — reusable fixtures/builders without production dependencies.
+- **[OPS-88]** `packages/server-runtime` — the shared server harness: structured logging with the single redaction layer (SEC-57, PRIV-10), correlation identifiers propagated across every hop (SEC-73), the minimal metrics registry served on a non-public interface (OPS-63), liveness and readiness routes (OPS-59 … OPS-61), error-envelope wiring (API-11), and graceful shutdown (OPS-62). Server-side only; never imported by the frontend (OPS-41).
+- **[OPS-89]** `packages/db` — the bounded PostgreSQL pool factory (OPS-48) and the versioned, reversible, checksummed migration runner with its CLI (OPS-20, QA-15); its cluster bootstrap creates the per-service schemas and least-privilege roles (OPS-17, OPS-18). Server-side only.
 - **[OPS-39]** `docs/` — project rules, requirements, decisions, runbooks, and the user guide.
+
+`OPS-88` and `OPS-89` were added when Phase 1 built the skeleton: logging, correlation, metrics, and database access are needed identically by three backends, and duplicating them per service would drift ([ADR-029](DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces)).
 
 Rules:
 

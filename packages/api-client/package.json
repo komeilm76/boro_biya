@@ -1,0 +1,25 @@
+{
+  "name": "@boro-biya/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed API client for the frontend, validating responses against the shared contracts (OPS-35, API-23).",
+  "license": "UNLICENSED",
+  "x-audience": "browser-safe",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/validation": "workspace:*"
+  }
+}

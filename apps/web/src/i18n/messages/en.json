@@ -1,0 +1,29 @@
+{
+  "app": {
+    "name": "Boro biya"
+  },
+  "nav": {
+    "toPublic": "Public home"
+  },
+  "publicLanding": {
+    "title": "Welcome to Boro biya",
+    "body": "This is an early build of the application: structure only. No product feature is live yet."
+  },
+  "signIn": {
+    "title": "Sign in",
+    "unavailable": "Authentication is not part of this build. It arrives with the next milestone."
+  },
+  "userArea": {
+    "title": "Your area",
+    "placeholder": "This area becomes yours once authentication ships. The route guard you passed to get here is a user-experience guard only; the server authorizes every real request."
+  },
+  "adminArea": {
+    "title": "Administration",
+    "placeholder": "Administration tools arrive in a later milestone."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you asked for is not part of this application.",
+    "action": "Go to the public home"
+  }
+}

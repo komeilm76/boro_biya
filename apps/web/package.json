@@ -1,0 +1,38 @@
+{
+  "name": "@boro-biya/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Web/PWA skeleton (OPS-01): Vue 3 + Vite + Vuetify 4 + Tailwind (preflight excluded per ADR-009), route namespaces /_auth, /_public, /_user, /_admin with UX-only guards, i18n seam (ADR-017/ADR-018).",
+  "license": "UNLICENSED",
+  "x-audience": "browser",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "dev": "vite",
+    "preview": "vite preview",
+    "serve": "node server/serve.mjs"
+  },
+  "dependencies": {
+    "@boro-biya/api-client": "workspace:*",
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/ui": "workspace:*",
+    "@boro-biya/validation": "workspace:*",
+    "@vue/devtools-api": "8.2.1",
+    "pinia": "4.0.3",
+    "vue": "3.5.44",
+    "vue-i18n": "11.4.14",
+    "vue-router": "5.4.0",
+    "vuetify": "4.2.5"
+  },
+  "devDependencies": {
+    "@boro-biya/test-utils": "workspace:*",
+    "@tailwindcss/vite": "4.3.3",
+    "@vitejs/plugin-vue": "6.0.10",
+    "@vue/test-utils": "2.5.1",
+    "happy-dom": "21.0.1",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.4",
+    "vue-tsc": "3.3.13"
+  }
+}

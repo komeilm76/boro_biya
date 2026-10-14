@@ -44,6 +44,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-14 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-14 |
+| [development/09-phase-1-report.md](development/09-phase-1-report.md) | The Phase 1 report: what was built, the commands and exit statuses that prove each gate, deviations, and residual risks | Engineering | 2026-10-14 |
 
 ### Security and privacy
 
@@ -64,6 +65,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-14 |
+| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-14 |
 
 ### Evidence
 
@@ -96,11 +98,11 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
 | `SEC` | Platform security controls | 73 | `1 … 74` |
 | `PRIV` | Location privacy, retention, and data lifecycle | 35 | `1 … 35` |
-| `OPS` | Architecture, operations, configuration, performance, observability | 87 | `1 … 87` |
+| `OPS` | Architecture, operations, configuration, performance, observability | 89 | `1 … 89` |
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **689** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **691** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 
@@ -130,8 +132,8 @@ Both are dependency-free Node scripts and run in CI on Linux and Windows.
 
 | Phase | Name | Status |
 | --- | --- | --- |
-| 0 | Repository foundation and documentation | Complete, awaiting owner approval (2026-10-13) |
-| 1 | Skeleton and developer experience | Not started — requires Phase 0 approval |
+| 0 | Repository foundation and documentation | Complete, owner-approved (2026-10-14) |
+| 1 | Skeleton and developer experience | Complete, awaiting owner approval (2026-10-14) |
 | 2 | Authentication and account lifecycle | Not started |
 | 3 | Map foundation and user settings | Not started |
 | 4 | Relation Service | Not started |

@@ -23,11 +23,13 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | --- | --- | --- | --- |
 | Git | current stable | Source control, LF enforcement via `.gitattributes` | `git --version` |
 | Node.js | 24 LTS (primary CI baseline; **production runtime**, [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Repository tooling, gate scripts, the tooling that must run on Node, and the runtime every production artefact runs on | `node --version` |
-| Bun | 1.4.x (pinned in Phase 1) | Preferred package manager and script runner; **not** a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | `bun --version` |
+| Bun | 1.4.3 (exact pin; verified 2026-10-14) | Preferred package manager and script runner; **not** a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | `bun --version` |
 | Docker + Compose v2 | current stable | PostgreSQL and full-stack local run | `docker compose version` |
 | Editor | VS Code (recommended) | `.editorconfig` and workspace recommendations are committed | — |
 
 Node.js 26 becomes Active LTS on 2026-10-28; the CI matrix adds it once it is LTS, and the baseline moves after a green matrix run (see [dependency policy](02-dependency-policy.md) §4).
+
+Where Docker is unavailable (restricted machines, Windows without WSL2, sandboxed CI), `bun run dev:db` provides the same PostgreSQL 18 from the embedded server binaries the integration tests use (QA-06); the data persists under the git-ignored `var/pg-dev`, and the cluster bootstrap it runs is the same code path `bun run db:migrate` uses. Compose remains the single source of truth for service versions (OPS-66).
 
 ## 3. Getting started (available today)
 
@@ -37,29 +39,36 @@ cd boro_biya
 node scripts/gates/phase0.mjs      # documentation gate — no dependencies required
 ```
 
-A package-manager script alias (`bun run gate`) is introduced in Phase 1 together with the workspace, so the gate command above stays the single source of truth today.
+The workspace gate suite (`bun run gate`, §4) includes this gate as its first step; the documentation gate itself stays dependency-free, so the command above works on a fresh clone before any install.
 
-## 4. Getting started (planned — Phase 1)
+## 4. Getting started (workspace)
 
-These commands are the contract Phase 1 must satisfy. They are documented now so the phase has testable acceptance criteria; they do not exist yet.
+These commands are the Phase 1 contract, and they exist. Each behaves identically on Windows PowerShell 7 and Linux (OPS-65); the CI matrix proves it (QA-70).
 
 ```bash
 bun install                        # install workspaces (pinned versions, lockfile committed)
-cp .env.example .env               # Windows PowerShell: Copy-Item .env.example .env
+bun run env:create                 # create .env from .env.example with development-safe values
 docker compose up -d db            # PostgreSQL 18 (container only)
-bun run db:migrate                 # apply versioned migrations
-bun run dev                        # web app + core API + both services
+bun run db:migrate                 # ensure roles and schemas, apply versioned migrations
+bun run dev                        # web app + core API + both services (watch mode)
 bun run gate                       # all gates that are active in the current phase
 bun run check:runtime              # runtime compatibility and portability check (QA-123)
 ```
+
+`bun run env:create` replaces the bare `cp .env.example .env` step of the original contract, and the change is deliberate: the template's `<placeholder>` values are designed to fail startup (OPS-53), so a copied-but-unfilled `.env` is a broken environment by construction. `env:create` fills development-safe values — loopback binds (OPS-70), explicit CORS origins, and cryptographically random secrets that exist only on this machine — refuses to overwrite an existing `.env` without `--force`, and fails loudly if `.env.example` grows a variable it does not know, so the two files cannot drift apart silently.
+
+Without Docker, replace the two database steps with `bun run dev:db` (see §2); it stays running in its own terminal and serves the same roles and schemas.
 
 Production runs these artefacts on **Node 24 LTS** (`node dist/…`), not on Bun: Bun is the development toolchain and package manager ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). The Docker path below builds and starts the same artefacts on the pinned Node version, which is what the compatibility check verifies.
 
 Docker-first alternative (no local Node required beyond the gate scripts):
 
 ```bash
-docker compose up --build          # web, api, relation, sos, db
+bun run env:create                 # once, so Compose has its variables
+docker compose up --build          # db, one-shot migrate job, api, relation, sos, web
 ```
+
+The Compose stack runs the one-shot `migrate` job before the services start (`service_completed_successfully`), publishes no metrics port (OPS-63), declares resource limits per container (OPS-52), and pins every image version (QA-14).
 
 ## 5. Environment variables
 
@@ -74,8 +83,8 @@ See [`.env.example`](../../.env.example) for the current placeholder list.
 
 - **[OPS-71]** `.editorconfig` — UTF-8, LF, final newline, 2-space indentation, space indentation everywhere except where a file format requires tabs (the `Makefile` rule sets tabs, because make does not accept spaces).
 - **[OPS-72]** `.gitattributes` — normalizes line endings to LF on checkout and commit so Windows contributors cannot introduce CRLF churn.
-- **[OPS-73]** Formatting and linting are automated in Phase 1 (Prettier + ESLint). Until then, follow [repository conventions](00-repository-conventions.md) §4.
-- **[OPS-74]** Recommended VS Code extensions are recorded in Phase 1 as `.vscode/extensions.json` (Vue, ESLint, Prettier, Tailwind IntelliSense, Docker, EditorConfig).
+- **[OPS-73]** Formatting and linting are automated: Prettier (`bun run format`) and ESLint (`bun run lint`) run in the gate suite and CI; the conventions they enforce are [repository conventions](00-repository-conventions.md) §4. Markdown is exempt from Prettier — the documentation gate owns its structure.
+- **[OPS-74]** Recommended VS Code extensions are recorded in `.vscode/extensions.json` (Vue, ESLint, Prettier, Tailwind IntelliSense, Docker, EditorConfig).
 
 ## 7. Troubleshooting
 

@@ -4,7 +4,7 @@ A security-first mapping, navigation, social-location, and SOS assistance platfo
 
 Owner: Repo owner. Reviewed: 2026-10-14.
 
-**Current status: Phase 0 — repository foundation and documentation.** There is no application code yet. Phase 0 is complete pending owner approval; Phase 1 (workspace skeleton and developer experience) starts only after that approval ([ROADMAP](docs/ROADMAP.md)).
+**Current status: Phase 1 — skeleton and developer experience, complete pending owner approval.** Phase 0 (repository foundation and documentation) was owner-approved on 2026-10-14. The workspace, the core API, the Relation and SOS service skeletons, the web client skeleton, the migration framework, the gate suite, and the application CI exist; no authentication, map, or business feature does yet — those follow the phase order in [ROADMAP](docs/ROADMAP.md), and the evidence for this phase is the [Phase 1 report](docs/development/09-phase-1-report.md).
 
 ## Where to start
 
@@ -13,9 +13,19 @@ Owner: Repo owner. Reviewed: 2026-10-14.
 - **Contributors:** [CONTRIBUTING.md](CONTRIBUTING.md) — workflow, gate command, and review rules.
 - **Users:** [docs/user/README.md](docs/user/README.md) — the user guide (content ships with the features; nothing is documented before it exists).
 
-## Documentation-only gate
+## Gates
 
-Phase 0 is verified by one dependency-free command that runs on Linux, Windows, and macOS:
+The full active gate set runs through one entry point, locally and in CI (same commands, QA-58):
+
+```bash
+bun install          # pinned toolchain: Bun 1.4.3 as package manager, Node 24 LTS as runtime
+bun run env:create   # .env with development-safe values
+bun run gate         # documentation, traceability, dependency direction, telemetry ban, licences,
+                     # advisories, format, lint, typecheck, unit, build, integration (disposable
+                     # PostgreSQL 18), container assertions, runtime compatibility, load baseline
+```
+
+The documentation gate itself stays dependency-free and runs on Linux, Windows, and macOS without any install:
 
 ```bash
 node scripts/gates/phase0.mjs
@@ -37,10 +47,16 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | `docs/user/` | End-user documentation |
 | `docs/operations/` | Runbook register, backup and restore policy, deployment profile, availability objective |
 | `docs/performance/` | Baseline load profile, capacity policy, and measured results |
-| `scripts/gates/` | Gate runners (dependency-free Node) |
-| `.github/workflows/` | CI workflows |
+| `scripts/` | Dependency-free Node tooling: gate runners, build/dev orchestration, policy checks, environment bootstrap, load baseline |
+| `.github/workflows/` | CI workflows: documentation gates and application gates |
+| `apps/web/` | Vue 3 web/PWA skeleton and its production static server |
+| `apps/api/` | Core Fastify API skeleton |
+| `apps/android/` | Capacitor packaging configuration (the shell arrives in Phase 8) |
+| `services/relation/`, `services/sos/` | The two service skeletons, each with its own schema and least-privilege role |
+| `packages/` | Shared workspaces: contracts, validation, config, server-runtime, db, api-client, ui, test-utils |
+| `docker/`, `docker-compose.yml` | Pinned image builds and the local stack (db, one-shot migrate, api, relation, sos, web) |
 
-Application code (`apps/`, `services/`, `packages/`) is introduced in Phase 1, following the layout fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5.
+The layout is fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5 and enforced by `bun run check:deps` (acyclic, browser-facing code never depends on server-only packages).
 
 ## Ground rules
 

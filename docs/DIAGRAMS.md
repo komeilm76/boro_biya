@@ -12,33 +12,34 @@ Owner: Engineering. Reviewed: 2026-10-14.
 - **The declared state machines are cross-checked.** §9 lists the four state vocabularies that are declared in the documents governing them. The documentation gate ([QA-118](development/03-ci-and-gates.md) §3) extracts the states from the sentence that declares them, compares them with §9, requires each one to be drawn in the section §9 names, and fails otherwise — so neither the table, nor the section reference, nor the picture can drift while the prose stays correct.
 - **Syntax is verified when the diagram is authored**, not assumed: every block in this file parsed with Mermaid 12.2.0 on 2026-10-14 (recorded in [REFERENCES](REFERENCES.md) and the [review record](development/08-phase-0-review.md) §14). A renderer check returns to CI in Phase 1 with the repository's other dependencies ([QA-60](development/03-ci-and-gates.md) §1).
 
-## 2. The repository now, and what Phase 1 adds
+## 2. The repository after Phase 1
 
-Cited: `GOV-41` … `GOV-48`, `OPS-28` … `OPS-43`, `ADR-010`.
+Cited: `GOV-41` … `GOV-48`, `OPS-28` … `OPS-43`, `OPS-88`, `OPS-89`, `ADR-010`, `ADR-029`.
 
 ```mermaid
 flowchart LR
-  subgraph now["Present in Phase 0"]
+  subgraph now["Phase 0 foundation"]
     entry["README.md, CONTRIBUTING.md,<br/>.env.example, .editorconfig"]
     docs["docs/ — the normative pack:<br/>requirements, architecture, security, data model,<br/>decisions, roadmap, diagrams, glossary, guides"]
-    gates["scripts/gates/ — two dependency-free<br/>gate runners"]
-    ci[".github/ — docs-gates.yml and<br/>the pull-request template"]
+    gates["scripts/ — dependency-free tooling:<br/>gate runners, build/dev orchestration,<br/>policy checks, load baseline"]
+    ci[".github/ — docs-gates.yml, ci.yml,<br/>PR template, CODEOWNERS"]
   end
-  subgraph p1["Introduced in Phase 1"]
-    web["apps/web — Vue PWA"]
+  subgraph p1["Built in Phase 1"]
+    web["apps/web — Vue PWA skeleton<br/>+ production static server"]
     api["apps/api — core Fastify API"]
-    android["apps/android — Capacitor shell"]
+    android["apps/android — Capacitor packaging config"]
     relsvc["services/relation"]
     sossvc["services/sos"]
-    pkgs["packages/ — contracts, validation,<br/>api-client, config, ui, test-utils"]
+    pkgs["packages/ — contracts, validation, api-client,<br/>config, ui, test-utils, server-runtime, db"]
+    stack["docker/ + docker-compose.yml —<br/>pinned images, non-root runtime,<br/>one-shot migration job"]
   end
   entry --> docs
   docs --> gates
   gates --> ci
-  docs -.->|"specified, not yet present"| p1
+  docs -->|"specification the skeleton implements"| p1
 ```
 
-Package dependency directions are acyclic and enforced by an automated check, not by review alone (`OPS-40`) — the check arrives with the packages in Phase 1; server implementation code never reaches the frontend and frontend code never reaches a service (`OPS-41`).
+Package dependency directions are acyclic and enforced by an automated check, not by review alone (`OPS-40`) — the check runs with the packages (`scripts/check-deps.mjs`); server implementation code never reaches the frontend and frontend code never reaches a service (`OPS-41`).
 
 ## 3. System topology and data ownership
 

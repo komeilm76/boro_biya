@@ -1,0 +1,21 @@
+{
+  "name": "@boro-biya/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reusable UI primitives shared by web and mobile shells (OPS-37). Primitives are added only when a second consumer exists.",
+  "license": "UNLICENSED",
+  "x-audience": "browser-safe",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

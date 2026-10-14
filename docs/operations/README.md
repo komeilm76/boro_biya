@@ -20,7 +20,7 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | Runbook | Failure mode it covers | Owning phase | Last exercised |
 | --- | --- | --- | --- |
 | Database unavailable and restore from backup | datastore loss, corruption, failed migration | 8 | not yet |
-| Failed migration and rollback | schema change that cannot complete | 1 | not yet |
+| [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | 2026-10-14 — exercised in Phase 1 against the disposable development database; transcript in the [Phase 1 report](../development/09-phase-1-report.md) |
 | Disk full or volume growth | uploads, logs, or location history exhaust storage — and, by design, retained data grows until an approved policy deletes it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | 8 | not yet |
 | Certificate expiry and TLS failure | expired or mis-issued certificate at the edge | 9 | not yet |
 | Secret and credential rotation | leaked or aged secret, plugin credential revocation | 7 | not yet |
@@ -37,13 +37,31 @@ Each row is a runbook that must exist before the phase gate named in the last co
 
 The incident-response procedure required by [SECURITY](../SECURITY.md) §9 is one of these entries; it is exercised against a rehearsal incident before the Phase 9 gate. From Phase 8 onward, at least one runbook is executed against a disposable environment per phase, and the date and result are recorded in the phase report. A runbook that has never been exercised is not evidence that the procedure works, and no phase report may describe it as one.
 
+## Runtime and deployment notes
+
+One place naming the runtime and the exact versions each artefact is built and tested with (`OPS-84`), the portability constraints that keep that true, and how the runtime is changed when it ever must be.
+
+| Item | Value (verified 2026-10-14) |
+| --- | --- |
+| Production runtime | Node.js 24 LTS ("Krypton"). Container base pinned to `node:24.21.0-slim`; CI installs the current 24.x through `actions/setup-node` and records `node --version` in every job log; the runtime compatibility gate (`QA-123`) fails any artefact smoke that is not running the pinned major. |
+| Development toolchain | Bun 1.4.3 — package manager and script runner only, never a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). `bun.lock` is committed; installs are frozen-lockfile in CI. |
+| TypeScript | 6.0.3 — pinned to the 6.0.x line because `typescript-eslint` 8.71.2 supports `>=4.8.4 <6.1.0` (dependency policy §3). |
+| Database | PostgreSQL 18. Compose pins `postgres:18.6` (the latest minor at verification, [REFERENCES](../REFERENCES.md)); CI integration tests run against embedded PostgreSQL 18.4 binaries — the same major, disposable per run (QA-06). |
+| Backend artefacts | `apps/api`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.21.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
+| Web artefact | Vite production bundle served by the dependency-free `apps/web/server/serve.mjs` on the same Node 24 base, proxying `/api/*` to a fixed upstream (`OPS-64`, `SEC-48`). |
+| Android artefact | Capacitor packaging configuration only; the shell and its toolchain pins arrive in Phase 8. |
+
+**Portability constraints (in one place, per `OPS-84`):** application code uses standard TypeScript and Web APIs only; no Bun-only runtime API is reachable outside an approved adapter — none exists, and `scripts/check-runtime.mjs` enforces it by source scan on every gate run; no native addon is in any runtime dependency path yet (the first candidate, `argon2`, arrives in Phase 2 behind the adapter rule of `GOV-82`); ESM everywhere; LF line endings enforced by `.gitattributes`; every documented command behaves identically on Windows PowerShell 7 and Linux (`OPS-65`), which CI proves with the Windows job.
+
+**How the runtime is changed:** one change containing a new ADR, the dependency-policy §4 runtime baseline, every Dockerfile base image, the CI `NODE_VERSION`, these notes, and a green `QA-123` run on the new runtime. A runtime change never rides along with a feature.
+
 ## Backups and restore
 
 The targets are recorded here rather than in a deployment script, because a target that lives only in configuration cannot be reviewed or missed when it is not met.
 
 | Field | Meaning | Value |
 | --- | --- | --- |
-| Stores covered | every stateful store in [ARCHITECTURE](../ARCHITECTURE.md) §1–§2: the core database (identity, relations, SOS, plugin registry) and any store added later | not yet deployed — Phase 1 creates the first store |
+| Stores covered | every stateful store in [ARCHITECTURE](../ARCHITECTURE.md) §1–§2: the core database (identity, relations, SOS, plugin registry) and any store added later | the PostgreSQL 18 cluster (schemas `core`, `relation`, `sos`) exists in development and CI from Phase 1; backup values are set with the hosting decision (Q-19) |
 | Schedule and recovery point objective | how much work may be lost | set with the hosting decision (Q-19) |
 | Encryption and key custody | at rest, and who can decrypt | set with the hosting decision (Q-19); never a repository-stored key |
 | Off-host copy | a backup that survives the host | required; destination set with Q-19 |
@@ -88,4 +106,4 @@ The route a user or a researcher follows to report a suspected account compromis
 
 ## Current state
 
-Nothing is deployed yet: the application does not exist until Phase 1. No runbook has been exercised, no backup has been taken, and no availability figure exists — so none is claimed. This file exists so that the register, the backup fields, and the availability fields are fixed before the first outage rather than invented during one, and so that the Phase 8 and Phase 9 exit gates have a document to check instead of a memory.
+The Phase 1 skeleton exists: the three backends, the web artefact, and the Compose stack run on the pinned runtime, and the first runbook ("Failed migration and rollback") has been exercised once against a disposable development database (2026-10-14). Nothing is deployed for users: no backup has been taken (there is no hosting decision yet, Q-19), no availability figure exists — so none is claimed — and the remaining runbooks are written by the phases that own their failure modes. This file exists so that the register, the backup fields, and the availability fields are fixed before the first outage rather than invented during one, and so that the Phase 8 and Phase 9 exit gates have a document to check instead of a memory.

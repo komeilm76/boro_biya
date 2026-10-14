@@ -1,0 +1,11 @@
+{
+  "//": "The recommended set named in OPS-74: consistent tooling for every contributor.",
+  "recommendations": [
+    "Vue.volar",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "ms-azuretools.vscode-docker",
+    "EditorConfig.EditorConfig"
+  ]
+}

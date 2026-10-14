@@ -1,0 +1,24 @@
+{
+  "name": "@boro-biya/validation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared Zod v4 schemas: the single source of truth for wire types (API-07, API-36, OPS-34).",
+  "license": "UNLICENSED",
+  "x-audience": "browser-safe",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
+}

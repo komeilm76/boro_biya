@@ -1,0 +1,19 @@
+# Markdown is governed by the documentation gate (scripts/gates/phase0.mjs), not Prettier:
+# the gate parses index tables, headers, and link structures that a reformatter would churn.
+docs/
+*.md
+
+# Lockfiles and generated files
+bun.lock
+package-lock.json
+docs/development/07-traceability.md
+
+# Build output, local data, and environment files
+dist/
+coverage/
+var/
+tmp/
+node_modules/
+.env
+.env.example
+*.tsbuildinfo

@@ -1,0 +1,31 @@
+{
+  "name": "@boro-biya/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bounded PostgreSQL pool factory and the versioned, reversible migration runner with its CLI (OPS-89, OPS-48, OPS-20).",
+  "license": "UNLICENSED",
+  "x-audience": "server",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "boro-db": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@boro-biya/config": "workspace:*",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  }
+}

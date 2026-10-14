@@ -1,0 +1,26 @@
+{
+  "$comment": "Phase 1 baseline load profile (ADR-028, OPS-86, QA-124). This is a development/CI regression gate on the reference environment — NOT a production capacity claim. The reference environment is the machine the run executes on (recorded in every report: CPU model and count, total memory, runtime version, PostgreSQL version). Production capacity targets are per-deployment measurements in the same shape.",
+  "profile": {
+    "concurrency": 25,
+    "warmupSeconds": 3,
+    "durationSeconds": 20,
+    "mix": {
+      "/healthz": 0.7,
+      "/readyz": 0.3
+    },
+    "requestTimeoutMs": 10000
+  },
+  "pass": {
+    "p95MsMax": 250,
+    "p99MsMax": 500,
+    "errorRateMax": 0.005,
+    "requestsPerSecondMin": 100,
+    "idleRssMbMax": 200,
+    "peakRssMbMax": 512,
+    "logBytesPer1kRequestsMax": 1500000
+  },
+  "phase1Scope": {
+    "criticalRoutes": ["/healthz", "/readyz"],
+    "note": "Login, map-data, and SOS-creation routes join the profile in the phases that create them (Phase 2/3/5). SSE/WebSocket event rate is 0 until the Relation Service ships streams (Phase 4); the gate asserts the stream surface does not exist yet."
+  }
+}

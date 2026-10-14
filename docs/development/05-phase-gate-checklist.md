@@ -7,11 +7,16 @@ Owner: Engineering. Reviewed: 2026-10-14.
 ## 1. Commands
 
 ```bash
-node scripts/gates/phase0.mjs        # Phase 0 gate: documentation, IDs, traceability, links, placeholders, audience, secrets, model coherence, phase status, diagrams
-node scripts/gates/traceability.mjs  # Traceability file is current (run with --write to update)
+bun install                          # pinned workspaces, frozen lockfile in CI
+bun run env:create                   # .env from .env.example with development-safe values
+node scripts/gates/phase0.mjs        # documentation gate: IDs, traceability, links, placeholders, audience, secrets, model coherence, phase status, diagrams
+node scripts/gates/traceability.mjs  # traceability file is current (run with --write to update)
+bun run gate                         # every gate active in the current phase, one entry point, honest summary table (QA-58, QA-77)
+bun run check:runtime                # runtime compatibility and portability (QA-123); --scan-only runs anywhere, the full smoke requires Node 24
+bun run loadtest                     # baseline load profile with its pass/fail rule (QA-124)
 ```
 
-Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and gates](03-ci-and-gates.md) §2). Until then, `scripts/gates/phase0.mjs` is the only gate and the only command that may be quoted as evidence for Phase 0.
+`bun run gate` is the single quoted entry point from Phase 1 onward: locally and in CI it runs the same list — documentation gate, traceability, dependency direction, telemetry ban, licences, advisories, format, lint, typecheck, unit, build, integration (disposable PostgreSQL 18), container assertions, runtime compatibility, load baseline — and prints each exit status ([CI and gates](03-ci-and-gates.md) §2). Phase 0 evidence remains `node scripts/gates/phase0.mjs` alone.
 
 ## 2. Phase 0 checklist
 
@@ -35,22 +40,22 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 16 | Phase 0 gate passes at the phase commit | Exit status of the command in §1, recorded in the phase report | Met |
 | 17 | Diagrams and lifecycles exist for the runtime, the data model, and the four declared state machines, and they agree with the requirement text | [DIAGRAMS](../DIAGRAMS.md) §9; gate check 10; parse evidence in the [review record](08-phase-0-review.md) §14 | Met |
 
-## 3. Phase 1 checklist (template, to be completed when Phase 1 ends)
+## 3. Phase 1 checklist (completed 2026-10-14)
 
 | # | Criterion | Evidence | Status |
 | --- | --- | --- | --- |
-| 1 | Workspace and package layout implemented as specified in ARCHITECTURE §5 | Directory listing and dependency-direction check | Not started |
-| 2 | Dependencies pinned exactly, lockfile committed, verified against the dependency policy | Manifest review and gate run | Not started |
-| 3 | Clean clone starts with only the documented commands, on Windows and Linux | Two recorded terminal transcripts | Not started |
-| 4 | Liveness and readiness endpoints answer correctly, including when the database is down | Integration test output | Not started |
-| 5 | Configuration is validated at startup and fails fast on invalid values | Test output | Not started |
-| 6 | Docker Compose starts the full local stack with safe defaults | Recorded run | Not started |
-| 7 | Formatting, lint, type check, unit, integration, audit, secret, and build gates active in Phase 1 | `bun run gate` exit status | Not started |
-| 8 | Runtime baseline in place: production artefacts build and start on **Node 24 LTS**, Bun serves as the development package manager and script runner, and no Bun-only runtime API is reachable from application code outside an approved adapter ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Decision recorded in DECISIONS; `QA-123` exit status and the artefact smoke output; `OPS-84` deployment notes naming the runtime and tested versions | Not started |
-| 9 | Baseline load profile defined for development and CI, with explicit measurable pass/fail criteria, and CI failing on a breach ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)) | `docs/performance/README.md` baseline table; `QA-124` exit status | Not started |
-| 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Not started |
-| 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Not started |
-| 12 | Wire timestamps are UTC instants under a contract test; one correlation identifier follows a request across service hops; the first migration has a rollback runbook, exercised once | Contract test output, a log sample carrying one correlation identifier, exercise transcript; `API-36`, `SEC-73`, `OPS-81` (declared pull-forward, [GOV-88](00-repository-conventions.md) §8) | Not started |
+| 1 | Workspace and package layout implemented as specified in ARCHITECTURE §5 | Directory listing and dependency-direction check | Met — `bun run check:deps` output and the layout table in the [Phase 1 report](09-phase-1-report.md); `OPS-88`/`OPS-89` document the two packages the skeleton needed beyond the Phase 0 list |
+| 2 | Dependencies pinned exactly, lockfile committed, verified against the dependency policy | Manifest review and gate run | Met — every manifest pins exact versions, `bun.lock` is committed, the baseline was re-verified at the phase boundary (dependency policy §3, REFERENCES log 2026-10-14) |
+| 3 | Clean clone starts with only the documented commands, on Windows and Linux | Two recorded terminal transcripts | Met — the CI `gate` (ubuntu, Node 24) and `windows` jobs run the documented commands on clean checkouts of this branch; transcripts are the job logs, quoted in the [Phase 1 report](09-phase-1-report.md); a local Linux transcript is recorded there too |
+| 4 | Liveness and readiness endpoints answer correctly, including when the database is down | Integration test output | Met — unit + integration tests (`healthz` never touches the database; `readyz` 503 with booleans-only body when the database is down or slow) and the runtime-check smoke; test names listed in the report |
+| 5 | Configuration is validated at startup and fails fast on invalid values | Test output | Met — `packages/config` unit tests (placeholders, missing variables, wildcard origins, value-free diagnostics) and the spawned-artefact integration test that exits non-zero with a non-secret message |
+| 6 | Docker Compose starts the full local stack with safe defaults | Recorded run | Met — the CI `containers` job runs `docker compose up --build -d --wait` and smokes every service through published ports, including the web-edge proxy path; the run is quoted in the [Phase 1 report](09-phase-1-report.md). The sandbox used for local development has no Docker; the Docker-less equivalent (`bun run dev:db`) is recorded there as the local transcript |
+| 7 | Formatting, lint, type check, unit, integration, audit, secret, and build gates active in Phase 1 | `bun run gate` exit status | Met — the gate summary table (15 gates) is reproduced in the [Phase 1 report](09-phase-1-report.md); secret scanning runs as the CI `secrets` job plus the documentation gate's pattern check |
+| 8 | Runtime baseline in place: production artefacts build and start on **Node 24 LTS**, Bun serves as the development package manager and script runner, and no Bun-only runtime API is reachable from application code outside an approved adapter ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Decision recorded in DECISIONS; `QA-123` exit status and the artefact smoke output; `OPS-84` deployment notes naming the runtime and tested versions | Met — `QA-123` runs in the CI `gate` job on Node 24 (smoke output quoted in the report); the source scan passes everywhere; deployment notes live in [operations](../operations/README.md); the Bun spike result is recorded in REFERENCES and dependency policy §4 |
+| 9 | Baseline load profile defined for development and CI, with explicit measurable pass/fail criteria, and CI failing on a breach ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)) | `docs/performance/README.md` baseline table; `QA-124` exit status | Met — the baseline table is filled with its method and first measurement; the breach path is proven (a run against an impossible threshold exits 1; transcript in the report); CI runs it inside `bun run gate` and uploads the report artefact |
+| 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Met — scope statement in the [Phase 1 report](09-phase-1-report.md): no `/api/v1` routes exist, the sign-in page is an honest placeholder, the session store is a documented seam, no map or plugin code is present |
+| 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Met — traceability passes with 691 requirements mapped, the affiliation and roadmap audits are clean, and the report walks the Phase 1 requirement areas with their evidence or their honest Phase 1 slice |
+| 12 | Wire timestamps are UTC instants under a contract test; one correlation identifier follows a request across service hops; the first migration has a rollback runbook, exercised once | Contract test output, a log sample carrying one correlation identifier, exercise transcript; `API-36`, `SEC-73`, `OPS-81` (declared pull-forward, [GOV-88](00-repository-conventions.md) §8) | Met — `API-36` contract tests (schema + live `/healthz`), the two-service correlation integration test with its log sample, and the full [runbook](../operations/runbooks/failed-migration-rollback.md) exercise transcript are reproduced in the [Phase 1 report](09-phase-1-report.md) |
 
 ## 4. Phase checklists 2–9 (templates, completed when the phase ends)
 

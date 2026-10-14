@@ -6,7 +6,7 @@ Owner: Repo owner. Reviewed: 2026-10-14.
 
 ## Phase 0 — Repository foundation and documentation
 
-**Status: complete, awaiting owner approval (2026-10-13).**
+**Status: complete, owner-approved (2026-10-14).**
 
 Deliverables and evidence:
 
@@ -33,7 +33,7 @@ Exit gate: documentation reviewed by the owner; every critical design question e
 ## Phase 1 — Skeleton and developer experience
 
 
-**Status: Not started — requires Phase 0 approval.**
+**Status: complete, awaiting owner approval (2026-10-14).**
 
 Deliver: workspace and package setup with pinned dependencies and a committed lockfile; minimal Vue application with the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`), guards that never substitute for server authorization, and the safe not-found page (UI-01 … UI-07); Fastify API, PostgreSQL migration framework, and the two service skeletons; Docker-based startup on Windows and Linux on the pinned production runtime (Node 24 LTS); the runtime compatibility and portability check in CI (`QA-123`); deployment notes naming the runtime and tested versions (`OPS-84`); liveness/readiness endpoints; structured logging with the shared redaction layer (SEC-57, PRIV-10) and correlation identifiers propagated across service hops (SEC-73); validated configuration; the skeleton-level privacy default of no analytics or telemetry dependency (PRIV-19); the timestamp contract for the wire (API-36); strict TypeScript; test examples; application CI (format, lint, typecheck, unit, integration); the rollback runbook for the first migration (declared pull-forward of OPS-81, [GOV-88](development/00-repository-conventions.md) §8); the Bun-toolchain compatibility verification required by [ADR-025](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain); the baseline load profile and its pass/fail rule ([ADR-028](DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement), `OPS-86`).
 
