@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **671** across 119 groups.
+Total requirements: **676** across 120 groups.
 
 ## Declared pull-forwards
 
@@ -27,7 +27,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | --- | --- |
 | 0 (foundation) | 26 |
 | 1 | 280 |
-| 2 | 119 |
+| 2 | 124 |
 | 3 | 41 |
 | 4 | 66 |
 | 5 | 58 |
@@ -88,12 +88,12 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `QA-92 … QA-96` | 5 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
 | 1 | `QA-97 … QA-106` | 10 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
 | 1 | `QA-107 … QA-111` | 5 | [performance/README.md](../performance/README.md) | Rules |
-| 2 | `ADM-01 … ADM-05` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| 2 | `ADM-01 … ADM-07` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | 2 | `UI-10` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 2 | `UI-21 … UI-28` | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 2 | `AUTH-01 … AUTH-06` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
-| 2 | `AUTH-07 … AUTH-12` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
-| 2 | `AUTH-13 … AUTH-20` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| 2 | `AUTH-07 … AUTH-39` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| 2 | `AUTH-13 … AUTH-40` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
 | 2 | `AUTH-21 … AUTH-25` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
 | 2 | `AUTH-26 … AUTH-30` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
 | 2 | `AUTH-31 … AUTH-38` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
@@ -106,6 +106,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 2 | `PRIV-15 … PRIV-31` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 2 | `API-20 … API-24` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
 | 2 | `API-25 … API-30` | 6 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| 2 | `API-38` | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
 | 2 | `QA-07 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 2 | `QA-20 … QA-28` | 9 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 2 | `DATA-01 … DATA-27` | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
@@ -258,6 +259,8 @@ Every identifier the documents define, with the phase that must deliver it and t
 | ADM-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-04 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | ADM-05 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-06 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-07 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | UI-01 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
 | UI-02 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
 | UI-03 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
@@ -324,6 +327,8 @@ Every identifier the documents define, with the phase that must deliver it and t
 | AUTH-36 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
 | AUTH-37 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
 | AUTH-38 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-39 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-40 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
 | MAP-01 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | MAP-02 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | MAP-03 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
@@ -686,6 +691,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | API-35 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
 | API-36 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
 | API-37 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-38 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
 | QA-01 | 0 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | QA-02 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | QA-03 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |

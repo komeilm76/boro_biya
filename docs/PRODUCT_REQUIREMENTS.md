@@ -6,11 +6,13 @@ Owner: Repo owner. Reviewed: 2026-10-14.
 
 ## 1. Roles and access
 
-- **[ADM-01]** Exactly two roles exist: `admin` and `user` ([DECISIONS](DECISIONS.md) ADR-016). No sub-roles are introduced in v1. The assistance category (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary.
+- **[ADM-01]** v1 ships exactly two roles, `admin` and `user`, seeded as **data** in a database-driven permission model ([DECISIONS](DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)): permissions are defined centrally as resource-plus-action pairs, roles carry them, and a new role is a row an authorized administrator creates, never a migration. No document or check may assume the seeded pair is the only possible set. The assistance category (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary (ADR-016).
 - **[ADM-02]** Authorization is enforced by the server on every protected operation. A frontend route guard is a user-experience affordance, not an authorization boundary.
 - **[ADM-03]** Admin capabilities are user administration, SOS monitoring/dispatch, and plugin management. Each admin capability requires an explicit authorization check and an audit event (`actor`, `action`, `target`, timestamp, request ID, source).
 - **[ADM-04]** Admins MUST NOT be able to read users' plaintext passwords, security-question answers, session tokens, or raw location trails.
 - **[ADM-05]** Role changes take effect for existing sessions without requiring a re-login, and are audited.
+- **[ADM-06]** Every authorization decision resolves through one server-side policy layer ([SECURITY](SECURITY.md) SEC-25): the layer maps the caller, the resource, and the action to the permissions their roles carry, endpoints opt in explicitly, and a permission check is never duplicated per route. Role and permission changes are validated on the server and audited with actor, target, previous value, and new value.
+- **[ADM-07]** The last active administrator cannot be removed: a change that would leave no active account holding the full administrative permission set — removal, demotion, deactivation, or ban, whether another administrator or the account itself performs it — is rejected, audited, and covered by a test.
 
 ## 2. Route namespaces
 
@@ -34,9 +36,9 @@ Infrastructure endpoints are **not** client routes and are documented in [ARCHIT
 - **[AUTH-01]** Fields: username and password.
 - **[AUTH-02]** CAPTCHA/challenge is required when the configured risk policy triggers it. The CAPTCHA MUST be server-verified, accessible (keyboard and screen-reader operable, and never the only control), rate-limited, and resistant to replay.
 - **[AUTH-03]** CAPTCHA is defence in depth and MUST NOT replace throttling, lockout, or abuse detection.
-- **[AUTH-04]** Failed attempts are counted per account and per network origin, with bounded escalating delays. Reaching the threshold applies the temporary lockout policy in [SECURITY](SECURITY.md) §3.
+- **[AUTH-04]** Failed attempts are counted per account and per network origin, with progressive bounded delays. Reaching the configured threshold — by default 10 failures per rolling 15-minute window — applies the self-expiring lockout policy of [ADR-022](DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) ([SECURITY](SECURITY.md) §3).
 - **[AUTH-05]** Login responses are uniform in shape and latency class and MUST NOT disclose whether the username exists, whether the account is banned, deactivated, or not yet set up, beyond the minimum needed for a legitimate recovery path.
-- **[AUTH-06]** The session established on success follows the session model decision ([DECISIONS](DECISIONS.md) Q-03) and MUST be revocable server-side.
+- **[AUTH-06]** The session established on success follows [ADR-021](DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android): a short-lived access token presented as `Authorization: Bearer`, obtained from a rotating refresh token, and revocable server-side; refresh tokens are single-use, rotated on every use, and reused-token detection revokes the family ([SECURITY](SECURITY.md) SEC-10).
 
 ### Registration
 
@@ -46,17 +48,19 @@ Infrastructure endpoints are **not** client routes and are documented in [ARCHIT
 - **[AUTH-10]** Five distinct security questions are selected from a static, server-owned question catalogue, with exactly one answer per question. Duplicate question IDs are rejected.
 - **[AUTH-11]** Security answers are stored normalized and hashed with a password-hashing algorithm; plaintext and reversible encryption are forbidden.
 - **[AUTH-12]** Registration is rate-limited per network origin and protected against automated bulk account creation.
+- **[AUTH-39]** The product collects and stores **no email address and no mobile number**, and uses neither as a login identifier, a recovery channel, or a notification channel ([DECISIONS](DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)). No registration, recovery, notification, or account feature may require either; the username alone identifies the account, and the only delivery channels are in-app and push (UI-14).
 
-**Security note:** Knowledge-based security questions are weak and can be guessed or researched. They are retained only as a legacy-compatible recovery factor; normalization, hashing, throttling, generic responses, and short-lived single-use grants are mandatory, and stronger recovery (one-time recovery codes, verified email/phone, passkeys) is planned where product policy permits ([DECISIONS](DECISIONS.md) Q-05).
+**Security note:** Knowledge-based security questions are weak and can be guessed or researched. They are retained only as a legacy-compatible recovery factor; normalization, hashing, throttling, generic responses, and short-lived single-use grants are mandatory, and **no stronger factor is approved**: recovery codes, verified contact channels, and passkeys-as-recovery stay unapproved until the owner explicitly approves one ([ADR-023](DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)).
 
 ### Forgot password
 
 1. **[AUTH-13]** Accept username and return a generic response that does not disclose account existence.
 2. **[AUTH-14]** If an eligible account exists, issue a short-lived, single-use recovery challenge.
 3. **[AUTH-15]** Select three of the user's five registered questions using a cryptographically secure random source. Avoid selecting the same question twice.
+   - **[AUTH-40]** Self-service recovery sits behind one server-side feature switch, `SECURITY_QUESTIONS_ENABLED` ([DECISIONS](DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)): with the switch off, the recovery endpoints reject attempts securely and generically — no flow state is created and no account-existence signal is returned — and the sign-in, registration, and recovery screens warn, before the account is relied on, that a forgotten password can mean permanent account loss with only administrator-assisted recovery left. The switch is configuration, not code, and its off state is covered by tests.
 4. **[AUTH-16]** Verify answers server-side, with per-account and per-IP throttling and constant-shape responses where practical.
 5. **[AUTH-17]** On success, issue a short-lived, single-use reset grant bound to that recovery flow.
-6. **[AUTH-18]** Allow password and repeat-password fields. Invalidate the grant after successful reset, revoke active sessions/refresh tokens, and notify the user through an available verified channel.
+6. **[AUTH-18]** Allow password and repeat-password fields. Invalidate the grant after successful reset, revoke the refresh-token family and every other active session, and notify the account's remaining active sessions in-app — there is no email or SMS channel to notify through ([ADR-019](DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)).
 7. **[AUTH-19]** Never log challenge answers or reset tokens. Do not expose whether each individual answer was correct in a way that facilitates guessing.
 8. **[AUTH-20]** Challenge and grant lifetime, attempt limits, and consumed-state are persisted so a restart, retry, or replay cannot extend or re-use them; each challenge is bound to the account and to the issuing flow.
 
@@ -65,7 +69,7 @@ Infrastructure endpoints are **not** client routes and are documented in [ARCHIT
 - **[AUTH-21]** Fields: current password, new password, repeat password.
 - **[AUTH-22]** Recent authentication is required where the session is older than the configured freshness window.
 - **[AUTH-23]** The password policy is validated server-side and the stored hash is updated atomically; the old hash is never retained in plaintext or logs.
-- **[AUTH-24]** All other sessions and refresh tokens are revoked on success, and the user is notified through an available verified channel.
+- **[AUTH-24]** All other sessions are revoked on success together with the refresh-token family, so the next refresh fails, and the remaining session notifies the user in-app.
 - **[AUTH-25]** Arbitrary periodic password rotation is not required or forced absent evidence of compromise.
 
 ### Admin-created account
@@ -90,7 +94,7 @@ Effective access rule: a session may be created only when `account_status = acti
 - **[AUTH-35]** Ban and deactivation both block login but remain semantically distinct; the UI and API must distinguish them in admin views and audit records.
 - **[AUTH-36]** The server may apply temporary lockouts and policy-defined automated bans. It MUST NOT automatically deactivate users for inactivity alone.
 - **[AUTH-37]** An administrator may reactivate a banned or deactivated account where policy permits; every transition is audited with the previous and new state.
-- **[AUTH-38]** Lockout uses escalating bounded delays, provides a documented recovery path, and MUST NOT be permanently triggerable by an attacker against a victim.
+- **[AUTH-38]** Lockout is a fixed, self-expiring duration with progressive bounded delays before it applies, provides a documented recovery path (automatic expiry, the owner's own password change, recovery, administrator-assisted reset), and MUST NOT be permanently triggerable by an attacker against a victim ([ADR-022](DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)).
 
 ## 4. Map and location
 
@@ -212,7 +216,7 @@ A user settings area exposes preferences whose backing schema/capability is actu
 - **[UI-11]** Appearance: light, dark, system.
 - **[UI-12]** Language and locale: Persian (`fa`) and English (`en`), both complete from the first release, including text direction, with the active language changeable at any time ([ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)). **English is the default for every visitor on first use** — device and browser language do not change it — and an explicit choice persists ([ADR-018](DECISIONS.md#adr-018--english-is-the-default-language-persian-is-a-complete-translation)).
 - **[UI-13]** Location permission status with a plain-language explanation and a shortcut to the platform settings.
-- **[UI-14]** Notification preferences, with an honest indication of which channels are actually available (in-app, push, email).
+- **[UI-14]** Notification preferences, with an honest indication of which channels are actually available: in-app and push only — there is no email or SMS channel, because no email address or mobile number is collected ([ADR-019](DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)).
 - **[UI-15]** A plugin's settings are shown only when that plugin is installed, healthy, and reports the capability; otherwise the UI explains that the feature is unavailable rather than showing a non-functional control.
 
 ## 9. Accessibility, localization, and resilience
@@ -246,6 +250,6 @@ These are deliberate exclusions, not oversights. Each row says why the item is e
 | More than one concurrent responder task per alert | v1 delivers exactly one active task per alert and no shortcut may pre-judge the future answer (SOS-14) | Q-09 is resolved and the schema is migrated deliberately |
 | Languages other than Persian and English | Two complete locales are the agreed v1 scope ([ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together), [ADR-018](DECISIONS.md#adr-018--english-is-the-default-language-persian-is-a-complete-translation)); a third catalogue multiplies the key-parity work that [QA-17](QUALITY_GATES.md) enforces and needs translation review capacity | A third language is requested, with a named owner for its translations |
 | Plugin ZIP installation in production | Disabled until the Phase 7 exit gate passes ([PLUGIN_SYSTEM](PLUGIN_SYSTEM.md) §3) | The Phase 7 exit gate passes |
-| Email and SMS notification channels | Channel and provider decisions are open; in-app and push only until they are answered (UI-14) | Provider and privacy review complete (Q-02, Q-11) |
+| Email and SMS notification channels | Not supported, now or later, without a new decision: the product stores no email address and no mobile number, so there is no address to deliver to ([ADR-019](DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)); in-app and push only (UI-14) | A contact channel is added by a new owner decision, with its data-protection review |
 | Legal documents beyond the privacy notice — terms of service, records of processing, a formal data-protection assessment | No jurisdiction, hosting target, or operator identity is decided yet; documents written now would describe an unnamed operator | The hosting target (Q-19) and the retention, deletion, and export obligations (Q-14) are decided |
 | Published availability, uptime, or response-time commitments | A figure published before it is measured, with its method, is prohibited | Measured budgets exist and the Phase 9 gate records them ([operations](operations/README.md)) |

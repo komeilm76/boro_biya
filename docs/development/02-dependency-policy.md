@@ -111,9 +111,9 @@ Data, tiles, fonts, and content are covered by the same discipline:
 | --- | --- | --- |
 | PostGIS version compatible with PostgreSQL 18, plus Docker image, extension creation, and backup/restore behaviour | Phase 3 prototype ([ADR-005](../DECISIONS.md#adr-005--geospatial-database)) | Extension availability, spatial index behaviour, restore fidelity |
 | Map tile, geocoding, routing, traffic, and speed-limit providers | Phase 3 (map/search), Phase 6 (routing) | Terms, coverage per region, attribution, caching rules, quotas, cost, privacy ([Q-10](../DECISIONS.md#open-questions)) |
-| CAPTCHA provider or self-hosted option | Phase 2 ([Q-02](../DECISIONS.md#open-questions)) | Accessibility, privacy, self-hosting option, rate limit interaction |
+| Self-hosted CAPTCHA implementation | Phase 2 ([ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) | Accessibility, licence, maintenance status, offline data flow, challenge-record retention; no third-party service and no client-side tracker |
 | Push notification provider for Android | Phase 5 ([Q-11](../DECISIONS.md#open-questions)) | Delivery guarantees, cost, privacy, SDK maintenance |
-| Email/SMS provider for recovery notification (only if verified channels are approved) | Phase 2 ([Q-05](../DECISIONS.md#open-questions)) | Deliverability, privacy, cost |
+| **No email and no SMS provider** — the product stores no email address and no mobile number ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)) | — | Not applicable: no mail or SMS channel exists, so no provider is reviewed, pinned, or configured |
 | Password-hashing implementation on Node (`argon2` native binding) if Node is the server runtime | Phase 1 spike | Maintenance status, native build requirements, advisory history |
 | Redis or another shared store (only if scaling is required) | After [ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists) is revisited | Operational cost versus measured need |
 | Playwright (or equivalent) for browser-level tests | Phase 3 | Current compatibility with the pinned browser matrix |

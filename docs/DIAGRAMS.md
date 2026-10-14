@@ -134,10 +134,10 @@ sequenceDiagram
   User->>API: POST /auth/password/recover/reset with the new password
   API->>DB: update the hash atomically and invalidate the grant
   API->>DB: revoke active sessions and refresh tokens
-  API-->>User: notify through an available verified channel
+  API-->>User: notify the remaining sessions in-app (no email or SMS channel exists, ADR-019)
 ```
 
-Sessions end on logout, password change, password reset, and administrative state change (`AUTH-18`, `AUTH-24`, `AUTH-34`); the session model itself is [Q-03](DECISIONS.md#open-questions), and whichever model is chosen, revocation is server-side (`AUTH-06`).
+Sessions end on logout, password change, password reset, and administrative state change (`AUTH-18`, `AUTH-24`, `AUTH-34`); the session model is [ADR-021](DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android) — short-lived bearer access tokens with rotating refresh tokens — and revocation is server-side whichever transport carries them (`AUTH-06`).
 
 ## 6. Relation lifecycles
 

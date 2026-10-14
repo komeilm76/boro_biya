@@ -1,6 +1,6 @@
 # Phase 0 Review Record
 
-Fifteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§20](#20-fifteenth-pass--the-default-language-decided-the-register-checked-and-the-record-corrected-2026-10-14).
+Sixteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§21](#21-sixteenth-pass--six-owner-answers-written-into-the-pack-2026-10-14).
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -1074,3 +1074,82 @@ node scripts/gates/traceability.mjs --write   # regenerated; the committed file 
 ```
 
 The identifier total moved 670 → 671 because `QA-122` is itself a requirement; ADR-018 is a decision, not a requirement, and `Q-25`, `Q-26` are register rows. The `QA` area table in [docs README](../README.md) now reads 122 and the pack total 671, both recomputed by the gate rather than by hand. The register now holds 26 questions: three resolved and pointing at their decisions (`Q-15`, `Q-18`, `Q-24`), and twenty-three open with an owner and a phase.
+
+## 21. Sixteenth pass — six owner answers written into the pack (2026-10-14)
+
+The owner answered six questions in one message: `Q-01`, `Q-02`, `Q-03`, `Q-04`, `Q-05`, and `Q-17`. Answers are decisions, not notes, so each one is an ADR (`ADR-019` … `ADR-024`), each register row keeps its question and points at its decision, and every document that assumed the old open state was carried along in the same change. The pass also reviewed the pack for language the answers made false, and found a good deal: four documents and a diagram still described a session model that had just been replaced, and one diagram still promised a notification channel that no longer exists.
+
+### 21.1 The decisions
+
+| Question | Decision | ADR |
+| --- | --- | --- |
+| `Q-01` | Neither an email address nor a mobile number is collected, stored, or used; the username is the only identifier, recovery channel, and notification path | [ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number) |
+| `Q-02` | Self-hosted, privacy-first CAPTCHA: adaptive challenges from the risk policy, server-side token validation, rate limiting, minimal data, no third-party tracking, documented retention, accessible, fails closed | [ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha) |
+| `Q-03` | One session model for web and Android: short-lived bearer access tokens from single-use rotating refresh tokens, hashed server-side, `HttpOnly` cookie on web, Keystore storage on Android, reuse detection revokes the family, no `localStorage` | [ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android) |
+| `Q-04` | Abuse protection with numbers: 10 failed attempts per account in a rolling 15-minute window, progressive bounded delays, a self-expiring 15-minute lockout, several unlock paths, and no automatic permanent bans (automated bans off by default) | [ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) |
+| `Q-05` | Security questions remain the only self-service recovery factor, behind one switch that can disable them; no stronger factor is approved; the user is warned before relying on the account | [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor) |
+| `Q-17` | Database-driven RBAC: permissions defined centrally as data, roles as rows, `admin` and `user` seeded in v1, custom roles creatable without a migration, one authorization layer, and the last active administrator protected | [ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded) |
+
+### 21.2 What each answer moved
+
+| Document | Change |
+| --- | --- |
+| [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) | `AUTH-06` names the session model; `AUTH-39` forbids collecting contact data and `AUTH-40` defines the recovery switch and the warning; `AUTH-04`, `AUTH-18`, `AUTH-24`, `AUTH-38` rewritten to the decided policy; `ADM-01` restated as seeded data and `ADM-06`, `ADM-07` added for the authorization layer and the last-administrator rule; `UI-14` says in-app and push only; the security note and the §10 row now say no stronger factor is approved and no email or SMS channel exists |
+| [SECURITY](../SECURITY.md) | `SEC-07`, `SEC-08`, `SEC-09`, `SEC-10`, `SEC-11`, `SEC-14`, `SEC-17`, `SEC-19`, `SEC-25`, `SEC-28` rewritten to the six decisions; the `SEC-19` placeholder language is gone |
+| [DATA_MODEL](../DATA_MODEL.md) | `users` loses its role column and gains four RBAC tables; `sessions` carries `refresh_token_hash`, `rotation_generation`, and `family_id`; `login_attempts` carries the decided policy; `captcha_challenges` added; the schema states there is no email address and no mobile number |
+| [ARCHITECTURE](../ARCHITECTURE.md), [API_AND_OPENAPI](../API_AND_OPENAPI.md) | `OPS-25` and `API-32` describe the stream ticket as the only authenticated SSE path, because a bearer token cannot ride an `EventSource`; `API-38` defines the refresh contract and its CSRF scope |
+| [DIAGRAMS](../DIAGRAMS.md), [GLOSSARY](../GLOSSARY.md) | the reset flow notifies remaining sessions in-app; the glossary's *Session* entry is rewritten and *Access token*, *Refresh token*, *Permission*, and *Recovery switch* added |
+| [data classification](../security/data-classification.md), [threat model](../security/threat-model.md) | retention rows for sessions, counters, and challenges; CAPTCHA tokens added to the restricted class; `TH-01`, `TH-02`, `TH-04` and §6 rewritten so the accepted recovery risk is stated rather than implied |
+| [API inventory](04-api-inventory.md), [dependency policy](02-dependency-policy.md) | `/auth/refresh` and the role/permission endpoints added; the CAPTCHA row becomes a self-hosted implementation, and the email/SMS row is retired with the reason |
+| [`.env.example`](../../.env.example) | token lifetimes, the `LOCKOUT_SECONDS` policy, `AUTOMATED_BAN_ENABLED`, the self-hosted challenge settings, `SECURITY_QUESTIONS_ENABLED`; the whole SMTP block is removed with a note saying why |
+| [ROADMAP](../ROADMAP.md), [gate checklist](05-phase-gate-checklist.md) | the ADR range extends to `ADR-024`; the Phase 2 deliver and exit gate carry the six decisions; the Phase 2 and Phase 3 decision rows now name what remains open (`Q-14`, `Q-26`) and what was decided |
+
+### 21.3 Language the decisions retired
+
+Two phrasings can no longer be written, and the gate fails on them ([model coherence](03-ci-and-gates.md) check 8):
+
+- **`verified channel`** — `ADR-019` removed every delivery path that needs an address the product does not store. The diagram in §5's reset flow promised exactly that, which is how the phrase survived its own decision.
+- **`escalating lockout`** — `ADR-022` fixed the lockout to a self-expiring duration; escalation applies to the bounded delay *before* the lockout, because a lockout that escalates can be driven by an attacker against a victim. `AUTH-04`, `AUTH-38`, `SEC-14`, and `ADR-022` itself now say so; where the decision discusses the old reading, the phrase is quoted inside inline code, as this record does.
+
+Five concepts became coherence anchors, so a document that stops describing the model it governs fails the gate: `role_permissions`, `refresh_token_hash`, `captcha_challenges`, `SECURITY_QUESTIONS_ENABLED`, and the statement that there is *no email address and no mobile number*.
+
+### 21.4 Mutation tests (sixteenth pass)
+
+```
+T22a SECURITY stops naming the RBAC tables
+     - [model] `role_permissions` (ADR-024) is not mentioned in SECURITY.md    exit 1
+
+T22b a retired notification channel returns in the glossary
+     - [model] retired wording "verified channel" in GLOSSARY.md:40            exit 1
+
+T22c AUTH-38 rewritten as an escalating lockout
+     - [model] retired wording "escalating lockout" in
+       PRODUCT_REQUIREMENTS.md:97                                             exit 1
+
+T22d AUTH-40 loses the switch's name
+     - [model] `SECURITY_QUESTIONS_ENABLED` (ADR-023) is not mentioned in
+       PRODUCT_REQUIREMENTS.md                                                exit 1
+
+T22e the no-contact statement is reworded in both places
+     - [model] `no email address and no mobile number` (ADR-019) is not
+       mentioned in PRODUCT_REQUIREMENTS.md                                   exit 1
+
+all mutations restored from the pre-test copies                           exit 0
+```
+
+### 21.5 Evidence (sixteenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 14 checks, exit 0
+node scripts/gates/traceability.mjs           # 676 requirements, 120 groups, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+Counts after this pass: identifiers 671 → 676 (`ADM-06`, `ADM-07`, `AUTH-39`, `AUTH-40`, `API-38`); decisions `ADR-001 … ADR-024`; the register holds 26 questions, of which **9 are resolved** (`Q-01` … `Q-05`, `Q-15`, `Q-17`, `Q-18`, `Q-24`) and **17 remain open**.
+
+### 21.6 Deliberately not done
+
+- **Production thresholds are not chosen here.** `ADR-022` fixes the policy and the development values; the stricter production set is a Phase 9 review item, and `.env.example` says so.
+- **No stronger recovery factor is planned or scaffolded.** `ADR-023` says not approved, and the pack no longer uses the word "planned" for one, so nothing implies work that has no owner.
+- **The login flow's uniform timing class** (`AUTH-05`, `SEC-12`) is unchanged: a self-hosted challenge adds work to the login path, and its timing behaviour is a Phase 2 measurement, not a Phase 0 claim.

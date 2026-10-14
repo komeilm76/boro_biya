@@ -350,6 +350,11 @@ const MODEL_COHERENCE = [
   { concept: 'user_location_history', docs: ['DATA_MODEL.md', 'SECURITY.md', 'security/data-classification.md'], adr: 'ADR-014' },
   { concept: 'user_categories', docs: ['DATA_MODEL.md', 'PRODUCT_REQUIREMENTS.md', 'SECURITY.md'], adr: 'ADR-015' },
   { concept: 'sos_alert_categories', docs: ['DATA_MODEL.md', 'ARCHITECTURE.md'], adr: 'ADR-015' },
+  { concept: 'role_permissions', docs: ['DATA_MODEL.md', 'SECURITY.md'], adr: 'ADR-024' },
+  { concept: 'refresh_token_hash', docs: ['DATA_MODEL.md', 'SECURITY.md'], adr: 'ADR-021' },
+  { concept: 'captcha_challenges', docs: ['DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-020' },
+  { concept: 'SECURITY_QUESTIONS_ENABLED', docs: ['DATA_MODEL.md', 'SECURITY.md', 'PRODUCT_REQUIREMENTS.md'], adr: 'ADR-023' },
+  { concept: 'no email address and no mobile number', docs: ['PRODUCT_REQUIREMENTS.md', 'DATA_MODEL.md', 'security/data-classification.md'], adr: 'ADR-019' },
 ];
 
 /**
@@ -372,6 +377,18 @@ const RETIRED_WORDING = [
     pattern: /\bmembership\b/i,
     label: 'membership',
     adr: 'ADR-016 (a category is an assignment carried as a profile attribute, never a group a user belongs to)',
+  },
+  // ADR-019 removed every notification path that delivered to an address the product does not store.
+  {
+    phrase: 'verified channel',
+    adr: 'ADR-019 (no email address and no mobile number is collected, so no verified channel exists)',
+  },
+  // ADR-022 replaced the escalating-lockout reading with a fixed, self-expiring lockout plus a
+  // bounded delay, because a lockout that escalates can be driven by an attacker against a victim.
+  {
+    pattern: /escalating lockout/i,
+    label: 'escalating lockout',
+    adr: 'ADR-022 (the lockout duration is fixed and self-expiring; the delay before it is what escalates)',
   },
   // Round 7 established that identifiers are assigned by the person writing the requirement and
   // only validated by this gate. "Assigned by the documentation gate" reverses that and invites a
@@ -401,11 +418,18 @@ function checkModelCoherence() {
   }
 
   for (const [rel, file] of byRel) {
+    let inFence = false;
     read(file)
       .split('\n')
       .forEach((line, index) => {
-        // As in check 5, text inside inline code documents the rule instead of violating it,
-        // so a review record may quote a retired phrase without failing the gate.
+        // As in checks 5 and 11, quoted text documents the rule instead of violating it, so a
+        // review record may quote a retired phrase — inline, or in the fenced blocks where it
+        // records what the gate printed. Only prose is scanned.
+        if (line.trimStart().startsWith('```')) {
+          inFence = !inFence;
+          return;
+        }
+        if (inFence) return;
         const prose = line.replace(/`[^`]*`/g, '');
         for (const entry of RETIRED_WORDING) {
           const hit = entry.pattern ? entry.pattern.test(prose) : prose.includes(entry.phrase);

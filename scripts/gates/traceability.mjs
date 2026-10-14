@@ -81,7 +81,7 @@ const PHASE_RULES = [
   ['GOV', 89, 89, 0],   // documentation language variety, enforced by gate check 12 (this review)
 
   // Roles, client routes, settings, accessibility
-  ['ADM', 1, 5, 2],
+  ['ADM', 1, 7, 2],
   ['UI', 1, 7, 1],      // route namespaces established with the application shell
   ['UI', 8, 8, 4],      // location-sharing settings ship with the sharing pipeline (Relation Service)
   ['UI', 9, 9, 5],      // SOS settings (suggestion preference, assistance category) ship with the SOS Service
@@ -97,7 +97,7 @@ const PHASE_RULES = [
   ['UI', 28, 28, 2],    // both catalogues complete, language switchable before sign-in (ADR-017)
 
   // Authentication and account lifecycle
-  ['AUTH', 1, 38, 2],
+  ['AUTH', 1, 40, 2],
 
   // Map, navigation
   ['MAP', 1, 5, 3],     // map shell, permission UX, presence labelling, provider adapters
@@ -175,6 +175,7 @@ const PHASE_RULES = [
   ['API', 31, 35, 4],   // realtime contracts
   ['API', 36, 36, 1],   // the timestamp contract belongs to the conventions fixed with the skeleton
   ['API', 37, 37, 1],   // the prose-language convention is fixed with the error envelope it constrains
+  ['API', 38, 38, 2],   // the refresh contract ships with the session model it belongs to
 
   // Quality gates: the catalogue rows map to the phase in which each gate activates
   ['QA', 1, 1, 0],      // documentation gate

@@ -11,9 +11,9 @@ Owner: Security. Reviewed: 2026-10-14. Re-review at each phase boundary and when
 | C0 | Public | Intentionally public, no harm if disclosed | Marketing pages, published API contract, public status page |
 | C1 | Internal | Not secret, but not published; disclosure is merely inconvenient | Non-sensitive configuration values, aggregate metrics, build metadata |
 | C2 | Confidential | Personal or operationally sensitive; disclosure harms users or the service | Username, display profile, relationships, blocks, account state, admin reasons, audit log, notification payloads, SOS alert metadata without precise location |
-| C3 | Restricted | Disclosure can cause direct harm (safety, stalking, account takeover, legal exposure) | Precise coordinates (live, last-known, alert, task), SOS description and photos, password hashes, security answers, session/refresh tokens, stream tickets, provider API keys, plugin secrets |
+| C3 | Restricted | Disclosure can cause direct harm (safety, stalking, account takeover, legal exposure) | Precise coordinates (live, last-known, alert, task), SOS description and photos, password hashes, security answers, session/refresh tokens, stream tickets, CAPTCHA challenge tokens, role and permission assignments, provider API keys, plugin secrets |
 
-Rule: when in doubt, classify higher. A new field without a stated class is treated as C3 until classified.
+There is no email address and no mobile number anywhere in the schema ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)), so no class is needed for either. Rule: when in doubt, classify higher. A new field without a stated class is treated as C3 until classified.
 
 ## 2. Handling rules by class
 
@@ -70,9 +70,10 @@ Cross-cutting rules:
 
 | Data | Retention | Mechanism |
 | --- | --- | --- |
-| Active session records | Until expiry or revocation; bounded maximum age | Row TTL/cleanup job |
+| Active session and refresh-token records | Until expiry or revocation; a reused refresh token revokes its family; bounded maximum age ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android)) | Row TTL/cleanup job |
 | Expired sessions and revoked tokens | Purged within 30 days of expiry (auditable summary may remain) | Scheduled cleanup |
-| Login attempt counters | Rolling window (hours to days, per policy Q-04) | Counter expiry |
+| Login attempt, lockout, and rate-limit counters | Rolling 15-minute window; lockout state until it expires ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) | Counter expiry |
+| CAPTCHA challenges and tokens (`captcha_challenges`) | Minutes: the challenge TTL plus a short cleanup grace; consumed rows are deleted and never kept for analytics ([ADR-020](../DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) | Short TTL + cleanup job; no third-party copy exists |
 | Recovery challenges and grants | Minutes (short-lived), deleted or marked consumed after use | `consumed_at` + cleanup |
 | Idempotency records | Long enough to cover client retries (typically 24 hours to 7 days, per operation) | TTL column + cleanup |
 | Live location points | Only the current point; superseded points removed promptly | Unique row per user, TTL |

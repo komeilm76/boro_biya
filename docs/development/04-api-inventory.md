@@ -11,7 +11,8 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | POST | `/auth/register` | public | Username, password, repeat, CAPTCHA, five security questions; rate-limited; generic errors |
-| POST | `/auth/login` | public | Username + password; CAPTCHA when risk policy requires it; establishes session |
+| POST | `/auth/login` | public | Username + password; self-hosted CAPTCHA when the risk policy requires it; returns the access token and sets the rotating refresh cookie |
+| POST | `/auth/refresh` | public (refresh cookie) | CSRF-protected; consumes the presented refresh token, rotates it, returns a new access token; a reused token revokes the family ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android), API-38) |
 | POST | `/auth/logout` | auth | Revokes the current session; CSRF-protected |
 | POST | `/auth/password/forgot` | public | Generic response, issues recovery challenge when eligible |
 | POST | `/auth/password/recover/questions` | public | Returns the challenge's question IDs (never answers) bound to the flow |
@@ -39,7 +40,10 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | POST | `/admin/users/:id/lock` `/unlock` | admin | Explicit transitions, each audited with reason |
 | POST | `/admin/users/:id/ban` `/unban` | admin | Requires reason; audited |
 | POST | `/admin/users/:id/deactivate` `/reactivate` | admin | Requires reason; audited |
-| PATCH | `/admin/users/:id/role` | admin | Role change; audited; high-impact re-authentication |
+| GET | `/admin/roles` | admin | Roles with their permissions; seeded `admin` and `user` plus any custom role ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) |
+| POST | `/admin/roles` | admin | Create a custom role and its permission set as data; audited |
+| PATCH | `/admin/roles/:id` | admin | Change a role's permissions or name; audited; the last active administrator protection (`ADM-07`) is enforced server-side |
+| PATCH | `/admin/users/:id/roles` | admin | Assign or revoke role assignments; audited; high-impact re-authentication; refused if it would remove the last active administrator |
 | GET | `/admin/audit-events` | admin | Filtered, read-only, cursor paginated |
 
 ## 2a. Assistance categories (Phase 5, served by the Core API)

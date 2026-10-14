@@ -22,7 +22,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 3 | Every binding requirement carries a permanent `AREA-NN` identifier | Identifiers present in all registry documents; gate check 2 | Met |
 | 4 | Every identifier is covered by exactly one traceability row, and the file is current | `docs/development/07-traceability.md`; gate checks 3 and 4 | Met |
 | 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-26) | Met |
-| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-018 | Met |
+| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-024 | Met |
 | 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
 | 9 | Windows and Linux workflows are documented, including the Docker-based startup contract Phase 1 must satisfy | [development environment](01-development-environment.md) §4 | Met |
@@ -71,7 +71,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 7 | Audit event store live; alerting proven on the authentication and rate-limit signals | Alert rule plus a triggered signal; `SEC-58 … SEC-60` | Not started |
 | 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | Not started |
 | 9 | Message catalogue and RTL scaffolding in place with **both locales complete** (Persian and English), a language switch reachable before sign-in, English as the default language with a persisted explicit choice, and localization checks active | Hard-coded-string lint, catalogue-parity test comparing the key sets, pre-sign-in switch test, default-language test; `UI-21`, `UI-22`, `UI-28`, `QA-17` | Not started |
-| 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-01 … Q-05`, `Q-14` (user data), `Q-15`, `Q-17` | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+| 10 | Decisions resolved or explicitly deferred with owner and risk: `Q-14` (user data) and `Q-26` (jurisdiction); the Phase 2 answers already given — `Q-01` … `Q-05` ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number) … [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)) and `Q-17` ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) — implemented as decided | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 
 ### Phase 3 — Map foundation and user settings
@@ -87,7 +87,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 7 | Geospatial prototype complete **with measurements** so `ADR-005` can be decided in Phase 4 | Benchmark output: spatial index, bounded radius query plans, non-PostGIS alternative; `DATA-22 … DATA-24` | Not started |
 | 8 | No coordinates are served to another user: nothing accepts or returns another user's location yet | Negative test; `PRIV-02` (sharing pipeline is Phase 4) | Not started |
 | 9 | Consent and preference changes recorded as audit events with actor and time | Audit query; `PRIV-09` | Not started |
-| 10 | Decisions resolved: `Q-06`, `Q-10` (map/search); the stronger-recovery build permitted by `Q-05` implemented or deferred with owner agreement | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
+| 10 | Decisions resolved: `Q-06`, `Q-10` (map/search); recovery stays as accepted in [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor) unless the owner approves another factor | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Supported browser matrix declared and tested, with a plain-language path for an unsupported browser; high-contrast and forced-colours behaviour verified | Matrix table plus detection test, contrast and forced-colours run; `UI-26`, `UI-27` | Not started |
 
 ### Phase 4 — Relation Service

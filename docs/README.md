@@ -86,9 +86,9 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | --- | --- | --- | --- |
 | `GOV` | Repository governance, documentation, phases, dependency policy | 89 | `1 … 89` |
 | `QA` | Quality gates, CI, testing, release process | 122 | `1 … 122` |
-| `API` | API contracts, OpenAPI, validation, realtime contracts | 37 | `1 … 37` |
-| `AUTH` | Identity, authentication, recovery, account lifecycle | 38 | `1 … 38` |
-| `ADM` | Roles and administrative capabilities | 5 | `1 … 5` |
+| `API` | API contracts, OpenAPI, validation, realtime contracts, session refresh | 38 | `1 … 38` |
+| `AUTH` | Identity, authentication, recovery, account lifecycle | 40 | `1 … 40` |
+| `ADM` | Roles and administrative capabilities | 7 | `1 … 7` |
 | `MAP` | Map rendering, location, permissions, providers | 23 | `1 … 23` |
 | `NAV` | Routing, navigation, guidance | 13 | `1 … 13` |
 | `REL` | Relation Service | 14 | `1 … 14` |
@@ -100,7 +100,7 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **671** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **676** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 
