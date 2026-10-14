@@ -1,29 +1,54 @@
-# Boro_biya — Project Documentation Source
+# Boro_biya
 
-This directory is the normative planning and implementation baseline for **Boro_biya**, a security-focused mapping, navigation, social-location, and SOS assistance platform.
+A security-first mapping, navigation, social-location, and SOS assistance platform: a responsive web application and installable PWA, an Android application, a core TypeScript API, and two independently deployable services (Relation and SOS).
 
-## Start here
+Owner: Repo owner. Reviewed: 2026-10-14.
 
-1. [`MASTER_PROJECT_PROMPT.md`](MASTER_PROJECT_PROMPT.md) — canonical prompt for the coding agent.
-2. [`PRODUCT_REQUIREMENTS.md`](PRODUCT_REQUIREMENTS.md) — functional scope and acceptance criteria.
-3. [`ARCHITECTURE.md`](ARCHITECTURE.md) — deployment, service boundaries, performance, and technology decisions.
-4. [`SECURITY.md`](SECURITY.md) — mandatory security baseline and threat model.
-5. [`DATA_MODEL.md`](DATA_MODEL.md) — initial domain model and invariants.
-6. [`PLUGIN_SYSTEM.md`](PLUGIN_SYSTEM.md) — safe plugin packaging, installation, and service contract.
-7. [`API_AND_OPENAPI.md`](API_AND_OPENAPI.md) — API conventions, OpenAPI 3.1, Zod, and `km-api`/`zopia` integration.
-8. [`QUALITY_GATES.md`](QUALITY_GATES.md) — CI, tests, repository gates, and release criteria.
-9. [`ROADMAP.md`](ROADMAP.md) — phases and phase exit criteria.
-10. [`DECISIONS.md`](DECISIONS.md) — architectural decisions and unresolved product choices.
-11. [`USER_GUIDE_OUTLINE.md`](USER_GUIDE_OUTLINE.md) — documentation intended for normal users.
-12. [`REFERENCES.md`](REFERENCES.md) — authoritative sources to re-check during implementation.
+**Current status: Phase 0 — repository foundation and documentation.** There is no application code yet. Phase 0 is complete pending owner approval; Phase 1 (workspace skeleton and developer experience) starts only after that approval ([ROADMAP](docs/ROADMAP.md)).
 
-## Normative language
+## Where to start
 
-- **MUST / MUST NOT**: mandatory requirement.
-- **SHOULD / SHOULD NOT**: strong recommendation; deviations need a written rationale.
-- **MAY**: optional.
-- Requirements are not considered implemented merely because a UI exists. They require server-side enforcement and automated tests.
+- **Everyone:** [docs/README.md](docs/README.md) — the documentation index, normative language, requirement scheme, and phase status; [docs/DIAGRAMS.md](docs/DIAGRAMS.md) for the topology, flows, and lifecycles; [docs/GLOSSARY.md](docs/GLOSSARY.md) for the vocabulary.
+- **Agents and engineers:** [docs/MASTER_PROJECT_PROMPT.md](docs/MASTER_PROJECT_PROMPT.md) — the canonical instructions.
+- **Contributors:** [CONTRIBUTING.md](CONTRIBUTING.md) — workflow, gate command, and review rules.
+- **Users:** [docs/user/README.md](docs/user/README.md) — the user guide (content ships with the features; nothing is documented before it exists).
 
-## Important implementation rule
+## Documentation-only gate
 
-Do not start feature implementation until Phase 0 documentation, repository rules, threat model, dependency/version policy, architecture decisions, and CI gates have been reviewed and accepted. Treat this pack as a baseline, not a substitute for verifying current package versions, licenses, advisories, provider terms, and platform limitations at implementation time.
+Phase 0 is verified by one dependency-free command that runs on Linux, Windows, and macOS:
+
+```bash
+node scripts/gates/phase0.mjs
+```
+
+It checks that every required document exists and is registered with a current owner and review date, that every requirement identifier is unique, defined, and covered by the traceability file, that all internal links, anchors, section citations, and identifier mentions resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that the pack uses one variety of English, that code fences are closed and every diagram cites its requirements, that the declared state machines still match the requirement text, that the review record's own pass count still matches the sections it holds, and that no document claims capacity, legal compliance, or indefinite retention without a basis. The checks added after the first ten — cross-references, language, review dates, and review-record consistency — are catalogued in [docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md) §3.
+
+```bash
+node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase coverage
+```
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `docs/` | Normative documentation: requirements, architecture, diagrams and lifecycles, glossary, security, decisions, roadmap, guides |
+| `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
+| `docs/security/` | Threat model, data classification, plugin threat model |
+| `docs/user/` | End-user documentation |
+| `docs/operations/` | Runbook register, backup and restore policy, deployment profile, availability objective |
+| `docs/performance/` | Baseline load profile, capacity policy, and measured results |
+| `scripts/gates/` | Gate runners (dependency-free Node) |
+| `.github/workflows/` | CI workflows |
+
+Application code (`apps/`, `services/`, `packages/`) is introduced in Phase 1, following the layout fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5.
+
+## Ground rules
+
+- Documentation and behaviour change in the same commit.
+- Security requirements are acceptance criteria, not cleanup work ([docs/SECURITY.md](docs/SECURITY.md)).
+- Nothing is claimed as working unless it was actually run and its exit status was checked.
+- No feature work begins before the phase gate for its phase has passed ([docs/ROADMAP.md](docs/ROADMAP.md)).
+
+## Licence
+
+Not yet decided. The choice is [Q-25](docs/DECISIONS.md#open-questions) with the repository owner, due before the first public release, and the dependency policy's licence allowlist is written to be compatible with a permissive choice. Until a licence is committed, no rights are granted.
