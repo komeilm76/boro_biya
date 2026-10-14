@@ -345,7 +345,46 @@ node scripts/gates/traceability.mjs           # exit 0
 node scripts/gates/phase0.mjs                 # 8 checks, exit 0
 ```
 
-The requirement total is 648 because `GOV-88` is itself a requirement, like `GOV-87` before it. The per-phase table now reads 0: 19, 1: 277, 2: 114, 3: 42, 4: 66, 5: 56, 6: 13, 7: 59, 8: 1, 9: 1 — i.e. Phase 0 +1 (`GOV-88`), Phase 1 −1 and Phase 2 +1 (`DATA-15`), Phase 3 −4 and Phase 4 +3 (`MAP-06`, `MAP-07`, `MAP-08`, and `PRIV-03` arrive in Phase 4 while `PRIV-20` leaves it), Phase 5 +1 (`PRIV-20`). Deleting the pull-forward register entries would not change any of these numbers: a pull-forward never moves affiliation.
- The traceability file is the authority; any older count quoted in this record describes the pass that produced it.
+The requirement total is 648 because `GOV-88` is itself a requirement, like `GOV-87` before it. The per-phase table as of this pass: 0: 19, 1: 277, 2: 114, 3: 42, 4: 66, 5: 56, 6: 13, 7: 59, 8: 1, 9: 1 — i.e. Phase 0 +1 (`GOV-88`), Phase 1 −1 and Phase 2 +1 (`DATA-15`), Phase 3 −4 and Phase 4 +3 (`MAP-06`, `MAP-07`, `MAP-08`, and `PRIV-03` arrive in Phase 4 while `PRIV-20` leaves it), Phase 5 +1 (`PRIV-20`). Deleting a pull-forward entry would not change any of these numbers: a pull-forward never moves affiliation. The generated [traceability](07-traceability.md) file is the authority; a count quoted earlier in this record describes the pass that produced it.
+
+## 11. Sixth review pass: task order, conflicts, and gate evidence
+
+### 11.1 Task order: the routing adapters were in the wrong phase
+
+`MAP-13` (routing), `MAP-14` (traffic and speed limits), and `MAP-15` (voice data) were affiliated with Phase 3, while everything around them said Phase 6: `NAV-01 … NAV-13` are Phase 6, the Phase 6 deliver line names "routing provider adapter, car/bicycle/foot alternatives … speed limits and traffic only when licensed provider data exists", `Q-10`'s routing half is due in Phase 6, and the API inventory already marks `/routes/*` as Phase 6 endpoints. Phase 3 could not verify any of the three — there is no route in Phase 3 to navigate.
+
+Fixed: `MAP-11` and `MAP-12` (tiles, geocoding) stay with the map in Phase 3, `MAP-13 … MAP-15` move to Phase 6, and the adapter **rules** (`MAP-16 … MAP-21`) stay in Phase 3 because they bind the first adapter and every adapter after it. The architecture section now states this split in words, the Phase 3 and Phase 6 deliver lines name the requirements they own, and the inventory section heading matches. This was the last instance of the defect class round 1 found by hand (Phase 3 claiming Phase 4 work) and round 4 caught mechanically; the audit could not see it because all three phases cited *something* — the requirement simply sat in the wrong one.
+
+### 11.2 Conflicts
+
+**11.2.1 The category endpoints were scheduled two phases early.** Nine endpoints — `/users/me/category`, `/categories`, the `/admin/categories` set, and the per-user category assignment and verification routes — sat in the "Users and administration (Phase 2, admin parts Phase 2–3)" section. Categories are Phase 5 in every other document: the catalogue and single-category management are in the Phase 5 deliver line, `SOS-24 … SOS-29`, `DATA-19 … DATA-21`, and `PRIV-26`/`PRIV-30` are all Phase 5, and there is no category catalogue before the SOS phase produces one. Fixed: the rows moved into a new section, §2a "Assistance categories (Phase 5, served by the Core API)", which also records why they are core endpoints delivered late (`OPS-10`/`OPS-12` own the data; the SOS phase creates it). The section-2 heading no longer claims "admin parts Phase 2–3", which had been stale since round 3.
+
+**11.2.2 The inventory listed `PUT /relation/preferences` twice** with different notes, and `GET /streams/events` twice — once in §4 (added in round 2 to make the revocation behaviour visible) and once in §6 where it is defined. The duplicate rows are gone; the merged preferences row carries both facts, and §4 now points at §6 in a sentence instead of restating the endpoint. The inventory's own rule — an endpoint appears once, with its access level and phase — is true again.
+
+**11.2.3 Phase 3's gate said "no location leaves the device"** while the same phase now declares a prototype migration that stores the owner's coordinate server-side (`DATA-04`, `DATA-05` pull-forward). Both statements were individually true and jointly confusing. It now reads "no coordinates are served to another user — nothing accepts or returns another user's location yet", which is what the phase can actually prove.
+
+### 11.3 Gate evidence for the phases' own requirements
+
+The §9.2.6 class again, three more instances:
+
+- Phase 1 owned the privacy default (`PRIV-19`, no analytics or telemetry) and the redaction layer (`SEC-57`, `PRIV-10`) with no gate evidence. Its deliver line now names both and its exit gate requires the default build to contain no analytics, telemetry, or tracker dependency, and invalid configuration to fail startup (`OPS-53`).
+- Phase 3 owns the consent-change audit trail (`PRIV-09`) — now in its gate.
+- Phase 4 owns the owner-facing sharing history (`MAP-10`) — now in its gate.
+
+### 11.4 Reviewed and accepted (no change)
+
+- **`OPS-12` cites `OPS-80`**, a Phase 5 requirement, from Phase 1. It is a service-boundary statement that names the rule it defers to ("categories are core data, read using the rule in OPS-80"); the boundary must exist before the rule does.
+- **Requirement numbering is not reading order**, and this pass confirmed all three remaining instances are the documented pattern rather than disorder: `OPS-80` sits beside `OPS-16` in the boundary list it elaborates, `SOS-24 … SOS-29` were appended to the subsections they belong to, and `QA-112 … QA-115` sit in the security-test matrix they extend. No area has a numbering gap (verified across all fifteen areas).
+- **`QA-10` / `QA-50` / `PLG-02`** name phases other than their own for the same reason recorded in §8.6.
+
+### 11.5 Evidence (sixth pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 648 requirements, 116 groups, 5 pull-forwards
+node scripts/gates/traceability.mjs           # exit 0
+node scripts/gates/phase0.mjs                 # 8 checks, exit 0
+```
+
+Per-phase counts after §11.1: Phase 3 42 → 39, Phase 6 13 → 16. The full table: 0: 19, 1: 277, 2: 114, 3: 39, 4: 66, 5: 56, 6: 16, 7: 59, 8: 1, 9: 1.
 
 

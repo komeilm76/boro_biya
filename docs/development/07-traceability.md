@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **648** across 115 groups.
+Total requirements: **648** across 116 groups.
 
 ## Declared pull-forwards
 
@@ -27,10 +27,10 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 0 (foundation) | 19 |
 | 1 | 277 |
 | 2 | 114 |
-| 3 | 42 |
+| 3 | 39 |
 | 4 | 66 |
 | 5 | 56 |
-| 6 | 13 |
+| 6 | 16 |
 | 7 | 59 |
 | 8 | 1 |
 | 9 | 1 |
@@ -110,7 +110,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 3 | `UI-11 … UI-13` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 3 | `UI-16 … UI-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
 | 3 | `MAP-01 … MAP-23` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
-| 3 | `MAP-11 … MAP-21` | 11 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| 3 | `MAP-11 … MAP-21` | 8 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
 | 3 | `PRIV-06 … PRIV-09` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | 3 | `QA-12 … QA-16` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 3 | `QA-29 … QA-36` | 8 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
@@ -140,6 +140,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
 | 5 | `DATA-06 … DATA-21` | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 5 | `DATA-25` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| 6 | `MAP-13 … MAP-15` | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
 | 6 | `NAV-01 … NAV-13` | 13 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
 | 7 | `UI-15` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 7 | `SEC-29 … SEC-39` | 11 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |

@@ -25,22 +25,13 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | DELETE | `/auth/sessions/:id` | auth | Revoke one session |
 | DELETE | `/auth/sessions` | auth | Revoke all other sessions |
 
-## 2. Users and administration (Phase 2, admin parts Phase 2–3)
+## 2. Users and administration (Phase 2; the preference set grows with each owning phase)
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | GET | `/users/me` | auth | Own profile and effective preferences |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
 | GET | `/users/me/preferences` | auth | Theme, locale, notification channels, SOS suggestion opt-in |
-| GET | `/users/me/category` | auth | Own assistance category with its verification state |
-| PUT | `/users/me/category` | auth | Set the single category (changing is allowed, rate-limited); unknown or inactive categories rejected; audited |
-| GET | `/categories` | auth | Active catalogue for selection UIs (key, localised label, verification requirement) |
-| GET | `/admin/categories` | admin | Full catalogue including inactive entries |
-| POST | `/admin/categories` | admin | Create a category; audited |
-| PATCH | `/admin/categories/:id` | admin | Rename, reorder, (de)activate, set verification requirement; deactivation blocks new selection and keeps history |
-| POST | `/admin/users/:id/categories/:categoryId/verify` | admin | Mark a membership verified; audited |
-| PUT | `/admin/users/:id/category` | admin | Set or clear another user's category (for example when verification is required); audited |
-| DELETE | `/admin/users/:id/category` | admin | Clear a user's category; audited |
 | PUT | `/users/me/preferences` | auth | Validated against schema; audited when a privacy-relevant value changes |
 | GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
 | POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
@@ -51,7 +42,23 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | PATCH | `/admin/users/:id/role` | admin | Role change; audited; high-impact re-authentication |
 | GET | `/admin/audit-events` | admin | Filtered, read-only, cursor paginated |
 
-## 3. Map, geocoding, and provider adapter (Phase 3, routing Phase 6)
+## 2a. Assistance categories (Phase 5, served by the Core API)
+
+Categories are core data ([ARCHITECTURE](../ARCHITECTURE.md) §2, OPS-10/OPS-12) but they are created, managed, and used only from the SOS phase; until then there is no catalogue to serve.
+
+| Method | Path | Access | Notes |
+| --- | --- | --- | --- |
+| GET | `/users/me/category` | auth | Own assistance category with its verification state |
+| PUT | `/users/me/category` | auth | Set the single category (changing is allowed, rate-limited); unknown or inactive categories rejected; audited |
+| GET | `/categories` | auth | Active catalogue for selection UIs (key, localised label, verification requirement) |
+| GET | `/admin/categories` | admin | Full catalogue including inactive entries |
+| POST | `/admin/categories` | admin | Create a category; audited |
+| PATCH | `/admin/categories/:id` | admin | Rename, reorder, (de)activate, set verification requirement; deactivation blocks new selection and keeps history |
+| POST | `/admin/users/:id/categories/:categoryId/verify` | admin | Mark a user's category verified; audited |
+| PUT | `/admin/users/:id/category` | admin | Set or clear another user's category (for example when verification is required); audited |
+| DELETE | `/admin/users/:id/category` | admin | Clear a user's category; audited |
+
+## 3. Map, geocoding, and provider adapter (Phase 3 map and geocoding, Phase 6 routing)
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
@@ -62,6 +69,8 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | POST | `/routes/eta` | auth | Recompute distance/ETA for an existing route |
 
 ## 4. Relation Service (Phase 4)
+
+Live location updates reach a granted viewer over the authenticated event stream defined in §6; the subscription is authorized against the active grant and **closed** when the grant ends (OPS-24, OPS-27).
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
@@ -75,14 +84,12 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 | POST | `/relation/blocks` | auth | Block; cancels pending requests; audited |
 | DELETE | `/relation/blocks/:id` | auth | Unblock |
 | GET | `/relation/preferences` | auth | Live/last-known sharing flags |
-| PUT | `/relation/preferences` | auth | Audited; effects on streams re-evaluated |
+| PUT | `/relation/preferences` | auth | Master switches for live, last-known, and history sharing; audited; effects on open streams re-evaluated immediately |
 | GET | `/relation/locations/:userId` | auth | **Live** coordinates require an active grant naming the caller, and the owner's live preference; **last-known** coordinates require an accepted relationship and the owner's last-known preference (ADR-013). Response always carries the live flag, timestamp, and accuracy |
 | POST | `/relation/live-shares` | auth | Starts a time-boxed session with an explicit viewer list and a duration within the server maximum; every viewer must be an accepted follower; audited |
 | DELETE | `/relation/live-shares` | auth | Ends the active session (all its grants) immediately; open streams closed |
 | DELETE | `/relation/live-shares/:viewerId` | auth | Revokes one follower's grant inside the active session; that stream closes; audited |
 | GET | `/relation/live-shares` | auth | Active session with its grants, plus sharing history (when, with whom, how long, end reason); paginated, rate-limited |
-| PUT | `/relation/preferences` | auth | Master switches for live, last-known, and history sharing |
-| GET | `/streams/events` (see §6) | auth/Ticket | Live location updates reach a granted viewer over the authenticated event stream: the subscription is authorized against the active grant and **closed** when the grant ends (OPS-24, OPS-27) |
 | GET | `/relation/history-shares` | auth | Followers currently granted history access and their windows |
 | PUT | `/relation/history-shares` | auth | Replace the granted follower list and the retention window (bounded by the server maximum); audited |
 | DELETE | `/relation/history-shares/:viewerId` | auth | Revoke one follower's history access; effective immediately, re-authorized per request |

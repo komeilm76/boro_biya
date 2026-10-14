@@ -97,7 +97,9 @@ const PHASE_RULES = [
   // Map, navigation
   ['MAP', 1, 5, 3],     // map shell, permission UX, presence labelling, provider adapters
   ['MAP', 6, 10, 4],    // live-vs-last-known display, sharing defaults, revoke, grants, share history
-  ['MAP', 11, 21, 3],
+  ['MAP', 11, 12, 3],   // tiles and geocoding adapters ship with the map
+  ['MAP', 13, 15, 6],   // routing, traffic/speed-limit, and voice data ship with navigation
+  ['MAP', 16, 21, 3],   // the rules every adapter follows start with the first adapter
   ['MAP', 22, 22, 4],   // location history capability (Relation Service)
   ['MAP', 23, 23, 3],   // generic location-never-in-URLs rule applies from the first location flow
   ['NAV', 1, 13, 6],

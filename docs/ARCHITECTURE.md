@@ -55,7 +55,7 @@ Rate-limit counters, lockout counters, session revocation, idempotency records, 
 
 ## 4. Maps and external providers
 
-MapLibre GL JS is the client map renderer. Provider adapters are defined for:
+MapLibre GL JS is the client map renderer. Provider adapters are defined for the following capabilities; the tile and geocoding adapters ship with the map (Phase 3), and the routing, traffic, and voice adapters ship with navigation (Phase 6), while the rules below apply to every adapter from the first one:
 
 - **[MAP-11]** Raster/vector map tiles and styles.
 - **[MAP-12]** Geocoding and place search.
