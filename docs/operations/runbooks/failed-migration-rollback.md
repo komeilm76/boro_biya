@@ -72,12 +72,12 @@ Notify the incident owner, database operator, and project owner of the outcome. 
 | Field | Evidence |
 | --- | --- |
 | Date | 2026-10-14 |
-| Commit exercised | `553cb70ec537545026e516ed9ac7ff18f4a8c68b` |
-| Environment | GitHub Actions `ubuntu-latest`; Node 24; Bun 1.4.3; disposable PostgreSQL 18.6 service |
-| Dataset | Empty disposable database `boro_biya_ci`; a random isolated schema; no application data |
-| Command and status | `bun run ops:exercise-rollback` — exit 0 |
-| Run reference | [Linux rollback exercise job](https://github.com/komeilm76/boro_biya/actions/runs/38567344926/job/115863292428) |
-| Result | The script verified migration apply, table/ledger creation, rollback, table/ledger removal, re-apply, and isolated-schema cleanup. The linked Actions step contains the sanitized transcript. |
+| Commit exercised | `c031fb3d5f3fa290fb8d70f302f4bde3cfa83f9d` |
+| Environment | GitHub Actions `ubuntu-latest` and `windows-2025`; Node 24; Bun 1.4.3; disposable PostgreSQL 18.6 (Linux) and 17 (Windows) services |
+| Dataset | Empty disposable database `boro_biya_ci`; a random isolated schema per exercise; no application data |
+| Command and status | `bun run ops:exercise-rollback` — exit 0 on both platforms |
+| Run reference | [Linux job](https://github.com/komeilm76/boro_biya/actions/runs/38568758953/job/115868105955) and [Windows job](https://github.com/komeilm76/boro_biya/actions/runs/38568758953/job/115868105248) |
+| Result | Both jobs completed the isolated rollback step successfully. The exercise verifies migration apply, table/ledger creation, rollback, table/ledger removal, re-apply, and isolated-schema cleanup; job summaries and step output record the run. |
 | Limits | Covers only the empty Phase 1 `service_metadata` migration; not backup restoration, production data, or future data-bearing migrations. |
 
-The Windows exercise in the same initial CI run exited 1 and is not counted as a successful Windows run. The script's dynamic import now uses a file URL rather than a Windows path string; a rerun on the corrected commit is required before recording cross-platform completion.
+The initial Windows attempt on commit `553cb70ec537545026e516ed9ac7ff18f4a8c68b` exited 1 and is not counted as a success. Switching the migration import to a file URL resolved the platform-specific failure; the corrected Linux and Windows attempts both passed in run `38568758953`.

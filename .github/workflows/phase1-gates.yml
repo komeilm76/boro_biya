@@ -148,19 +148,4 @@ jobs:
           version: v0.76.0
           cache: true
       - name: Scan built images for high and critical vulnerabilities
-        shell: bash
-        run: |
-          set -euo pipefail
-          failed=0
-          for image in \
-            boro-biya/api:phase1 \
-            boro-biya/relation:phase1 \
-            boro-biya/sos:phase1 \
-            boro-biya/web:phase1
-          do
-            echo "Scanning $image"
-            if ! trivy image --scanners vuln --exit-code 1 --severity HIGH,CRITICAL "$image"; then
-              failed=1
-            fi
-          done
-          exit "$failed"
+        run: node scripts/gates/images.mjs

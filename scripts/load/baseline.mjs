@@ -107,6 +107,9 @@ try {
   };
   const serialized = JSON.stringify(result, null, 2);
   process.stdout.write(`${serialized}\n`);
+  process.stdout.write(
+    `::notice title=Phase 1 load baseline::Node ${result.node}; ${result.requests} requests; ${result.errors} errors; ${result.requestsPerSecond} req/s; p95 ${result.p95Milliseconds} ms; p99 ${result.p99Milliseconds} ms\n`,
+  );
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,

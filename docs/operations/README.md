@@ -20,7 +20,7 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | Runbook | Failure mode it covers | Owning phase | Last exercised |
 | --- | --- | --- | --- |
 | Database unavailable and restore from backup | datastore loss, corruption, failed migration | 8 | not yet |
-| [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | 2026-10-14 — Linux CI passed; Windows retry pending (run 38567344926) |
+| [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | 2026-10-14 — Linux and Windows CI passed after the Windows path fix (run 38568758953) |
 | Disk full or volume growth | uploads, logs, or location history exhaust storage — and, by design, retained data grows until an approved policy deletes it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | 8 | not yet |
 | Certificate expiry and TLS failure | expired or mis-issued certificate at the edge | 9 | not yet |
 | Secret and credential rotation | leaked or aged secret, plugin credential revocation | 7 | not yet |
@@ -88,4 +88,4 @@ The route a user or a researcher follows to report a suspected account compromis
 
 ## Current state
 
-The Phase 1 infrastructure skeleton exists; no product feature or production deployment is claimed. No runbook has yet been evidenced as exercised, no backup has been taken, and no availability figure exists — so none is claimed. A disposable Phase 1 rollback exercise will be recorded separately only after a successful CI or owner-machine run. This file keeps the register, backup fields, and availability fields fixed before the first outage, and gives the Phase 8 and Phase 9 exit gates a document to check instead of a memory.
+The Phase 1 infrastructure skeleton exists; no product feature or production deployment is claimed. The failed-migration rollback runbook has been exercised against disposable PostgreSQL on Linux and Windows CI and is recorded separately. No backup has been taken and no availability figure exists, so neither is claimed. This file keeps the register, backup fields, and availability fields fixed before the first outage, and gives the Phase 8 and Phase 9 exit gates a document to check instead of a memory.

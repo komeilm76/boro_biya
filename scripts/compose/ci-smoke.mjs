@@ -99,6 +99,9 @@ try {
   process.stdout.write(
     'Compose smoke passed: PostgreSQL, API, Relation Service, SOS Service, and web shell became healthy.\n',
   );
+  process.stdout.write(
+    `::notice title=Docker Compose smoke::PostgreSQL, API, Relation, SOS, and web checks passed; project ${projectName} cleaned up\n`,
+  );
   appendSummary(
     `## Docker Compose smoke\n\n**Result:** passed\n\n${checks.map((check) => `- ${check.name}: ${check.url}`).join('\n')}\n\n**Cleanup:** removed only Compose project \`${projectName}\` and its volumes.\n`,
   );
@@ -106,6 +109,11 @@ try {
   failed = true;
   const message = error instanceof Error ? error.message : 'Unknown Compose smoke failure';
   process.stderr.write(`[compose] ${message}\n`);
+  const annotationMessage = message
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A');
+  process.stdout.write(`::error title=Docker Compose smoke::${annotationMessage}\n`);
   appendSummary(
     `## Docker Compose smoke\n\n**Result:** failed\n\n**Details:** ${message}\n\n**Project:** \`${projectName}\`\n`,
   );

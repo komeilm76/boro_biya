@@ -129,6 +129,9 @@ try {
 
 if (exercisePassed && process.exitCode !== 1) {
   process.stdout.write('ROLLBACK EXERCISE PASSED; no application schema or data was changed.\n');
+  process.stdout.write(
+    `::notice title=Phase 1 rollback exercise::Database ${databaseName}; isolated schema ${schema}; apply, rollback, reapply, and cleanup passed\n`,
+  );
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   const status = exercisePassed && process.exitCode !== 1 ? 'passed' : 'failed';
