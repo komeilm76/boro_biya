@@ -80,25 +80,27 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 ## Requirement IDs
 
-Every binding requirement carries a permanent identifier of the form `AREA-NN`:
+Every binding requirement carries a permanent identifier of the form `AREA-NN`. The table below is the map of the identifier space: the areas, what each one covers, how many identifiers it holds, and the span they occupy. The documentation gate recomputes all four from the documents themselves, so this table cannot drift — and it prints any number inside a span that was never assigned.
 
-| Area | Scope |
-| --- | --- |
-| `GOV` | Repository governance, documentation, phases, dependency policy |
-| `QA` | Quality gates, CI, testing, release process |
-| `API` | API contracts, OpenAPI, validation, realtime contracts |
-| `AUTH` | Identity, authentication, recovery, account lifecycle |
-| `ADM` | Roles and administrative capabilities |
-| `MAP` | Map rendering, location, permissions, providers |
-| `NAV` | Routing, navigation, guidance |
-| `REL` | Relation Service |
-| `SOS` | SOS Service |
-| `PLG` | Plugin system and service contracts |
-| `SEC` | Platform security controls |
-| `PRIV` | Location privacy and data lifecycle |
-| `OPS` | Architecture, operations, configuration, performance, observability |
-| `UI` | Client routes, settings, accessibility, localisation |
-| `DATA` | Data model invariants |
+| Area | Scope | Identifiers | Range |
+| --- | --- | --- | --- |
+| `GOV` | Repository governance, documentation, phases, dependency policy | 88 | `1 … 88` |
+| `QA` | Quality gates, CI, testing, release process | 118 | `1 … 118` |
+| `API` | API contracts, OpenAPI, validation, realtime contracts | 37 | `1 … 37` |
+| `AUTH` | Identity, authentication, recovery, account lifecycle | 38 | `1 … 38` |
+| `ADM` | Roles and administrative capabilities | 5 | `1 … 5` |
+| `MAP` | Map rendering, location, permissions, providers | 23 | `1 … 23` |
+| `NAV` | Routing, navigation, guidance | 13 | `1 … 13` |
+| `REL` | Relation Service | 14 | `1 … 14` |
+| `SOS` | SOS Service | 31 | `1 … 31` |
+| `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
+| `SEC` | Platform security controls | 73 | `1 … 74` |
+| `PRIV` | Location privacy and data lifecycle | 31 | `1 … 31` |
+| `OPS` | Architecture, operations, configuration, performance, observability | 83 | `1 … 83` |
+| `UI` | Client routes, settings, accessibility, localisation | 28 | `1 … 28` |
+| `DATA` | Data model invariants | 27 | `1 … 27` |
+
+Total: **666** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 

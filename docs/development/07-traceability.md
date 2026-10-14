@@ -156,3 +156,676 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 8 | `OPS-81 … OPS-83` | 3 | [operations/README.md](../operations/README.md) | Rules |
 | 8 | `QA-13` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 9 | `SEC-61` | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+
+## Identifier index
+
+Every identifier the documents define, with the phase that must deliver it and the document that owns it. The rows above group identifiers into ranges; this index names each one, so no requirement is visible only inside the document that happens to define it.
+
+| Identifier | Phase | Document | Section |
+| --- | --- | --- | --- |
+| GOV-01 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-02 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-03 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-04 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-05 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-06 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-07 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-08 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-09 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-10 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-11 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-12 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-13 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-14 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-15 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-16 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-17 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-18 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
+| GOV-19 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-20 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-21 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-22 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-23 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-24 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-25 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-26 | 0 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
+| GOV-27 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-28 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-29 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-30 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-31 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-32 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-33 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-34 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-35 | 1 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
+| GOV-36 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
+| GOV-37 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
+| GOV-38 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
+| GOV-39 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
+| GOV-40 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
+| GOV-41 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| GOV-42 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| GOV-43 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| GOV-44 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
+| GOV-45 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 2. Repository layout |
+| GOV-46 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 2. Repository layout |
+| GOV-47 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 2. Repository layout |
+| GOV-48 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 2. Repository layout |
+| GOV-49 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-50 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-51 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-52 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-53 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-54 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-55 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 3. Branches, commits, and reviews |
+| GOV-56 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-57 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-58 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-59 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-60 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-61 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-62 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-63 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 4. Code conventions |
+| GOV-64 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 5. Tests |
+| GOV-65 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 5. Tests |
+| GOV-66 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 5. Tests |
+| GOV-67 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 5. Tests |
+| GOV-68 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 6. Dependency changes |
+| GOV-69 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 6. Dependency changes |
+| GOV-70 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 6. Dependency changes |
+| GOV-71 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 7. Documentation maintenance |
+| GOV-72 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 7. Documentation maintenance |
+| GOV-73 | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 7. Documentation maintenance |
+| GOV-74 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-75 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-76 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-77 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-78 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-79 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-80 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 1. Principles |
+| GOV-81 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
+| GOV-82 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
+| GOV-83 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 4. Runtime baseline |
+| GOV-84 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
+| GOV-85 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
+| GOV-86 | 1 | [development/02-dependency-policy.md](../development/02-dependency-policy.md) | 6. Licence policy |
+| GOV-87 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
+| GOV-88 | 0 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
+| ADM-01 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-02 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-04 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| ADM-05 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
+| UI-01 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-02 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-03 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-04 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-05 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-06 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-07 | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 2. Route namespaces |
+| UI-08 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-09 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-10 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-11 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-12 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-13 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-14 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-15 | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
+| UI-16 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-17 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-18 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-19 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-20 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-21 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-22 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-23 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-24 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-25 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-26 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-27 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| UI-28 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
+| AUTH-01 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-02 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-03 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-04 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-05 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-06 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Login |
+| AUTH-07 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-08 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-09 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-10 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-11 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-12 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Registration |
+| AUTH-13 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-14 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-15 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-16 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-17 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-18 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-19 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-20 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Forgot password |
+| AUTH-21 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
+| AUTH-22 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
+| AUTH-23 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
+| AUTH-24 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
+| AUTH-25 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Change password |
+| AUTH-26 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
+| AUTH-27 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
+| AUTH-28 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
+| AUTH-29 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
+| AUTH-30 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
+| AUTH-31 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-32 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-33 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-34 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-35 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-36 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-37 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| AUTH-38 | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
+| MAP-01 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-02 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-03 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-04 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-05 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-06 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-07 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-08 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-09 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-10 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-11 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-12 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-13 | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-14 | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-15 | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-16 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-17 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-18 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-19 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-20 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-21 | 3 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
+| MAP-22 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| MAP-23 | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| NAV-01 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-02 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-03 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-04 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-05 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-06 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-07 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-08 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-09 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-10 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-11 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-12 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| NAV-13 | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 5. Routing and navigation |
+| REL-01 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-02 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-03 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-04 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-05 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-06 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-07 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-08 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-09 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-10 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-11 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-12 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-13 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| REL-14 | 4 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
+| SOS-01 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-02 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-03 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-04 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-05 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-06 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-07 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-08 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-09 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-10 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-11 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-12 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-13 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-14 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-15 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-16 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
+| SOS-17 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
+| SOS-18 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
+| SOS-19 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
+| SOS-20 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Task states |
+| SOS-21 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
+| SOS-22 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
+| SOS-23 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
+| SOS-24 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Create SOS |
+| SOS-25 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-26 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-27 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-28 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-29 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin dispatch |
+| SOS-30 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Disclosure and the no-responder state |
+| SOS-31 | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Disclosure and the no-responder state |
+| SEC-01 | 1 | [SECURITY.md](../SECURITY.md) | 1. Security baseline |
+| SEC-02 | 1 | [SECURITY.md](../SECURITY.md) | 1. Security baseline |
+| SEC-03 | 1 | [SECURITY.md](../SECURITY.md) | 1. Security baseline |
+| SEC-04 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-05 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-06 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-07 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-08 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-09 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-10 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-11 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-12 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-13 | 2 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
+| SEC-14 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-15 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-16 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-17 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-18 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-19 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-20 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| SEC-21 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-22 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-23 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-24 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-25 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-26 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-27 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-28 | 2 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
+| SEC-29 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-30 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-31 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-32 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-33 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-34 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-35 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-36 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-37 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-38 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-39 | 7 | [SECURITY.md](../SECURITY.md) | 6. Plugin ZIP upload is a critical attack surface |
+| SEC-40 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-41 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-42 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-43 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-44 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-45 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-46 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-47 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-48 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-49 | 2 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
+| SEC-50 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-51 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-52 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-53 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-54 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-55 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-56 | 5 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
+| SEC-57 | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-58 | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-59 | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-60 | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-61 | 9 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-62 | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-63 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-64 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-65 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-66 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-67 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-68 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-69 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-70 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-71 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
+| SEC-73 | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-74 | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| PRIV-01 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-02 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-03 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-04 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-05 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-06 | 3 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-07 | 5 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-08 | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-09 | 3 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-10 | 1 | [security/data-classification.md](../security/data-classification.md) | 2. Handling rules by class |
+| PRIV-11 | 1 | [security/data-classification.md](../security/data-classification.md) | 2. Handling rules by class |
+| PRIV-12 | 1 | [security/data-classification.md](../security/data-classification.md) | 2. Handling rules by class |
+| PRIV-13 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-14 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-15 | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-16 | 5 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-17 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-18 | 5 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-19 | 1 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-20 | 5 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-21 | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-22 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-23 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-24 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-25 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-26 | 5 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| PRIV-27 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-28 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-29 | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-30 | 5 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| PRIV-31 | 2 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| OPS-01 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-02 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-03 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-04 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-05 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-06 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-07 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-08 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-09 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
+| OPS-10 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-11 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-12 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-13 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-14 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-15 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-16 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-17 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
+| OPS-18 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
+| OPS-19 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
+| OPS-20 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
+| OPS-21 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-22 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-23 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-24 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-25 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-26 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-27 | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
+| OPS-28 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-29 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-30 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-31 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-32 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-33 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-34 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-35 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-36 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-37 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-38 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-39 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-40 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-41 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-42 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-43 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-44 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-45 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-46 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-47 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-48 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-49 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-50 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-51 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-52 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-53 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-54 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-55 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-56 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-57 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-58 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
+| OPS-59 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-60 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-61 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-62 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-63 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-64 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
+| OPS-65 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 1. Supported platforms |
+| OPS-66 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 1. Supported platforms |
+| OPS-67 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
+| OPS-68 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
+| OPS-69 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
+| OPS-70 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 5. Environment variables |
+| OPS-71 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 6. Editor and repository hygiene |
+| OPS-72 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 6. Editor and repository hygiene |
+| OPS-73 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 6. Editor and repository hygiene |
+| OPS-74 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 6. Editor and repository hygiene |
+| OPS-75 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| OPS-76 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| OPS-77 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| OPS-78 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| OPS-79 | 1 | [development/01-development-environment.md](../development/01-development-environment.md) | 8. Contribution flow |
+| OPS-80 | 5 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
+| OPS-81 | 8 | [operations/README.md](../operations/README.md) | Rules |
+| OPS-82 | 8 | [operations/README.md](../operations/README.md) | Rules |
+| OPS-83 | 8 | [operations/README.md](../operations/README.md) | Rules |
+| PLG-01 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
+| PLG-02 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
+| PLG-03 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
+| PLG-04 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-05 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-06 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-07 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-08 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-09 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-10 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-11 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-12 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-13 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-14 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 2. Plugin manifest |
+| PLG-15 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-16 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-17 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-18 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-19 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-20 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-21 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-22 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-23 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-24 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-25 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-26 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-27 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-28 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 3. Upload and install workflow |
+| PLG-29 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-30 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-31 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-32 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-33 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-34 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| PLG-35 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-36 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-37 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-38 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-39 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-40 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
+| PLG-41 | 4 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-42 | 5 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-43 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-44 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-45 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-46 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
+| PLG-47 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
+| PLG-48 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
+| PLG-49 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
+| PLG-50 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 7. Resource controls |
+| PLG-51 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-52 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-53 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-54 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-55 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-56 | 7 | [security/plugin-threat-model.md](../security/plugin-threat-model.md) | 4. Prohibited implementation shortcuts |
+| PLG-57 | 7 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 4. Dynamic configuration form |
+| API-01 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-02 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-03 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-04 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-05 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-06 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-07 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-08 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-09 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 1. Contract-first policy |
+| API-10 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-11 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-12 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-13 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-14 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-15 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-16 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-17 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-18 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-19 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-20 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
+| API-21 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
+| API-22 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
+| API-23 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
+| API-24 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
+| API-25 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-26 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-27 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-28 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-29 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-30 | 2 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
+| API-31 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
+| API-32 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
+| API-33 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
+| API-34 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
+| API-35 | 4 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 5. Realtime contracts |
+| API-36 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| API-37 | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
+| QA-01 | 0 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-02 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-03 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-04 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-05 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-06 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-07 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-08 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-09 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-10 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-11 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-12 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-13 | 8 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-14 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-15 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-16 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-17 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-18 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-19 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
+| QA-20 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-21 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-22 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-23 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-24 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-25 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-26 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-27 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-28 | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-29 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-30 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-31 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-32 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-33 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-34 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-35 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-36 | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
+| QA-37 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-38 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-39 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-40 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-41 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-42 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-43 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-44 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-45 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-46 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-47 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 4. Pull request checklist |
+| QA-48 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-49 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-50 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-51 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-52 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-53 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-54 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 5. Release process |
+| QA-55 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 6. Gate exceptions |
+| QA-56 | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 6. Gate exceptions |
+| QA-57 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 1. Gate model |
+| QA-58 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 1. Gate model |
+| QA-59 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 1. Gate model |
+| QA-60 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 1. Gate model |
+| QA-61 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 1. Gate model |
+| QA-62 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-63 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-64 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-65 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-66 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-67 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-68 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-69 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-70 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-71 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-72 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-73 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-74 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-75 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-76 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-77 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 4. CI workflow design |
+| QA-78 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 5. Branch protection expectations |
+| QA-79 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 5. Branch protection expectations |
+| QA-80 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 5. Branch protection expectations |
+| QA-81 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 5. Branch protection expectations |
+| QA-82 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 6. Adding or changing a gate |
+| QA-83 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 6. Adding or changing a gate |
+| QA-84 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 6. Adding or changing a gate |
+| QA-85 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 6. Adding or changing a gate |
+| QA-86 | 1 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 6. Adding or changing a gate |
+| QA-87 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 1. Versioning |
+| QA-88 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 1. Versioning |
+| QA-89 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 1. Versioning |
+| QA-90 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 1. Versioning |
+| QA-91 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 1. Versioning |
+| QA-92 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
+| QA-93 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
+| QA-94 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
+| QA-95 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
+| QA-96 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
+| QA-97 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-98 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-99 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-100 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-101 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-102 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-103 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-104 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-105 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-106 | 1 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
+| QA-107 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| QA-108 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| QA-109 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| QA-110 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| QA-111 | 1 | [performance/README.md](../performance/README.md) | Rules |
+| QA-112 | 4 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-113 | 4 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-114 | 5 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-115 | 5 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
+| QA-116 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-117 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-118 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| DATA-01 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-02 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-03 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-04 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-05 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-06 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-07 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-08 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-09 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-10 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-11 | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-12 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-13 | 7 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-14 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-15 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-16 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-17 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-18 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-19 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-20 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-21 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| DATA-22 | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| DATA-23 | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| DATA-24 | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| DATA-25 | 5 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| DATA-26 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
+| DATA-27 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

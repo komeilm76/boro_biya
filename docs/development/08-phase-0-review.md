@@ -798,3 +798,55 @@ node scripts/gates/traceability.mjs --write   # regenerated; the committed file 
 ```
 
 The total moved from 663 to 666: `UI-28` (Phase 2), `API-37` (Phase 1), `PLG-57` (Phase 7). Phase 0 remains **complete, awaiting owner approval**; Phase 1 is **not started**.
+
+## 18. Thirteenth pass — the identifier space, checked rather than assumed (2026-10-14)
+
+The question that opened this pass was narrow: the area table under "Requirement IDs" in [docs/README.md](../README.md) — does it show all of them? Scanning every definition the way the gate does answered it in three parts.
+
+### 18.1 What the scan found
+
+All fifteen areas that appear anywhere in the documents have a row in that table, and no row describes an area nothing uses — so the table was already complete *as a list of areas*. What it did not show was the size of each area or the span each one occupies, which is exactly the information a reader needs to notice that something is missing. Recomputing it produced the numbers now in the table: `QA` 118, `GOV` 88, `OPS` 83, `SEC` 73, `PLG` 57, `AUTH` 38, `API` 37, `SOS` 31, `PRIV` 31, `UI` 28, `DATA` 27, `MAP` 23, `REL` 14, `NAV` 13, `ADM` 5 — 666 identifiers in total, agreeing with the traceability total.
+
+The scan also found the one thing a hand-maintained table would never have revealed: **`SEC-72` does not exist.** The `SEC` span runs to `SEC-74` with 73 identifiers, because this pass's predecessor extended `SEC-45` in place instead of spending the next free number. Nothing was lost — but "73 identifiers in a span that ends at 74" is exactly the shape a *lost* requirement would have, and the pack had no way to tell the two apart. That ambiguity is now gone: the gate computes the span and prints the holes.
+
+### 18.2 What changed
+
+| Surface | Change |
+| --- | --- |
+| [docs/README.md](../README.md) "Requirement IDs" | The area table now carries **Identifiers** and **Range** columns, a stated total, and a sentence on what a span longer than the count means |
+| [traceability](07-traceability.md) | A generated **identifier index** lists all 666 identifiers individually with phase, document, and section — ranges were previously the smallest unit the file showed |
+| The gate (`QA-63`) | Recomputes the area table (missing row, stale count, moved span, empty scope, row for an unused area) and prints any number skipped inside a span |
+
+The index is generated from the same scan that produces the rows above it, so it cannot disagree with them; a hand-written appendix of 666 identifiers would have been the most rot-prone page in the pack. The area table stays hand-written — it is short, it is the one place a reader meets the areas — and the gate now holds it against the documents.
+
+### 18.3 Tests
+
+```
+T6  the GOV row's count changed from 88 to 87
+    - docs/README.md says GOV holds 87 identifiers; the documents define 88                exit 1
+
+T7  the ADM row deleted from the area table
+    - the identifier-area table in docs/README.md has no row for area ADM, which 5
+      requirements use                                                                     exit 1
+
+T8  a row added for an area that nothing uses (`XYZ`)
+    - docs/README.md lists area XYZ, which no requirement uses                             exit 1
+
+all three mutations restored from the pre-test copies                                      exit 0
+```
+
+### 18.4 Evidence (thirteenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 10 checks, exit 0
+node scripts/gates/traceability.mjs           # 666 requirements, 118 groups, 6 pull-forwards, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # 831 lines: 118 range rows, 666 index rows
+
+node scripts/gates/phase0.mjs | grep traceability
+#   · traceability ok: 666 requirements mapped to phases
+#   · declared pull-forwards: 6 (GOV-88)
+#   · unassigned identifiers inside an area's span: SEC-72
+```
+
+No requirement was added, moved, or renumbered by this pass: the identifier set is unchanged at 666, and the only new statements are about how it is displayed and checked.

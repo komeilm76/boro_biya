@@ -390,6 +390,74 @@ function auditPullForwards(reqs, phases) {
   return problems;
 }
 
+/**
+ * The identifier-area table in docs/README.md is the reader's map of the identifier space
+ * (area, scope, how many identifiers, and the span they occupy). It is generated data written
+ * by hand, so the gate recomputes it: a missing row, a stale count, or a span that no longer
+ * matches fails here rather than misleading a reader who never opens the traceability file.
+ */
+const AREA_ROW_RE = /^\|\s*`([A-Z]{2,4})`\s*\|([^|]*)\|\s*(\d+)\s*\|\s*`(\d+)(?:\s*…\s*(\d+))?`\s*\|\s*$/;
+
+function auditAreaTable(reqs) {
+  const problems = [];
+  const readme = readFileSync(join(DOCS, 'README.md'), 'utf8');
+  const rows = new Map();
+  for (const line of readme.split('\n')) {
+    const match = AREA_ROW_RE.exec(line);
+    if (!match) continue;
+    rows.set(match[1], {
+      scope: (match[2] || '').trim(),
+      count: Number(match[3]),
+      from: Number(match[4]),
+      to: Number(match[5] ?? match[4]),
+    });
+  }
+  const computed = new Map();
+  for (const req of reqs.values()) {
+    const entry = computed.get(req.area) ?? { count: 0, from: Number.POSITIVE_INFINITY, to: 0 };
+    entry.count += 1;
+    entry.from = Math.min(entry.from, req.num);
+    entry.to = Math.max(entry.to, req.num);
+    computed.set(req.area, entry);
+  }
+  for (const [area, entry] of computed) {
+    const row = rows.get(area);
+    if (!row) {
+      problems.push(`the identifier-area table in docs/README.md has no row for area ${area}, which ${entry.count} requirements use`);
+      continue;
+    }
+    if (!row.scope) problems.push(`the ${area} row in the identifier-area table has no scope text`);
+    if (row.count !== entry.count) {
+      problems.push(`docs/README.md says ${area} holds ${row.count} identifiers; the documents define ${entry.count}`);
+    }
+    if (row.from !== entry.from || row.to !== entry.to) {
+      problems.push(`docs/README.md gives the ${area} range as ${row.from} … ${row.to}; the documents define ${entry.from} … ${entry.to}`);
+    }
+  }
+  for (const area of rows.keys()) {
+    if (!computed.has(area)) problems.push(`docs/README.md lists area ${area}, which no requirement uses`);
+  }
+  return problems;
+}
+
+/** Numbers skipped inside an area's span. Legitimate, but always reported. */
+function identifierGaps(reqs) {
+  const byArea = new Map();
+  for (const req of reqs.values()) {
+    const nums = byArea.get(req.area) ?? new Set();
+    nums.add(req.num);
+    byArea.set(req.area, nums);
+  }
+  const gaps = [];
+  for (const [area, nums] of byArea) {
+    const max = Math.max(...nums);
+    for (let n = Math.min(...nums); n <= max; n += 1) {
+      if (!nums.has(n)) gaps.push(`${area}-${String(n).padStart(2, '0')}`);
+    }
+  }
+  return gaps.sort();
+}
+
 /** Map every requirement to a phase, failing on overlap or missing coverage. */
 function assignPhases(reqs) {
   const problems = [];
@@ -483,6 +551,16 @@ function render(reqs, rows, perPhaseId) {
     lines.push(`| ${row.phase} | \`${range(row)}\` | ${row.count} | [${row.doc}](../${row.doc}) | ${row.section || '—'} |`);
   }
   lines.push('');
+  lines.push('## Identifier index');
+  lines.push('');
+  lines.push('Every identifier the documents define, with the phase that must deliver it and the document that owns it. The rows above group identifiers into ranges; this index names each one, so no requirement is visible only inside the document that happens to define it.');
+  lines.push('');
+  lines.push('| Identifier | Phase | Document | Section |');
+  lines.push('| --- | --- | --- | --- |');
+  for (const req of [...reqs.values()].sort((a, b) => (a.area === b.area ? a.num - b.num : AREAS.indexOf(a.area) - AREAS.indexOf(b.area)))) {
+    lines.push(`| ${req.id} | ${perPhaseId.get(req.id) ?? '—'} | [${req.doc}](../${req.doc}) | ${req.section || '—'} |`);
+  }
+  lines.push('');
   return lines.join('\n');
 }
 
@@ -493,6 +571,7 @@ function main() {
   problems.push(...auditAffiliation(reqs, phases));
   problems.push(...auditRoadmapGates(phases));
   problems.push(...auditPullForwards(reqs, phases));
+  problems.push(...auditAreaTable(reqs));
   const errors = [...duplicates.map((d) => `duplicate id: ${d}`), ...problems];
   if (errors.length) {
     console.error('traceability check failed:');
@@ -518,6 +597,8 @@ function main() {
   }
   console.log(`traceability ok: ${reqs.size} requirements mapped to phases`);
   if (PULL_FORWARD.size) console.log(`declared pull-forwards: ${PULL_FORWARD.size} (GOV-88)`);
+  const gaps = identifierGaps(reqs);
+  if (gaps.length) console.log(`unassigned identifiers inside an area's span: ${gaps.join(', ')}`);
 }
 
 main();
