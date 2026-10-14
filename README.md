@@ -21,7 +21,7 @@ Phase 0 is verified by one dependency-free command that runs on Linux, Windows, 
 node scripts/gates/phase0.mjs
 ```
 
-It checks that every required document exists and is registered with a current owner and review date, that every requirement identifier is unique, defined, and covered by the traceability file, that all internal links, anchors, section citations, and identifier mentions resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that the pack uses one variety of English, that code fences are closed and every diagram cites its requirements, and that the declared state machines still match the requirement text. The three newest checks — cross-references, language, and review dates — are catalogued in [docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md) §3.
+It checks that every required document exists and is registered with a current owner and review date, that every requirement identifier is unique, defined, and covered by the traceability file, that all internal links, anchors, section citations, and identifier mentions resolve, that no placeholder text remains in normative documents, that user documentation contains no internal identifiers, that no credential material is present, that the pack uses one variety of English, that code fences are closed and every diagram cites its requirements, that the declared state machines still match the requirement text, and that the review record's own pass count still matches the sections it holds. The checks added after the first ten — cross-references, language, review dates, and review-record consistency — are catalogued in [docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md) §3.
 
 ```bash
 node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase coverage
@@ -51,4 +51,4 @@ Application code (`apps/`, `services/`, `packages/`) is introduced in Phase 1, f
 
 ## Licence
 
-Not yet decided; recorded as an open item before the first public release.
+Not yet decided. The choice is [Q-25](docs/DECISIONS.md#open-questions) with the repository owner, due before the first public release, and the dependency policy's licence allowlist is written to be compatible with a permissive choice. Until a licence is committed, no rights are granted.

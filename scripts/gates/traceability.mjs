@@ -199,7 +199,7 @@ const PHASE_RULES = [
   ['QA', 116, 116, 0],  // documentation gate: model coherence and retired wording
   ['QA', 117, 117, 0],  // documentation gate: phase-status agreement between README and ROADMAP
   ['QA', 118, 118, 0],  // documentation gate: diagram integrity and state-set coherence
-  ['QA', 119, 121, 0],  // documentation gate: cross-references, one variety of English, review dates
+  ['QA', 119, 122, 0],  // documentation gate: cross-references, one variety of English, review dates, review-record consistency
 
   // Data model invariants
   ['DATA', 1, 1, 2],
@@ -439,6 +439,50 @@ function auditAreaTable(reqs) {
   for (const area of rows.keys()) {
     if (!computed.has(area)) problems.push(`docs/README.md lists area ${area}, which no requirement uses`);
   }
+  // The stated total is a claim too, and the one number a reader quotes without re-deriving it.
+  const total = /Total:\s*\*\*(\d+)\*\*\s+identifiers/.exec(readme);
+  if (!total) problems.push('docs/README.md does not state the total identifier count');
+  else if (Number(total[1]) !== reqs.size) {
+    problems.push(`docs/README.md says the pack holds ${total[1]} identifiers; the documents define ${reqs.size}`);
+  }
+  return problems;
+}
+
+/**
+ * The open-question register in docs/DECISIONS.md is the reader's list of what is still undecided,
+ * and the source the affiliation audit reads its due phases from. A row that loses its owner, its
+ * deadline, or its "effect if deferred" cell changes that computation silently; a question marked
+ * resolved without naming the decision that resolved it reads as a decision nobody made.
+ */
+function auditQuestionRegister() {
+  const problems = [];
+  const text = readFileSync(join(DOCS, 'DECISIONS.md'), 'utf8');
+  const section = text.split(/^## Open questions$/m)[1];
+  if (section === undefined) return ['docs/DECISIONS.md has no "## Open questions" section'];
+  const rows = [];
+  for (const line of section.split('\n')) {
+    const row = /^\|\s*(Q-\d{2})\s*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    if (row) rows.push({ id: row[1], question: row[2].trim(), owner: row[3].trim(), due: row[4].trim(), effect: row[5].trim() });
+  }
+  if (!rows.length) return ['the open-question register lists no questions'];
+  const seen = new Set();
+  for (const row of rows) {
+    if (seen.has(row.id)) problems.push(`${row.id} appears twice in the open-question register`);
+    seen.add(row.id);
+    if (!row.question) problems.push(`${row.id} has no question text`);
+    if (!row.owner) problems.push(`${row.id} names no owner — every question has one`);
+    if (!row.effect) problems.push(`${row.id} has no "effect if deferred" cell`);
+    if (/resolved/i.test(row.question)) {
+      const decision = /ADR-\d{3}/.exec(row.question);
+      if (!decision) problems.push(`${row.id} is marked resolved but names no decision (write "resolved by ADR-0NN")`);
+      else if (!new RegExp(`^### ${decision[0]}\\b`, 'm').test(text)) {
+        problems.push(`${row.id} is marked resolved by ${decision[0]}, which has no heading in docs/DECISIONS.md`);
+      }
+      if (!/closed/i.test(row.due)) problems.push(`${row.id} is resolved, so its "decide by" cell should read Closed (it reads "${row.due}")`);
+    } else if (!/phase\s*\d/i.test(row.due)) {
+      problems.push(`${row.id} is open but its "decide by" cell names no phase (it reads "${row.due || 'empty'}")`);
+    }
+  }
   return problems;
 }
 
@@ -574,6 +618,7 @@ function main() {
   problems.push(...auditRoadmapGates(phases));
   problems.push(...auditPullForwards(reqs, phases));
   problems.push(...auditAreaTable(reqs));
+  problems.push(...auditQuestionRegister());
   const errors = [...duplicates.map((d) => `duplicate id: ${d}`), ...problems];
   if (errors.length) {
     console.error('traceability check failed:');

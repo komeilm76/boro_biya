@@ -1,6 +1,6 @@
 # Phase 0 Review Record
 
-A second pass over the Phase 0 pack, looking for defects rather than deliverables. Everything found was fixed in the same work session as this record; the exit status of the gate at the end of that session is the evidence. The record covers two review passes: §1–§6 are the first (§7.4 carries that pass's evidence), and §7 is the second, exhaustive pass over every document.
+Fifteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§20](#20-fifteenth-pass--the-default-language-decided-the-register-checked-and-the-record-corrected-2026-10-14).
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -869,7 +869,7 @@ The instruction for this pass was literal: read every file under `docs/` line by
 | 8 | The gate resolved links but not **mentions**: an identifier typed into prose — or a section cited by name rather than link — could be wrong anywhere, and `SEC-999`, an identifier that does not exist, passed the whole gate. | `scripts/gates/phase0.mjs` | Check 11 (`QA-119`) resolves every requirement, decision, and open-question mention, and every section citation, whether linked, named, or bare inside a document that numbers its own sections. Mutation T10 in §19.5 is that hole closed. |
 | 9 | The pack used two varieties of English at once: `behaviour`, `licence`, `catalogue`, and `artefact` beside `-isation` endings, and `artifact`, `behavior`, `defense`, `license` (noun) in 34 files. A reader could not tell the house style from a mistake, and the gate had no opinion. | 24 files across `docs/`, `README.md`, `CONTRIBUTING.md` | One variety is now declared ([repository conventions](00-repository-conventions.md) §1, `GOV-89`): British spelling with `-ize`/`-ization` endings, `licence` as a noun. 59 `-is-` forms were converted across 24 files, including the ADR-017 heading and its eleven inbound anchors, plus `artefacts`, `behaviour`, `defence`, and `licence`. The first run of the sweep dropped the capital letter from nine words that begin a sentence, a heading, or a table label (`Parameterized queries`, `Pseudonymized only`, `Localization checks`, the ADR-017 title, and five more); all nine were restored by comparing the result against the pre-review text word by word — which is the point of reading the output of a mechanical change rather than trusting it. The same sweep was briefly run over the gate script itself, where it rewrote the retired-spelling pattern into the spellings the pattern exists to catch; the pattern was restored, and §19.5 now tests it in both directions (T15, T16) instead of trusting it. Code identifiers keep their own spelling. Check 12 (`QA-120`) enforces it. |
 | 10 | Eight documents had changed since the date in their own review line, so the date certified text nobody had re-read. | `ARCHITECTURE.md`, `docs/README.md`, `REFERENCES.md`, [repository conventions](00-repository-conventions.md), [development environment](01-development-environment.md), [API inventory](04-api-inventory.md), root `README.md`, `CONTRIBUTING.md` | Each review line was moved to the day of the change its history records, and the matching index rows moved with it — check 1 verifies the pair, so half a bump fails. Check 13 (`QA-121`) now enforces the rule. |
-| 11 | **The new review-date check was skipping itself.** It declines to run in a shallow clone, and every shallow checkout — the sandbox and the CI default — is shallow, so the gate printed a note and stayed green while the eight documents above were stale. | `.github/workflows/docs-gates.yml` | The workflow checks out the full history (`fetch-depth: 0`), so the check runs where it matters, and its note names what a caller must do when history is genuinely unavailable. |
+| 11 | **The new review-date check was skipping itself.** It declines to run in a shallow clone, and every shallow checkout — the sandbox and the CI default — is shallow, so the gate printed a note and stayed green while the eight documents above were stale. | `.github/workflows/docs-gates.yml` | The workflow checks out the full history (`fetch-depth: 0`), so the check runs where it matters, and its note names what a caller must do when history is genuinely unavailable. **The recorded fix was not in the file** — the line was added in the fifteenth pass, and check 13 now asserts the workflow sets it ([§20.4](#204-the-records-own-summary-had-drifted)). |
 | 12 | Three checks ran in the gate with **no requirement, no catalogue entry, and no declared rule**: the gate catalogue listed ten checks, the script ran thirteen. A gate that enforces an undeclared rule is indistinguishable from a gate that is wrong. | [CI and gates](03-ci-and-gates.md) §3, `QA-01` row in [QUALITY_GATES](../QUALITY_GATES.md) §1, `GOV-71`, `docs/README.md`, root `README.md` | Checks 11–13 are catalogued as `QA-119`, `QA-120`, `QA-121`, the language variety is declared as `GOV-89` in §1 of the conventions, and the four places that summarize the gate now name all thirteen checks. |
 | 13 | The record's own opening paragraph still described a document of two passes, while it held thirteen. | this document, ¶1 | It now describes the record as it is: successive passes, the latest being §19. |
 | 14 | The root `README.md` was stale in two places: the gate paragraph listed ten of thirteen checks, and the repository-layout table had no row for `docs/operations/` or `docs/performance/` — two directories the pack itself requires. | root `README.md` §2, §4 | Both extended. |
@@ -902,7 +902,7 @@ Recorded because each was suspected during the reading and then disproved — a 
 | Check 12 added (`QA-120`) over Markdown, `.env.example`, and the two root files | Defect 9: one variety of English, declared before it is enforced |
 | Check 13 added (`QA-121`), with a working-tree branch and a shallow-clone note | Defects 10 and 11: the review line is a claim, and a check that skips itself everywhere is not a check |
 | `PLUGIN_SYSTEM`-style ranges, `–§M` continuations | Defect 7 |
-| `fetch-depth: 0` in `docs-gates.yml` | Defect 11 |
+| `fetch-depth: 0` in `docs-gates.yml` — recorded in this pass, added in the fifteenth ([§20.4](#204-the-records-own-summary-had-drifted)) | Defect 11 |
 | `GOV-89` (language variety), `GOV-71` and the `QA-01` row extended, catalogue items 11–13 | Defect 12: the rule, its requirement, and its documentation land together |
 | `PHASE_RULES` in the traceability generator: `GOV-89`, `QA-119 … QA-121` affiliated with Phase 0 | The gate rules themselves are Phase 0 deliverables, as `QA-62 … QA-68` and `QA-116 … QA-118` already were |
 
@@ -969,3 +969,103 @@ node scripts/gates/phase0.mjs
 The identifier total moved 666 → 670: `GOV-89` (the language variety) and `QA-119`, `QA-120`, `QA-121` (the three checks). The area table in [docs/README.md](../README.md#requirement-ids) was recomputed by the gate in the same change — `GOV` 88 → 89, `QA` 118 → 121 — because the gate reads that table out of the documents and fails on a stale count, which it did on the first run of this pass.
 
 No requirement was renumbered, no identifier was reused, and nothing outside Phase 0 changed: this pass corrected what the documents said, not what the product is.
+
+## 20. Fifteenth pass — the default language decided, the register checked, and the record corrected (2026-10-14)
+
+The owner answered the last question this pack was holding open for them: the **default language**. It is recorded as a decision with its alternatives and consequences rather than as a note in a document, and everything that depended on it moved in the same change. Reading the register to write that decision exposed two more defects, both fixed here: the register itself was never checked, and the licence — the one item the root `README.md` names as undecided — had no row for a reader to decide from.
+
+### 20.1 The decision
+
+[ADR-018](../DECISIONS.md#adr-018--english-is-the-default-language-persian-is-a-complete-translation) records it: **English is the default language for every visitor on first use**, and nothing selects a language automatically — device and browser language and `Accept-Language` do not change it for now, so the first screen is the same for everyone and there is no detection to test. **Persian ships complete**, reachable before sign-in from the sign-in, registration, and recovery screens and at any time in settings; an explicit choice is stored and wins on later visits, against the account when signed in and on the device when signed out. **Exactly these two locales ship in v1** — a third language is a non-goal, not a pending idea. The question it closes, `Q-24`, keeps its row and now points at the decision.
+
+### 20.2 Where it lands
+
+| Document | Change |
+| --- | --- |
+| [DECISIONS](../DECISIONS.md) | ADR-018 added; `Q-24` marked resolved by it and kept for traceability; `Q-25` (licence) and `Q-26` (jurisdiction and legal regime) added |
+| [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) | `UI-12` states the default and that a choice persists; `UI-28` states that nothing selects a language automatically, so the pre-sign-in switch is the only path into Persian before an account exists; §10 gains an exclusion row for languages beyond the two |
+| [ROADMAP](../ROADMAP.md) | the deliverables row carries the register's new range; the Phase 2 exit gate requires English as the default with a persisted choice (ADR-018) instead of the resolved question |
+| [phase gate checklist](05-phase-gate-checklist.md) | the Phase 0 register range moves; the Phase 2 criterion adds the default-language behaviour and a test for it |
+| root `README.md` | the licence section now points at the row that records the choice, and states what is true until one is committed; the gate paragraph names check 14 |
+| [`phase0.mjs`](../../scripts/gates/phase0.mjs) | check 14 added: the review record's stated pass count agrees with its pass sections, and the ordinals run in order |
+| [`traceability.mjs`](../../scripts/gates/traceability.mjs) | the register audit (20.3) and the total-claim audit (20.4) added; `QA-122` affiliated with Phase 0 |
+| [03-ci-and-gates](03-ci-and-gates.md), [QUALITY_GATES](../QUALITY_GATES.md), [docs README](../README.md) | check 14 catalogued as `QA-122`; the gate's contents row, the command comment, the area table (`QA` 122), and the total (671) updated |
+
+### 20.3 The register is now checked
+
+[`traceability.mjs`](../../scripts/gates/traceability.mjs) reads the open-question register already — the affiliation rule takes each question's "decide by" phase from it — but nothing checked the table itself: a row could lose its owner, its deadline, or its "effect if deferred" cell, or claim to be resolved by a decision that does not exist, and the only symptom would be a phase computed from an empty cell. The audit now requires, for every row: a question, an owner, an effect cell, and a deadline that is either a phase (open) or `Closed` (resolved); a resolved row must name an `ADR-` that has a heading in the same document; a duplicate row fails; and the register must not be empty. This is the pass that made it matter — the register is the list the owner reads to decide what is still open.
+
+### 20.4 The record's own summary had drifted
+
+The review record describes itself, and nothing checked its description. Its opening paragraph still read *"the record covers two review passes"* while the record held fifteen, and the roadmap described the same record as eleven passes — three answers to one question. Row 13 of §19.1 claimed the introduction had been made accurate; it had not, which is exactly the failure mode a hand-maintained summary invites: the fix was written down as done without a check that could tell.
+
+The same pass found a second fix recorded but not made: row 11 of §19.1 and the gate-change table both said the CI workflow checks out the full history, and `.github/workflows/docs-gates.yml` had no `fetch-depth` line at all — so check 13 had been skipping itself in CI, exactly where it matters. The line is now in the workflow, and check 13 asserts it, so a workflow that checks out one commit fails instead of skipping.
+
+The count now has one home. The introduction states how many passes the record holds, the roadmap describes it without restating a number, and check 14 (`QA-122`) compares the stated count with the pass sections the record actually contains and requires the ordinals (second pass … twentieth pass) to run in order, so a pass cannot be skipped or repeated in the titles while the count moves on. A record that grows by appending a section now updates its own summary in the same change, or the gate fails.
+
+### 20.5 What the check cannot decide
+
+Stated here because a check that looks stronger than it is invites the reader to stop reading:
+
+- It cannot tell whether an answer is **correct**, only that a resolved question names a decision. `Q-15` resolved by ADR-017 and `Q-24` resolved by ADR-018 are checked as links, not as content.
+- It cannot tell whether a range claim is **current**. `ADR-001 … ADR-017` stays mechanically valid after ADR-018 is added, because both ends exist; a claim that a range *is* the whole register is still kept correct by reading it, and §2.1 records the one time it went stale.
+- It cannot judge whether a question's deadline is **sensible** — only that a phase is named.
+
+### 20.6 Mutation tests (fifteenth pass)
+
+```
+T20a the owner cell of Q-23 emptied
+     - Q-23 names no owner — every question has one                      exit 1
+
+T20b Q-15 marked resolved by ADR-099, which does not exist
+     - Q-15 is marked resolved by ADR-099, which has no heading in
+       docs/DECISIONS.md                                                 exit 1
+
+T20c Q-19's "decide by" cell changed to "Later"
+     - Q-19 is open but its "decide by" cell names no phase (it reads
+       "Later")                                                          exit 1
+
+T20d the Q-21 row duplicated
+     - Q-21 appears twice in the open-question register                   exit 1
+
+T20e Q-99 mentioned in docs/GLOSSARY.md, a question the register does not list
+     - [references] docs/GLOSSARY.md:23 mentions undefined open question
+       "Q-99" — define it, or say on the line why it is deliberately absent   exit 1
+
+T20f a range whose end does not exist: SEC-58 … SEC-99 in the roadmap
+     - [references] docs/ROADMAP.md:47 claims the range SEC-58 … SEC-99,
+       but SEC-99 does not exist                                         exit 1
+
+T21a the introduction's pass count changed to "fourteen"
+     - [review-record] the introduction says the record holds 14 passes;
+       it holds 15                                                       exit 1
+
+T21b the fifteenth pass section retitled "Sixteenth pass"
+     - [review-record] "20. Sixteenth pass — …" says sixteenth pass, but
+       it is the fifteenth pass section in the record                    exit 1
+
+T21c a new pass section appended without touching the introduction
+     - [review-record] the introduction says the record holds 15 passes;
+       it holds 16                                                       exit 1
+
+T21d the workflow checks out a single commit again (fetch-depth removed)
+     - [review-dates] the CI workflow checks out a shallow clone, so this
+       check skips itself in CI: set "fetch-depth: 0" on the checkout step   exit 1
+
+T21e the workflow file removed
+     - [review-dates] .github/workflows/docs-gates.yml is missing; the
+       Phase 0 gates documented in 03-ci-and-gates §4 do not run            exit 1
+
+all mutations restored from the pre-test copies                           exit 0
+```
+
+### 20.7 Evidence (fifteenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 14 checks, exit 0
+node scripts/gates/traceability.mjs           # 671 requirements, 119 groups, 6 pull-forwards, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+The identifier total moved 670 → 671 because `QA-122` is itself a requirement; ADR-018 is a decision, not a requirement, and `Q-25`, `Q-26` are register rows. The `QA` area table in [docs README](../README.md) now reads 122 and the pack total 671, both recomputed by the gate rather than by hand. The register now holds 26 questions: three resolved and pointing at their decisions (`Q-15`, `Q-18`, `Q-24`), and twenty-three open with an owner and a phase.

@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **670** across 119 groups.
+Total requirements: **671** across 119 groups.
 
 ## Declared pull-forwards
 
@@ -25,7 +25,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 25 |
+| 0 (foundation) | 26 |
 | 1 | 280 |
 | 2 | 119 |
 | 3 | 41 |
@@ -42,7 +42,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 0 | `GOV-87 … GOV-88` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | 0 | `GOV-89` | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 1. Language and documents |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
-| 0 | `QA-62 … QA-121` | 13 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| 0 | `QA-62 … QA-122` | 14 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
 | 1 | `GOV-27 … GOV-35` | 9 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Definition of done |
 | 1 | `GOV-36 … GOV-40` | 5 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 9. Dependency policy |
@@ -807,6 +807,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | QA-119 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-120 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | QA-121 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
+| QA-122 | 0 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | DATA-01 | 2 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-02 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | DATA-03 | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |

@@ -34,6 +34,9 @@
  *  13. Review dates — a change to a document updates its "Owner: … Reviewed:" line, so the date
  *      cannot silently describe text that has since changed. Skipped when git history is absent
  *      (a source download, or a shallow clone).
+ *  14. Review record — the review record states how many passes it holds in the paragraph that
+ *      introduces it, and the gate keeps that claim true: the number matches the pass sections
+ *      it contains, and the ordinals run in order without a gap. The count has one home.
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -757,6 +760,17 @@ function checkReferences() {
   // Areas are read from the definitions rather than hard-coded: a token whose prefix the pack
   // never defines (a threat ID, a plugin-threat ID, an asset class) is not this check's business.
   const areas = new Set([...defined].map((id) => id.split('-')[0]));
+  // Numbers that exist per prefix, so a claimed range ("ADR-001 … ADR-018") can be checked as a
+  // claim about the register rather than as two identifiers that happen to appear together.
+  const numbersByPrefix = new Map();
+  for (const id of defined) {
+    const [prefix, digits] = id.split('-');
+    const numbers = numbersByPrefix.get(prefix) ?? new Set();
+    numbers.add(Number(digits));
+    numbersByPrefix.set(prefix, numbers);
+  }
+  numbersByPrefix.set('ADR', new Set([...decisions].map((id) => Number(id.slice(4)))));
+  numbersByPrefix.set('Q', new Set([...questions].map((id) => Number(id.slice(2)))));
 
   const headingsCache = new Map();
   const headingsOf = (file) => {
@@ -803,6 +817,20 @@ function checkReferences() {
           else if (areas.has(prefix)) identifier(id, defined.has(id), 'requirement');
         }
         for (const match of line.matchAll(/\b(Q-\d{2})\b/g)) identifier(match[1], questions.has(match[1]), 'open question');
+
+        // Register ranges: "ADR-001 … ADR-018", "Q-01 … Q-24", "PRIV-23 … PRIV-26" are claims
+        // about the register, so both ends must exist: a range that was true in an earlier round
+        // cannot survive a new decision or a renumbering.
+        for (const match of line.matchAll(/\b([A-Z]{2,4})-(\d{1,3})\s*…\s*([A-Z]{2,4})-(\d{1,3})\b/g)) {
+          const [claim, first, firstDigits, second, secondDigits] = match;
+          if (first !== second) continue;
+          const numbers = numbersByPrefix.get(first);
+          if (!numbers) continue;
+          for (const digits of [firstDigits, secondDigits]) {
+            if (numbers.has(Number(digits))) continue;
+            failures.push(`[references] ${rel}:${lineNo} claims the range ${claim.replace(/\s+/g, ' ')}, but ${first}-${digits} does not exist`);
+          }
+        }
 
         // Section citations, with the matched spans masked so each one is resolved once.
         const prose = line.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length));
@@ -935,6 +963,15 @@ function checkReviewDates() {
     notes.push('review dates: not a git checkout, check skipped');
     return;
   }
+  // The check needs history, so the pipeline that runs it must provide history. This is asserted
+  // before the shallow-clone early return: a workflow that checks out one commit makes the check
+  // skip itself in CI, where it is the only place the rule is enforced.
+  const workflow = join(ROOT, '.github/workflows/docs-gates.yml');
+  if (!existsSync(workflow)) {
+    failures.push('[review-dates] .github/workflows/docs-gates.yml is missing; the Phase 0 gates documented in 03-ci-and-gates §4 do not run');
+  } else if (!/fetch-depth:\s*0/.test(read(workflow)) && !/git fetch[^\n]*--unshallow/.test(read(workflow))) {
+    failures.push('[review-dates] the CI workflow checks out a shallow clone, so this check skips itself in CI: set "fetch-depth: 0" on the checkout step');
+  }
   if (git('rev-parse', '--is-shallow-repository') === 'true') {
     notes.push('review dates: shallow clone, check skipped (fetch full history to enforce it)');
     return;
@@ -967,12 +1004,61 @@ function checkReviewDates() {
   notes.push('review dates: every changed document carries a current review date');
 }
 
+/**
+ * 14. The review record describes itself: how many passes it holds, and in what order. Both are
+ * claims a reader trusts without re-deriving them, so both are checked against the sections the
+ * record actually contains. The count is stated once, in the introduction, so there is one home
+ * for it; a document that restates it elsewhere would need the same check in that place.
+ */
+const REVIEW_RECORD = join(DOCS, 'development/08-phase-0-review.md');
+const COUNT_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const PASS_ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth',
+  'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth'];
+
+function checkReviewRecord() {
+  if (!existsSync(REVIEW_RECORD)) return; // check 1 reports a missing document
+  const text = read(REVIEW_RECORD);
+  const intro = text.split(/\n## /)[0];
+  const passes = [];
+  // A pass section is titled with its ordinal: "## 7. Second review pass (round 2)". A heading
+  // that merely mentions a pass in parentheses ("## 6. Evidence (first pass)") is not one.
+  for (const heading of text.matchAll(/^##\s+\d+\.\s+(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth)\s+[^\n]*\bpass\b[^\n]*$/gim)) {
+    const line = heading[0];
+    const word = heading[1].toLowerCase();
+    passes.push({ heading: line.replace(/^##\s+/, '').trim(), number: PASS_ORDINALS.indexOf(word) + 1, word });
+  }
+  if (!passes.length) {
+    failures.push('[review-record] the review record contains no pass sections with an ordinal heading');
+  }
+  passes.forEach((pass, index) => {
+    const expected = index + 2; // the first pass has no ordinal heading of its own
+    if (pass.number !== expected && expected <= PASS_ORDINALS.length) {
+      failures.push(`[review-record] "${pass.heading}" says ${pass.word} pass, but it is the ${PASS_ORDINALS[expected - 1]} pass section in the record`);
+    }
+  });
+  const claims = [...intro.matchAll(
+    /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\d+)\s+(?:\w+\s+)?passes\b/gi,
+  )].map((match) => (/^\d+$/.test(match[1]) ? Number(match[1]) : COUNT_WORDS.indexOf(match[1].toLowerCase()) + 1));
+  const recorded = passes.length + 1; // the first pass is described rather than titled
+  if (!claims.length) {
+    failures.push('[review-record] the introduction does not state how many passes the record holds — write it once, there');
+  }
+  for (const claim of claims) {
+    if (claim !== recorded) {
+      failures.push(`[review-record] the introduction says the record holds ${claim} passes; it holds ${recorded}`);
+    }
+  }
+  if (failures.length === 0) notes.push(`review record: ${recorded} passes, in order, and the introduction says so`);
+}
+
 const args = process.argv.slice(2);
 if (args.includes('--help') || args.includes('-h')) {
   console.log('Usage: node scripts/gates/phase0.mjs');
   console.log('Runs the Phase 0 documentation gate (inventory and index registration, requirement IDs, traceability,');
   console.log('links, placeholders, audience separation, secrets, model coherence, phase status, diagrams, glossary,');
-  console.log('cross-references (identifiers and section citations), documentation language, review dates).');
+  console.log('cross-references (identifiers and section citations), documentation language, review dates,');
+  console.log('review-record consistency).');
   console.log('Every document must open with "Owner: <role>. Reviewed: YYYY-MM-DD." (GOV-44).');
   console.log('Exit code 0 = pass.');
   process.exit(0);
@@ -990,6 +1076,7 @@ checkDiagrams();
 checkReferences();
 checkLanguage();
 checkReviewDates();
+checkReviewRecord();
 
 if (failures.length) {
   console.error(`\nPhase 0 documentation gate FAILED with ${failures.length} problem(s):\n`);
@@ -1012,4 +1099,5 @@ console.log(' 10. code fences closed, every diagram cites its requirements, the 
 console.log(' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists');
 console.log(' 12. one variety of English across the pack, with code identifiers left as they are written');
 console.log(' 13. every document changed since its review date carries a current "Owner: … Reviewed:" line');
+console.log(' 14. the review record states its own pass count and its pass sections run in order');
 for (const note of notes) console.log(`  · ${note}`);

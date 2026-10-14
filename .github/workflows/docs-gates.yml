@@ -32,9 +32,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
+      # Full history, not the default single commit: the documentation gate compares each
+      # document's review date with the last commit that changed it (check 13), and a shallow
+      # checkout makes that check skip itself silently — a gate that cannot run is not a gate.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Install Node.js
