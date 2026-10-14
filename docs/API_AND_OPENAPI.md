@@ -51,7 +51,7 @@ Constructs that must have explicit fixtures: nullable/optional distinctions, uni
 ## 5. Realtime contracts
 
 - **[API-31]** Event names, payload schemas, recipient authorization, ordering guarantees, replay behaviour, reconnect semantics, and retention are documented per stream.
-- **[API-32]** SSE authentication uses the session cookie or a short-lived single-use stream ticket (issue: `POST /api/v1/streams/ticket`), because `EventSource` cannot send headers; tickets are bound to the user and expire within seconds.
+- **[API-32]** SSE authentication uses the session cookie when the client has one, and otherwise a short-lived single-use stream ticket (issue: `POST /api/v1/streams/ticket`), because `EventSource` cannot send headers; tickets are bound to the user and expire within seconds. Both paths must exist until the session model ([Q-03](DECISIONS.md#open-questions)) is decided, because a header-based token cannot authenticate an `EventSource`.
 - **[API-33]** Every event carries an ID so a reconnecting client can request missed events; the server treats the client's last-seen ID as a hint and re-checks authorization before replaying.
 - **[API-34]** SSE/WebSocket messages are untrusted input on the client and are never used to make authorization or state decisions; state-changing actions go through the normal API and domain logic.
 - **[API-35]** Message payloads are size-bounded and contain the minimum data needed (no full location trails, no cross-user data).

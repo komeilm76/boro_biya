@@ -54,7 +54,7 @@ Private-by-default follow requests, accept/reject, unfollow, blocking, follower-
 
 ### SOS Service
 
-Create SOS alerts with priority, **at least one assistance category**, description, optional coordinates, and optional image. Admins view alerts on a map, find nearby eligible users, and send assistance suggestions — suggestions reach only users whose single category the alert carries ([DECISIONS](DECISIONS.md) ADR-015), and category membership is never a permission ([DECISIONS](DECISIONS.md) ADR-016). Suggestions may be delivered to multiple users, but a task may be claimed by exactly one eligible user. Task states are explicit and audited. A user with an active task cannot claim another. A completed task returns the user to eligibility only after the server validates the completion transition.
+Create SOS alerts with priority, **at least one assistance category**, description, optional coordinates, and optional image. Admins view alerts on a map, find nearby eligible users, and send assistance suggestions — suggestions reach only users whose single category the alert carries ([DECISIONS](DECISIONS.md) ADR-015), and holding a category is never a permission ([DECISIONS](DECISIONS.md) ADR-016). Suggestions may be delivered to multiple users, but a task may be claimed by exactly one eligible user. Task states are explicit and audited. A user with an active task cannot claim another. A completed task returns the user to eligibility only after the server validates the completion transition.
 
 ### Plugin management
 

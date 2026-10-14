@@ -293,6 +293,8 @@ const RETIRED_WORDING = [
   { phrase: 'at least one category that the alert carries', adr: 'ADR-015 (single category per user)' },
   { phrase: 'within the configured maximum', adr: 'ADR-015 (exactly one category per user)' },
   { phrase: 'live-sharing session is running', adr: 'ADR-013 (grants, not sessions, gate a viewer)' },
+  { phrase: 'category membership', adr: 'ADR-016 (a category is a single assignment, never a role or membership)' },
+  { phrase: 'membership changes', adr: 'ADR-015 (assignments change: set, change, clear, verify)' },
 ];
 
 function checkModelCoherence() {

@@ -13,7 +13,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 ## Workflow
 
-1. Create a short-lived branch: `<type>/<topic>` (`docs/`, `fix/`, `feat/`, `chore/`, `security/`, …).
+1. Create a short-lived branch: `<type>/<topic>`, where `<type>` is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `security` ([repository conventions](docs/development/00-repository-conventions.md) §3).
 2. Make the smallest change that satisfies a requirement, and update the documents it affects **in the same commit**. Requirement IDs are the reference handles — quote them in the commit body and the pull request.
 3. Run the gates that are active for the current phase ([docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md)). Today that is one command:
 

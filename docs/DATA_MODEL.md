@@ -73,7 +73,7 @@ Each invariant names its enforcement mechanism; enforcement is verified by the t
 18. **[DATA-18]** Live and historical location are visible only to individually granted followers of an accepted relationship; revoking one grant, unfollowing, blocking, or disabling sharing stops that access immediately, including for open streams (integration, security).
 19. **[DATA-19]** Every SOS alert carries at least one active category, enforced in the creation transaction; an alert with no category cannot be created (integration).
 20. **[DATA-20]** Dispatch suggests only users holding a category that matches the alert, evaluated before distance ordering, and stores the matched category on the suggestion for audit (integration, security).
-21. **[DATA-21]** Category catalogue and membership changes are audited, a user holds exactly one category at a time, and category membership never grants authorization by itself (integration).
+21. **[DATA-21]** Category catalogue and assignment changes are audited (set, change, clear, verify), a user holds exactly one category at a time, and a category assignment never grants authorization by itself (integration).
 
 ## Geospatial design
 

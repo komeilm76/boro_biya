@@ -63,7 +63,7 @@ Automated axe checks on primary routes, keyboard-only walkthrough of critical fl
 - **[QA-112]** A live-sharing grant cannot be extended, re-opened, or transferred to another viewer after it expires or is revoked, and the affected stream closes when it ends (integration).
 - **[QA-113]** Location history is authorized per request against the viewer's grant: expired rows are never served, revoking one grant, unfollowing, blocking, disabling sharing, or deleting the trail ends access immediately, and no bulk-export path exists (integration).
 - **[QA-114]** An alert cannot be created without at least one active category, a user holds exactly one category, and a user whose category the alert does not carry is never suggested, whatever the distance (integration).
-- **[QA-115]** Category membership alone never grants access to another user's data or an administrative capability (authorization).
+- **[QA-115]** Holding an assistance category alone never grants access to another user's data or an administrative capability (authorization).
 
 ### Test hygiene
 

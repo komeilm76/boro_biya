@@ -28,7 +28,7 @@ The phase checklist still claimed the register ended at `ADR-012` and `Q-20`, an
 
 ### 2.2 A decision that reached only half the pack (the important one)
 
-Three owner decisions — per-follower timed live grants, per-follower history sharing, and exactly one assistance category per user — were applied to the data model, the requirements, and the decision log, but **not** to `SECURITY.md`, `security/data-classification.md`, `ARCHITECTURE.md`, `PLUGIN_SYSTEM.md`, or `MASTER_PROJECT_PROMPT.md`. Those documents still described session-wide sharing, follower-wide history access, and multiple category memberships.
+Three owner decisions — per-follower timed live grants, per-follower history sharing, and exactly one assistance category per user — were applied to the data model, the requirements, and the decision log, but **not** to `SECURITY.md`, `security/data-classification.md`, `ARCHITECTURE.md`, `PLUGIN_SYSTEM.md`, or `MASTER_PROJECT_PROMPT.md`. Those documents still described session-wide sharing, follower-wide history access, and multiple `category membership` rows.
 
 The cause is worth recording: the edits were applied by a script whose helper rebound a local copy of the file text, so the write was a silent no-op for part of the batch. The gate could not see it, because nothing in the pack was structurally wrong — the identifiers, links, and traceability coverage were all intact. The lesson is not "be careful with scripts"; it is that **a documentation set needs a semantic check, not only a structural one**, which is what check 8 below adds.
 
@@ -63,7 +63,7 @@ After the audience change, `SECURITY.md` and the API inventory implied that an a
 `scripts/gates/phase0.mjs` gained an eighth check so §2.2 cannot recur silently. It has two lists, both maintained in the script:
 
 - **Governed concepts.** Each table or capability introduced by a decision must be mentioned in the documents that govern it. `live_share_grants`, for example, must appear in the data model, in `SECURITY.md`, and in the data-classification retention table. A document that loses it fails the gate with the concept and the decision that introduced it.
-- **Retired wording.** Phrasings replaced by a decision are listed with the decision that replaced them; any occurrence fails the gate with file, line, and the superseding decision. Current entries cover the session-wide sharing model, follower-wide history access, and multi-category membership.
+- **Retired wording.** Phrasings replaced by a decision are listed with the decision that replaced them; any occurrence fails the gate with file, line, and the superseding decision. Current entries cover the session-wide sharing model, follower-wide history access, multi-category assignments, and category-as-membership vocabulary.
 
 The check exists because structure and truth are different properties: the pack that produced §2.2 had perfect identifiers and links. Its limitation is honest and stated: it can only catch drift for concepts and phrasings that someone remembered to list. Adding an entry is part of changing a model, which the conventions document now requires alongside the requirement IDs.
 
@@ -128,7 +128,7 @@ Fixed: the three owner-accepted ADRs are now `Accepted (owner decision, 2026-10-
 
 **7.2.8 The API inventory was missing an endpoint the architecture requires and the channel its own requirements depend on.** `OPS-80` requires category matching inside a bounded candidate set and the inventory has no internal endpoint for it — an "endpoint that exists in code but not in this inventory is a defect" by the inventory's own rule — and neither the inventory nor the live-location rows named the mechanism by which a granted viewer receives updates, although `OPS-24` and `OPS-27` make closing that mechanism on revocation a hard requirement. Both added.
 
-**7.2.9 Requirement-set defects.** `REL-11` … `REL-14` were listed **before** `REL-08` … `REL-10` in the same section, so reading order contradicted numbering order; `AUTH-07` omitted the five security questions that `AUTH-10` and the API inventory both require at registration; `MAP-07` still described sharing as governed by "explicit per-user settings" with an "accepted followers" audience; `SOS-25`, `SOS-27`, and `SOS-28` used membership vocabulary for an attribute that is exactly one per user.
+**7.2.9 Requirement-set defects.** `REL-11` … `REL-14` were listed **before** `REL-08` … `REL-10` in the same section, so reading order contradicted numbering order; `AUTH-07` omitted the five security questions that `AUTH-10` and the API inventory both require at registration; `MAP-07` still described sharing as governed by "explicit per-user settings" with an "accepted followers" audience; `SOS-25`, `SOS-27`, and `SOS-28` used `category membership` vocabulary for an attribute that is exactly one per user.
 
 **7.2.10 Documents about the gate were behind the gate.** `QA-62`, `QA-63`, `QA-01`, `GOV-71`, and the README command comment described a smaller check set than the script performs (`QA-63` omitted reference resolution, which the gate has always done; `QA-01` omitted anchors, audience separation, and model coherence). Fixed, and the same pass corrected `QA-67`'s "clientside" typo and widened the OWASP `A09` cell in `SECURITY.md` to name the alerting coverage that `SEC-60` actually requires.
 
@@ -386,5 +386,54 @@ node scripts/gates/phase0.mjs                 # 8 checks, exit 0
 ```
 
 Per-phase counts after §11.1: Phase 3 42 → 39, Phase 6 13 → 16. The full table: 0: 19, 1: 277, 2: 114, 3: 39, 4: 66, 5: 56, 6: 16, 7: 59, 8: 1, 9: 1.
+
+## 12. Seventh review pass: silent decisions, vocabulary residue, and pointers
+
+This pass ran new kinds of sweeps rather than re-reading: state and enum lists across documents, configuration values against documented bounds, identifiers that are never referenced, and the pointers inside requirements.
+
+### 12.1 A question that was answered without being asked (`Q-03`)
+
+`Q-03` (session model: cookie sessions, token + refresh, or both) is open. Three requirements had already decided it:
+
+- `SEC-08` required "server-side sessions with `HttpOnly`, `Secure`, `SameSite` cookies ... for browsers" — one of the three candidate models, stated as the answer;
+- `OPS-25` and `API-32` assumed the session cookie exists for browser SSE.
+
+The register's own rule is explicit: "Deferring a question is allowed; starting the affected work without answering it is not." A requirement that pre-decides an open question is that defect in reverse — the decision exists without a decision record.
+
+Fixed by separating the invariant from the mechanism. `SEC-08` now requires the *properties* of any chosen model (`HttpOnly`/`Secure`/`SameSite` when cookies are used; platform-secure storage for native; no bearer token in `localStorage`; rotation and revocation documented) and says the mechanism is not chosen there. `OPS-25` and `API-32` are conditional: a cookie session is used when the model is cookie-based, and the single-use stream ticket is required whenever no cookie session exists — which is always true for a header-based token, since `EventSource` cannot send headers. Both paths must exist until `Q-03` is answered.
+
+### 12.2 Vocabulary residue: half-propagated category wording
+
+Round 3 replaced "membership" language for the single-category model in `SOS-25`, `SOS-27`, and `SOS-28`, but eight other places still used it: `ADM-01`, `DATA-21`, `QA-115`, `PRIV-30`, `ADR-015`, `ADR-016` (including its heading), `MASTER_PROJECT_PROMPT`, and the API inventory. "Membership" implies a group a user belongs to and can hold several of; the model is exactly one assignment per user, carried as a profile attribute and never a permission.
+
+Fixed: every site now uses category/assignment vocabulary, the ADR-016 heading became "an assistance category is not a role" (its anchor was referenced nowhere, and the one internal link that used the old anchor was updated), and two entries were added to the gate's retired-wording list — `category membership` and `membership changes` — so the same half-propagation fails the gate next time instead of waiting for a review pass. The gate caught three further occurrences immediately on the next run, including one I had missed in the review record itself.
+
+### 12.3 Pointers that pointed nowhere
+
+- `QA-77` said branch-protection requirements "are recorded with the release plan". The release plan does not mention branch protection; the expectations are §5 of the same document that contains `QA-77`. The pointer now names §5, and the release-flow step that must not complete while a required check is bypassable.
+- `CONTRIBUTING.md` abbreviated the branch-type list as "(`docs/`, `fix/`, `feat/`, `chore/`, `security/`, …)" while `GOV-50` defines exactly eight types. The contribution guide now lists all eight and links the rule.
+
+### 12.4 A decision nobody cited
+
+`ADR-002` (plugin ZIP security) was not referenced by identifier anywhere, although its rule ("never run uploaded code in the core process") is stated in `SECURITY.md` §6 and `MASTER_PROJECT_PROMPT`. The rule is now cited at the place it is stated, so a reader can reach the decision rather than inferring it. This was the only unreferenced decision; every closed question (`Q-18`) and every other ADR is referenced.
+
+### 12.5 Verified clean (no change)
+
+- **Enum and state lists** agree everywhere they appear: suggestion states (`pending`, `accepted`, `declined`, `expired`, `cancelled`), account status (four values plus the two setup flags), alert priorities, plugin lifecycle states, category status (`self_declared`, `verified`), theme values.
+- **Configuration values against documents**: the Argon2id parameters, upload byte and pixel bounds, plugin archive and extraction bounds, SOS radius, login attempt and window values, and stream ticket lifetime all match their documented descriptions; no bound exists in a document without a variable, and no variable carries a value the documents contradict.
+- **Action pins**: both SHAs in the workflow match `REFERENCES.md` exactly (`actions/checkout` `3d3c42e5…`, `actions/setup-node` `949feb24…`).
+- **Identifier coverage**: no area has a numbering gap (all fifteen areas re-verified), and no requirement identifier is undefined.
+- **Path namespaces**: `/_auth`, `/_public`, `/_user`, `/_admin`, `/healthz`, `/readyz`, `/api/v1`, and the metric endpoint appear only in their defined forms.
+
+### 12.6 Evidence (seventh pass)
+
+```
+node scripts/gates/phase0.mjs                 # 8 checks, exit 0 (twice failed on the new
+                                              # retired-wording entries before the fixes landed)
+node scripts/gates/traceability.mjs           # exit 0, 648 requirements, 5 pull-forwards
+```
+
+No affiliation or count changes in this pass — the total stays 648 and every phase holds the counts recorded in §11.5.
+
 
 

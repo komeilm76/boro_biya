@@ -108,7 +108,7 @@ Live location updates reach a granted viewer over the authenticated event stream
 | GET | `/sos/attachments/:id` | auth | Authorization-checked per request; short-lived signed access where applicable |
 | GET | `/admin/sos/alerts` | admin | Map and list views; filters by priority/status/time |
 | GET | `/admin/sos/alerts/:id` | admin | Detail with attachments and suggestion history |
-| POST | `/admin/sos/alerts/:id/suggestions` | admin | Fan-out to eligible users within the configured radius **holding a category the alert carries** (verified membership where the category requires it) |
+| POST | `/admin/sos/alerts/:id/suggestions` | admin | Fan-out to eligible users within the configured radius **holding a category the alert carries**, with verification where that category requires it |
 | POST | `/admin/sos/nearby-users` | admin | Eligibility-filtered proximity search (documented radius + method) with optional category filter and the matched category returned per user |
 | GET | `/sos/suggestions/mine` | auth | Pending and historical suggestions |
 | POST | `/sos/suggestions/:id/accept` | auth | Idempotent; fails if the user already holds an active task |

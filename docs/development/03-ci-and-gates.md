@@ -67,7 +67,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 - **[QA-74]** Concurrency cancels superseded runs on the same branch.
 - **[QA-75]** Caches are used only for package-manager caches, never for build outputs that must be reproducible.
 - **[QA-76]** Timeouts are set on jobs so a hung step cannot consume the entire pipeline budget.
-- **[QA-77]** Required checks for branch protection: the documentation gate in Phase 0; the full active set from Phase 1 onward. Branch protection requirements are recorded with the release plan.
+- **[QA-77]** Required checks for branch protection: the documentation gate in Phase 0; the full active set from Phase 1 onward. The concrete expectations are recorded in §5 of this document, and a release is not cut while a required check is missing or bypassable ([release plan](06-release-plan.md) §3, step 2).
 
 ## 5. Branch protection expectations
 

@@ -30,7 +30,7 @@ Owner: Security. Reviewed: 2026-10-13.
 - **[SEC-05]** Preferred implementation: the runtime's built-in Argon2id (Bun's `Bun.password.hash`, default `argon2id`, `m=65536 KiB`, `t=2`, `p=1`) where the runtime decision ([DECISIONS](DECISIONS.md) Q-16) selects Bun; on Node.js, a maintained native binding (`argon2`) is used. The chosen implementation is recorded in the dependency policy and reviewed as a security-critical dependency.
 - **[SEC-06]** Security-question answers are normalized (trim, collapse whitespace, Unicode normalization) and hashed with the same password-hashing algorithm. Case folding is applied only if the UX declares answers case-insensitive. The normalization policy version is stored per answer so the policy can evolve without locking out existing users, and plaintext or reversibly encrypted answers are forbidden.
 - **[SEC-07]** Security questions have low entropy and are not a second authentication factor. They are treated as a weak recovery factor with layered throttling, generic responses, short-lived single-use grants, audit events, and (where approved) stronger recovery options.
-- **[SEC-08]** Session/refresh secrets are stored and transmitted safely: server-side sessions with `HttpOnly`, `Secure`, `SameSite` cookies (with `__Host-` prefix where the deployment permits) for browsers, and platform-secure storage with documented rotation/revocation for native clients. Bearer tokens are not kept in `localStorage` by default.
+- **[SEC-08]** Session/refresh secrets are stored and transmitted safely whichever session model [Q-03](DECISIONS.md#open-questions) selects: `HttpOnly`, `Secure`, `SameSite`-scoped cookies with the `__Host-` prefix where the deployment permits, when cookies are used; platform-secure storage with documented rotation and revocation for native clients; and no bearer token kept in `localStorage` by default. The mechanism is not chosen here — the invariants are required of whatever mechanism is chosen.
 - **[SEC-09]** State-changing requests authenticated by cookie carry CSRF protection (token or double-submit with origin checks), including logout and settings changes.
 - **[SEC-10]** Sessions expire, rotate, and revoke explicitly. Password reset, password change, account state changes, and administrative credential operations revoke affected sessions.
 - **[SEC-11]** CAPTCHA is defense in depth, never a replacement for rate limiting or abuse detection, and its provider must be verified against privacy commitments before use.
@@ -76,7 +76,7 @@ Owner: Security. Reviewed: 2026-10-13.
 
 ## 6. Plugin ZIP upload is a critical attack surface
 
-Never extract an uploaded archive into an executable host path, and never run its scripts in the core API process. Required defences:
+Never extract an uploaded archive into an executable host path, and never run its scripts in the core API process ([DECISIONS](DECISIONS.md) ADR-002). Required defences:
 
 - **[SEC-29]** Bounded archive size, file count, decompressed size, nesting depth, and compression ratio, all enforced before and during extraction.
 - **[SEC-30]** Rejection of absolute paths, `..` traversal, symlinks, hardlinks, device files, duplicate normalized paths, case-collision paths, unexpected file types, and path collisions. Extraction is performed by an implementation that does not follow links and writes only into a fresh, non-executable directory.

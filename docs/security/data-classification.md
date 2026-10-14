@@ -108,4 +108,4 @@ These defaults are binding unless the user explicitly changes them, and each is 
 11. **[PRIV-27]** Live location is shared only through an explicit, time-boxed grant to the specific follower the owner selects; the maximum duration and viewer count are bounded by configuration (Q-21), and no grant renews itself or applies to anyone else.
 12. **[PRIV-28]** Location history is never exportable in bulk, is readable only by granted viewers inside their window, and the owner can delete it in full at any time with immediate effect.
 13. **[PRIV-29]** A follower sees live or historical location only while that follower's grant is active and the relationship is accepted; revoking one grant stops that access immediately, including for open streams.
-14. **[PRIV-30]** Assistance-category membership is visible to its owner and to administrators for administration, is used server-side for dispatch matching, and is never exposed as a public profile list.
+14. **[PRIV-30]** A user's assistance category is visible to its owner and to administrators for administration, is used server-side for dispatch matching, and is never exposed as a public profile list.

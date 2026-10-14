@@ -6,7 +6,7 @@ Owner: Repo owner. Reviewed: 2026-10-13.
 
 ## 1. Roles and access
 
-- **[ADM-01]** Exactly two roles exist: `admin` and `user` ([DECISIONS](DECISIONS.md) ADR-016). No sub-roles are introduced in v1. Assistance-category membership (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary.
+- **[ADM-01]** Exactly two roles exist: `admin` and `user` ([DECISIONS](DECISIONS.md) ADR-016). No sub-roles are introduced in v1. The assistance category (§7) is a profile attribute, never a role, and MUST NOT be used as an authorization boundary.
 - **[ADM-02]** Authorization is enforced by the server on every protected operation. A frontend route guard is a user-experience affordance, not an authorization boundary.
 - **[ADM-03]** Admin capabilities are user administration, SOS monitoring/dispatch, and plugin management. Each admin capability requires an explicit authorization check and an audit event (`actor`, `action`, `target`, timestamp, request ID, source).
 - **[ADM-04]** Admins MUST NOT be able to read users' plaintext passwords, security-question answers, session tokens, or raw location trails.
@@ -201,7 +201,7 @@ with explicit cancellation/failed/needs-escalation transitions where product pol
 A user settings area exposes preferences whose backing schema/capability is actually available:
 
 - **[UI-08]** Location sharing: per-follower live grants with their remaining time and an "end now" control; the history-sharing toggle with its retention window; the list of followers granted history access; a "delete my location history" action; and the list of followers who can currently see live or historical location.
-- **[UI-09]** SOS: receive assistance suggestions, plus the user's assistance category and its verification state, with a plain-language explanation of what membership means for them.
+- **[UI-09]** SOS: receive assistance suggestions, plus the user's assistance category and its verification state, with a plain-language explanation of what the category means for them.
 - **[UI-10]** Privacy: current sessions with revoke controls, account state and recovery options where appropriate.
 - **[UI-11]** Appearance: light, dark, system.
 - **[UI-12]** Language and locale, including text direction, once localisation is enabled.
