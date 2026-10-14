@@ -1,3 +1,4 @@
+import { appendFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -53,4 +54,13 @@ const passed = results.filter((result) => result.status === 'PASSED').length;
 const failed = results.filter((result) => result.status === 'FAILED').length;
 const notRun = results.filter((result) => result.status === 'NOT RUN').length;
 process.stdout.write(`\n${passed} passed, ${failed} failed, ${notRun} not run\n`);
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const rows = results
+    .map((result) => `| ${result.name} | ${result.status} | ${result.detail} |`)
+    .join('\n');
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    `## Phase 1 gate results\n\n| Gate | Status | Detail |\n| --- | --- | --- |\n${rows}\n\n**${passed} passed, ${failed} failed, ${notRun} not run.**\n`,
+  );
+}
 if (failed > 0 || notRun > 0 || passed !== steps.length) process.exitCode = 1;

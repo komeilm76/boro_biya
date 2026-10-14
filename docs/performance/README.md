@@ -64,4 +64,4 @@ Limitations:    <what this measurement does NOT cover>
 
 ## Current state
 
-No Phase 1 performance result is recorded yet. The skeleton and executable profile now exist, but this sandbox has Node 22 rather than the pinned Node 24 runtime; record the first supported-host result from CI or a Node 24 machine in the reporting format above. Until then, the thresholds are policy values, not measured performance claims.
+The first Phase 1 CI run (`553cb70ec537545026e516ed9ac7ff18f4a8c68b`, Node 24, Bun 1.4.3, Linux/Windows GitHub-hosted runners) executed `bun run check:load` and passed the profile's error-rate, request-rate, p95, and p99 thresholds on both platforms ([run 38567344926](https://github.com/komeilm76/boro_biya/actions/runs/38567344926)). The exact JSON values are not yet copied into this document, so no numeric performance claim is recorded. The follow-up workflow writes that JSON to its job summary; record it here with the runner, empty-shell dataset, route, and command before using it as a reproducible measurement. This sandbox itself has Node 22.22.3 and correctly did not run the Node 24 profile.

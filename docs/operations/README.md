@@ -20,7 +20,7 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | Runbook | Failure mode it covers | Owning phase | Last exercised |
 | --- | --- | --- | --- |
 | Database unavailable and restore from backup | datastore loss, corruption, failed migration | 8 | not yet |
-| [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | not yet |
+| [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | 2026-10-14 — Linux CI passed; Windows retry pending (run 38567344926) |
 | Disk full or volume growth | uploads, logs, or location history exhaust storage — and, by design, retained data grows until an approved policy deletes it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | 8 | not yet |
 | Certificate expiry and TLS failure | expired or mis-issued certificate at the edge | 9 | not yet |
 | Secret and credential rotation | leaked or aged secret, plugin credential revocation | 7 | not yet |

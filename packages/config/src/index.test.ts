@@ -38,6 +38,11 @@ describe('startup configuration', () => {
     expect(parseConfig({ SERVICE_NAME: 'relation' }).SERVICE_NAME).toBe('relation');
   });
 
+  it('accepts only a valid hexadecimal commit identifier when GIT_SHA is supplied', () => {
+    expect(parseConfig({ GIT_SHA: 'abcdef0' }).GIT_SHA).toBe('abcdef0');
+    expect(() => parseConfig({ GIT_SHA: 'local' })).toThrow(ConfigurationError);
+  });
+
   it('rejects an unsupported mode and log level', () => {
     expect(() => parseConfig({ NODE_ENV: 'preview' })).toThrow(ConfigurationError);
     expect(() => parseConfig({ LOG_LEVEL: 'verbose' })).toThrow(ConfigurationError);

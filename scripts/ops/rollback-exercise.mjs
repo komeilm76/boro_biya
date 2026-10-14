@@ -1,3 +1,4 @@
+import { appendFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -7,9 +8,7 @@ if (!requireNode24('Rollback exercise')) process.exit(1);
 
 const apiManifest = fileURLToPath(new URL('../../apps/api/package.json', import.meta.url));
 const migrationsDirectory = fileURLToPath(new URL('../../apps/api/migrations/', import.meta.url));
-const migrationModule = await import(
-  fileURLToPath(new URL('../../apps/api/dist/db/migrate.js', import.meta.url))
-);
+const migrationModule = await import(new URL('../../apps/api/dist/db/migrate.js', import.meta.url));
 const { applyMigrations, getMigrationStatus, rollbackMigrations } = migrationModule;
 const { Pool } = createRequire(apiManifest)('pg');
 const connectionString = process.env.DATABASE_URL;
@@ -35,6 +34,7 @@ const pool = new Pool({ connectionString, max: 1, connectionTimeoutMillis: 2_000
 const schema = `phase1_rollback_exercise_${randomBytes(8).toString('hex')}`;
 let schemaCreated = false;
 let exercisePassed = false;
+let databaseName = 'unknown';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -57,7 +57,7 @@ async function migrationRowCount() {
 
 try {
   const identity = await pool.query('SELECT current_database() AS database_name');
-  const databaseName = identity.rows[0]?.database_name;
+  databaseName = identity.rows[0]?.database_name ?? 'unknown';
   assert(
     typeof databaseName === 'string' &&
       /^boro_biya_(?:dev|ci|test)(?:_[a-z0-9]+)?$/i.test(databaseName),
@@ -129,4 +129,11 @@ try {
 
 if (exercisePassed && process.exitCode !== 1) {
   process.stdout.write('ROLLBACK EXERCISE PASSED; no application schema or data was changed.\n');
+}
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const status = exercisePassed && process.exitCode !== 1 ? 'passed' : 'failed';
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    `## Phase 1 migration rollback exercise\n\n- Result: **${status}**\n- Database: \`${databaseName}\`\n- Isolated schema: \`${schema}\`\n- Verified sequence: apply, verify table and ledger; rollback, verify removal; reapply, verify restoration; clean up isolated schema.\n- Command: \`bun run ops:exercise-rollback\`\n`,
+  );
 }

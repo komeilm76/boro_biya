@@ -3,7 +3,7 @@ import { createServer } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { requireNode24 } from '../lib/require-node24.mjs';
 
 if (!requireNode24('Load baseline')) process.exit(1);
@@ -105,7 +105,14 @@ try {
     dataset: profile.dataset,
     node: process.version,
   };
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  const serialized = JSON.stringify(result, null, 2);
+  process.stdout.write(`${serialized}\n`);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(
+      process.env.GITHUB_STEP_SUMMARY,
+      `## Phase 1 baseline load profile\n\n\`\`\`json\n${serialized}\n\`\`\`\n`,
+    );
+  }
   failed =
     errors !== profile.pass.errors ||
     result.requestsPerSecond < profile.pass.requestsPerSecondAtLeast ||

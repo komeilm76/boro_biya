@@ -67,6 +67,17 @@ The Phase 1 `0001_core_metadata.down.sql` drops `service_metadata`. It is safe o
 
 Notify the incident owner, database operator, and project owner of the outcome. Attach the sanitized command transcript and test/CI run reference. Record the failure cause, any data-loss assessment, the commit SHA, the migration/checksum state, and the follow-up action. Update this runbook only alongside a tested migration or recovery behaviour change; keep the exercise record in `docs/operations/`.
 
-## Phase 1 exercise status
+## Phase 1 exercise record
 
-The runbook is written; an actual exercise is not claimed until the disposable-database command has completed with exit status 0 and its timestamp, commit, environment, transcript, and CI/local run reference have been recorded separately. The exercise covers the empty Phase 1 metadata migration, not backup restoration or production data recovery.
+| Field | Evidence |
+| --- | --- |
+| Date | 2026-10-14 |
+| Commit exercised | `553cb70ec537545026e516ed9ac7ff18f4a8c68b` |
+| Environment | GitHub Actions `ubuntu-latest`; Node 24; Bun 1.4.3; disposable PostgreSQL 18.6 service |
+| Dataset | Empty disposable database `boro_biya_ci`; a random isolated schema; no application data |
+| Command and status | `bun run ops:exercise-rollback` — exit 0 |
+| Run reference | [Linux rollback exercise job](https://github.com/komeilm76/boro_biya/actions/runs/38567344926/job/115863292428) |
+| Result | The script verified migration apply, table/ledger creation, rollback, table/ledger removal, re-apply, and isolated-schema cleanup. The linked Actions step contains the sanitized transcript. |
+| Limits | Covers only the empty Phase 1 `service_metadata` migration; not backup restoration, production data, or future data-bearing migrations. |
+
+The Windows exercise in the same initial CI run exited 1 and is not counted as a successful Windows run. The script's dynamic import now uses a file URL rather than a Windows path string; a rerun on the corrected commit is required before recording cross-platform completion.

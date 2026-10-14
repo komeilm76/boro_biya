@@ -88,6 +88,11 @@ for (const port of publishedPorts) {
     failures.push(`.env.example: ${port.name} must be listed as an overridable published port`);
   }
 }
+if (/GIT_SHA:\s*\$\{GIT_SHA:-local\}/.test(compose)) {
+  failures.push(
+    'compose.yaml: the local GIT_SHA fallback must satisfy the validated commit format',
+  );
+}
 if (/\b(?:postgres|node|oven\/bun):latest\b/i.test(compose))
   failures.push('compose.yaml: floating latest image tag is forbidden');
 

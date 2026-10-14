@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { appendFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +36,10 @@ const checks = [
 ];
 let stackStarted = false;
 let failed = false;
+
+function appendSummary(content) {
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, content);
+}
 
 function runDocker(args, label) {
   process.stdout.write(`> docker compose --project-name ${projectName} ${args.join(' ')}\n`);
@@ -94,10 +99,16 @@ try {
   process.stdout.write(
     'Compose smoke passed: PostgreSQL, API, Relation Service, SOS Service, and web shell became healthy.\n',
   );
+  appendSummary(
+    `## Docker Compose smoke\n\n**Result:** passed\n\n${checks.map((check) => `- ${check.name}: ${check.url}`).join('\n')}\n\n**Cleanup:** removed only Compose project \`${projectName}\` and its volumes.\n`,
+  );
 } catch (error) {
   failed = true;
   const message = error instanceof Error ? error.message : 'Unknown Compose smoke failure';
   process.stderr.write(`[compose] ${message}\n`);
+  appendSummary(
+    `## Docker Compose smoke\n\n**Result:** failed\n\n**Details:** ${message}\n\n**Project:** \`${projectName}\`\n`,
+  );
   if (stackStarted) runDocker(['logs', '--no-color', '--tail', '100'], 'Compose logs');
 } finally {
   const cleanup = runDocker(['down', '--volumes', '--remove-orphans'], 'Compose cleanup');

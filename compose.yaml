@@ -33,7 +33,6 @@ services:
       API_PORT: '3000'
       LOG_LEVEL: info
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      GIT_SHA: ${GIT_SHA:-local}
     command:
       ['sh', '-c', 'node apps/api/dist/db/cli.js migrate && exec node apps/api/dist/index.js']
     ports:
@@ -63,7 +62,6 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: '3001'
       LOG_LEVEL: info
-      GIT_SHA: ${GIT_SHA:-local}
     ports:
       - '127.0.0.1:${RELATION_PUBLISHED_PORT:-3001}:3001'
     healthcheck:
@@ -91,7 +89,6 @@ services:
       API_HOST: 0.0.0.0
       API_PORT: '3002'
       LOG_LEVEL: info
-      GIT_SHA: ${GIT_SHA:-local}
     ports:
       - '127.0.0.1:${SOS_PUBLISHED_PORT:-3002}:3002'
     healthcheck:
