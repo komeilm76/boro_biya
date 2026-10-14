@@ -68,13 +68,26 @@ Three questions are asked of every requirement affiliated with the phase, and a 
 
 A requirement that genuinely belongs earlier — a default, a redaction layer, a message catalogue, an audit store — is moved earlier together with the deliverable and gate wording it implies. A requirement that belongs later is moved later and removed from the exit gate that claimed it. Both directions are recorded in the phase report as a mapping change with its reason.
 
+Two audits run in addition to the three questions, and both are part of the same command: a requirement that cites an open question due later than its own phase fails, and a roadmap phase section that cites a later-phase requirement fails **unless the work is a declared pull-forward** ([GOV-88](00-repository-conventions.md) §8).
+
+### When a later-phase issue blocks this phase
+
+Some issues cannot wait for their phase: a prototype that must benchmark the real row shape, or a workstream running in parallel that needs a service identity before the service contract phase completes. `GOV-88` covers this without bending the plan:
+
+1. Implement the **minimal slice** the current phase needs — no API surface, service logic, or background job unless the reason says so.
+2. **Declare** it: the requirement ID, the phase implementing it early, and the reason go into the pull-forward register in `scripts/gates/traceability.mjs`; the generated [traceability](07-traceability.md) file lists it, so it is visible to anyone reading the plan.
+3. Keep the owning phase honest: it still delivers the full requirement and its gate still proves it. The early slice is reported under pull-forwards in the current phase report.
+4. If the requirement cites an open question that is due later, the question moves earlier too — otherwise the pull-forward is rejected by the audit.
+
+A gate that cannot run yet is recorded as an exception with owner, justification, and expiry ([QUALITY_GATES](../QUALITY_GATES.md) §6); a pull-forward never weakens a gate.
+
 ## 5. Sequencing and parallel work
 
 Phases are sequential for *approval*, not for *all* work: a phase starts only after the previous gate passes, but work inside a phase may run in any order, and one workstream may be prepared early when it touches no shared contract. The dependencies that actually constrain order are:
 
 | Workstream | May start when | Blocked by |
 | --- | --- | --- |
-| Plugin lifecycle (Phase 7) | Phase 2 gate passes | Nothing in Phases 3–6 for install, isolation, health, and rollback: it needs the admin role, authentication, and the service skeleton. Integration tests that exercise the location scopes wait for Phase 4, so the permission-vocabulary tests are the piece that cannot run early. |
+| Plugin lifecycle (Phase 7) | Phase 2 gate passes | Nothing in Phases 3–6 for install, isolation, health, and rollback: it needs the admin role, authentication, and the service skeleton. Three pieces are declared pull-forwards (`PLG-36`, `PLG-37`, `PLG-39`) because an isolated host needs a service identity, bounded calls, and an authenticated channel before Phase 4 completes; integration tests that exercise the location scopes still wait for Phase 4. |
 | Android shell (Phase 8) | Phase 3 gate passes | The PWA it wraps; not by routing or SOS. Load, tuning, and backup/restore work still follows the phases above. |
 | Routing and navigation (Phase 6) | Phase 3 gate passes | Map shell and provider adapters; not by the SOS service. |
 | SOS service (Phase 5) | Phase 4 gate passes | Relation Service (eligibility, blocks, location) and the category catalogue it dispatches on. This is the real critical path: every later phase inherits its contract. |

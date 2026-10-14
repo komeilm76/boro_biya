@@ -118,4 +118,6 @@ A gate is never weakened or skipped to make CI green. When an exception is unavo
 - **[QA-56]** Expired exceptions fail the phase gate and must be re-justified or removed.
 - Security gates (QA-08, QA-10, QA-14) cannot be excepted at release time; they must pass or the release does not ship.
 
+A pull-forward ([GOV-88](development/00-repository-conventions.md) §8) is **not** an exception and is not recorded here: it is a declared, minimal piece of later-phase work needed by the current phase, and no gate is weakened or skipped by it. An exception is used when a gate that should run cannot pass or cannot run at all.
+
 Current exceptions: none.

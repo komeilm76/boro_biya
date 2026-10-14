@@ -282,6 +282,70 @@ node scripts/gates/traceability.mjs           # exit 0
 node scripts/gates/phase0.mjs                 # 8 checks, exit 0
 ```
 
-The group count moved from 112 to 116 because three blanket phase rules were split into eight narrower ones (§9.2.4, §9.2.5); requirement counts per phase changed accordingly: Phase 2 +1 (UI-10), Phase 3 −3 (UI-10, UI-14, UI-15 leave), Phase 4 −5 (PLG-42 and PLG-43 … PLG-46 leave), Phase 5 +2 (PLG-42, UI-14), Phase 7 +5 (PLG-43 … PLG-46, UI-15). The sum is unchanged at 647. The traceability file is the authority; any older count quoted in this record describes the pass that produced it.
+The group count moved from 112 to 116 because three blanket phase rules were split into eight narrower ones (§9.2.4, §9.2.5); requirement counts per phase changed accordingly: Phase 2 +1 (UI-10), Phase 3 −3 (UI-10, UI-14, UI-15 leave), Phase 4 −5 (PLG-42 and PLG-43 … PLG-46 leave), Phase 5 +2 (PLG-42, UI-14), Phase 7 +5 (PLG-43 … PLG-46, UI-15). The sum is unchanged at 647.
+
+## 10. Fifth review pass: flexibility for blocking work, and the affiliations that were still wrong
+
+### 10.1 The problem the rules had
+
+The affiliation rules from round 3 were correct and too rigid in one direction: they left no way to **legally** do a small piece of later-phase work when the current phase cannot proceed without it. Two cases are visible in the plan itself:
+
+- The Phase 3 PostGIS prototype must benchmark proximity **on the real location row**, or its measurements cannot answer `ADR-005` for Phase 4. The row's requirements (`DATA-04`, `DATA-05`) are Phase 4, so the honest plan was previously impossible to write down.
+- The plugin workstream is allowed to run in parallel from the Phase 2 gate, but an isolated plugin host cannot be validated without a service identity, bounded calls, and an authenticated channel (`PLG-36`, `PLG-37`, `PLG-39`) — all Phase 4.
+
+The alternative to a declared mechanism is what actually happens in projects: the rule is quietly ignored, or the work is done twice. Both are worse than a recorded exception.
+
+### 10.2 `GOV-88`: pull-forward
+
+A phase may implement the **minimal slice** of a later-phase requirement when the current phase cannot proceed without it, under five conditions: it is **declared** in a register (`PULL_FORWARD` in `scripts/gates/traceability.mjs`, printed in the generated [traceability](07-traceability.md) file so it is visible in the plan); it is **minimal** (no API surface, service logic, or background job unless the reason says otherwise); the **owning phase keeps the requirement** and still proves it, so a pull-forward is never delivery; **decisions come first** — every open question the requirement cites must already be due by the earlier phase; and it is **not a phase transition** (`GOV-55` still governs, no later gate is claimed).
+
+`GOV-87` consequence 4 was amended accordingly: a phase gate must not require later-phase work *unless it is a declared pull-forward*. A gate that cannot run at all remains a different mechanism — a recorded exception with owner, justification, and expiry ([QUALITY_GATES](../QUALITY_GATES.md) §6) — and the two are now explicitly distinguished, because one weakens a gate and the other does not.
+
+Five pull-forwards are declared, each with its reason in the register: `DATA-04` and `DATA-05` into Phase 3 (prototype migration only), `PLG-36`, `PLG-37`, `PLG-39` into Phase 3 (parallel plugin workstream). The Phase 3 deliver line and the parallel-work table in [phase gate checklist](05-phase-gate-checklist.md) now name them, so a reader does not have to open the gate script to find out what the plan actually allows.
+
+### 10.3 Affiliations that were still wrong
+
+| Requirement | Was | Now | Reason |
+| --- | --- | --- | --- |
+| `MAP-06` | 3 | 4 | "Live and last-known are distinct" is a viewer-side rule of the sharing pipeline. Phase 3 shows the owner's own device position; there is no follower display to label. |
+| `MAP-07` | 3 | 4 | Sharing defaults and audiences; it duplicates `PRIV-13`/`PRIV-14`, which moved in round 3 — the same rule cannot live in two phases. |
+| `MAP-08` | 3 | 4 | Revoke controls and stopping publication are the pipeline's own behaviour (`PRIV-04`). |
+| `PRIV-03` | 3 | 4 | Last-known labelling is the viewer-side half of the pipeline, paired with `PRIV-02` (Phase 4) and `DATA-05` (Phase 4). |
+| `PRIV-20` | 4 | 5 | Administrative access to a location starts with the SOS admin map — the same reasoning that moved `PRIV-07` to Phase 5 in round 3; leaving one of the pair in Phase 4 was an oversight. |
+| `DATA-15` | 1 | 2 | A schema rule about timestamps and actors can only be verified once a real table exists; Phase 1 has a migration framework, not tables. |
+
+The Phase 3 exit gate was rewritten in the same change, because it had been claiming "a default build shares nothing" — true, but vacuous once the sharing defaults belong to Phase 4. It now asserts what Phase 3 can prove: the permission, stale-fix, and manual-coordinate flows and their labelling, and that **no location leaves the device** — nothing accepts or serves another user's coordinates, and the sharing pipeline is absent.
+
+One leftover text defect was fixed with them: `SEC-61`'s own sentence still said "(Phase 8/9 deliverable)" after round 3 aligned it with Phase 9; it now reads "written in Phase 8 and completed as a Phase 9 deliverable", which is what actually happens — the runbook exists in Phase 8, the procedure completes in Phase 9.
+
+### 10.4 Tests
+
+```
+# positive: a declared pull-forward is accepted
+Phase 3 section cites DATA-04, DATA-05  ->  traceability exit 0
+
+# negative: an undeclared later-phase citation is rejected
+Phase 3 section cites MAP-09            ->  exit 1:
+  affiliation: the Phase 3 section cites MAP-09, which is affiliated with Phase 4 — move the
+  requirement, remove the citation, or declare a pull-forward (GOV-88) if this phase genuinely
+  cannot proceed without that work
+
+# negative: a pull-forward whose decision is still open is rejected
+MAP-22 declared into Phase 3            ->  exit 1:
+  pull-forward of MAP-22 into Phase 3 needs Q-22 answered first (currently due by Phase 4)
+```
+
+Both negative tests were reverted from pre-test copies of the modified file.
+
+### 10.5 Evidence (fifth pass)
+
+```
+node scripts/gates/traceability.mjs --write   # 648 requirements, 115 groups, 5 pull-forwards
+node scripts/gates/traceability.mjs           # exit 0
+node scripts/gates/phase0.mjs                 # 8 checks, exit 0
+```
+
+The requirement total is 648 because `GOV-88` is itself a requirement, like `GOV-87` before it. The per-phase table now reads 0: 19, 1: 277, 2: 114, 3: 42, 4: 66, 5: 56, 6: 13, 7: 59, 8: 1, 9: 1 — i.e. Phase 0 +1 (`GOV-88`), Phase 1 −1 and Phase 2 +1 (`DATA-15`), Phase 3 −4 and Phase 4 +3 (`MAP-06`, `MAP-07`, `MAP-08`, and `PRIV-03` arrive in Phase 4 while `PRIV-20` leaves it), Phase 5 +1 (`PRIV-20`). Deleting the pull-forward register entries would not change any of these numbers: a pull-forward never moves affiliation.
+ The traceability file is the authority; any older count quoted in this record describes the pass that produced it.
 
 

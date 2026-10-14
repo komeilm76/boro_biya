@@ -119,7 +119,7 @@ Never extract an uploaded archive into an executable host path, and never run it
 - **[SEC-58]** Security-relevant events are audited: login success/failure, lockout, ban/deactivation/reactivation, password and recovery operations, role changes, session revocation, plugin upload/install/disable/rollback, location-sharing changes, follower/block changes, SOS dispatch, task claim and state transitions, and administrative access to sensitive data.
 - **[SEC-59]** Audit records are append-only at the application layer, access-controlled, tamper-evident (hash chaining or equivalent), retained per policy, and never edited by the code that reads them.
 - **[SEC-60]** Alerting covers authentication anomaly rates, repeated authorization failures, rate-limit saturation, upload rejections, plugin health failures, and replication/backup failures.
-- **[SEC-61]** An incident response procedure defines severity levels, contacts, evidence preservation, containment, user notification duties, and post-incident review; it is stored in the operational runbook (Phase 8/9 deliverable).
+- **[SEC-61]** An incident response procedure defines severity levels, contacts, evidence preservation, containment, user notification duties, and post-incident review; it is stored in the operational runbook written in Phase 8 and completed as a Phase 9 deliverable.
 - **[SEC-62]** Log and metric retention is defined in [data classification](security/data-classification.md) §4, and no sensitive location trail is stored in observability systems.
 
 ## 10. Security gates

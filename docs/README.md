@@ -33,7 +33,7 @@ Owner: Engineering. Reviewed: 2026-10-13.
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-13 |
 | [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist and reported evidence format | Engineering | 2026-10-13 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artifacts, promotion, rollback, and release evidence | Engineering | 2026-10-13 |
-| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage (checked by the documentation gate) | Engineering | 2026-10-13 |
+| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-13 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-13 |
 
 ### Security and privacy
@@ -90,7 +90,7 @@ Rules:
 - IDs are permanent and assigned when a requirement is written, using the area table above; they are **never renumbered or reused**, and an identifier that disappears is marked withdrawn in the phase report rather than deleted.
 - Identifiers are assigned in the order requirements are added, so a document's numbers are not necessarily consecutive or in reading order; a new requirement always takes the next free number in its area.
 - Every ID must be covered by exactly one row in the generated [traceability](development/07-traceability.md) file, and the documentation gate fails if coverage is incomplete or stale.
-- The phase a requirement is affiliated with is where it is first implemented and verifiable, not where it is written or discussed: a data default lands with the table that carries it, and a structural prerequisite (message catalogue, RTL scaffolding, redaction, audit store) lands with the earliest phase that renders user-facing UI or stores user data. The rule, and the exception process, are [GOV-87](development/00-repository-conventions.md) §8; a phase's exit gate must never require a capability a later phase delivers, and `node scripts/gates/traceability.mjs` fails when a roadmap phase section cites a requirement affiliated with a later phase.
+- The phase a requirement is affiliated with is where it is first implemented and verifiable, not where it is written or discussed: a data default lands with the table that carries it, and a structural prerequisite (message catalogue, RTL scaffolding, redaction, audit store) lands with the earliest phase that renders user-facing UI or stores user data. The rule, and the exception process, are [GOV-87](development/00-repository-conventions.md) §8; a phase's exit gate must never require a capability a later phase delivers, and `node scripts/gates/traceability.mjs` fails when a roadmap phase section cites a requirement affiliated with a later phase — unless that work is a declared pull-forward ([GOV-88](development/00-repository-conventions.md) §8): a minimal, recorded slice of later work that the current phase genuinely needs, with the owning phase still delivering the full requirement.
 - Withdrawn requirements are marked as withdrawn in the phase report instead of deleting the identifier.
 - `/docs/user/` never references requirement IDs, phases, or ADRs.
 

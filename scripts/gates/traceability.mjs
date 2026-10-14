@@ -7,7 +7,8 @@
  *
  * Usage:
  *   node scripts/gates/traceability.mjs           # verify the committed file is current, and audit
- *                                                 # requirement/question and roadmap/gate affiliation
+ *                                                 # requirement/question and roadmap/gate affiliation,
+ *                                                 # including declared pull-forwards (GOV-88)
  *   node scripts/gates/traceability.mjs --write   # regenerate the file
  *
  * The phase mapping below is the source of truth for "which phase must deliver which
@@ -75,6 +76,7 @@ const PHASE_RULES = [
   ['GOV', 27, 40, 1],   // definition of done + dependency policy in ARCHITECTURE
   ['GOV', 41, 86, 1],   // repository conventions, environment, dependency policy, docs maintenance
   ['GOV', 87, 87, 0],   // phase-affiliation and prioritization rule (delivered by this review)
+  ['GOV', 88, 88, 0],   // pull-forward rule and gate flexibility (delivered by this review)
 
   // Roles, client routes, settings, accessibility
   ['ADM', 1, 5, 2],
@@ -93,8 +95,8 @@ const PHASE_RULES = [
   ['AUTH', 1, 38, 2],
 
   // Map, navigation
-  ['MAP', 1, 8, 3],     // map shell, permissions, provider adapters (routing detail in Phase 6)
-  ['MAP', 9, 10, 4],    // live-sharing grants and share history follow the Relation Service
+  ['MAP', 1, 5, 3],     // map shell, permission UX, presence labelling, provider adapters
+  ['MAP', 6, 10, 4],    // live-vs-last-known display, sharing defaults, revoke, grants, share history
   ['MAP', 11, 21, 3],
   ['MAP', 22, 22, 4],   // location history capability (Relation Service)
   ['MAP', 23, 23, 3],   // generic location-never-in-URLs rule applies from the first location flow
@@ -119,7 +121,7 @@ const PHASE_RULES = [
   // Location privacy and data lifecycle
   ['PRIV', 10, 12, 1],  // classification rules apply from the first stored record
   ['PRIV', 1, 2, 4],    // live-share defaults and audience are enforceable once grants exist
-  ['PRIV', 3, 3, 3],    // last-known labelling is a display rule (map phase)
+  ['PRIV', 3, 3, 4],    // last-known labelling is the viewer-side half of the sharing pipeline
   ['PRIV', 4, 5, 4],    // revocation and retention of the sharing pipeline
   ['PRIV', 6, 6, 3],    // coordinates in logs, URLs, and provider calls (first coordinates)
   ['PRIV', 7, 7, 5],    // admin access to location first exists on the SOS admin map
@@ -131,7 +133,7 @@ const PHASE_RULES = [
   ['PRIV', 17, 17, 4],  // history off by default
   ['PRIV', 18, 18, 5],  // notification defaults land with notifications
   ['PRIV', 19, 19, 1],  // no analytics or telemetry by default, from the skeleton
-  ['PRIV', 20, 20, 4],  // admin location access needs locations to exist
+  ['PRIV', 20, 20, 5],  // admin location access starts with the SOS admin map (pairs with PRIV-07)
   ['PRIV', 21, 21, 2],  // own-session visibility and revocation (sharing revocation extends in 4)
   ['PRIV', 22, 22, 4],  // consent/sharing change audit lands with the sharing settings
   ['PRIV', 23, 25, 4],  // grant lifecycle, history ownership, per-request re-authorization
@@ -192,7 +194,7 @@ const PHASE_RULES = [
   ['DATA', 12, 12, 4],
   ['DATA', 13, 13, 7],
   ['DATA', 14, 14, 5],
-  ['DATA', 15, 15, 1],
+  ['DATA', 15, 15, 2],  // timestamp/actor rule applies to the first real table, not the skeleton
   ['DATA', 16, 18, 4],
   ['DATA', 19, 21, 5],
   ['DATA', 22, 24, 3],
@@ -207,6 +209,21 @@ const PHASE_RULES = [
 const AFFILIATION_EXEMPT = new Map([
   ['GOV-84', 'dependency policy: "do not adopt a provider before Q-10 resolves" is a Phase 1 policy rule'],
   ['OPS-58', 'architecture: "resolve the hosting target before Phase 9" constrains Phase 1 environment design'],
+]);
+
+/**
+ * Declared pull-forwards (GOV-88). A phase may implement the **minimal slice** of a later-phase
+ * requirement when the phase's own work cannot proceed without it. A pull-forward never changes a
+ * requirement's affiliation and never lets the owning phase skip anything: it is a declaration that
+ * the early slice exists, with the reason and the phase it is implemented in. Anything not declared
+ * here fails the roadmap gate audit below.
+ */
+const PULL_FORWARD = new Map([
+  ['DATA-04', { into: 3, reason: 'the PostGIS prototype must benchmark the real location row: the column default and the row shape are created as a prototype migration, with no API, service logic, or retention job' }],
+  ['DATA-05', { into: 3, reason: 'the same prototype needs the recorded_at/live response shape to be meaningful; the retrieval contract and TTL job stay Phase 4 work' }],
+  ['PLG-36', { into: 3, reason: 'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: a service identity for its calls' }],
+  ['PLG-37', { into: 3, reason: 'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes' }],
+  ['PLG-39', { into: 3, reason: 'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all' }],
 ]);
 
 const AREA_ALT = 'GOV|ADM|UI|AUTH|MAP|NAV|REL|SOS|SEC|PRIV|OPS|PLG|API|QA|DATA';
@@ -304,9 +321,53 @@ function auditRoadmapGates(phases) {
       const own = phases.get(id);
       if (own === undefined || own <= phase || seen.has(id)) continue;
       seen.add(id);
+      const declared = PULL_FORWARD.get(id);
+      if (declared && declared.into === phase) continue; // declared early slice (GOV-88)
       problems.push(
-        `affiliation: the Phase ${phase} section cites ${id}, which is affiliated with Phase ${own} — the gate would demand work a later phase delivers`,
+        `affiliation: the Phase ${phase} section cites ${id}, which is affiliated with Phase ${own} — move the requirement, remove the citation, or declare a pull-forward (GOV-88) if this phase genuinely cannot proceed without that work`,
       );
+    }
+  }
+  return problems;
+}
+
+/**
+ * A pull-forward is only usable when the decisions it depends on are already due: implementing a
+ * slice of later work while its governing question is still open moves the blockage, not the fix.
+ */
+function auditPullForwards(reqs, phases) {
+  const problems = [];
+  const decisions = readFileSync(join(DOCS, 'DECISIONS.md'), 'utf8');
+  const questionPhase = new Map();
+  for (const line of decisions.split('\n')) {
+    const row = /^\|\s*(Q-\d{2})\s*\|([^|]*)\|([^|]*)\|([^|]*)\|([^|]*)\|\s*$/.exec(line);
+    if (!row) continue;
+    const phasesInCell = [...row[4].matchAll(/Phase\s+(\d)/g)].map((m) => Number(m[1]));
+    if (phasesInCell.length) questionPhase.set(row[1], Math.min(...phasesInCell));
+  }
+  const text = new Map();
+  for (const file of collectDocs()) {
+    const rel = relative(DOCS, file).split('\\').join('/');
+    if (!REGISTRY_DOCS.includes(rel)) continue;
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const def = DEF_RE.exec(line);
+      if (!def) continue;
+      const id = `${def[1]}-${String(Number(def[2])).padStart(2, '0')}`;
+      if (!text.has(id)) text.set(id, line);
+    }
+  }
+  for (const [id, entry] of PULL_FORWARD) {
+    if (!phases.has(id)) problems.push(`pull-forward references missing requirement ${id}`);
+    else if (entry.into >= phases.get(id)) {
+      problems.push(`pull-forward of ${id} into Phase ${entry.into} is not earlier than its own phase`);
+    }
+    for (const cited of new Set((text.get(id) || '').match(/\bQ-\d{2}\b/g) || [])) {
+      const due = questionPhase.get(cited);
+      if (due !== undefined && due > entry.into) {
+        problems.push(
+          `pull-forward of ${id} into Phase ${entry.into} needs ${cited} answered first (currently due by Phase ${due}) — move the question earlier or drop the pull-forward`,
+        );
+      }
     }
   }
   return problems;
@@ -364,7 +425,7 @@ function range(row) {
   return row.from === row.to ? `${row.area}-${fmt(row.from)}` : `${row.area}-${fmt(row.from)} … ${row.area}-${fmt(row.to)}`;
 }
 
-function render(reqs, rows) {
+function render(reqs, rows, perPhaseId) {
   const total = reqs.size;
   const perPhase = new Map();
   for (const row of rows) perPhase.set(row.phase, (perPhase.get(row.phase) || 0) + row.count);
@@ -379,6 +440,19 @@ function render(reqs, rows) {
   lines.push('Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.');
   lines.push('');
   lines.push(`Total requirements: **${total}** across ${rows.length} groups.`);
+  lines.push('');
+  if (PULL_FORWARD.size) {
+    lines.push('## Declared pull-forwards');
+    lines.push('');
+    lines.push('A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phase requirement when its own work cannot proceed without it. The requirement stays affiliated with the phase below; that phase still delivers and verifies it in full.');
+    lines.push('');
+    lines.push('| Requirement | Affiliated phase | Implemented early in | Reason |');
+    lines.push('| --- | --- | --- | --- |');
+    for (const [id, entry] of [...PULL_FORWARD].sort((a, b) => a[0].localeCompare(b[0]))) {
+      lines.push(`| ${id} | ${perPhaseId.get(id) ?? '—'} | ${entry.into} | ${entry.reason} |`);
+    }
+    lines.push('');
+  }
   lines.push('');
   lines.push('| Phase | Requirements |');
   lines.push('| --- | --- |');
@@ -401,6 +475,7 @@ function main() {
   const { phases, problems } = assignPhases(reqs);
   problems.push(...auditAffiliation(reqs, phases));
   problems.push(...auditRoadmapGates(phases));
+  problems.push(...auditPullForwards(reqs, phases));
   const errors = [...duplicates.map((d) => `duplicate id: ${d}`), ...problems];
   if (errors.length) {
     console.error('traceability check failed:');
@@ -408,7 +483,7 @@ function main() {
     process.exit(1);
   }
   const rows = buildRows(reqs, phases);
-  const rendered = render(reqs, rows);
+  const rendered = render(reqs, rows, new Map([...phases].map(([id, phase]) => [id, phase])));
   let current = '';
   try {
     current = readFileSync(OUT, 'utf8');
@@ -425,6 +500,7 @@ function main() {
     process.exit(1);
   }
   console.log(`traceability ok: ${reqs.size} requirements mapped to phases`);
+  if (PULL_FORWARD.size) console.log(`declared pull-forwards: ${PULL_FORWARD.size} (GOV-88)`);
 }
 
 main();

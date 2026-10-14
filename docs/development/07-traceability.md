@@ -7,16 +7,29 @@ Owner: Engineering. Reviewed: 2026-10-13.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **647** across 116 groups.
+Total requirements: **648** across 115 groups.
+
+## Declared pull-forwards
+
+A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phase requirement when its own work cannot proceed without it. The requirement stays affiliated with the phase below; that phase still delivers and verifies it in full.
+
+| Requirement | Affiliated phase | Implemented early in | Reason |
+| --- | --- | --- | --- |
+| DATA-04 | 4 | 3 | the PostGIS prototype must benchmark the real location row: the column default and the row shape are created as a prototype migration, with no API, service logic, or retention job |
+| DATA-05 | 4 | 3 | the same prototype needs the recorded_at/live response shape to be meaningful; the retrieval contract and TTL job stay Phase 4 work |
+| PLG-36 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: a service identity for its calls |
+| PLG-37 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes |
+| PLG-39 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all |
+
 
 | Phase | Requirements |
 | --- | --- |
-| 0 (foundation) | 18 |
-| 1 | 278 |
-| 2 | 113 |
-| 3 | 46 |
-| 4 | 63 |
-| 5 | 55 |
+| 0 (foundation) | 19 |
+| 1 | 277 |
+| 2 | 114 |
+| 3 | 42 |
+| 4 | 66 |
+| 5 | 56 |
 | 6 | 13 |
 | 7 | 59 |
 | 8 | 1 |
@@ -25,7 +38,7 @@ Total requirements: **647** across 116 groups.
 | Phase | Requirement range | Count | Document | Section |
 | --- | --- | --- | --- | --- |
 | 0 | `GOV-19 … GOV-26` | 8 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Mandatory Phase 0 |
-| 0 | `GOV-87` | 1 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
+| 0 | `GOV-87 … GOV-88` | 2 | [development/00-repository-conventions.md](../development/00-repository-conventions.md) | 8. Phases, prioritization, and affiliation |
 | 0 | `QA-01` | 1 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 0 | `QA-62 … QA-116` | 8 | [development/03-ci-and-gates.md](../development/03-ci-and-gates.md) | 3. Documentation gate (active now) |
 | 1 | `GOV-01 … GOV-18` | 18 | [MASTER_PROJECT_PROMPT.md](../MASTER_PROJECT_PROMPT.md) | Engineering rules |
@@ -73,7 +86,6 @@ Total requirements: **647** across 116 groups.
 | 1 | `QA-92 … QA-96` | 5 | [development/06-release-plan.md](../development/06-release-plan.md) | 4. Rollback and failure handling |
 | 1 | `QA-97 … QA-106` | 10 | [development/06-release-plan.md](../development/06-release-plan.md) | 6. Release checklist |
 | 1 | `QA-107 … QA-111` | 5 | [performance/README.md](../performance/README.md) | Rules |
-| 1 | `DATA-15` | 1 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 2 | `ADM-01 … ADM-05` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 1. Roles and access |
 | 2 | `UI-10` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 2 | `UI-21 … UI-22` | 2 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
@@ -94,20 +106,20 @@ Total requirements: **647** across 116 groups.
 | 2 | `API-25 … API-30` | 6 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
 | 2 | `QA-07 … QA-17` | 3 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 2 | `QA-20 … QA-28` | 9 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
-| 2 | `DATA-01 … DATA-10` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
+| 2 | `DATA-01 … DATA-15` | 4 | [DATA_MODEL.md](../DATA_MODEL.md) | Invariants that require database and service enforcement |
 | 3 | `UI-11 … UI-13` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
 | 3 | `UI-16 … UI-24` | 7 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 9. Accessibility, localization, and resilience |
-| 3 | `MAP-01 … MAP-23` | 9 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| 3 | `MAP-01 … MAP-23` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 3 | `MAP-11 … MAP-21` | 11 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 4. Maps and external providers |
-| 3 | `PRIV-03 … PRIV-09` | 3 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 3 | `PRIV-06 … PRIV-09` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | 3 | `QA-12 … QA-16` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 1. Required gates |
 | 3 | `QA-29 … QA-36` | 8 | [QUALITY_GATES.md](../QUALITY_GATES.md) | 3. Performance tests |
 | 3 | `DATA-22 … DATA-24` | 3 | [DATA_MODEL.md](../DATA_MODEL.md) | Geospatial design |
 | 4 | `UI-08` | 1 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 8. Personal settings |
-| 4 | `MAP-09 … MAP-22` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
+| 4 | `MAP-06 … MAP-22` | 6 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 4. Map and location |
 | 4 | `REL-01 … REL-14` | 14 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | 6. Relation Service |
-| 4 | `PRIV-01 … PRIV-25` | 7 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 4 | `PRIV-13 … PRIV-29` | 8 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 4 | `PRIV-01 … PRIV-25` | 8 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
+| 4 | `PRIV-13 … PRIV-29` | 7 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 4 | `OPS-21 … OPS-27` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 3. Realtime model |
 | 4 | `PLG-35 … PLG-40` | 6 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 5. Service lifecycle and API |
 | 4 | `PLG-41` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
@@ -122,7 +134,7 @@ Total requirements: **647** across 116 groups.
 | 5 | `SOS-21 … SOS-23` | 3 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Notifications and realtime |
 | 5 | `SEC-50 … SEC-56` | 7 | [SECURITY.md](../SECURITY.md) | 8. Images and files |
 | 5 | `PRIV-07 … PRIV-26` | 2 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
-| 5 | `PRIV-16 … PRIV-30` | 3 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 5 | `PRIV-16 … PRIV-30` | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
 | 5 | `OPS-80` | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
 | 5 | `PLG-42` | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 6. Capability and failure behavior |
 | 5 | `QA-114 … QA-115` | 2 | [QUALITY_GATES.md](../QUALITY_GATES.md) | Security and negative cases |
