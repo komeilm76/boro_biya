@@ -198,7 +198,7 @@ stateDiagram-v2
 
 ### 6.3 Location history: opt-in, retention-bounded, deletable
 
-Cited: `MAP-22`, `REL-12`, `REL-14`, `PRIV-24`, `PRIV-25`, `DATA-17`, `DATA-26`, `OPS-50`, `ADR-014`.
+Cited: `MAP-22`, `REL-12`, `REL-14`, `PRIV-24`, `PRIV-25`, `DATA-17`, `DATA-26`, `OPS-50`, `ADR-014`, `ADR-026`.
 
 ```mermaid
 stateDiagram-v2
@@ -207,10 +207,12 @@ stateDiagram-v2
   on --> on : points recorded while it is enabled
   on --> off : the owner disables it — no further recording
   note right of on
-    Deleting the trail is a data operation, not a state change: it
-    removes the recorded rows immediately and leaves the setting as it
-    was (MAP-22, PRIV-24). Rows carry an expiry and are purged by TTL,
-    and a trail exists only while sharing is enabled (DATA-17, OPS-50).
+    Deleting the trail is a data operation, not a state change: the
+    owner's own delete removes the recorded rows immediately and leaves
+    the setting as it was (MAP-22, PRIV-24). Rows carry an expiry and
+    stop being readable at it; cleaning expired rows up is retention
+    enforcement and stays off by default (DATA-17, OPS-50, ADR-026),
+    and a trail exists only while sharing is enabled.
     Reads require an active history grant naming the viewer, stay inside
     that grant's window, are paginated, are never bulk-exportable, and
     are re-authorized on every request.

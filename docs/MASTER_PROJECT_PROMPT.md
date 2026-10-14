@@ -74,6 +74,8 @@ Admins can upload and install plugin packages through a controlled workflow. Do 
 - Design for graceful degradation when map, routing, geocoding, push notification, or realtime services are unavailable.
 - Optimize from measurements. Establish resource budgets and load-test targets rather than promising `unlimited scale`.
 - Treat the single-replica constraint ([ADR-008](DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)) as a correctness requirement until a shared-state design is accepted.
+- **Retention and deletion are deployment policy, not product defaults.** Nothing user-related is deleted automatically by default; a deactivated account keeps every record, and no administrator-facing account-deletion path exists. Export and erasure are reserved capabilities, added only when a deployment's approved policy requires them and recorded in its deployment profile ([ADR-026](DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet), [ADR-027](DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction), [OPS-85](operations/README.md)).
+- **Never claim more than the pack can show.** No legal compliance for a deployment, no capacity or availability figure without a measurement behind it, and no indefinite retention ([GOV-91](development/00-repository-conventions.md) §1).
 
 ## Engineering rules
 

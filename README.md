@@ -35,8 +35,8 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
 | `docs/security/` | Threat model, data classification, plugin threat model |
 | `docs/user/` | End-user documentation |
-| `docs/operations/` | Runbook register, backup and restore policy, availability objective |
-| `docs/performance/` | Performance budget and measured results |
+| `docs/operations/` | Runbook register, backup and restore policy, deployment profile, availability objective |
+| `docs/performance/` | Baseline load profile, capacity policy, and measured results |
 | `scripts/gates/` | Gate runners (dependency-free Node) |
 | `.github/workflows/` | CI workflows |
 

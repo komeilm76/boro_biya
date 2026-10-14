@@ -22,7 +22,7 @@ Phase 1 adds `bun run gate`, which runs every gate active at that phase ([CI and
 | 3 | Every binding requirement carries a permanent `AREA-NN` identifier | Identifiers present in all registry documents; gate check 2 | Met |
 | 4 | Every identifier is covered by exactly one traceability row, and the file is current | `docs/development/07-traceability.md`; gate checks 3 and 4 | Met |
 | 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-26) | Met |
-| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-024 | Met |
+| 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-028 | Met |
 | 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
 | 9 | Windows and Linux workflows are documented, including the Docker-based startup contract Phase 1 must satisfy | [development environment](01-development-environment.md) §4 | Met |
@@ -100,7 +100,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 4 | History sharing works per follower grant: window, paginated reads, full delete, per-request re-authorization | Authorization tests; `MAP-22`, `PRIV-24`, `PRIV-25`, `DATA-17`, `DATA-26` | Not started |
 | 5 | Every revocation path closes open streams: single-grant revoke, session end, unfollow, block, disable sharing, expiry | Stream closure assertions per path; `PRIV-04`, `SEC-27`, `OPS-24`, `OPS-27` | Not started |
 | 6 | Relation-unavailable behaviour fails closed with an explanation, never an implied grant | Outage test; `PLG-41` | Not started |
-| 7 | Retention purges evidenced for the last-known row and for history rows past their window | Purge run + query evidence; `DATA-17`, `PRIV-05` | Not started |
+| 7 | Retention defaults and expiry behaviour evidenced: an expired last-known or history row is never served, enforcement is off by default, and no cleanup job runs on a default installation | Expiry query evidence + enabled/disabled switch test; `DATA-17`, `PRIV-05`, `PRIV-32` | Not started |
 | 8 | Sharing defaults proven off in a fresh account; consent and sharing change trail queryable | Fresh-account test + audit query; `PRIV-13`, `PRIV-14`, `PRIV-17`, `PRIV-22` | Not started |
 | 9 | Owner-facing sharing history (when, with whom, how long) and rate-limited share starts | API test; `MAP-10` | Not started |
 | 10 | `ADR-004` accepted; `ADR-005` decided, implemented, and benchmarked; decisions `Q-20`, `Q-21`, `Q-22` resolved | [DECISIONS](../DECISIONS.md) register rows updated | Not started |

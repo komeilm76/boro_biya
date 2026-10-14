@@ -63,7 +63,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-14 |
+| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-14 |
 
 ### Evidence
 

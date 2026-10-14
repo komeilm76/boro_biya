@@ -1,6 +1,6 @@
 # Phase 0 Review Record
 
-Eighteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§23](#23-eighteenth-pass--retention-legal-regime-and-capacity-decided-2026-10-14).
+Nineteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§24](#24-nineteenth-pass--the-pack-re-read-against-the-three-new-decisions-2026-10-14).
 
 Owner: Engineering. Reviewed: 2026-10-14.
 
@@ -1295,3 +1295,68 @@ Counts after this pass: identifiers 679 → 689 (`PRIV-32` … `PRIV-35`, `OPS-8
 - **No export or deletion workflow is designed beyond its boundary.** The obligations that shape them are the operator's (ADR-027), and building either now would be reworked.
 - **No retention window is switched on.** Enabling enforcement is the deployment's decision, and it follows its approved policy.
 - **No production capacity number is stated.** There are no measurements yet; the baseline profile's values are Phase 1 work.
+
+## 24. Nineteenth pass — the pack re-read against the three new decisions (2026-10-14)
+
+The previous pass answered `Q-14`, `Q-26`, and `Q-12` and carried them into the documents named in their decisions. This pass re-read every document against the three answers, on the principle that a decision reaches **tables and schema descriptions last**: the argument in §4 of the data classification was rewritten, while the rows it introduces still promised the deletion the decision forbids.
+
+### 24.1 Defects found and fixed
+
+| # | Defect | Where | Fix |
+| --- | --- | --- | --- |
+| 1 | The handling rules by class described deletion and export as **implemented workflows** — `Provided to the owner on request`, `Deleted or anonymized on account deletion` — two pages above the section saying neither exists | [data classification](../security/data-classification.md) §2 | Both rows restated as designed-for; deletion row now says deactivation keeps every record and any policy is configuration, off by default |
+| 2 | Five retention rows promised scheduled deletion in their mechanism column: a session cleanup job with no gate, CAPTCHA rows `deleted`, history `TTL purge … immediate delete on user request`, last-known a bare "TTL column", SOS a "Deletion job" | [data classification](../security/data-classification.md) §4 | Every mechanism now says which kind it is: functional expiry, a gated cleanup, an audited action, or operator-configured rotation |
+| 3 | "Data-subject export: a user can obtain …" — present tense for a workflow the reserved-capability table five lines above calls future work | [data classification](../security/data-classification.md) §4 | Rewritten as designed, not implemented, with the manual path named for today |
+| 4 | `PRIV-31` still cited `Q-14` as the source of the obligations and told the notice to explain "how to delete data" when no deletion workflow exists | [data classification](../security/data-classification.md) §5 | Cites ADR-026 and ADR-027, and asks for what a deletion request does *today* |
+| 5 | `DATA-17` claimed history rows `are purged by TTL` and that deleting removes rows immediately; `DATA-05` named a TTL cleanup job; both schema rows claimed a `TTL purge`/cleanup | [data model](../DATA_MODEL.md) | Functional expiry, the owner's own delete, and gated cleanup separated, each pointing at ADR-026 |
+| 6 | The history lifecycle diagram's note said rows `are purged by TTL` | [diagrams](../DIAGRAMS.md) §6.3 | Restated; the diagram's cited list now names ADR-026 |
+| 7 | `PRIV-05` said the latest point is kept "with a TTL", which reads as scheduled deletion rather than replacement in place | [SECURITY](../SECURITY.md) §5 | Restated: replaced in place, expired means unserved, cleanup gated |
+| 8 | The Phase 4 gate demanded "retention purges evidenced" — an install with enforcement off can never produce that evidence | [checklist](05-phase-gate-checklist.md) Phase 4 row 7 | Restated as expiry evidence plus the enabled/disabled switch test |
+| 9 | The backup-restore row required a restore not to resurrect a `purged location history` or a `completed account deletion` — neither operation exists to purge or complete | [operations](../operations/README.md) | Restated: the restore procedure states its treatment of deletions under the approved policy, and a restore can return a record deleted after the backup |
+| 10 | `ADR-014`'s consequences still named a "retention job" shipping in Phase 4 | [DECISIONS](../DECISIONS.md) | Amended in place, as `ADR-007` was: the job runs only when a deployment enables enforcement; expiry and the owner's delete do not depend on it |
+| 11 | Three register rows carried no trace of the new decisions: `Q-06` and `Q-22` read as if one universal value would be picked, and `Q-19` still described a single hosting target | [DECISIONS](../DECISIONS.md) register | Each row now records its constraint: a shipped default an operator overrides (ADR-026), and the deployment the project itself runs for validation (ADR-027) |
+| 12 | The register range in the roadmap and the checklist stopped at `ADR-024`; the CI document quoted `ADR-001 … ADR-024` *today* in check 11's rationale; the roadmap's Phase 1 list still contained the Bun-versus-Node spike and "performance budget definitions" as open-question work | [ROADMAP](../ROADMAP.md), [checklist](05-phase-gate-checklist.md), [CI and gates](03-ci-and-gates.md) | All three ranges now end at `ADR-028`, and the two Phase 1 items are restated as the work `ADR-025` and `ADR-028` actually require |
+| 13 | Check 8's description said "Both lists" after the claims rule made three | [CI and gates](03-ci-and-gates.md) | "All three lists" |
+| 15 | The record's introduction pointed at §23 as the latest pass after §24 was appended — the same sentence states the count, and the count had been updated while the pointer had not | [this record](08-phase-0-review.md) §24 | Pointer corrected, and check 14 now compares it with the last pass section, so the sentence cannot move half-way again |
+| 14 | The canonical agent prompt carried no retention or claim rule: `GOV-15` forbids unplanned destructive changes, but nothing told an agent that deletion is off by default or that compliance and capacity claims are prohibited | [master project prompt](../MASTER_PROJECT_PROMPT.md) | Two principles added — retention and deletion as deployment policy with the deployment profile named, and no claim beyond what the pack can show (`GOV-91`) |
+
+### 24.2 A new retired-wording entry
+
+The five purged/deleted phrasings were removed by hand; the gate now keeps them out. Three entries join the retired-wording list, all citing ADR-026: `purged by TTL`, `TTL purge`, and (as a pattern, so either spelling matches) `deleted or anonymized on account deletion`. A document that must discuss the old wording quotes it in inline code, like every other retired phrase.
+
+### 24.3 Mutation tests (nineteenth pass)
+
+```
+T26a reinserted "is purged by TTL" into the data model
+     - [model] retired wording "purged by TTL" in DATA_MODEL.md:34            exit 1
+
+T26b reinserted "TTL purge" into SECURITY.md §5
+     - [model] retired wording "TTL purge" in SECURITY.md:67                  exit 1
+
+T26c restored the account-deletion handling claim in the class table
+     - [model] retired wording "deleted or anonymized on account deletion"
+       in security/data-classification.md:33                                  exit 1
+
+T27  the introduction's "latest being" pointer reverted to §23
+     - [review-record] the introduction points at §23 as the latest pass;
+       the record's latest pass is §24                                        exit 1
+
+all mutations restored from the pre-test copies                             exit 0
+```
+
+### 24.4 Evidence (nineteenth pass)
+
+```
+node scripts/gates/phase0.mjs                 # 14 checks, exit 0
+node scripts/gates/traceability.mjs           # 689 requirements, 124 groups, exit 0
+#   unassigned identifiers inside an area's span: SEC-72
+node scripts/gates/traceability.mjs --write   # regenerated; the committed file matches
+```
+
+Counts are unchanged by this pass: 689 identifiers, decisions `ADR-001 … ADR-028`, 26 registered questions with 13 resolved.
+
+### 24.5 What this changes for the reader
+
+- **A reader of the retention table** can no longer mistake a candidate window for an enforced schedule: each row says what happens today, what the switch would add, and which of the three operations it is describing.
+- **An operator** gets an honest backup statement: a restore may return a record deleted after the backup was taken, and the procedure has to say so rather than promise erasure by implication.
+- **A reviewer of the register** sees the questions still open, with the constraint each now carries — no window is a universal answer, and no hosting target is decided here.

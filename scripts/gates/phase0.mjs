@@ -37,7 +37,8 @@
  *      (a source download, or a shallow clone).
  *  14. Review record — the review record states how many passes it holds in the paragraph that
  *      introduces it, and the gate keeps that claim true: the number matches the pass sections
- *      it contains, and the ordinals run in order without a gap. The count has one home.
+ *      it contains, the ordinals run in order without a gap, and the section it names as the
+ *      latest pass is the last one the record actually holds. The count has one home.
  *
  * Usage: node scripts/gates/phase0.mjs
  * Exit code: 0 when every check passes, 1 otherwise.
@@ -427,6 +428,22 @@ const RETIRED_WORDING = [
   {
     phrase: 'server runtime pending',
     adr: 'ADR-025 (the server runtime is decided; what remains a toolchain question is Bun compatibility)',
+  },
+  // ADR-026 separated functional expiry from retention deletion: an expired record stops being
+  // served, and removing it is a policy decision that is off by default. The shorthand that said
+  // rows "are purged" promised a scheduled deletion the product does not perform.
+  {
+    phrase: 'purged by TTL',
+    adr: 'ADR-026 (expiry is functional; physical cleanup is retention deletion, disabled by default)',
+  },
+  {
+    phrase: 'TTL purge',
+    adr: 'ADR-026 (the expiry column is functional; cleanup follows the enforcement switch)',
+  },
+  {
+    pattern: /\bdeleted or anonymi[sz]ed on account deletion\b/i,
+    label: 'deleted or anonymized on account deletion',
+    adr: 'ADR-026 (deactivation is not deletion; account erasure is a reserved capability)',
   },
   // ADR-019 removed every notification path that delivered to an address the product does not store.
   {
@@ -1126,6 +1143,18 @@ function checkReviewRecord() {
   for (const claim of claims) {
     if (claim !== recorded) {
       failures.push(`[review-record] the introduction says the record holds ${claim} passes; it holds ${recorded}`);
+    }
+  }
+  // The count is not the only moving part in that sentence: the introduction also points at the
+  // latest pass, and a pointer that stops moving is how the count and the record drift apart.
+  const pointer = /the latest being \[§(\d+)\]/.exec(intro);
+  const last = passes.at(-1);
+  if (!pointer) {
+    failures.push('[review-record] the introduction does not name the latest pass section — write "the latest being [§N](…)"');
+  } else if (last) {
+    const expectedNumber = Number(/^\d+\./.exec(last.heading)[0].slice(0, -1));
+    if (Number(pointer[1]) !== expectedNumber) {
+      failures.push(`[review-record] the introduction points at §${pointer[1]} as the latest pass; the record's latest pass is §${expectedNumber}`);
     }
   }
   if (failures.length === 0) notes.push(`review record: ${recorded} passes, in order, and the introduction says so`);

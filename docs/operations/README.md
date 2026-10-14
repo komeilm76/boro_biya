@@ -48,7 +48,7 @@ The targets are recorded here rather than in a deployment script, because a targ
 | Encryption and key custody | at rest, and who can decrypt | set with the hosting decision (Q-19); never a repository-stored key |
 | Off-host copy | a backup that survives the host | required; destination set with Q-19 |
 | Recovery time objective | how long a restore may take, measured by rehearsal | measured in the Phase 8 rehearsal, not estimated |
-| Retention window | how long backups are kept, and how it interacts with the retention rules in [data classification](../security/data-classification.md) §4 | bounded by the operator's approved retention policy; a restore must not resurrect purged location history or a completed account deletion |
+| Retention window | how long backups are kept, and how it interacts with the retention rules in [data classification](../security/data-classification.md) §4 | bounded by the operator's approved retention policy; the restore procedure states what it does with data deleted under that policy, because a restore can return a record deleted after the backup was taken ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) |
 | Failure alerting | who hears about a failed job and how | [SEC-60](../SECURITY.md) alerting covers replication and backup failures |
 | Access | who may restore, and what is recorded | role-limited and audited ([SEC-58](../SECURITY.md), [SEC-59](../SECURITY.md)); a restore that is not audited is not permitted |
 | Reporting format | what a rehearsal records | date, commit SHA, environment, dataset, exact command, elapsed time, and what the rehearsal did **not** cover (QA-110) |
