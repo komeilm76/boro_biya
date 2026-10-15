@@ -26,6 +26,16 @@ RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules services/*/n
   && bun install --production --frozen-lockfile
 
 FROM node:24.22.0-slim AS runtime
+
+# Published Debian security updates are applied to the shipped layer at build time (SEC-63):
+# upstream base rebuilds lag security advisories — node:24.22.0-slim still shipped
+# perl-base 5.36.0-7+deb12u3 with three published CRITICAL fixes (deb12u4). The base tag
+# stays pinned for lineage; the security suite provides the fixed OS packages. The build
+# stage is not upgraded: it is multi-stage-discarded and never shipped or scanned.
+RUN apt-get update \
+  && apt-get upgrade -y \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 WORKDIR /repo
 

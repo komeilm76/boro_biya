@@ -19,6 +19,13 @@ ENV BUILD_COMMIT=${BUILD_COMMIT}
 RUN node scripts/build.mjs --filter=@boro-biya/web
 
 FROM node:24.22.0-slim AS runtime
+
+# Published Debian security updates are applied to the shipped layer at build time (SEC-63) —
+# the same mechanism and rationale as docker/backend.Dockerfile; the base tag stays pinned.
+RUN apt-get update \
+  && apt-get upgrade -y \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 WORKDIR /app
 

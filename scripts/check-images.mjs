@@ -6,7 +6,12 @@
  *
  *  Dockerfiles: every FROM is pinned (no `latest`, no bare image name), the final stage runs as
  *  a non-root USER, no ENV/ARG line embeds a secret-looking value, and no ADD pulls a remote
- *  URL.
+ *  URL. The final (shipped) stage must apply published Debian security updates at build time
+ *  (`apt-get upgrade -y`), because upstream base-image rebuilds lag security advisories
+ *  (SEC-63). A postgres-based final stage inherits the vendor entrypoint's privilege drop
+ *  (initdb needs root; gosu switches to `postgres` at runtime), so the non-root USER rule does
+ *  not apply to it — but it must remove the pgdg repository before upgrading so OS security
+ *  updates can never drift the pinned PostgreSQL version (QA-47).
  *  docker-compose.yml: every `image:` reference is tag-pinned and not `latest`; every
  *  long-running service declares a healthcheck (the one-shot migrate job is exempt); no
  *  metrics port (9000-9099) is published to the host (OPS-63); resource limits are declared
@@ -73,10 +78,35 @@ for (const name of dockerfiles) {
     }
     return user;
   })();
-  if (finalStageUser === null || finalStageUser === 'root') {
+  const finalStage = (() => {
+    let fromIndex = -1;
+    lines.forEach((rawLine, index) => {
+      if (/^\s*FROM\s/i.test(rawLine)) fromIndex = index;
+    });
+    if (fromIndex < 0) return { image: null, text: '' };
+    const image = /^FROM\s+(\S+)/i.exec((lines[fromIndex] ?? '').trim())?.[1] ?? null;
+    return { image, text: lines.slice(fromIndex).join('\n') };
+  })();
+  if (/^postgres:/i.test(finalStage.image ?? '')) {
+    // The vendor postgres entrypoint runs initdb as root and drops privileges to `postgres`
+    // via gosu at runtime; a USER directive would break initialization (see docker/db.Dockerfile).
+    if (!/pgdg/.test(finalStage.text)) {
+      problems.push(
+        `${rel}: postgres-based final stage must remove the pgdg repository before upgrading — OS security updates must not be able to drift the pinned PostgreSQL version (QA-47)`,
+      );
+    }
+    notes.push(`${rel}: final stage inherits the vendor postgres entrypoint (privilege drop to "postgres" at runtime)`);
+  } else if (finalStageUser === null || finalStageUser === 'root') {
     problems.push(`${rel}: the final stage does not switch to a non-root USER (QA-14)`);
   } else {
     notes.push(`${rel}: final stage runs as "${finalStageUser}"`);
+  }
+  // Shipped layers carry published Debian security fixes: upstream base-image rebuilds lag
+  // security advisories, so the final stage upgrades OS packages at build time (SEC-63).
+  if (!/apt-get upgrade -y/.test(finalStage.text)) {
+    problems.push(
+      `${rel}: the final stage does not apply OS security updates ("apt-get upgrade -y") — shipped images must carry published Debian security fixes (SEC-63)`,
+    );
   }
   notes.push(`${rel}: ${stages.length} stage(s), base ${stages[0]?.image ?? '?'}`);
 }
