@@ -2,8 +2,9 @@
 # integration environments (OPS-66). Application services are built from the repository with
 # pinned base images; the database service is built from the pinned vendor image
 # (postgres:18.6, docker/db.Dockerfile) with Debian security updates applied at build time
-# (SEC-63). Production deployment stays declarative (OPS-71) and is documented in
-# docs/operations/README.md.
+# (SEC-63). This file defines development and CI environments, not a production deployment:
+# docs/operations/README.md records the runtime and deployment notes, and the hosting decision
+# that a production deployment needs is still open (Q-19).
 #
 # Quick start (docs/development/01-development-environment.md §4):
 #   bun install && bun run env:create

@@ -2,7 +2,7 @@
 
 The review held at the Phase 1 → Phase 2 boundary, after the owner merged the Phase 1 pull request and before any Phase 2 work: every document re-read for defects rather than deliverables, the identifier citations in code checked against the registry, the boundary re-verifications the pack requires, the owner decisions taken during the review, and the evidence the owner asked for before deciding two Phase 1 items that stay unratified.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## 1. Scope and method
 
@@ -91,6 +91,14 @@ Correcting the two links in the Phase 0 review record changes navigation only; t
 ### 2.5 The gate now catches the first class
 
 Check 11 (`QA-119`) resolved every identifier mentioned in the pack but never asked whether a link pointed at the right place, and it never read code. It now does both, as [CI and gates](03-ci-and-gates.md) §3 records. The demonstration `QA-85` asks for is this review itself: run before the fixes, the extended gate failed with exactly the fourteen references of §2.1 and nothing else; after them it passes. The classes of §2.2 stay a reading task — whether an identifier is cited for what it says is a judgement about meaning, not a lookup.
+
+### 2.6 Found while preparing this record for the owner's review
+
+Preparing the record for the owner's review on 2026-10-16 meant re-reading the files the held findings touch and re-deriving §5 from source, rather than re-reading the record itself. That found the defects below, fixed in the same pull request:
+
+| # | Where | Defect | Fix |
+| --- | --- | --- | --- |
+| 44 | `docker-compose.yml` header | "Production deployment stays declarative (`OPS-71`)": `OPS-71` is the `.editorconfig` rule, no requirement makes that claim, and no production deployment exists to be declarative | The comment now says the file defines development and CI environments, points to the deployment notes, and names the open hosting decision (`Q-19`) |
 
 ## 3. Findings that need the owner's go-ahead
 
