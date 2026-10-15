@@ -5,7 +5,7 @@
 # recorded in docs/operations/README.md), no `latest` tag, non-root runtime user, no secrets or
 # .env content in any layer (.dockerignore excludes them), devDependencies removed from the
 # runtime layer (OPS-06: minimum necessary components).
-FROM node:24.21.0-slim AS build
+FROM node:24.22.0-slim AS build
 
 # Bun is the package manager and script runner (ADR-025), pinned to the exact verified version
 # and installed from the same npm registry the lockfile resolves against.
@@ -25,7 +25,7 @@ RUN node scripts/build.mjs
 RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules services/*/node_modules \
   && bun install --production --frozen-lockfile
 
-FROM node:24.21.0-slim AS runtime
+FROM node:24.22.0-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /repo
 

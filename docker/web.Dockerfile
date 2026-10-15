@@ -5,7 +5,7 @@
 # QA-14 / OPS-84 properties: pinned Node 24 LTS base, no `latest` tag, non-root runtime user,
 # no secrets in layers, and the runtime layer contains only the built artefact and the server
 # (no node_modules at all — the server is dependency-free, GOV-13/GOV-80).
-FROM node:24.21.0-slim AS build
+FROM node:24.22.0-slim AS build
 
 RUN npm install -g bun@1.4.3 --no-audit --no-fund && npm cache clean --force
 
@@ -18,7 +18,7 @@ ENV BUILD_COMMIT=${BUILD_COMMIT}
 
 RUN node scripts/build.mjs --filter=@boro-biya/web
 
-FROM node:24.21.0-slim AS runtime
+FROM node:24.22.0-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 

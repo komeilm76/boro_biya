@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Reviewed: 2026-10-14. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
+Owner: Engineering. Reviewed: 2026-10-15. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
 
 ## 1. Principles
 
@@ -77,7 +77,7 @@ Runtimes and infrastructure:
 
 | Component | Baseline | Evidence |
 | --- | --- | --- |
-| Node.js (**production runtime**) | 24 LTS (Active LTS; maintenance from 2026-10-20, EOL 2028-04-30); containers pinned to **24.21.0**, the latest 24.x at re-verification | Node.js release schedule and `nodejs/node` tag `v24.21.0` (2026-09-08); Docker tag `node:24.21.0-slim` confirmed in `docker-library/official-images`; Vitest 5 accepts `^22.12 \|\| ^24 \|\| >=26`; the runtime decision is [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) |
+| Node.js (**production runtime**) | 24 LTS (Active LTS; maintenance from 2026-10-20, EOL 2028-04-30); containers pinned to **24.22.0**, the latest 24.x (security-exception bump 2026-10-15, [REFERENCES](../REFERENCES.md)) | Node.js release schedule and `nodejs/node` tag `v24.22.0` (2026-10-14); Docker tag `node:24.22.0-slim` confirmed in `docker-library/official-images`; Vitest 5 accepts `^22.12 \|\| ^24 \|\| >=26`; the runtime decision is [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) |
 | Node.js (next) | 26 becomes Active LTS on 2026-10-28 (EOL 2029-04-30) | Add to the CI matrix once LTS, then move the baseline after a green run |
 | PostgreSQL | 18 (current major, EOL November 2030); Compose pins **18.6**; CI/local tests run embedded **18.4** binaries | PostgreSQL support policy; `postgres:18.6` tag confirmed in `docker-library/official-images` (2026-10-14); 14 reaches EOL November 2026 and is not a target |
 | Bun | 1.4.3 as package manager and script runner (development and the CI install step); **not** a production runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Must stay compatible with the pinned dependency set; no runtime-specific API may reach application code ([GOV-82](#4-runtime-baseline)) |

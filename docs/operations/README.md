@@ -2,7 +2,7 @@
 
 This directory holds the operational side of the project: the runbooks that say what to do when something breaks, the backup and restore policy, and the availability objective the deployment is held to. It exists before the first deployment so that "what do we do when the database is gone" has an answer written down before anyone is under pressure.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## Rules
 
@@ -43,11 +43,11 @@ One place naming the runtime and the exact versions each artefact is built and t
 
 | Item | Value (verified 2026-10-14) |
 | --- | --- |
-| Production runtime | Node.js 24 LTS ("Krypton"). Container base pinned to `node:24.21.0-slim`; CI installs the current 24.x through `actions/setup-node` and records `node --version` in every job log; the runtime compatibility gate (`QA-123`) fails any artefact smoke that is not running the pinned major. |
+| Production runtime | Node.js 24 LTS ("Krypton"). Container base pinned to `node:24.22.0-slim`; CI installs the current 24.x through `actions/setup-node` and records `node --version` in every job log; the runtime compatibility gate (`QA-123`) fails any artefact smoke that is not running the pinned major. |
 | Development toolchain | Bun 1.4.3 — package manager and script runner only, never a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). `bun.lock` is committed; installs are frozen-lockfile in CI. |
 | TypeScript | 6.0.3 — pinned to the 6.0.x line because `typescript-eslint` 8.71.2 supports `>=4.8.4 <6.1.0` (dependency policy §3). |
 | Database | PostgreSQL 18. Compose pins `postgres:18.6` (the latest minor at verification, [REFERENCES](../REFERENCES.md)); CI integration tests run against embedded PostgreSQL 18.4 binaries — the same major, disposable per run (QA-06). |
-| Backend artefacts | `apps/api`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.21.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
+| Backend artefacts | `apps/api`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.22.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
 | Web artefact | Vite production bundle served by the dependency-free `apps/web/server/serve.mjs` on the same Node 24 base, proxying `/api/*` to a fixed upstream (`OPS-64`, `SEC-48`). |
 | Android artefact | Capacitor packaging configuration only; the shell and its toolchain pins arrive in Phase 8. |
 

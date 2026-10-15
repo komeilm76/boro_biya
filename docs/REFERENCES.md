@@ -2,7 +2,7 @@
 
 Verify all links and current guidance during implementation and before every release. Search results, package versions, and standards editions change.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## Verification log
 
@@ -29,6 +29,8 @@ Owner: Engineering. Reviewed: 2026-10-14.
 | 2026-10-14 | New CI action pins | `oven-sh/setup-bun` v2.2.0 (`0c5077e51419868618aeaa5fe8019c62421857d6`), `aquasecurity/trivy-action` v0.36.0 (`ed142fd0673e97e23eac54620cfb913e5ce36c25`), `actions/upload-artifact` v7.0.2 (`cf430e030ddbb5b0abf93d22962f4752f3646cd9`) — SHA-pinned in `.github/workflows/ci.yml`; the `actions/checkout` and `actions/setup-node` pins from Phase 0 are unchanged and reused. |
 | 2026-10-14 | Dependency advisories at the phase boundary | Registry bulk-advisory API over 372 packages (398 installed versions): **no critical or high findings**; one moderate (`uuid@7.0.3`, a dev-only transitive with no runtime path, GHSA-w5hq-g745-h8pq) printed for review. Re-checked on every gate run by `scripts/check-advisories.mjs`, which fails closed when the registry is unreachable. |
 | 2026-10-14 | Re-fetch of previously unreachable links | The Phase 1 environment carries the **same host allowlist** as Phase 0 (github.com, codeload.github.com, api.github.com, registry.npmjs.org, pypi.org, files.pythonhosted.org). External documentation links below remain verified against version evidence rather than direct fetches; the re-fetch stays owed to the first unrestricted environment and is recorded as a deviation in the [Phase 1 report](development/09-phase-1-report.md). |
+| 2026-10-15 | Node 24 minor bump to 24.22.0 (security exception) | The `containers` gate blocked on a CRITICAL (fixed) Trivy finding in `boro-biya/api:dev` built `FROM node:24.21.0-slim`, while the registry advisory scan over the full dependency tree (same GHSA data) was green minutes earlier — pointing at a Debian package in the base image. `nodejs/node` tag **v24.22.0** was released 2026-10-14; `node:24.22.0-slim` confirmed in `docker-library/official-images` `library/node` (bookworm-slim, GitCommit `f27125230b3c367dcf63043ea3fe286fb3d0914c`), the freshest rebuild of the same lineage. Bumped immediately under the dependency policy §5 security exception (not the monthly batch). |
+| 2026-10-15 | Trivy findings made readable in CI | `aquasecurity/trivy-action` v0.36.0 installs Trivy **v0.70.0** by default (pinned inside the SHA-pinned action). The scan steps now write JSON reports and do not decide the gate; `scripts/ci/trivy-report.mjs` (dependency-free) enforces the policy — CRITICAL blocks, HIGH reported, any secret finding blocks — prints every finding as a check-run annotation, and fails closed when a report is missing or unparseable (GOV-18). Secret findings print rule, file, and line, never the matched text (QA-10). |
 
 **Environment note:** the Phase 0 workspace could reach only `github.com`, `codeload.github.com`, `api.github.com`, `registry.npmjs.org`, `pypi.org`, and `files.pythonhosted.org`. Links to other hosts below were therefore checked against version evidence (registry metadata, repository contents, mirrored documentation) rather than by direct HTTP fetch, and each link must be re-fetched from an unrestricted environment at the next phase boundary. Anything that could not be verified is marked as such rather than assumed correct.
 

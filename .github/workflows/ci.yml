@@ -119,61 +119,52 @@ jobs:
         run: bun run build
       - name: Runtime source scan (QA-123, part 1)
         run: node scripts/check-runtime.mjs --scan-only
-      # Windows PostgreSQL refuses to run under an elevated administrator token, and hosted
-      # Windows runners ARE elevated administrators: initdb succeeds, but the postmaster exits
-      # with "Execution of PostgreSQL by a user with administrative permissions is not
-      # permitted". The embedded harness therefore cannot self-start there. This step
-      # provisions the SAME pinned binaries (from the lockfile's @embedded-postgres/windows-x64,
-      # no third-party download) as a loopback server under a disposable standard user, and the
-      # integration step consumes it through the harness's documented TEST_DATABASE_URL override
-      # (QA-06, QA-70; the deviation is recorded in docs/development/09-phase-1-report.md §7).
-      # Every credential here is a CI-disposable value for a loopback-only server on an
-      # ephemeral runner, in the same class as the harness's own test fixtures (OPS-70).
+      # Windows PostgreSQL refuses to run its postmaster under an elevated administrator token,
+      # and hosted Windows runners ARE elevated administrators: initdb succeeds under the admin,
+      # but postgres.exe exits with "Execution of PostgreSQL by a user with administrative
+      # permissions is not permitted". The embedded harness therefore cannot self-start there.
+      # This step provisions the SAME pinned binaries (the lockfile's @embedded-postgres/windows-x64
+      # — no third-party installer, no unpinned download) as a loopback server, de-elevating only
+      # the postmaster: `runas /trustlevel:0x20000` starts it with the standard-user (filtered)
+      # token of the same account — exactly the state of a non-elevated shell on an administrator
+      # account, which is how PostgreSQL normally runs on Windows machines. The integration step
+      # consumes the server through the harness's documented TEST_DATABASE_URL override (QA-06,
+      # QA-70; recorded in docs/development/09-phase-1-report.md §7 item 10). All credentials are
+      # CI-disposable values for a loopback-only server on an ephemeral runner (OPS-70).
       - name: Provision disposable PostgreSQL 18 (Windows refuses an elevated postmaster)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
           try {
             $store = Get-ChildItem 'node_modules\.bun' -Directory -Filter '@embedded-postgres+windows-x64@*' |
               Select-Object -First 1
             if (-not $store) { throw 'the @embedded-postgres/windows-x64 package is not installed' }
-            $native = Join-Path $store.FullName 'node_modules\@embedded-postgres\windows-x64\native'
+            $bin = Join-Path $store.FullName 'node_modules\@embedded-postgres\windows-x64\native\bin'
 
-            # Self-contained copy outside the workspace, so the disposable user needs no ACL
-            # anywhere in the repository tree; C:\ grants standard users traverse + read by default.
-            $root = 'C:\boro-pg-ci'
-            if (Test-Path $root) { Remove-Item $root -Recurse -Force }
-            New-Item -ItemType Directory -Path $root | Out-Null
-            robocopy $native "$root\pg" /E /NFL /NDL /NJH /NJS | Out-Null
-            if ($LASTEXITCODE -ge 8) { throw "copying the PostgreSQL binaries failed (robocopy exit $LASTEXITCODE)" }
+            $dataDir = Join-Path $env:RUNNER_TEMP 'pg-ci-data'
+            if (Test-Path $dataDir) { Remove-Item $dataDir -Recurse -Force }
 
             # Initialise as the administrator (initdb permits this; only the postmaster does not),
             # with the same flags the embedded harness uses, plus UTF8 to match the Linux default.
-            $dataDir = "$root\data"
-            $pwFile = "$root\pwfile"
+            $pwFile = Join-Path $env:RUNNER_TEMP 'pg-ci-pwfile'
             Set-Content -Path $pwFile -Value 'disposable-test-only' -NoNewline -Encoding ascii
-            & "$root\pg\bin\initdb.exe" --pgdata=$dataDir --auth=password --username=boro_test_admin `
-              --pwfile=$pwFile --lc-messages=C --encoding=UTF8
-            if ($LASTEXITCODE -ne 0) { throw "initdb failed (exit $LASTEXITCODE)" }
+            $initdb = & "$bin\initdb.exe" --pgdata="$dataDir" --auth=password --username=boro_test_admin `
+              --pwfile="$pwFile" --lc-messages=C --encoding=UTF8 2>&1 | ForEach-Object { "$_" }
+            if ($LASTEXITCODE -ne 0) {
+              throw "initdb failed (exit ${LASTEXITCODE}): $(($initdb | Select-Object -Last 12) -join ' | ')"
+            }
             Remove-Item $pwFile -Force
-
-            # Disposable standard (non-administrator) user to own the postmaster process.
-            $pgUser = 'boro_pg_ci'
-            $pgPass = 'Zx9' + [Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(12)).ToLowerInvariant() + '!Q'
-            net user $pgUser /delete 2>&1 | Out-Null
-            net user $pgUser $pgPass /add | Out-Null
-            if ($LASTEXITCODE -ne 0) { throw "creating the disposable postgres user failed (exit $LASTEXITCODE)" }
-            icacls $root /grant "${pgUser}:(OI)(CI)F" /T /Q | Out-Null
 
             $port = 54330
             $probe = { param($p) $c = New-Object Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', $p); $true } catch { $false } finally { $c.Dispose() } }
             if (& $probe $port) { throw "port $port is unexpectedly busy" }
 
-            $sec = ConvertTo-SecureString $pgPass -AsPlainText -Force
-            $cred = New-Object System.Management.Automation.PSCredential($pgUser, $sec)
-            Start-Process -FilePath "$root\pg\bin\postgres.exe" `
-              -ArgumentList '-D', $dataDir, '-p', "$port", '-c', 'logging_collector=on', '-c', 'log_directory=log', '-c', 'log_filename=postgresql.log' `
-              -Credential $cred -WorkingDirectory $dataDir
+            # Start the postmaster de-elevated (filtered standard-user token); it logs to its own
+            # log directory so a failed start is diagnosable from the annotations below.
+            $cmd = "$bin\postgres.exe -D $dataDir -p $port -c logging_collector=on -c log_directory=log -c log_filename=postgresql.log"
+            $runas = & runas /trustlevel:0x20000 "$cmd" 2>&1 | ForEach-Object { "$_" }
+            if ($LASTEXITCODE -ne 0) { throw "de-elevated start failed (exit ${LASTEXITCODE}): $($runas -join ' | ')" }
 
             $deadline = (Get-Date).AddSeconds(90)
             $ready = $false
@@ -182,16 +173,16 @@ jobs:
               Start-Sleep -Milliseconds 500
             }
             if (-not $ready) {
-              $lines = Get-Content "$dataDir\log\postgresql.log" -Tail 30 -ErrorAction SilentlyContinue |
+              $lines = Get-Content (Join-Path $dataDir 'log\postgresql.log') -Tail 30 -ErrorAction SilentlyContinue |
                 ForEach-Object { $_ -replace '%', '%25' }
               $tail = if ($lines) { $lines -join '%0A' } else { '(no server log written)' }
               Write-Host "::error::provisioned PostgreSQL did not become ready on port ${port}%0A$tail"
-              throw 'PostgreSQL provisioning failed: server never accepted connections'
+              throw 'PostgreSQL provisioning failed: the server never accepted connections'
             }
 
             "TEST_DATABASE_URL=postgresql://boro_test_admin:disposable-test-only@127.0.0.1:$port/postgres" |
               Add-Content -Path $env:GITHUB_ENV
-            Write-Host "provisioned disposable PostgreSQL 18 on 127.0.0.1:$port under the standard user $pgUser"
+            Write-Host "provisioned disposable PostgreSQL 18 on 127.0.0.1:$port with a de-elevated postmaster"
           } catch {
             $message = $_.Exception.Message -replace '%', '%25' -replace "`r?`n", ' | '
             Write-Host "::error::PostgreSQL provisioning failed: $message"
@@ -219,14 +210,14 @@ jobs:
             exit 1
           }
 
-      - name: Remove the provisioned PostgreSQL server and its disposable user
+      - name: Stop the provisioned PostgreSQL server
         if: always()
         shell: pwsh
         run: |
           Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
           Start-Sleep -Seconds 2
-          net user boro_pg_ci /delete 2>&1 | Out-Null
-          if (Test-Path 'C:\boro-pg-ci') { Remove-Item 'C:\boro-pg-ci' -Recurse -Force -ErrorAction SilentlyContinue }
+          $dataDir = Join-Path $env:RUNNER_TEMP 'pg-ci-data'
+          if (Test-Path $dataDir) { Remove-Item $dataDir -Recurse -Force -ErrorAction SilentlyContinue }
 
   containers:
     name: containers (QA-11, QA-14)
@@ -321,35 +312,57 @@ jobs:
           grep -q '"requestId"' /tmp/proxy-404.json
           echo "compose smoke: web edge proxies /api and preserves the error envelope"
 
+      # Trivy writes JSON reports and does not fail the job on findings; the repository-owned
+      # policy step after each scan is the gate (SEC-63/QA-14: CRITICAL blocks, HIGH reported)
+      # and converts findings into workflow annotations, so a red scan names them from the
+      # check-run annotations alone (QA-73). A scan that fails operationally yields no report,
+      # and the policy step fails closed on a missing or unparseable report (GOV-18).
       - name: Scan the built images (Trivy; CRITICAL blocks, HIGH reported — SEC-63/QA-14)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0 (installs Trivy v0.70.0)
         with:
           scan-type: image
           image-ref: boro-biya/api:dev
-          format: table
-          exit-code: "1"
-          severity: CRITICAL
+          format: json
+          output: ${{ runner.temp }}/trivy-api.json
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Enforce the api image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-api.json"
 
       - name: Scan the web image
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: boro-biya/web:dev
-          format: table
-          exit-code: "1"
-          severity: CRITICAL
+          format: json
+          output: ${{ runner.temp }}/trivy-web.json
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Enforce the web image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-web.json"
 
       - name: Scan the database image
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: postgres:18.6
-          format: table
-          exit-code: "1"
-          severity: CRITICAL
+          format: json
+          output: ${{ runner.temp }}/trivy-db.json
+          severity: CRITICAL,HIGH
           ignore-unfixed: true
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Enforce the database image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-db.json"
 
       - name: Capture logs and stop the stack
         if: always()
@@ -368,16 +381,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       # Trivy's secret scanner over the whole repository and its history-facing working tree;
       # the documentation gate's pattern check runs inside `bun run gate` (QA-10: both layers).
+      # The report is JSON and the policy step is the gate, so findings are readable from the
+      # check-run annotations — without ever printing the matched text (QA-73, QA-10).
       - name: Trivy filesystem secret scan
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
           scanners: secret
-          format: table
-          exit-code: "1"
+          format: json
+          output: ${{ runner.temp }}/trivy-secrets.json
+          exit-code: "0"
+
+      - name: Enforce the secret-scan policy (QA-10)
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-secrets.json" --mode secret
 
   release-mechanics:
     name: release mechanics
