@@ -99,6 +99,7 @@ Preparing the record for the owner's review on 2026-10-16 meant re-reading the f
 | # | Where | Defect | Fix |
 | --- | --- | --- | --- |
 | 44 | `docker-compose.yml` header | "Production deployment stays declarative (`OPS-71`)": `OPS-71` is the `.editorconfig` rule, no requirement makes that claim, and no production deployment exists to be declarative | The comment now says the file defines development and CI environments, points to the deployment notes, and names the open hosting decision (`Q-19`) |
+| 45 | §5 as first written, the [dependency policy](02-dependency-policy.md) §6, the [Phase 1 report](09-phase-1-report.md) §7 item 8, the 2026-10-15 entry of the [REFERENCES](../REFERENCES.md) log, and the licence gate's comment | BlueOak-1.0.0 was said to reach the tree as three packages (`tar`, `yallist`, `sax`) through `@capacitor/cli` alone. The installed tree holds eleven — `chownr`, `glob`, `lru-cache`, `minimatch`, `minipass`, `package-json-from-dist`, `path-scurry`, and `rimraf` as well — through three development-only entry points: the root lint toolchain, `@vue/test-utils`, and `@capacitor/cli`. The conclusion that none reaches a distributed artefact holds; the evidence behind it was incomplete | §5 rebuilt from the lockfile and the installed tree; the policy and the report corrected, and a new log entry supersedes the old one; the gate's comment is left to the decision's own change, so the allowlist file stays untouched until the owner decides |
 
 ## 3. Findings that need the owner's go-ahead
 
@@ -115,10 +116,17 @@ These change runtime behaviour or deployment posture, so they are recorded with 
 - **External references (`GOV-73`).** Registry and GitHub facts were re-queried; links on other hosts remain unreachable from this environment and are verified against version evidence, as the log states.
 - **Threat model and data classification.** Both are due a re-read at each boundary. The threat model's residual risks still hold, and the items Phase 1 introduced were added (its §6). The data classification is unchanged: Phase 1 stores no personal data, and every data item Phase 2 creates already has its row.
 - **Owner decisions taken in this review.** Phase 1 is approved, dated 2026-10-15 — the day the owner merged the Phase 1 pull request — and recorded in the [Phase 1 report](09-phase-1-report.md) §10, the [ROADMAP](../ROADMAP.md), the [documentation index](../README.md), the repository README, and the master prompt. The BlueOak-1.0.0 allowlist entry and ADR-029 are **held out of that approval** until the owner reviews §5 and §6. The superseded Phase 1 pull request #2 was closed at the owner's request.
+- **Owner direction on 2026-10-16.** Both held items stay pending. For BlueOak-1.0.0 the owner asked for the evidence in §5 to be completed and for a recommendation, with no approval recorded until the owner confirms. For ADR-029 the owner kept the four decisions pending and the implementations in place provisionally, asked for the migration runner's timeout and statement-timeout requirements to become tracked work before Phase 9, and for the web edge's limitations and the need for a properly configured TLS and reverse-proxy layer in real deployments to be documented (§6). The owner also asked for three findings of §3 to be handled as separate, reviewable changes — the Compose port exposure first, as the highest-priority operational security issue, then the repository security policy and private vulnerability reporting, then the image contents as a Phase 2 work item — and for this pull request to be prepared for the owner's review and merge, not merged on the owner's behalf.
 
 ## 5. Evidence for the pending decision: BlueOak-1.0.0
 
-**The licence.** Verbatim from `LICENSE.md` in the installed `tar` 7.5.22; `sax` 1.6.1 ships a byte-identical file, and `yallist` 5.0.0 prefixes the same text with a note that bundled sub-packages keep their own licences:
+The decision is still open. On 2026-10-16 the owner asked that this section document the exact licence text or its authoritative source, the dependency tree, the evidence that the packages stay out of every distributed artefact, and the policy that applies; that it recommend development-only ratification if the evidence supports it; and that no approval be recorded until the owner confirms. Re-deriving each item from the committed lockfile and the installed tree **corrected the evidence this section first gave**: eleven installed packages carry BlueOak-1.0.0, not three, and they arrive through three development-only entry points, not one (§2.6). Everything below comes from that re-derivation, on Bun 1.4.3 and Node 24.22.0, against the committed `bun.lock`.
+
+**The licence text and its authoritative source.** The Blue Oak Model License 1.0.0 is published by the Blue Oak Council at https://blueoakcouncil.org/license/1.0.0. The SPDX License List gives it the identifier `BlueOak-1.0.0`, names that page as its reference, and marks it OSI-approved (`spdx/license-list-data`, release v3.29.0 of 2026-09-16). The text below is the same 1 552 bytes — SHA-256 `8a1af140fdfbf5afd3df27f7e662f989c5b963a300020dfafce42033cae9e004` — in three independent places:
+
+- the Markdown form published on the council's page (retrieved 2026-10-16);
+- the SPDX canonical text, `text/BlueOak-1.0.0.txt` at v3.29.0, unchanged there since 2020-11-17;
+- the `LICENSE.md` of six of the eleven packages (`lru-cache`, `minipass`, `path-scurry`, `rimraf`, `sax`, `tar`). Four more (`chownr`, `glob`, `package-json-from-dist`, `yallist`) ship the same 1 552 bytes after one shared 212-byte preamble saying that sub-packages under `src/` keep their own licences, and `minimatch` ships the same words with single spaces after two full stops and a different bold-italic markup.
 
 ```text
 # Blue Oak Model License
@@ -178,40 +186,54 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-**The project's policy.** `GOV-39` ([ARCHITECTURE](../ARCHITECTURE.md) §9): licences are checked against the allowed list before adoption, and a licence outside the list needs written approval recorded in the [dependency policy](02-dependency-policy.md) §6. BlueOak-1.0.0 was outside the original list; Engineering added it on 2026-10-14, and that written approval does not exist yet. `scripts/check-licenses.mjs` enforces the list over **every** installed package — development and production alike — and currently treats BlueOak-1.0.0 as allowed outright.
+**Which packages carry it, and why they are present.** A dependency-free script read the declared licence of every package in the lockfile — the 398 installed on this platform, and, from the npm registry, the 54 that install only on other platforms — platform builds and the support packages of the WebAssembly builds (36 MIT, 18 MPL-2.0, no BlueOak-1.0.0) — and walked every path from a workspace manifest to each BlueOak-1.0.0 package. It found eleven packages and 68 paths, and **every path starts with a `devDependencies` entry**:
 
-**Why the three packages are present.** From the committed lockfile, the only path into the tree is one development dependency of the packaging workspace:
-
-```text
-apps/android (devDependencies) → @capacitor/cli 8.5.3 → tar 7.5.22                    BlueOak-1.0.0
-apps/android (devDependencies) → @capacitor/cli 8.5.3 → tar 7.5.22 → yallist 5.0.0    BlueOak-1.0.0
-apps/android (devDependencies) → @capacitor/cli 8.5.3 → xml2js 0.6.2 → sax 1.6.1      BlueOak-1.0.0
-apps/android (devDependencies) → @capacitor/cli 8.5.3 → native-run → elementtree → sax 1.1.4   ISC
-```
-
-`@capacitor/cli` is the Capacitor command line, used at build time to copy the web bundle into the Android project; Phase 8 needs it for the Android build.
-
-**Whether they can enter a distributed artefact.** Today, no:
-
-| Artefact | What it contains | BlueOak packages |
+| Package | Version | Arrives through (the first step of every path is a development dependency) |
 | --- | --- | --- |
-| Backend images (api, relation, sos) | The repository plus a fresh `bun install --production --frozen-lockfile` | None — reproduced: 158 packages installed, no `tar`, `yallist`, `sax`, `xml2js`, or `@capacitor/cli` |
-| Web image | Only `apps/web/dist`, `apps/web/server`, and `apps/web/package.json` | None — no `node_modules` at all |
-| Web bundle | What Vite bundles from `apps/web/src` | None — nothing in the web, API, service, or package sources imports Capacitor |
-| Release tarballs (`release-mechanics`) | Built `dist/` folders, manifests, and `bun.lock` | None — no `node_modules` |
-| Android APK/AAB (Phase 8) | The web bundle and the native Capacitor runtime | Not expected — the CLI runs at build time and is not packaged; verify when the Android build exists |
+| `tar` | 7.5.22 | `@capacitor/cli` 8.5.3, a development dependency of `apps/android` |
+| `yallist` | 5.0.0 | `@capacitor/cli` → `tar` |
+| `chownr` | 3.0.0 | `@capacitor/cli` → `tar` |
+| `sax` | 1.6.1 | `@capacitor/cli` → `xml2js` 0.6.2 |
+| `rimraf` | 6.1.3 | `@capacitor/cli` |
+| `package-json-from-dist` | 1.0.1 | `@capacitor/cli` → `rimraf` |
+| `glob` | 13.0.6 | `@capacitor/cli` → `rimraf`; and `@vue/test-utils` 2.5.1, a development dependency of `apps/web`, → `js-beautify` 2.0.3 |
+| `path-scurry` | 2.0.2 | `glob`, on both of its paths |
+| `lru-cache` | 11.5.3 | `glob` → `path-scurry`, on both paths |
+| `minipass` | 7.1.3 | `@capacitor/cli` → `tar` (directly, and through `minizlib` and `@isaacs/fs-minipass`); and `glob` and `path-scurry` on both of their paths — 7 paths |
+| `minimatch` | 10.2.6 | `eslint` 10.12.0 and `typescript-eslint` 8.71.2 from the root manifest's development dependencies (46 of its 49 paths); `glob` under `@capacitor/cli`; `js-beautify` under `@vue/test-utils`, through `glob` and `editorconfig` |
 
-The production set those images carry is 141 MIT, 5 BSD-3-Clause, 5 ISC, 3 MPL-2.0 (`lightningcss`, see §3 item 2), 2 Apache-2.0, 1 BSD-2-Clause, and 1 0BSD packages — no BlueOak-1.0.0.
+The three entry points are the lint toolchain of the root manifest (`QA-03`), the component-test utilities of `apps/web` (`QA-05`), and the Capacitor command line of `apps/android`, which copies the web bundle into the Android project at build time and is needed by Phase 8. The `sax` that `@capacitor/cli` reaches through `native-run` → `elementtree` is a different release (1.1.4) under ISC.
 
-**Obligations.** The only duty is *Notices*: whoever passes on a copy of the software must pass on the licence text or its link. There is no copyleft, no source-disclosure duty, no patent-retaliation clause, and no restriction on commercial use; a missed notice can be cured within 30 days of written notice. Because the packages reach no distributed artefact, the duty is met today by the packages themselves, which ship their `LICENSE.md` wherever they are installed — it would only become an action item if a development image or vendored dependencies were ever distributed. BlueOak-1.0.0 is permissive and places no condition on the licence the project chooses (`Q-25`).
+**Whether they can enter a distributed artefact.** Today, no — checked artefact by artefact:
+
+| Artefact | What it is built from | Evidence | BlueOak packages |
+| --- | --- | --- | --- |
+| Backend images (`api`, `relation`, `sos`) | `docker/backend.Dockerfile`: the build stage deletes every `node_modules` and runs `bun install --production --frozen-lockfile` (lines 25–26); the runtime stage copies `/repo` from that stage (line 44) | That stage reproduced on the tracked files less the `.dockerignore` exclusions — full install, build, clean-room production install: 158 packages (141 MIT, 5 BSD-3-Clause, 5 ISC, 3 MPL-2.0, 2 Apache-2.0, 1 BSD-2-Clause, 1 0BSD). Independently, the production closure computed from `bun.lock` — every workspace's `dependencies`, optional and peer dependencies, followed transitively — holds 189 packages: all 158, plus 30 builds for other platforms and one optional peer the install skips. The result therefore does not depend on the build platform | None of the eleven, and none of `@capacitor/cli`, `xml2js`, `eslint`, or `@vue/test-utils` |
+| Web image | `docker/web.Dockerfile` copies only `apps/web/dist`, `apps/web/server`, and `apps/web/package.json` (lines 33–35) | No `node_modules` in the image at all | None |
+| Web bundle | Vite bundles what `apps/web/src` imports: `vue`, `vue-router`, `pinia`, `vuetify`, `vue-i18n`, and workspace packages | A search of the built bundle finds none of the eleven packages' names or identifiers | None |
+| Release tarballs (`release mechanics` job) | `dist/` folders, package manifests, and `bun.lock` (`ci.yml`, "Package artefacts and checksums") | No `node_modules` | None |
+| Android APK/AAB (Phase 8) | The web bundle and the native Capacitor runtime | Not built yet; `@capacitor/cli` runs at build time and is not packaged | Not expected — verified when the Android build exists |
+
+The CI `containers` job builds the images on every pull request but does not list the packages inside them; that assertion arrives with the image-content work of §3 item 2. Until then, the evidence for the images is the Dockerfile and the reproduction above.
+
+**The applicable policy.**
+
+- `GOV-39` ([ARCHITECTURE](../ARCHITECTURE.md) §9): "Licences are checked against the allowed list before adoption; a licence outside the list requires written approval recorded in the policy document."
+- The [dependency policy](02-dependency-policy.md) §6 keeps the list in four tiers: allowed without further review; allowed with a recorded note; requiring written owner approval with the obligation documented; and not permitted in distributed code. Only the last tier distinguishes distributed code, and no tier has a development-only scope. BlueOak-1.0.0 sits in the first tier, marked "owner ratification is pending".
+- `QA-09` ([QUALITY_GATES](../QUALITY_GATES.md)): the licence-allowlist gate, active since Phase 1.
+- Enforcement: `scripts/check-licenses.mjs` classifies every installed package, development and production alike — it reads the installed tree and has no notion of dependency kind — and lists `BlueOak-1.0.0` in its allowed set (line 28). The gate therefore passes today on an entry the owner has not ratified, and its comment repeats the three-package claim. Both stay untouched until the decision, so the allowlist file changes only when the owner decides.
+
+**Obligations.** The licence's only condition is *Notices*: whoever passes on a copy of any part of the software must pass on the licence text or a link to it, and a missed notice can be cured within 30 days of being told in writing (*Excuse*). There is no copyleft, no duty to disclose source, no patent-retaliation clause, and no restriction on commercial use, and the licence places no condition on the one the project chooses (`Q-25`). Because none of the eleven packages reaches a distributed artefact, there is nothing to give notice for today. If one ever did, the duty would depend on how it ships: a package copied into an image keeps its own `LICENSE.md`, but a bundler drops licence files, so a bundled package would need its notice added explicitly.
 
 **Options for the owner.**
 
-1. **Ratify as listed** — BlueOak-1.0.0 stays on the allowed list for any dependency. Simplest; matches how MIT and ISC are treated, and BlueOak's only condition is the same notice duty MIT carries.
-2. **Ratify for development-only use** — allowed only where the package cannot reach a distributed artefact; the licence check would then need to tell development from production dependencies, which it does not do today.
-3. **Do not ratify** — `@capacitor/cli` would have to leave the tree, or receive a recorded per-package exception, and Phase 8 would need another way to sync the Android project.
+1. **Ratify as listed** — BlueOak-1.0.0 stays allowed for any dependency, production and bundled code included, and the gate stays as it is. Simplest, but a BlueOak package that later enters a distributed artefact — where a bundler drops the licence file — would pass without anyone deciding how its notice ships.
+2. **Ratify for development-only use** — allowed only outside the production dependency closure of every workspace. The licence gate would have to tell the two apart, which it cannot do today. The lockfile closure used above shows that it can, without a dependency, and because that closure over-approximates the real install (it adds builds for other platforms and optional peers), a check built on it can only err on the strict side. A BlueOak package that later enters the closure would fail the gate and come back to the owner, together with its notice question.
+3. **Do not ratify** — no longer practical: the lint gate (`eslint`, `typescript-eslint`), the component tests (`@vue/test-utils`), and the Phase 8 Android build (`@capacitor/cli`) all depend on BlueOak packages, so each would have to be replaced, or eleven per-package exceptions recorded.
 
-Engineering's recommendation is option 1: the text above imposes nothing beyond MIT's notice duty, and the dependency path is development-only today. Until the owner decides, nothing changes and nothing is described as approved.
+**Recommendation: option 2, development-only ratification.** The evidence supports it on every measure: all 68 dependency paths start at a development dependency; none of the eleven packages is in the production install or in the lockfile's production closure; and none reaches an image, the web bundle, or a release tarball. Development-only ratification approves exactly what is in use, and it returns the question to the owner at the one point where the licence asks for anything — the first time a BlueOak package would ship.
+
+If the owner confirms, one change would record it: the dependency policy §6 gives BlueOak-1.0.0 a development-only scope with the owner's approval and its date; `scripts/check-licenses.mjs` gains the production-closure check, fails when a development-only licence appears inside the closure, and has its comment corrected; and the Phase 8 checklist gains a row verifying that the Android APK and AAB contain none of them. **Until the owner confirms, nothing is approved and nothing changes:** the allowlist entry stays as it is and is described as pending wherever it appears.
 
 ## 6. Evidence for the pending decision: ADR-029
 
@@ -282,6 +304,6 @@ bun run gate                             # the full active suite
 
 ## 8. What happens next
 
-1. The owner reviews §5 and §6 and decides each item — ratify, revise, or reject — and the decision is recorded in the dependency policy and in DECISIONS.
-2. The owner decides whether the three findings in §3 items 1–3 are fixed now or with Phase 2.
+1. The owner reviews §5 and §6 and decides each item — ratify, revise, or reject. §5 recommends development-only ratification of BlueOak-1.0.0. Each decision is recorded in the dependency policy and in DECISIONS, and nothing is described as approved before then.
+2. The three findings in §3 items 1–3 follow as separate pull requests after this one, in the owner's order: the Compose port exposure, the repository security policy and private vulnerability reporting, and the image contents — a Phase 2 work item that does not depend on either held decision. Each carries its own evidence, gate results, and remaining risks.
 3. Phase 2 (authentication and account lifecycle) then starts from its [checklist](05-phase-gate-checklist.md) §4. Almost all of it builds on the components ADR-029 governs — migrations for the identity tables, logging, the error envelope, the web edge's CSP — so it waits for that decision.

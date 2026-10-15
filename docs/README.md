@@ -37,14 +37,14 @@ Owner: Engineering. Reviewed: 2026-10-16.
 | --- | --- | --- | --- |
 | [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-14 |
 | [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-15 |
-| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-15 |
+| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-16 |
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-15 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-14 |
 | [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-15 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-14 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-15 |
-| [development/09-phase-1-report.md](development/09-phase-1-report.md) | The Phase 1 report: what was built, the commands and exit statuses that prove each gate, deviations, and residual risks | Engineering | 2026-10-15 |
+| [development/09-phase-1-report.md](development/09-phase-1-report.md) | The Phase 1 report: what was built, the commands and exit statuses that prove each gate, deviations, and residual risks | Engineering | 2026-10-16 |
 | [development/10-phase-1-exit-review.md](development/10-phase-1-exit-review.md) | The Phase 1 exit review: defects found and fixed at the Phase 1 → Phase 2 boundary, findings awaiting the owner, the boundary re-verifications, and the evidence for the two pending owner decisions | Engineering | 2026-10-16 |
 
 ### Security and privacy
