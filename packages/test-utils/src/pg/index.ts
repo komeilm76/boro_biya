@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createServer } from 'node:net';
+import { inspect } from 'node:util';
 import pg from 'pg';
 import EmbeddedPostgres from 'embedded-postgres';
 import { inject } from 'vitest';
@@ -186,6 +187,19 @@ export async function startTestDatabaseServer(options: StartOptions = {}): Promi
   const port = options.port ?? (await findFreePort());
   const databaseDir = options.databaseDir ?? (persistent ? undefined : mkdtempSync(join(tmpdir(), 'boro-biya-pg-')));
   if (databaseDir === undefined) throw new Error('persistent mode requires databaseDir');
+  // PostgreSQL's own output is captured in a bounded ring buffer instead of streamed: the
+  // upstream start() rejects with NO value when the server process exits before printing its
+  // readiness message, and this buffer is the only channel carrying the real reason (a locale
+  // rejection, a missing library, data-directory permissions). Startup failures below rethrow
+  // with its tail, so a failing run names the cause instead of an empty error.
+  const startupLog: string[] = [];
+  const STARTUP_LOG_LINES = 200;
+  const recordLog = (message: unknown): void => {
+    for (const line of String(message).split(/\r?\n/)) {
+      startupLog.push(line);
+      if (startupLog.length > STARTUP_LOG_LINES) startupLog.shift();
+    }
+  };
   const server = new EmbeddedPostgres({
     databaseDir,
     port,
@@ -193,8 +207,9 @@ export async function startTestDatabaseServer(options: StartOptions = {}): Promi
     password: TEST_ADMIN_PASSWORD,
     persistent,
     initdbFlags: ['--auth=password'],
-    onLog: () => undefined,
+    onLog: recordLog,
     onError: (message) => {
+      recordLog(message);
       process.stderr.write(`[embedded-postgres] ${String(message)}\n`);
     },
   });
@@ -202,10 +217,41 @@ export async function startTestDatabaseServer(options: StartOptions = {}): Promi
   // PG_VERSION is the marker that the cluster already exists (documented embedded-postgres
   // behaviour: initialise() is only needed the first time).
   mkdirSync(databaseDir, { recursive: true });
-  if (!existsSync(join(databaseDir, 'PG_VERSION'))) {
-    await server.initialise();
+  const STARTUP_BUDGET_MS = 150_000;
+  const startup = (async () => {
+    if (!existsSync(join(databaseDir, 'PG_VERSION'))) {
+      await server.initialise();
+    }
+    await server.start();
+  })();
+  // If the budget expires, `startup` may still settle later; this subscription keeps a late
+  // rejection from escaping as an unhandled one after the race has already been decided.
+  void startup.catch(() => undefined);
+  let budgetTimer: NodeJS.Timeout | undefined;
+  const budgetExhausted = new Promise<never>((_resolve, rejectBudget) => {
+    budgetTimer = setTimeout(
+      () => rejectBudget(new Error(`PostgreSQL did not report readiness within ${STARTUP_BUDGET_MS} ms`)),
+      STARTUP_BUDGET_MS,
+    );
+  });
+  try {
+    await Promise.race([startup, budgetExhausted]);
+  } catch (error) {
+    const reason =
+      error instanceof Error
+        ? error.message
+        : error === null || error === undefined
+          ? 'the PostgreSQL process exited before reporting readiness'
+          : inspect(error);
+    const tail = startupLog.slice(-40).join('\n');
+    throw new Error(
+      `disposable PostgreSQL failed to start on ${process.platform}/${process.arch}, port ${port}: ${reason}. ` +
+        `embedded-postgres output tail:\n${tail === '' ? '(nothing captured)' : tail}`,
+      { cause: error },
+    );
+  } finally {
+    clearTimeout(budgetTimer);
   }
-  await server.start();
 
   const adminConnectionString = buildAdminConnectionString(port);
   let stopped = false;

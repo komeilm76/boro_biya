@@ -119,8 +119,25 @@ jobs:
         run: bun run build
       - name: Runtime source scan (QA-123, part 1)
         run: node scripts/check-runtime.mjs --scan-only
+      # Git Bash wrapper: on failure the tail of the vitest output becomes workflow error
+      # annotations, so a Windows-only failure is diagnosable from the check-run annotations
+      # themselves. The documented contributor command stays `bun run test:integration`
+      # (OPS-65) — the wrapper only surfaces its output when it fails.
       - name: Integration tests, disposable PostgreSQL 18 (QA-06/15)
-        run: bun run test:integration
+        shell: bash
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          bun run test:integration 2>&1 | tee "$RUNNER_TEMP/integration.log" || {
+            annotate_tail "integration tests failed on windows" "$RUNNER_TEMP/integration.log"
+            exit 1
+          }
 
   containers:
     name: containers (QA-11, QA-14)
@@ -151,8 +168,42 @@ jobs:
       - name: Create the local development environment
         run: bun run env:create
 
-      - name: Build and start the documented stack (docker compose up --build)
-        run: docker compose up --build -d --wait --wait-timeout 300
+      # Build and start are separate steps, and both convert the tail of their log into
+      # workflow annotations on failure, so a broken stack is diagnosable straight from the
+      # check-run annotations (the job log archive needs a host this project's tooling cannot
+      # always reach). The most recent lines are annotated first: they carry the error.
+      - name: Build the documented stack
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          docker compose build --progress=plain 2>&1 | tee "$RUNNER_TEMP/compose-build.log" || {
+            annotate_tail "docker compose build failed" "$RUNNER_TEMP/compose-build.log"
+            exit 1
+          }
+
+      - name: Start the documented stack (docker compose up -d --wait)
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          docker compose up -d --wait --wait-timeout 300 2>&1 | tee "$RUNNER_TEMP/compose-up.log" || {
+            annotate_tail "the compose stack did not become healthy" "$RUNNER_TEMP/compose-up.log"
+            { docker compose ps --all; echo '--- container logs ---'; docker compose logs --tail 60; } \
+              > "$RUNNER_TEMP/compose-state.log" 2>&1
+            annotate_tail "compose state at failure" "$RUNNER_TEMP/compose-state.log"
+            exit 1
+          }
 
       - name: Smoke the running stack
         run: |
@@ -240,7 +291,7 @@ jobs:
           exit-code: "1"
 
   release-mechanics:
-    name: release mechanics (${{ github.ref_name }})
+    name: release mechanics
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 30
