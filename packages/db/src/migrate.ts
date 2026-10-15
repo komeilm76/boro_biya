@@ -12,7 +12,7 @@ import { assertSafeIdentifier } from './identifiers.js';
  *   change arrives in a later phase, the runbook register (OPS-81) gains a forward-fix entry and
  *   the runner grows an explicit, reviewed escape hatch — never a silent one.
  * - Each migration runs inside a transaction with its ledger row, so a failure leaves no partial
- *   application (QA-47: failed releases roll back cleanly).
+ *   application (QA-93: failed releases roll back cleanly).
  * - The ledger records a SHA-256 checksum of the applied file; a changed checksum is treated as
  *   tampering and fails closed (QA-49: migration integrity).
  * - A session-level advisory lock serializes concurrent migrators against one database.

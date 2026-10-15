@@ -47,3 +47,8 @@ apps/android/android/
 
 # Docker/Compose local overrides
 docker-compose.override.yml
+
+# Compiler output never lives beside package sources (GOV-46): builds write to dist/, and a
+# stray emit must not be committable.
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map

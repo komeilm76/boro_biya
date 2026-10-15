@@ -18,9 +18,9 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | DATA-04 | 4 | 3 | the PostGIS prototype must benchmark the real location row: the column default and the row shape are created as a prototype migration, with no API, service logic, or retention job |
 | DATA-05 | 4 | 3 | the same prototype needs the recorded_at/live response shape to be meaningful; the retrieval contract and TTL job stay Phase 4 work |
 | OPS-81 | 8 | 1 | the first migration needs a rollback runbook before any data can be lost, and the account-compromise report needs its internal path once accounts exist; the full register, the exercised-runbook rule, and the remaining rows stay Phase 8 work |
-| PLG-36 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: a service identity for its calls |
-| PLG-37 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes |
-| PLG-39 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all |
+| PLG-36 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: a service identity for its calls |
+| PLG-37 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes |
+| PLG-39 | 4 | 3 | the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all |
 
 
 | Phase | Requirements |

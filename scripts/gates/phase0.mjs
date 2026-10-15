@@ -27,7 +27,9 @@
  *      term once, naming the document that owns it.
  *  11. Cross-references — every requirement, decision, and open-question identifier mentioned
  *      anywhere is defined, and every section citation names a section that exists. An identifier
- *      that is deliberately undefined must be explained on the line that uses it.
+ *      that is deliberately undefined must be explained on the line that uses it. A link whose text
+ *      is an identifier must target the document (and the section, for an anchor or a `§N`) that
+ *      defines it, and identifiers cited in tracked code, configuration, and workflows resolve too.
  *  12. Documentation language — the pack is written in one variety of English: British spelling
  *      with -ize/-ization endings, "licence" for the noun, and the British forms of the words this
  *      project uses (behaviour, catalogue, artefact, defence). Code identifiers keep their own
@@ -915,17 +917,96 @@ const NAMED_CITATION = new RegExp(
 );
 const BARE_CITATION = new RegExp(String.raw`§+\s*(${CITATION_RANGE})`, 'g');
 
+/**
+ * Heading outline of a document: each heading's title, GitHub anchor (with GitHub's "-1", "-2"
+ * suffixes for repeated titles), leading section number, and the line span it governs — up to
+ * the next heading of the same or a higher level. Code fences are skipped.
+ */
+const outlineCache = new Map();
+function outlineOf(file) {
+  if (outlineCache.has(file)) return outlineCache.get(file);
+  const lines = read(file).split('\n');
+  const outline = [];
+  const seen = new Map();
+  let inFence = false;
+  lines.forEach((line, index) => {
+    if (line.trimStart().startsWith('```')) inFence = !inFence;
+    if (inFence) return;
+    const match = /^(#{1,6})\s+(.*?)\s*$/.exec(line);
+    if (!match) return;
+    const base = slug(match[2]);
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    const number = /^(\d+(?:\.\d+)?[a-z]?)\b/.exec(match[2]);
+    outline.push({
+      level: match[1].length,
+      title: match[2],
+      anchor: count ? `${base}-${count}` : base,
+      number: number ? number[1] : null,
+      start: index,
+      end: lines.length,
+    });
+  });
+  outline.forEach((heading, i) => {
+    const next = outline.slice(i + 1).find((other) => other.level <= heading.level);
+    if (next) heading.end = next.start;
+  });
+  outlineCache.set(file, outline);
+  return outline;
+}
+
+/** The innermost heading whose span contains the line, or undefined in a preamble. */
+function enclosingHeading(outline, line) {
+  return outline.filter((heading) => heading.start <= line && line < heading.end).at(-1);
+}
+
+/**
+ * Tracked files outside the pack that may cite identifiers: code, configuration, workflows, the
+ * changelog. `git ls-files` decides what is tracked; without git, the working tree is walked with
+ * the usual exclusions. The pack itself (and the three root files check 11 already reads) is skipped.
+ */
+const SOURCE_SKIP =
+  /^(docs\/|README\.md$|CONTRIBUTING\.md$|\.env\.example$|bun\.lock$)|\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|map)$/;
+function trackedSourceFiles() {
+  let list = [];
+  try {
+    list = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+      .split('\0')
+      .filter(Boolean);
+  } catch {
+    const skipDirs = new Set(['node_modules', '.git', 'dist', 'var', 'coverage', 'release']);
+    const visit = (dir) => {
+      for (const entry of readdirSync(dir)) {
+        if (skipDirs.has(entry)) continue;
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) visit(full);
+        else list.push(relative(ROOT, full).split('\\').join('/'));
+      }
+    };
+    visit(ROOT);
+  }
+  return list.filter((rel) => !SOURCE_SKIP.test(rel) && existsSync(join(ROOT, rel)));
+}
+
 function checkReferences() {
   const docs = walk(DOCS, (file) => file.endsWith('.md'));
   const scanned = docs.concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md'), join(ROOT, '.env.example')]);
 
-  // Definitions: the requirement handles, the ADR headings, and the open-question rows.
+  // Definitions: the requirement handles, the ADR headings, and the open-question rows. Each
+  // requirement handle also keeps its site (file and line), so a link whose text is the handle can
+  // be checked against the document and the section that actually define it.
   const defined = new Set();
   const decisions = new Set();
   const questions = new Set();
+  const definitionSite = new Map();
   for (const file of docs) {
     const text = read(file);
     for (const match of text.matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g)) defined.add(match[1]);
+    text.split('\n').forEach((line, index) => {
+      for (const match of line.matchAll(/\*\*\[([A-Z]{2,4}-\d{1,3})\]\*\*/g)) {
+        if (!definitionSite.has(match[1])) definitionSite.set(match[1], { file, line: index });
+      }
+    });
     if (file.endsWith('DECISIONS.md')) {
       for (const match of text.matchAll(/^#{2,6}\s+(ADR-\d{3})\b/gm)) decisions.add(match[1]);
       for (const match of text.matchAll(/^\|\s*(Q-\d{2})\s*\|/gm)) questions.add(match[1]);
@@ -1014,6 +1095,58 @@ function checkReferences() {
         const prose = line.replace(/`[^`]*`/g, (span) => ' '.repeat(span.length));
         const taken = new Array(prose.length).fill(false);
 
+        // Identifier links: a link whose text is an identifier promises that its target defines
+        // it. The link check proves the file and anchor exist; this proves they are the right ones.
+        for (const match of prose.matchAll(/\[([A-Z]{2,4})-(\d{1,3})\]\(([^)\s#]*)(?:#([^)\s]*))?\)/g)) {
+          const [whole, prefix, digits, target, anchor] = match;
+          const id = `${prefix}-${digits}`;
+          if (prefix === 'ADR') {
+            const named = anchor ? /^adr-(\d{3})-/.exec(anchor) : null;
+            if (named && named[1] !== digits) {
+              failures.push(`[references] ${rel}:${lineNo} links ${id} to the heading of ADR-${named[1]} (#${anchor})`);
+            }
+            continue;
+          }
+          const site = definitionSite.get(id);
+          if (!areas.has(prefix) || !site) continue; // an undefined identifier is reported above
+          const targetFile = target ? resolve(dirname(file), target) : file;
+          if (!targetFile.endsWith('.md') || !existsSync(targetFile)) continue; // check 4 reports it
+          const definedIn = relative(ROOT, site.file).split('\\').join('/');
+          if (targetFile !== site.file) {
+            failures.push(
+              `[references] ${rel}:${lineNo} links ${id} to ${target || rel}, but ${id} is defined in ${definedIn}`,
+            );
+            continue;
+          }
+          const outline = outlineOf(targetFile);
+          if (anchor) {
+            const candidates = outline.filter((heading) => heading.anchor === anchor);
+            if (
+              candidates.length &&
+              !candidates.some((heading) => heading.start <= site.line && site.line < heading.end)
+            ) {
+              const home = enclosingHeading(outline, site.line);
+              failures.push(
+                `[references] ${rel}:${lineNo} links ${id} to #${anchor}, but ${id} is defined under "${home ? home.title : 'the document preamble'}" in ${definedIn}`,
+              );
+            }
+          }
+          // "[GOV-45](00-repository-conventions.md) §2": the cited section must hold the definition.
+          const after = CITATION_LIST.exec(prose.slice(match.index + whole.length));
+          if (after) {
+            const holding = outline
+              .filter((heading) => heading.number && heading.start <= site.line && site.line < heading.end)
+              .map((heading) => heading.number);
+            for (const number of numbersIn(after[1])) {
+              if (holding.length && !holding.includes(number)) {
+                failures.push(
+                  `[references] ${rel}:${lineNo} cites ${id} as §${number} of ${definedIn}, but it is defined in §${holding.at(-1)}`,
+                );
+              }
+            }
+          }
+        }
+
         for (const link of prose.matchAll(LINK)) {
           const target = resolve(dirname(file), link[1]);
           const targetExists = existsSync(target); // the link check reports missing files
@@ -1060,6 +1193,37 @@ function checkReferences() {
           }
         }
       });
+  }
+
+  // Code, configuration, and workflow comments cite identifiers too, and a handle typed from
+  // memory there — for example a range ending at ADM-21 while the area ends at ADM-07 — misleads
+  // exactly like one in the pack. Same rules as above: defined, or explained on the line.
+  for (const rel of trackedSourceFiles()) {
+    let text;
+    try {
+      text = read(join(ROOT, rel));
+    } catch {
+      continue;
+    }
+    if (text.includes('\0')) continue; // binary
+    text.split('\n').forEach((line, index) => {
+      if (EXPLAINED_UNKNOWN.test(line)) return;
+      const lineNo = index + 1;
+      for (const match of line.matchAll(/\b([A-Z]{2,4})-(\d{1,3})\b/g)) {
+        const [id, prefix] = [match[0], match[1]];
+        const known = prefix === 'ADR' ? decisions.has(id) : areas.has(prefix) ? defined.has(id) : true;
+        if (!known) {
+          failures.push(
+            `[references] ${rel}:${lineNo} mentions undefined ${prefix === 'ADR' ? 'decision' : 'requirement'} "${id}" — define it, or say on the line why it is deliberately absent`,
+          );
+        }
+      }
+      for (const match of line.matchAll(/\b(Q-\d{2})\b/g)) {
+        if (!questions.has(match[1])) {
+          failures.push(`[references] ${rel}:${lineNo} mentions undefined open question "${match[1]}"`);
+        }
+      }
+    });
   }
 }
 
@@ -1360,7 +1524,7 @@ console.log(
   ' 10. code fences closed, every diagram cites its requirements, the declared state machines agree with the text, and the glossary defines each term once',
 );
 console.log(
-  ' 11. every requirement, decision, and open-question identifier mentioned resolves, and every section citation names a section that exists',
+  ' 11. every identifier mentioned — in the pack and in tracked code — resolves, identifier links target the section that defines them, and every section citation names a section that exists',
 );
 console.log(' 12. one variety of English across the pack, with code identifiers left as they are written');
 console.log(' 13. every document changed since its review date carries a current "Owner: … Reviewed:" line');

@@ -2,7 +2,7 @@
 
 ## Role and mission
 
-Owner: Repo owner. Reviewed: 2026-10-14.
+Owner: Repo owner. Reviewed: 2026-10-15.
 
 Act as a senior cross-functional engineering team: product architect, TypeScript/Vue engineer, backend engineer, GIS/map engineer, application-security engineer, DevOps engineer, QA engineer, and technical writer.
 
@@ -113,7 +113,7 @@ Before feature code:
 
 ## Phase governance
 
-Phase 0 was approved by the repository owner on 2026-10-14, and Phase 1 (skeleton and developer experience) is complete pending owner approval (see [ROADMAP](ROADMAP.md) and the [Phase 1 report](development/09-phase-1-report.md)). Do not begin Phase 2 implementation — authentication, sessions, or any business feature — until the Phase 1 gate is approved by the repository owner. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
+Phase 0 was approved by the repository owner on 2026-10-14, and Phase 1 (skeleton and developer experience) on 2026-10-15 (see [ROADMAP](ROADMAP.md) and the [Phase 1 report](development/09-phase-1-report.md) §10). Two Phase 1 items were held out of that approval for an evidence review the owner requested — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 (owned minimal infrastructure) — and work that depends on either waits for the owner's decision ([Phase 1 exit review](development/10-phase-1-exit-review.md) §5–§6). Phase 2 (authentication and account lifecycle) is the next phase. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
 
 ## Definition of done
 

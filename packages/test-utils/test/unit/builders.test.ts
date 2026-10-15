@@ -9,7 +9,7 @@ import {
   makeServerConfigFixture,
 } from '../../src/builders.js';
 
-describe('shared fixtures validate against the production schemas (QA-13 fidelity)', () => {
+describe('shared fixtures validate against the production schemas (GOV-67)', () => {
   it('builds contract-valid fixtures', () => {
     expect(errorEnvelopeSchema.safeParse(makeErrorEnvelopeFixture()).success).toBe(true);
     expect(healthResponseSchema.safeParse(makeHealthFixture()).success).toBe(true);

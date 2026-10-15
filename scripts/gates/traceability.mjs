@@ -297,7 +297,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: a service identity for its calls',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: a service identity for its calls',
     },
   ],
   [
@@ -305,7 +305,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
     },
   ],
   [
@@ -313,7 +313,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all',
     },
   ],
 ]);

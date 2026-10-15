@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Reviewed: 2026-10-15. Baseline verified: **2026-10-13**; next scheduled re-verification is the start of Phase 1, then each phase boundary.
+Owner: Engineering. Reviewed: 2026-10-15. Baseline verified: **2026-10-15** (Phase 1 → Phase 2 boundary); next scheduled re-verification is the Phase 2 → Phase 3 boundary.
 
 ## 1. Principles
 
@@ -22,9 +22,9 @@ Owner: Engineering. Reviewed: 2026-10-15. Baseline verified: **2026-10-13**; nex
 4. Record the result, the date, and the source in the table below.
 5. Re-verify when: a phase boundary is reached, a major version is proposed, a security advisory affects a pinned version, or a support window changes.
 
-## 3. Verified baseline (2026-10-14)
+## 3. Verified baseline (2026-10-15)
 
-Re-verified at the Phase 0 → Phase 1 boundary against the npm registry, as `GOV-37` requires: every version below was queried on 2026-10-14, and the manifests pin these exact versions with a committed `bun.lock`. Where a pin lags the verified latest, the row says why.
+Re-verified at the Phase 1 → Phase 2 boundary against the npm registry, as `GOV-37` requires: every version below was queried on 2026-10-15 (the previous boundary check was 2026-10-14; both are logged in [REFERENCES](../REFERENCES.md)), and the manifests pin these exact versions with a committed `bun.lock`. Where a pin lags the verified latest, the row says why.
 
 Frontend:
 
@@ -34,7 +34,7 @@ Frontend:
 | `vue-router` | 5.4.0 | MIT | peer: `vue ^3.5.34 \|\| ^4`; `vite`/`pinia` peers are optional |
 | `pinia` | 4.0.3 pinned (4.1.0 verified, published 2026-10-14) | MIT | non-optional peer `@vue/devtools-api ^8.1.5` — installed explicitly; 4.1.0 waits for the monthly batch (§5) rather than being adopted on its release day (`GOV-76`) |
 | `@vue/devtools-api` | 8.2.1 | MIT | required peer of Pinia 4 |
-| `vuetify` | 4.2.5 | MIT | Vuetify 4 is the current major; `vite-plugin-vuetify` is an **optional** peer and is deliberately not used — components are registered explicitly ([ADR-009](../DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android)) |
+| `vuetify` | 4.2.5 pinned (4.2.6 verified, published 2026-10-14) | MIT | Vuetify 4 is the current major; `vite-plugin-vuetify` is an **optional** peer and is deliberately not used — components are registered explicitly ([ADR-009](../DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android)) |
 | `tailwindcss` | 4.3.3 | MIT | Tailwind 4; CSS-first configuration; preflight excluded ([ADR-009](../DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android)) |
 | `@tailwindcss/vite` | 4.3.3 | MIT | peer: `vite ^5.2 \|\| ^6 \|\| ^7 \|\| ^8` |
 | `vue-i18n` | 11.4.14 | MIT | peer: `vue ^3.0.0`, Node `>=22`; the message catalogue and per-locale formatting for the two required locales ([ADR-017](../DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)) |
@@ -52,12 +52,12 @@ Backend and tooling:
 | Package | Latest verified | Licence | Engines / peers worth noting |
 | --- | --- | --- | --- |
 | `fastify` | 5.12.7 | MIT | Fastify 5 line; secure HTTP parser defaults required; the deprecated `disableRequestLogging` option is not used (FSTDEP023) |
-| `pg` | 8.23.1 | MIT | the PostgreSQL client (ADR-004: SQL-first, no ORM); pure JavaScript — the optional native `pg-native` peer is **not** installed |
+| `pg` | 8.23.1 | MIT | the PostgreSQL driver — the only new runtime dependency [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) admits — used through the bounded `packages/db` pool with parameterized SQL (`SEC-42`); pure JavaScript — the optional native `pg-native` peer is **not** installed |
 | `@types/pg` | 8.23.1 | MIT | dev-only |
 | `zod` | 4.6.7 | MIT | **Zod v4 is mandatory** — `km-api` requires `^4.3.6`, `zopia` requires `^4.0.0`; note v4 semantics: `.default()` values are output-typed |
-| `embedded-postgres` | 18.4.0-beta.17 | MIT | **test-only**: real PostgreSQL 18.4 server binaries per platform (`@embedded-postgres/*`, PostgreSQL Licence); makes QA-06 runnable on the Windows CI matrix and in environments without Docker; its `postinstall` hydrates soname symlinks and is listed in `trustedDependencies` (reviewed per `GOV-40`) |
-| `vitest` | 5.0.4 | MIT | Node `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` |
-| `@vitest/coverage-v8` | 5.0.4 | MIT | coverage provider (QA-66) |
+| `embedded-postgres` | 18.4.0-beta.17 | MIT | **test-only**: real PostgreSQL 18.4 server binaries per platform (`@embedded-postgres/*`, PostgreSQL Licence); makes QA-06 runnable on the Windows CI matrix and in environments without Docker; declared as a runtime dependency of the test-only `packages/test-utils`, so the backend images' production install currently carries its 60 MB server binaries too (a finding of the [Phase 1 exit review](10-phase-1-exit-review.md), awaiting the owner's go-ahead to fix); its `postinstall` hydrates soname symlinks and is listed in `trustedDependencies` (reviewed per `GOV-40`) |
+| `vitest` | 5.0.4 pinned (5.0.5 verified, published 2026-10-15) | MIT | Node `^22.12.0 \|\| ^24.0.0 \|\| >=26.0.0` |
+| `@vitest/coverage-v8` | 5.0.4 pinned (5.0.5 verified, published 2026-10-15) | MIT | coverage provider for the unit-test gate and its floors (QA-05) |
 | `typescript` | 6.0.3 (pin this line) | Apache-2.0 | 7.0.2 exists but is **outside** `typescript-eslint`'s peer range (`>=4.8.4 <6.1.0`) |
 | `typescript-eslint` | 8.71.2 | MIT | peers: `eslint ^8.57 \|\| ^9 \|\| ^10`, `typescript >=4.8.4 <6.1.0` |
 | `eslint` | 10.12.0 | MIT | Node `^20.19 \|\| ^22.13 \|\| >=24` |
@@ -79,7 +79,7 @@ Runtimes and infrastructure:
 | --- | --- | --- |
 | Node.js (**production runtime**) | 24 LTS (Active LTS; maintenance from 2026-10-20, EOL 2028-04-30); containers pinned to **24.22.0**, the latest 24.x (security-exception bump 2026-10-15, [REFERENCES](../REFERENCES.md)); shipped layers apply Debian security updates at build time (SEC-63) | Node.js release schedule and `nodejs/node` tag `v24.22.0` (2026-10-14); Docker tag `node:24.22.0-slim` confirmed in `docker-library/official-images`; Vitest 5 accepts `^22.12 \|\| ^24 \|\| >=26`; the runtime decision is [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) |
 | Node.js (next) | 26 becomes Active LTS on 2026-10-28 (EOL 2029-04-30) | Add to the CI matrix once LTS, then move the baseline after a green run |
-| PostgreSQL | 18 (current major, EOL November 2030); `docker/db.Dockerfile` pins **18.6** — the vendor image plus Debian security updates at build time (pgdg repo removed so the pin cannot drift, QA-47) and the `gosu` helper rebuilt from pinned source with a patched Go toolchain (SEC-63); CI/local tests run embedded **18.4** binaries | PostgreSQL support policy; `postgres:18.6` tag confirmed in `docker-library/official-images` (2026-10-14); the build-time update rationale, CVE evidence, and gosu rebuild chain of record are in [REFERENCES](../REFERENCES.md) (2026-10-15); 14 reaches EOL November 2026 and is not a target |
+| PostgreSQL | 18 (current major, EOL November 2030); `docker/db.Dockerfile` pins **18.6** — the vendor image plus Debian security updates at build time (pgdg repo removed so the pin cannot drift, QA-101) and the `gosu` helper rebuilt from pinned source with a patched Go toolchain (SEC-63); CI/local tests run embedded **18.4** binaries | PostgreSQL support policy; `postgres:18.6` tag confirmed in `docker-library/official-images` (2026-10-14); the build-time update rationale, CVE evidence, and gosu rebuild chain of record are in [REFERENCES](../REFERENCES.md) (2026-10-15); 14 reaches EOL November 2026 and is not a target |
 | Bun | 1.4.3 as package manager and script runner (development and the CI install step); **not** a production runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Must stay compatible with the pinned dependency set; no runtime-specific API may reach application code ([GOV-82](#4-runtime-baseline)) |
 | Docker Compose | Compose v2 specification, no version pin required | Used for local development and small deployments |
 
@@ -107,9 +107,9 @@ Renovation tooling may open pull requests, but nothing merges automatically — 
 
 ## 6. Licence policy
 
-Allowed without further review: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, CC0-1.0, Unlicense, Python-2.0, PostgreSQL (the licence of the PostgreSQL server binaries bundled by the test-only `embedded-postgres` packages), BlueOak-1.0.0 (permissive, MIT-compatible in intent; reaches the tree only through dev-only transitives of `@capacitor/cli` — `tar`, `yallist`, `sax`; added 2026-10-14, ratified by the owner with the Phase 1 pull request).
+Allowed without further review: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, CC0-1.0, Unlicense, Python-2.0, PostgreSQL (the licence of the PostgreSQL server binaries bundled by the test-only `embedded-postgres` packages), BlueOak-1.0.0 (permissive, MIT-compatible in intent; reaches the tree only through dev-only transitives of `@capacitor/cli` — `tar`, `yallist`, `sax`; added 2026-10-14 by Engineering. **Owner ratification is pending:** the owner asked for an evidence review before deciding (2026-10-15, [Phase 1 exit review](10-phase-1-exit-review.md) §5), so the entry stays as it is and is not treated as owner-approved until a decision is recorded here).
 
-Allowed with a recorded note: MPL-2.0 (file-level copyleft — note the obligation; present as the optional musl build of `lightningcss`, a Tailwind transitive), CC-BY-4.0 (documentation/data attribution), SIL OFL (fonts).
+Allowed with a recorded note: MPL-2.0 (file-level copyleft — note the obligation; present as `lightningcss` and its platform builds: 1.32.0 through `@tailwindcss/vite`, and 1.33.0 through `vite`, which the `vue-router` peer range also pulls into the production install, so the backend images currently carry it — a distributed image therefore owes MPL's notice of where the source is available; see the [Phase 1 exit review](10-phase-1-exit-review.md) §5), CC-BY-4.0 (documentation/data attribution), SIL OFL (fonts).
 
 Requires written owner approval with the obligation documented: LGPL-2.1/3.0 (dynamic linking only, no static bundling), EPL-2.0, CDDL.
 

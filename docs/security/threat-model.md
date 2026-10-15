@@ -2,7 +2,7 @@
 
 Method: asset-driven review with STRIDE-style threat identification plus abuse cases for the product's social and safety features. Controls reference [SECURITY](../SECURITY.md), [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md), and [ARCHITECTURE](../ARCHITECTURE.md) sections; requirement-level identifiers live in those documents and are tracked in [traceability](../development/07-traceability.md).
 
-Owner: Security. Reviewed: 2026-10-14.
+Owner: Security. Reviewed: 2026-10-15.
 
 **Review cadence:** at each phase boundary, before each release, and whenever a new data flow, provider, or deployment target is introduced. The owner of this document is Security.
 
@@ -90,7 +90,9 @@ Trust boundaries: browser ↔ API; mobile shell ↔ API; API ↔ services; servi
 | AB-05 | An admin mass-queries users' locations "to check" | Purpose-scoped location access, audit of every sensitive read, alerting on abnormal admin query volume |
 | AB-06 | A plugin exfiltrates data through an allowed egress destination | Least-privilege scopes, minimal payloads, egress allowlist, review of declared network destinations before activation |
 
-## 6. Residual risks and accepted gaps at Phase 0
+## 6. Residual risks and accepted gaps
+
+Recorded at Phase 0 and re-read at the Phase 1 → Phase 2 boundary (2026-10-15); every item below still holds, and the items Phase 1 introduced follow the list.
 
 - Security-question recovery remains the weakest path into an account: it is the only self-service factor, no stronger factor is approved, and there is no contact channel to fall back on ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number), [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)). The risk is accepted with a user-visible warning and administrator-assisted recovery.
 - Abuse thresholds are configuration ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)); the development values are relaxed, and the stricter production set is reviewed before release rather than assumed.
@@ -100,3 +102,11 @@ Trust boundaries: browser ↔ API; mobile shell ↔ API; API ↔ services; servi
 - Malware scanning of uploads is best-effort; quarantine state is tracked, and scanning quality depends on the deployment environment.
 - Multi-replica correctness is not solved; the single-replica constraint (ADR-008) is the control, and it must be revisited before any scaling attempt.
 - No penetration test has been performed; the Phase 9 gate requires a security review, and an external test is recommended before general availability.
+
+Added by the Phase 1 → Phase 2 boundary review (2026-10-15, [Phase 1 exit review](../development/10-phase-1-exit-review.md)):
+
+- **The Compose stack publishes every service port on all host interfaces.** The web edge, the core API, both services, and PostgreSQL are published as `"<port>:<port>"`, which binds every interface of the host, and container-published ports bypass host firewalls such as `ufw`. On a development machine connected to a shared network, the database (with its generated credentials) and the unauthenticated skeleton endpoints are reachable from that network, which contradicts the safe-default rule (`OPS-70`). The recommended fix — publish on `127.0.0.1` by default, with an explicit variable for a deliberate wider bind — awaits the owner's go-ahead.
+- **The web edge is a plain-HTTP origin with no transport security or abuse limits of its own.** It serves static files and proxies `/api/*` to one fixed upstream (SSRF closed by construction, `SEC-48`), but it terminates no TLS, sets no connection, rate, or proxied-body limits, and relies on Node's default HTTP timeouts. Any deployment beyond a developer machine must place a TLS-terminating reverse proxy in front of it (`OPS-06`); the hosting decision that would name that proxy is still open (Q-19).
+- **The backend images carry code they never run.** Their production install includes the test-only `embedded-postgres` server binaries and the web build toolchain that the `vue-router` peer range pulls in (`vite`, `rolldown`, `lightningcss`, `typescript`), which widens the scanned and exploitable surface without serving a request. The fix (install only the backend workspaces, and declare test tooling as development dependencies) awaits the owner's go-ahead.
+- **Inline styles stay allowed until Phase 2.** The document CSP keeps `style-src 'unsafe-inline'` for Vuetify's runtime styles; nonce-based hardening is Phase 2 work (`SEC-45`).
+- **Build-time OS upgrades trade reproducibility for currency.** Every shipped layer runs `apt-get upgrade` at build time (`SEC-63`), so two builds of one commit on different days can differ in OS packages; the release flow builds once and promotes the same digests (`QA-49`), which keeps a release internally consistent.

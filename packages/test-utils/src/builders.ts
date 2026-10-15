@@ -12,7 +12,7 @@ import { healthResponseSchema, readyResponseSchema } from '@boro-biya/validation
 /**
  * Shared fixtures and builders (OPS-38). Every fixture is validated against the production
  * schema before it is returned, so a fixture that drifts from the contract fails the test that
- * builds it instead of silently teaching tests a wrong shape (QA-13 spirit: fidelity fixtures).
+ * builds it instead of silently teaching tests a wrong shape (GOV-67: fixtures come from shared builders that match production shapes).
  */
 export function makeCorrelationIdFixture(): string {
   return globalThis.crypto.randomUUID();

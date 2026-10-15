@@ -11,7 +11,7 @@
  *  (SEC-63). A postgres-based final stage inherits the vendor entrypoint's privilege drop
  *  (initdb needs root; gosu switches to `postgres` at runtime), so the non-root USER rule does
  *  not apply to it — but it must remove the pgdg repository before upgrading so OS security
- *  updates can never drift the pinned PostgreSQL version (QA-47).
+ *  updates can never drift the pinned PostgreSQL version (QA-101).
  *  docker-compose.yml: every `image:` reference is tag-pinned and not `latest`; every
  *  long-running service declares a healthcheck (the one-shot migrate job is exempt); no
  *  metrics port (9000-9099) is published to the host (OPS-63); resource limits are declared
@@ -92,7 +92,7 @@ for (const name of dockerfiles) {
     // via gosu at runtime; a USER directive would break initialization (see docker/db.Dockerfile).
     if (!/pgdg/.test(finalStage.text)) {
       problems.push(
-        `${rel}: postgres-based final stage must remove the pgdg repository before upgrading — OS security updates must not be able to drift the pinned PostgreSQL version (QA-47)`,
+        `${rel}: postgres-based final stage must remove the pgdg repository before upgrading — OS security updates must not be able to drift the pinned PostgreSQL version (QA-101)`,
       );
     }
     notes.push(`${rel}: final stage inherits the vendor postgres entrypoint (privilege drop to "postgres" at runtime)`);

@@ -13,7 +13,7 @@
 #   secrets           — repository secret scanning over full history (QA-10).
 #   release-mechanics — on version tags only: reproducible artefacts, checksums, and version
 #                       coherence, exercised from Phase 1 with non-production tags (QA-48 …
-#                       QA-56 mechanics; the full release gate set activates at Phase 9).
+#                       QA-54 mechanics; the full release gate set activates at Phase 9).
 #
 # Every action is pinned to a full commit SHA (QA-18, QA-71); versions and SHAs are recorded
 # in docs/REFERENCES.md.
@@ -349,7 +349,7 @@ jobs:
         run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-web.json"
 
       # The database image is the built wrapper (docker/db.Dockerfile: vendor postgres:18.6 +
-      # Debian security updates, pgdg repo removed so the 18.6 pin cannot drift — QA-47 — and
+      # Debian security updates, pgdg repo removed so the 18.6 pin cannot drift — QA-101 — and
       # the entrypoint's gosu helper rebuilt from checksum-pinned source with a patched Go
       # toolchain, because the official release binaries embed a vulnerable Go stdlib — SEC-63).
       - name: Scan the database image
@@ -455,7 +455,7 @@ jobs:
         run: |
           BUILD_COMMIT="${GITHUB_SHA}" bun run build
 
-      - name: Package artefacts and checksums (QA-99 mechanics)
+      - name: Package artefacts and checksums (QA-50 mechanics)
         run: |
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"

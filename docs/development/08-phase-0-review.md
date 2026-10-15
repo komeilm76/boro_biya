@@ -2,7 +2,7 @@
 
 Nineteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§24](#24-nineteenth-pass--the-pack-re-read-against-the-three-new-decisions-2026-10-14).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## 1. Method
 
@@ -1166,7 +1166,7 @@ The owner also asked for the pack to be re-read, because answers to earlier ques
 | --- | --- | --- | --- |
 | 1 | ADR-007 still said the server-runtime question was open and that a spike must run "before Bun can be the server runtime" | [DECISIONS](../DECISIONS.md) ADR-007 | Amended: Node 24 LTS is the production runtime, the spike now verifies the **toolchain**, and the reopen condition names only the toolchain half |
 | 2 | `GOV-82`'s spike list required "native-free Argon2id" and container size/startup "versus Node" — both were arguments for a Bun production runtime that is no longer planned | [dependency policy](02-dependency-policy.md) §4 | Rewritten: no Bun-only runtime API without owner approval and an adapter, portability checked in CI (`QA-123`), and the spike verifies Vitest/Vite/workspace install under Bun |
-| 3 | `SEC-05` preferred `Bun.password` "where the runtime decision (Q-16) selects Bun" and ended with a stale superseded tail | [SECURITY](../SECURITY.md) §2 | Rewritten: the maintained `argon2` binding on Node 24 LTS, behind the password-hashing adapter, with the native dependency accepted explicitly ([GOV-79](02-dependency-policy.md#2-how-verification-is-performed)) |
+| 3 | `SEC-05` preferred `Bun.password` "where the runtime decision (Q-16) selects Bun" and ended with a stale superseded tail | [SECURITY](../SECURITY.md) §2 | Rewritten: the maintained `argon2` binding on Node 24 LTS, behind the password-hashing adapter, with the native dependency accepted explicitly ([GOV-79](02-dependency-policy.md#1-principles)) |
 | 4 | The dependency policy's unverified list asked for the `argon2` binding only "if Node is the server runtime" | [dependency policy](02-dependency-policy.md) §7 | It is the production path now, and is listed as a Phase 1 verification item with advisory history and benchmarked parameters |
 | 5 | Bun was still described as a `candidate server runtime` in two documents, and its table row was justified by the Argon2id it provides | [development environment](01-development-environment.md) §2, [dependency policy](02-dependency-policy.md) §3 | Both restated as the development toolchain; `candidate server runtime` and `server runtime pending` are now retired wording the gate fails on |
 | 6 | No gate verified that a production artefact **runs** on the runtime it ships on, and nothing failed on a Bun-only API reached from application code | [QUALITY_GATES](../QUALITY_GATES.md) §1, [CI and gates](03-ci-and-gates.md) §2, §4 | `QA-123` added: build + container start + health/smoke on the pinned runtime, plus a portability scan; new row in the phase activation table, a CI design bullet, and a step in the release plan's verification |
@@ -1175,7 +1175,7 @@ The owner also asked for the pack to be re-read, because answers to earlier ques
 | 9 | The Phase 1 exit gate and checklist still demanded that the runtime decision **be recorded** | [ROADMAP](../ROADMAP.md) Phase 1, [checklist](05-phase-gate-checklist.md) row 8 | Restated as the baseline being in force: artefacts build and start on Node 24 LTS, Bun is the toolchain, no Bun-only API is reachable |
 | 10 | `REFERENCES` told contributors to "verify Bun-only APIs before relying on them" — weaker than the rule the owner set | [REFERENCES](../REFERENCES.md) | Aligned with [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain): the toolchain may use Bun freely; application code may not |
 
-Checked and found correct, so left alone: the gate scripts themselves (dependency-free Node, [GOV-45](00-repository-conventions.md) §1); `docs-gates.yml` (already Node 24); the workspace list in [ARCHITECTURE](../ARCHITECTURE.md) §5, which never assumed a runtime; `MASTER_PROJECT_PROMPT`'s version-pinning rules; and the `.env.example` template, which contains no runtime setting.
+Checked and found correct, so left alone: the gate scripts themselves (dependency-free Node, [GOV-45](00-repository-conventions.md) §2); `docs-gates.yml` (already Node 24); the workspace list in [ARCHITECTURE](../ARCHITECTURE.md) §5, which never assumed a runtime; `MASTER_PROJECT_PROMPT`'s version-pinning rules; and the `.env.example` template, which contains no runtime setting.
 
 ### 22.2 Mutation tests (seventeenth pass)
 
