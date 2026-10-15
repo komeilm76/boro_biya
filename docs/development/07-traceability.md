@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **691** across 124 groups.
+Total requirements: **693** across 125 groups.
 
 ## Declared pull-forwards
 
@@ -27,7 +27,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | --- | --- |
 | 0 (foundation) | 27 |
 | 1 | 290 |
-| 2 | 126 |
+| 2 | 128 |
 | 3 | 41 |
 | 4 | 66 |
 | 5 | 58 |
@@ -106,6 +106,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 2 | `SEC-58 … SEC-74` | 4 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
 | 2 | `PRIV-08` | 1 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | 2 | `PRIV-15 … PRIV-33` | 4 | [security/data-classification.md](../security/data-classification.md) | 5. Privacy defaults |
+| 2 | `OPS-90 … OPS-91` | 2 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
 | 2 | `API-20 … API-24` | 5 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 3. Validation |
 | 2 | `API-25 … API-30` | 6 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 4. OpenAPI generation and validation |
 | 2 | `API-38` | 1 | [API_AND_OPENAPI.md](../API_AND_OPENAPI.md) | 2. API conventions |
@@ -613,6 +614,8 @@ Every identifier the documents define, with the phase that must deliver it and t
 | OPS-87 | 8 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
 | OPS-88 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
 | OPS-89 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-90 | 2 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
+| OPS-91 | 2 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
 | PLG-01 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-02 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-03 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |

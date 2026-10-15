@@ -2,7 +2,7 @@
 
 The checklist a phase must satisfy before the next phase starts. It is runnable locally and in CI, and its results are copied into the phase report described in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## 1. Commands
 
@@ -79,6 +79,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 10 | Retention and deletion defaults in place: automated deletion off by default, no administrator account-deletion path, deactivation preserving every record, and the temporary policy documented with its unresolved items (`PRIV-32` … `PRIV-34`, `QA-125`); the Phase 2 answers already given — `Q-01` … `Q-05` ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number) … [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)) and `Q-17` ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) — implemented as decided | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 | 12 | The login route joins the baseline load profile with its own p95/p99 budget, and the profile still passes with its breach path intact | `bun run loadtest` exit status and the updated baseline table in the [performance policy](../performance/README.md); `OPS-86`, `QA-124` (the profile and its rule are Phase 1's; the route is Phase 2's) | Not started |
+| 13 | Migration runs are bounded: the run lock and every lock a migration requests time out, and every migration statement runs under a statement timeout, each from configuration with a safe default; a run that reaches a bound fails with a clear diagnostic and an unchanged ledger | Integration tests against real PostgreSQL — two runners racing for the run lock, a migration blocked by a held table lock, a statement that outlasts its bound; `OPS-90`, `OPS-91` (tracked from the [Phase 1 exit review](10-phase-1-exit-review.md) §6; they bind whichever runner [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) settles on) | Not started |
 
 ### Phase 3 — Map foundation and user settings
 

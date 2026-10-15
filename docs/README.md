@@ -40,7 +40,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 | [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-16 |
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-15 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-14 |
-| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-15 |
+| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-16 |
 | [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-14 |
 | [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
 | [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-15 |
@@ -51,7 +51,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-15 |
+| [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-16 |
 | [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-15 |
 | [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-14 |
 
@@ -65,7 +65,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-15 |
+| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-16 |
 | [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-14 |
 
 ### Evidence
@@ -99,11 +99,11 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
 | `SEC` | Platform security controls | 73 | `1 … 74` |
 | `PRIV` | Location privacy, retention, and data lifecycle | 35 | `1 … 35` |
-| `OPS` | Architecture, operations, configuration, performance, observability | 89 | `1 … 89` |
+| `OPS` | Architecture, operations, configuration, performance, observability | 91 | `1 … 91` |
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **691** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **693** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 

@@ -184,6 +184,7 @@ const PHASE_RULES = [
   ['OPS', 86, 86, 1], // the baseline load profile is fixed in the phase that builds the skeleton
   ['OPS', 87, 87, 8], // scaling prerequisites and adjustable capacity are documented with the hardening phase
   ['OPS', 88, 89, 1], // server harness and database/migration packages, created with the skeleton (ADR-029)
+  ['OPS', 90, 91, 2], // migration lock and statement bounds, before the first data-bearing tables (Phase 1 exit review)
 
   // Plugin/service contracts
   ['PLG', 1, 3, 1],

@@ -2,7 +2,7 @@
 
 Requirement identifiers (`OPS-…`, `MAP-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## 1. High-level topology
 
@@ -38,6 +38,8 @@ Constraints:
 - **[OPS-18]** A service's role has no privileges on another service's objects; violations are caught by a migration and permission test, not by review alone.
 - **[OPS-19]** Prefer API contracts over shared tables. Use an outbox/event pattern where reliable cross-service delivery is required; distributed transactions are not used.
 - **[OPS-20]** Every migration declares its owning service, is versioned, and is reversible where practical (see [release plan](development/06-release-plan.md)).
+- **[OPS-90]** A migration run never waits without bound for a lock. Acquiring the run's serializing lock is bounded, and every migration session sets `lock_timeout`, so a run that cannot get a lock — another runner holds the run lock, or live traffic holds a table lock — fails within a configured interval that has a safe default, with a clear, non-secret diagnostic and the ledger unchanged, and live traffic never queues behind a waiting migration for longer than that interval. Verified against real PostgreSQL with two runners racing for the run lock and with a migration blocked by a held table lock.
+- **[OPS-91]** Every migration statement runs under a `statement_timeout` set for the migration session from configuration, with a safe default; a migration that legitimately needs longer, such as a backfill or an index build, raises the bound in its own file, where review sees it. A statement that exceeds the bound fails its migration, the migration's transaction rolls back, and the ledger is unchanged. Verified against real PostgreSQL with a statement that outlasts the bound. `OPS-90` and `OPS-91` bind whichever migration runner [ADR-029](DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) settles on.
 
 ## 3. Realtime model
 
