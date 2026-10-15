@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **689** across 124 groups.
+Total requirements: **691** across 124 groups.
 
 ## Declared pull-forwards
 
@@ -26,7 +26,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | Phase | Requirements |
 | --- | --- |
 | 0 (foundation) | 27 |
-| 1 | 288 |
+| 1 | 290 |
 | 2 | 126 |
 | 3 | 41 |
 | 4 | 66 |
@@ -65,7 +65,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 1 | `OPS-01 … OPS-09` | 9 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 1. High-level topology |
 | 1 | `OPS-10 … OPS-16` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 2. Service boundaries |
 | 1 | `OPS-17 … OPS-20` | 4 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Database ownership |
-| 1 | `OPS-28 … OPS-43` | 16 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| 1 | `OPS-28 … OPS-89` | 18 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
 | 1 | `OPS-44 … OPS-52` | 9 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
 | 1 | `OPS-53 … OPS-84` | 7 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 7. Configuration and environments |
 | 1 | `OPS-59 … OPS-64` | 6 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 8. Operational endpoints |
@@ -611,6 +611,8 @@ Every identifier the documents define, with the phase that must deliver it and t
 | OPS-85 | 1 | [operations/README.md](../operations/README.md) | Rules |
 | OPS-86 | 1 | [performance/README.md](../performance/README.md) | Rules |
 | OPS-87 | 8 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 6. Performance and resource management |
+| OPS-88 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
+| OPS-89 | 1 | [ARCHITECTURE.md](../ARCHITECTURE.md) | 5. Shared packages |
 | PLG-01 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-02 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |
 | PLG-03 | 1 | [PLUGIN_SYSTEM.md](../PLUGIN_SYSTEM.md) | 1. Design goals |

@@ -17,18 +17,36 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 The **baseline profile** is fixed in Phase 1 ([ROADMAP](../ROADMAP.md)) and applies to development and CI only: it is a small, reproducible workload whose purpose is to catch a regression, not to describe production capacity. Each deployment then defines its own **production capacity targets** in the same shape, validated by measurement on its own hardware ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)).
 
-| Baseline field | Meaning | Value |
+| Baseline field | Meaning | Value (fixed 2026-10-14; machine-readable twin: `scripts/loadtest/baseline.json`) |
 | --- | --- | --- |
-| Concurrent users | Synthetic sessions active at once | set in Phase 1 |
-| Request rate | Requests per second across the API, with the mix stated | set in Phase 1 |
-| Event rate | SSE/WebSocket events per second and concurrent streams | set in Phase 1 |
-| Latency SLO | p95/p99 per critical route (login, map data, SOS creation) | set in Phase 1 |
-| Error rate | Failed request ratio that still passes | set in Phase 1 |
-| CPU and memory | Budget per service container on the reference environment | set in Phase 1 |
-| Disk | Growth per thousand events, and the headroom the test expects | set in Phase 1 |
-| Pass/fail rule | CI fails when the baseline is breached on the reference environment, or when the profile cannot complete | any breach fails the run |
+| Concurrent users | Synthetic sessions active at once | **25** concurrent HTTP clients against the core API. Sessions and authentication do not exist until Phase 2, so a "user" is one keep-alive client loop; the field gains session semantics when sessions exist. |
+| Request rate | Requests per second across the API, with the mix stated | Open-loop for **20 s** after a 3 s warm-up; mix **70 % `GET /healthz` + 30 % `GET /readyz`** (readiness crosses the bounded pool into PostgreSQL 18). Pass floor: **≥ 100 rps** — a regression signal, deliberately far below measured throughput so it fires on pathology, not on hardware variance. |
+| Event rate | SSE/WebSocket events per second and concurrent streams | **0** — no stream surface exists yet. The profile asserts this: `GET /api/v1/streams` must answer the 404 envelope. Real values arrive with the Relation Service streams (Phase 4, OPS-21 … OPS-27). |
+| Latency SLO | p95/p99 per critical route (login, map data, SOS creation) | **p95 ≤ 250 ms, p99 ≤ 500 ms** across the mixed routes, measured client-side. The critical routes of this phase are `/healthz` and `/readyz`; login, map-data, and SOS-creation routes join the profile in the phases that create them (2, 3, 5). |
+| Error rate | Failed request ratio that still passes | **≤ 0.5 %** (non-2xx statuses or transport failures). |
+| CPU and memory | Budget per service container on the reference environment | API process **idle RSS ≤ 200 MB**, **peak RSS ≤ 512 MB** under load, sampled from the service's own metrics endpoint. CPU is bounded by declared Compose limits (1.0 CPU per backend, 0.5 web — OPS-52) but is not asserted numerically in Phase 1: CPU share on shared CI runners is not a comparable signal (QA-108). |
+| Disk | Growth per thousand events, and the headroom the test expects | **≤ 1.5 MB of structured logs per 1 000 requests** at info level. The run itself writes only to the disposable database directory; a persistent-write disk budget arrives with uploads and location history (Phase 3+). |
+| Pass/fail rule | CI fails when the baseline is breached on the reference environment, or when the profile cannot complete | Any breach fails the run: `bun run loadtest` exits non-zero and the `gate` CI job with it. The breach path is proven, not assumed — the Phase 1 report records a run against an impossible threshold exiting 1. |
 
-No numeric budget exists yet, and no optimization work may claim to satisfy one until the profile above is filled in.
+**Method.** `bun run loadtest` (locally and in the CI `gate` job) starts a disposable PostgreSQL 18, boots the built core-API artefact under Node, and drives the profile above; the JSON report it prints (and writes for the CI artefact) records the environment — CPU model and count, total memory, OS, Node version, PostgreSQL version — with every result, satisfying QA-107/QA-108 and the "state your hardware" rule of OPS-86. Threshold changes go through `scripts/loadtest/baseline.json` and this table in the same commit.
+
+### First measurement (calibration run)
+
+```text
+Date:           2026-10-14
+Commit:         the Phase 1 head — `git log -1 -- docs/performance/README.md` names the SHA (QA-107)
+Environment:    linux x64, Intel Xeon @ 2.60 GHz × 2 cores, 3 940 MB RAM, Node 22.22.3 (sandbox runtime;
+                CI re-runs the same profile on Node 24), PostgreSQL 18.4 (embedded, disposable)
+Dataset:        empty schema cluster (core/relation/sos bootstrapped; no domain tables exist in Phase 1)
+Command:        node scripts/loadtest.mjs --report=var/load-baseline-report.json
+Result:         100 145 requests in 20 s — 4 994.8 rps, 0 errors; p50 3.9 ms, p95 11.1 ms, p99 17.6 ms,
+                max 55.5 ms; idle RSS 81.1 MB, peak RSS 110.1 MB; 273 KB logs per 1 000 requests;
+                stream surface confirmed absent
+Interpretation: every pass/fail criterion holds with wide margin; thresholds were then fixed as the
+                committed baseline (regression gates, not capacity claims)
+Limitations:    skeleton routes only — no authentication, database writes, streams, or provider calls;
+                a 2-core sandbox is not a production host and the numbers are not comparable to one
+```
 
 ### Capacity and scaling
 
@@ -63,4 +81,4 @@ Limitations:    <what this measurement does NOT cover>
 
 ## Current state
 
-No measurements have been recorded yet, by design: the application does not exist until Phase 1. This file exists so the policy, the budget fields, and the reporting format are fixed before the first number is quoted.
+The Phase 1 baseline profile is fixed and measured (above): the pass/fail rule exists, runs in CI, and fails on a breach. No production capacity target exists — none is claimed (ADR-028, GOV-91) — and per-route budgets for login, map data, and SOS creation arrive with the phases that create those routes. This file remains the single home for every performance number the project is willing to defend.

@@ -1,0 +1,18 @@
+{
+  "name": "@boro-biya/android",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Capacitor Android packaging configuration home (OPS-30). The Ionic shell, plugins, and CI matrix arrive in Phase 8.",
+  "license": "UNLICENSED",
+  "x-audience": "mobile-shell",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

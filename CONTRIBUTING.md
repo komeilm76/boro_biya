@@ -16,7 +16,14 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 1. Create a short-lived branch: `<type>/<topic>`, where `<type>` is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `security` ([repository conventions](docs/development/00-repository-conventions.md) §3).
 2. Make the smallest change that satisfies a requirement, and update the documents it affects **in the same commit** — including the `Reviewed:` date in each changed document's header, which gate check 13 verifies. Requirement IDs are the reference handles — quote them in the commit body and the pull request.
-3. Run the gates that are active for the current phase ([docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md)). Today that is one command:
+3. Run the gates that are active for the current phase ([docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md)). From Phase 1 that is one command:
+
+   ```bash
+   bun install
+   bun run gate
+   ```
+
+   The documentation gate remains dependency-free for a checkout with nothing installed:
 
    ```bash
    node scripts/gates/phase0.mjs
@@ -36,7 +43,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 - English everywhere in the repository: code, comments, documentation, commit messages — British spelling with `-ize` endings ([repository conventions](docs/development/00-repository-conventions.md) §1). The product itself ships in English and Persian ([ADR-017](docs/DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)); that is a localization requirement, not a change to the language of the repository.
 - TypeScript in strict mode, no `any` without a documented reason, JSDoc on exported APIs.
 - Documentation follows [repository conventions](docs/development/00-repository-conventions.md): LF endings, one H1 per document, listed in the documentation index, no internal identifiers in user-facing pages.
-- Formatting, linting, and type checks become automated in Phase 1; until then, match the surrounding code and the conventions document.
+- Formatting, linting, and type checks are automated and gated: Prettier (`bun run format`, fixes with `format:fix`), ESLint with type-aware rules (`bun run lint`), and strict `tsc`/`vue-tsc` per workspace (`bun run typecheck`). Markdown is exempt from Prettier — the documentation gate owns its structure.
 
 ## Reporting problems
 

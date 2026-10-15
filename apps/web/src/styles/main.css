@@ -1,0 +1,32 @@
+/*
+ * Tailwind 4 without preflight (ADR-009): Vuetify owns the component layer, Tailwind provides
+ * layout utilities, and the preflight reset is excluded outright so it can never fight Vuetify's
+ * base styles. Only the theme variables and the utilities layer are imported.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@layer base {
+  /* Logical properties keep spacing and alignment correct in both directions (UI-22). */
+  html {
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  .app-link {
+    @apply inline-block rounded px-4 py-2 font-medium underline-offset-4;
+    color: rgb(var(--v-theme-primary, 25 118 210));
+    border: 1px solid currentColor;
+  }
+
+  .app-link:hover {
+    text-decoration-line: underline;
+  }
+
+  .app-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}

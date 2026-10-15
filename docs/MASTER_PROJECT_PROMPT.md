@@ -113,7 +113,7 @@ Before feature code:
 
 ## Phase governance
 
-Phase 0 is complete pending owner approval (see [ROADMAP](ROADMAP.md)). Do not begin Phase 1 implementation — workspace setup, application code, authentication, map features, plugins, or business logic — until the Phase 0 gate is approved by the repository owner. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
+Phase 0 was approved by the repository owner on 2026-10-14, and Phase 1 (skeleton and developer experience) is complete pending owner approval (see [ROADMAP](ROADMAP.md) and the [Phase 1 report](development/09-phase-1-report.md)). Do not begin Phase 2 implementation — authentication, sessions, or any business feature — until the Phase 1 gate is approved by the repository owner. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
 
 ## Definition of done
 

@@ -1,0 +1,31 @@
+{
+  "name": "@boro-biya/server-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared server harness: structured logging with the redaction layer, correlation identifiers, metrics, health/readiness routes, error envelope wiring, graceful shutdown (OPS-88).",
+  "license": "UNLICENSED",
+  "x-audience": "server",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/validation": "workspace:*"
+  },
+  "peerDependencies": {
+    "fastify": "^5.12.7"
+  },
+  "devDependencies": {
+    "fastify": "5.12.7"
+  }
+}

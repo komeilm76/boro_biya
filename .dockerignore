@@ -1,0 +1,37 @@
+# Version control and CI metadata
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation is not part of any runtime image (keeps context small and images lean, OPS-06)
+docs
+*.md
+
+# Editor and local tooling state
+.vscode
+.idea
+.editorconfig
+.prettierrc.json
+.prettierignore
+
+# Dependencies and build output are produced inside the image, never copied from the host
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+*.tsbuildinfo
+.vitest
+
+# Local environment and secrets must never enter an image (QA-14)
+.env
+.env.*
+!.env.example
+var
+tmp
+*.log
+
+# Android native output (Phase 8)
+apps/android/android

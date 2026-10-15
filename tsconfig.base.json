@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["es2023"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "paths": {
+      "@boro-biya/api-client": ["./packages/api-client/src/index.ts"],
+      "@boro-biya/config": ["./packages/config/src/index.ts"],
+      "@boro-biya/contracts": ["./packages/contracts/src/index.ts"],
+      "@boro-biya/db": ["./packages/db/src/index.ts"],
+      "@boro-biya/server-runtime": ["./packages/server-runtime/src/index.ts"],
+      "@boro-biya/test-utils": ["./packages/test-utils/src/index.ts"],
+      "@boro-biya/test-utils/pg": ["./packages/test-utils/src/pg/index.ts"],
+      "@boro-biya/ui": ["./packages/ui/src/index.ts"],
+      "@boro-biya/validation": ["./packages/validation/src/index.ts"]
+    }
+  }
+}

@@ -1,0 +1,477 @@
+# Application gates (Phase 1 onward). The documentation gates run in docs-gates.yml; this
+# workflow runs the gates that need the toolchain and code (QA-69, QA-77).
+#
+# Structure:
+#   gate              — the full Phase 1 suite through the same entry point contributors use
+#                       (`bun run gate`), on the pinned production runtime (QA-58, QA-123).
+#   windows           — the portable subset of the same suite on Windows (QA-70, OPS-65).
+#                       Container, load, and runtime-smoke gates are Linux-only by nature
+#                       (Docker, the metrics/smoke harness); their commands are documented in
+#                       docs/development/03-ci-and-gates.md.
+#   containers        — the documented `docker compose up --build` contract, image assertions,
+#                       and Trivy image scans (QA-11, QA-14).
+#   secrets           — repository secret scanning over full history (QA-10).
+#   release-mechanics — on version tags only: reproducible artefacts, checksums, and version
+#                       coherence, exercised from Phase 1 with non-production tags (QA-48 …
+#                       QA-56 mechanics; the full release gate set activates at Phase 9).
+#
+# Every action is pinned to a full commit SHA (QA-18, QA-71); versions and SHAs are recorded
+# in docs/REFERENCES.md.
+name: Application gates
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main' }}
+
+env:
+  NODE_VERSION: "24"
+  BUN_VERSION: "1.4.3"
+
+jobs:
+  gate:
+    name: gate (ubuntu, Node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the documentation gate's review-date check needs history
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Set up Bun ${{ env.BUN_VERSION }}
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Record the exact runtime (OPS-84, QA-123)
+        run: |
+          node --version
+          bun --version
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Run the full Phase 1 gate suite
+        run: bun run gate
+
+      - name: Upload the load-baseline report (QA-124, OPS-86)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: load-baseline-report
+          path: var/load-baseline-report.json
+          if-no-files-found: warn
+
+  windows:
+    name: windows portability (QA-70)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Set up Bun ${{ env.BUN_VERSION }}
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      # The same documented commands as Linux (OPS-65), minus the Docker/load/runtime-smoke
+      # gates that need Linux facilities; those run in the `gate` and `containers` jobs.
+      - name: Format check (QA-02)
+        run: bun run format
+      - name: Lint (QA-03)
+        run: bun run lint
+      - name: Strict typecheck (QA-04)
+        run: bun run typecheck
+      - name: Dependency direction (OPS-40/41)
+        run: bun run check:deps
+      - name: Telemetry ban (PRIV-19)
+        run: bun run check:telemetry
+      - name: Licence allowlist (QA-09)
+        run: bun run check:licenses
+      - name: Unit tests (QA-05)
+        run: bun run test
+      - name: Production builds (QA-11)
+        run: bun run build
+      - name: Runtime source scan (QA-123, part 1)
+        run: node scripts/check-runtime.mjs --scan-only
+      # Windows PostgreSQL refuses to run its postmaster under an elevated administrator token,
+      # and hosted Windows runners ARE elevated administrators: initdb succeeds under the admin,
+      # but postgres.exe exits with "Execution of PostgreSQL by a user with administrative
+      # permissions is not permitted". The embedded harness therefore cannot self-start there.
+      # This step provisions the SAME pinned binaries (the lockfile's @embedded-postgres/windows-x64
+      # — no third-party installer, no unpinned download) as a loopback server, de-elevating only
+      # the postmaster: `runas /trustlevel:0x20000` starts it with the standard-user (filtered)
+      # token of the same account — exactly the state of a non-elevated shell on an administrator
+      # account, which is how PostgreSQL normally runs on Windows machines. The integration step
+      # consumes the server through the harness's documented TEST_DATABASE_URL override (QA-06,
+      # QA-70; recorded in docs/development/09-phase-1-report.md §7 item 10). All credentials are
+      # CI-disposable values for a loopback-only server on an ephemeral runner (OPS-70).
+      - name: Provision disposable PostgreSQL 18 (Windows refuses an elevated postmaster)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          try {
+            $store = Get-ChildItem 'node_modules\.bun' -Directory -Filter '@embedded-postgres+windows-x64@*' |
+              Select-Object -First 1
+            if (-not $store) { throw 'the @embedded-postgres/windows-x64 package is not installed' }
+            $bin = Join-Path $store.FullName 'node_modules\@embedded-postgres\windows-x64\native\bin'
+
+            $dataDir = Join-Path $env:RUNNER_TEMP 'pg-ci-data'
+            if (Test-Path $dataDir) { Remove-Item $dataDir -Recurse -Force }
+
+            # Initialise as the administrator (initdb permits this; only the postmaster does not),
+            # with the same flags the embedded harness uses, plus UTF8 to match the Linux default.
+            $pwFile = Join-Path $env:RUNNER_TEMP 'pg-ci-pwfile'
+            Set-Content -Path $pwFile -Value 'disposable-test-only' -NoNewline -Encoding ascii
+            $initdb = & "$bin\initdb.exe" --pgdata="$dataDir" --auth=password --username=boro_test_admin `
+              --pwfile="$pwFile" --lc-messages=C --encoding=UTF8 2>&1 | ForEach-Object { "$_" }
+            if ($LASTEXITCODE -ne 0) {
+              throw "initdb failed (exit ${LASTEXITCODE}): $(($initdb | Select-Object -Last 12) -join ' | ')"
+            }
+            Remove-Item $pwFile -Force
+
+            $port = 54330
+            $probe = { param($p) $c = New-Object Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', $p); $true } catch { $false } finally { $c.Dispose() } }
+            if (& $probe $port) { throw "port $port is unexpectedly busy" }
+
+            # Start the postmaster de-elevated (filtered standard-user token); it logs to its own
+            # log directory so a failed start is diagnosable from the annotations below.
+            $cmd = "$bin\postgres.exe -D $dataDir -p $port -c logging_collector=on -c log_directory=log -c log_filename=postgresql.log"
+            $runas = & runas /trustlevel:0x20000 "$cmd" 2>&1 | ForEach-Object { "$_" }
+            if ($LASTEXITCODE -ne 0) { throw "de-elevated start failed (exit ${LASTEXITCODE}): $($runas -join ' | ')" }
+
+            $deadline = (Get-Date).AddSeconds(90)
+            $ready = $false
+            while ((Get-Date) -lt $deadline) {
+              if (& $probe $port) { $ready = $true; break }
+              Start-Sleep -Milliseconds 500
+            }
+            if (-not $ready) {
+              $lines = Get-Content (Join-Path $dataDir 'log\postgresql.log') -Tail 30 -ErrorAction SilentlyContinue |
+                ForEach-Object { $_ -replace '%', '%25' }
+              $tail = if ($lines) { $lines -join '%0A' } else { '(no server log written)' }
+              Write-Host "::error::provisioned PostgreSQL did not become ready on port ${port}%0A$tail"
+              throw 'PostgreSQL provisioning failed: the server never accepted connections'
+            }
+
+            "TEST_DATABASE_URL=postgresql://boro_test_admin:disposable-test-only@127.0.0.1:$port/postgres" |
+              Add-Content -Path $env:GITHUB_ENV
+            Write-Host "provisioned disposable PostgreSQL 18 on 127.0.0.1:$port with a de-elevated postmaster"
+          } catch {
+            $message = $_.Exception.Message -replace '%', '%25' -replace "`r?`n", ' | '
+            Write-Host "::error::PostgreSQL provisioning failed: $message"
+            exit 1
+          }
+
+      # Git Bash wrapper: on failure the tail of the vitest output becomes workflow error
+      # annotations, so a Windows-only failure is diagnosable from the check-run annotations
+      # themselves. The documented contributor command stays `bun run test:integration`
+      # (OPS-65) — the wrapper only surfaces its output when it fails, and TEST_DATABASE_URL
+      # (previous step) points the harness at the provisioned server.
+      - name: Integration tests, disposable PostgreSQL 18 (QA-06/15)
+        shell: bash
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          bun run test:integration 2>&1 | tee "$RUNNER_TEMP/integration.log" || {
+            annotate_tail "integration tests failed on windows" "$RUNNER_TEMP/integration.log"
+            exit 1
+          }
+
+      - name: Stop the provisioned PostgreSQL server
+        if: always()
+        shell: pwsh
+        run: |
+          Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 2
+          $dataDir = Join-Path $env:RUNNER_TEMP 'pg-ci-data'
+          if (Test-Path $dataDir) { Remove-Item $dataDir -Recurse -Force -ErrorAction SilentlyContinue }
+
+  containers:
+    name: containers (QA-11, QA-14)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BUILD_COMMIT: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Set up Bun ${{ env.BUN_VERSION }}
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Container configuration assertions
+        run: bun run check:images
+
+      - name: Create the local development environment
+        run: bun run env:create
+
+      # Build and start are separate steps, and both convert the tail of their log into
+      # workflow annotations on failure, so a broken stack is diagnosable straight from the
+      # check-run annotations (the job log archive needs a host this project's tooling cannot
+      # always reach). The most recent lines are annotated first: they carry the error.
+      - name: Build the documented stack
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          docker compose build --progress=plain 2>&1 | tee "$RUNNER_TEMP/compose-build.log" || {
+            annotate_tail "docker compose build failed" "$RUNNER_TEMP/compose-build.log"
+            exit 1
+          }
+
+      - name: Start the documented stack (docker compose up -d --wait)
+        run: |
+          set -o pipefail
+          annotate_tail() {
+            local title="$1" file="$2" core context
+            core=$(tail -n 25 "$file" | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            context=$(tail -n 90 "$file" | head -n 65 | sed -e 's/%/%25/g' -e 's/\r//g' -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/$/%0A/' | tr -d '\n')
+            echo "::error::${title} — tail of the log%0A${core}"
+            echo "::error::${title} — context before the tail%0A${context}"
+          }
+          docker compose up -d --wait --wait-timeout 300 2>&1 | tee "$RUNNER_TEMP/compose-up.log" || {
+            annotate_tail "the compose stack did not become healthy" "$RUNNER_TEMP/compose-up.log"
+            { docker compose ps --all; echo '--- container logs ---'; docker compose logs --tail 60; } \
+              > "$RUNNER_TEMP/compose-state.log" 2>&1
+            annotate_tail "compose state at failure" "$RUNNER_TEMP/compose-state.log"
+            exit 1
+          }
+
+      - name: Smoke the running stack
+        run: |
+          set -euo pipefail
+          curl -fsS http://localhost:8080/healthz | tee /tmp/web-health.json
+          curl -fsS http://localhost:3000/healthz | tee /tmp/api-health.json
+          curl -fsS http://localhost:3000/readyz | tee /tmp/api-ready.json
+          curl -fsS http://localhost:3001/readyz | tee /tmp/relation-ready.json
+          curl -fsS http://localhost:3002/readyz | tee /tmp/sos-ready.json
+          node -e '
+            const assert = require("node:assert");
+            const web = JSON.parse(require("node:fs").readFileSync("/tmp/web-health.json", "utf8"));
+            const api = JSON.parse(require("node:fs").readFileSync("/tmp/api-health.json", "utf8"));
+            const ready = JSON.parse(require("node:fs").readFileSync("/tmp/api-ready.json", "utf8"));
+            assert.equal(web.service, "web");
+            assert.equal(api.service, "api");
+            assert.equal(api.commit, process.env.BUILD_COMMIT ?? "dev", "healthz must report the build commit (OPS-61)");
+            assert.match(api.serverTime, /Z$/);
+            assert.equal(ready.status, "ready");
+            console.log("compose smoke: web + api healthy, readyz green, commit and timestamp contract verified");
+          '
+          # The proxy path: an unknown /api/v1 route through the web edge returns the envelope.
+          status=$(curl -s -o /tmp/proxy-404.json -w "%{http_code}" http://localhost:8080/api/v1/definitely-not-a-route)
+          test "$status" = "404"
+          grep -q '"code":"not_found"' /tmp/proxy-404.json
+          grep -q '"requestId"' /tmp/proxy-404.json
+          echo "compose smoke: web edge proxies /api and preserves the error envelope"
+
+      # Trivy writes JSON reports and does not fail the job on findings; the repository-owned
+      # policy step after each scan is the gate (SEC-63/QA-14: CRITICAL blocks, HIGH reported)
+      # and converts findings into workflow annotations, so a red scan names them from the
+      # check-run annotations alone (QA-73). A scan that fails operationally yields no report,
+      # and the policy step fails closed on a missing or unparseable report (GOV-18).
+      - name: Scan the built images (Trivy; CRITICAL blocks, HIGH reported — SEC-63/QA-14)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0 (installs Trivy v0.70.0)
+        with:
+          scan-type: image
+          image-ref: boro-biya/api:dev
+          format: json
+          output: ${{ runner.temp }}/trivy-api.json
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Enforce the api image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-api.json"
+
+      - name: Scan the web image
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: boro-biya/web:dev
+          format: json
+          output: ${{ runner.temp }}/trivy-web.json
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Enforce the web image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-web.json"
+
+      # The database image is the built wrapper (docker/db.Dockerfile: vendor postgres:18.6 +
+      # Debian security updates, pgdg repo removed so the 18.6 pin cannot drift — QA-47 — and
+      # the entrypoint's gosu helper rebuilt from checksum-pinned source with a patched Go
+      # toolchain, because the official release binaries embed a vulnerable Go stdlib — SEC-63).
+      - name: Scan the database image
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: boro-biya/db:dev
+          format: json
+          output: ${{ runner.temp }}/trivy-db.json
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Enforce the database image scan policy
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-db.json"
+
+      - name: Capture logs and stop the stack
+        if: always()
+        run: |
+          docker compose ps --all || true
+          docker compose logs --tail 80 || true
+          docker compose down -v || true
+
+  secrets:
+    name: secret scanning (QA-10)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Trivy's secret scanner over the whole repository and its history-facing working tree;
+      # the documentation gate's pattern check runs inside `bun run gate` (QA-10: both layers).
+      # The report is JSON and the policy step is the gate, so findings are readable from the
+      # check-run annotations — without ever printing the matched text (QA-73, QA-10).
+      - name: Trivy filesystem secret scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          format: json
+          output: ${{ runner.temp }}/trivy-secrets.json
+          exit-code: "0"
+
+      - name: Enforce the secret-scan policy (QA-10)
+        run: node scripts/ci/trivy-report.mjs --report "${{ runner.temp }}/trivy-secrets.json" --mode secret
+
+  release-mechanics:
+    name: release mechanics
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Set up Bun ${{ env.BUN_VERSION }}
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Version coherence (tag ↔ manifests ↔ changelog)
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}" node -e '
+            const fs = require("node:fs");
+            const tag = process.env.TAG_VERSION;
+            const files = ["package.json", "apps/api/package.json", "apps/web/package.json", "services/relation/package.json", "services/sos/package.json"];
+            for (const file of files) {
+              const version = JSON.parse(fs.readFileSync(file, "utf8")).version;
+              if (version !== tag) { console.error(`${file} says ${version}, tag says ${tag}`); process.exit(1); }
+            }
+            if (!fs.readFileSync("CHANGELOG.md", "utf8").includes(`## [${tag}]`)) {
+              console.error(`CHANGELOG.md has no entry for ${tag} (QA-98)`); process.exit(1);
+            }
+            console.log(`version coherence: tag v${tag} matches every manifest and the changelog`);
+          '
+
+      - name: Build the release artefacts with the tagged commit (QA-91)
+        run: |
+          BUILD_COMMIT="${GITHUB_SHA}" bun run build
+
+      - name: Package artefacts and checksums (QA-99 mechanics)
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p release
+          tar -czf "release/boro-biya-backend-${version}.tar.gz" \
+            apps/api/dist apps/api/package.json \
+            services/relation/dist services/relation/package.json \
+            services/sos/dist services/sos/package.json \
+            packages/*/dist packages/*/package.json \
+            package.json bun.lock
+          tar -czf "release/boro-biya-web-${version}.tar.gz" \
+            apps/web/dist apps/web/server apps/web/package.json
+          (cd release && sha256sum ./*.tar.gz > SHA256SUMS.txt && cat SHA256SUMS.txt)
+
+      - name: Upload release artefacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ github.ref_name }}
+          path: release/

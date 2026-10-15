@@ -1,0 +1,40 @@
+{
+  "name": "@boro-biya/test-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared test fixtures and builders (OPS-38) plus the disposable PostgreSQL 18 harness used by integration tests (QA-06).",
+  "license": "UNLICENSED",
+  "x-audience": "test",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./pg": {
+      "types": "./dist/pg/index.d.ts",
+      "default": "./dist/pg/index.js"
+    },
+    "./pg/global-setup": {
+      "types": "./dist/pg/global-setup.d.ts",
+      "default": "./dist/pg/global-setup.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@boro-biya/config": "workspace:*",
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/validation": "workspace:*",
+    "embedded-postgres": "18.4.0-beta.17",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1",
+    "vitest": "5.0.4"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@boro-biya/sos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SOS Service skeleton (OPS-04): own schema and role, configuration, logging, health/readiness, metrics. Domain APIs arrive in Phase 5 under /sos/* (PLG-35).",
+  "license": "UNLICENSED",
+  "x-audience": "server",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@boro-biya/config": "workspace:*",
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/db": "workspace:*",
+    "@boro-biya/server-runtime": "workspace:*",
+    "@boro-biya/validation": "workspace:*",
+    "fastify": "5.12.7"
+  },
+  "devDependencies": {
+    "@boro-biya/test-utils": "workspace:*"
+  }
+}
