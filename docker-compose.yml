@@ -26,7 +26,10 @@ services:
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # postgres:18+ stores data in a major-version subdirectory of /var/lib/postgresql
+      # (PGDATA=/var/lib/postgresql/18/docker) and its entrypoint refuses the legacy
+      # /data mount point; the volume follows the image's documented layout (OPS-05).
+      - db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-boro_biya} -d ${POSTGRES_DB:-boro_biya}"]
       interval: 5s

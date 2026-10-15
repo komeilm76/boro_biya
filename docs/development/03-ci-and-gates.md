@@ -2,7 +2,7 @@
 
 This document explains how gates are organized, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## 1. Gate model
 
@@ -81,7 +81,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 ## 4. CI workflow design
 
 - **[QA-69]** Workflows live in `.github/workflows/`. Phase 0 shipped `docs-gates.yml`; Phase 1 ships `ci.yml` with the code it checks: the `gate` job runs the full active suite through the same entry point contributors use (`bun run gate`, QA-58) on the pinned Node 24 runtime, the `windows` job runs the portable subset on `windows-latest` (QA-70), `containers` proves the documented `docker compose up --build` contract and runs the image assertions and Trivy scans (QA-11, QA-14), `secrets` scans the repository with full history (QA-10), and `release-mechanics` runs on version tags to exercise artefact packaging, checksums, and version coherence with a non-production tag ([release plan](06-release-plan.md)).
-- **[QA-70]** Matrix: `ubuntu-latest` and `windows-latest`, so a Windows contributor cannot break the build silently.
+- **[QA-70]** Matrix: `ubuntu-latest` and `windows-latest`, so a Windows contributor cannot break the build silently. Windows PostgreSQL refuses to run its postmaster under an elevated administrator token — which hosted Windows runners carry — so the `windows` job provisions the lockfile's pinned PostgreSQL 18 binaries under a disposable standard user (loopback-only, ephemeral runner, CI-disposable credentials) and the unchanged `bun run test:integration` consumes that server through the `TEST_DATABASE_URL` override QA-06 documents.
 - **[QA-71]** Actions are pinned to immutable commit SHAs with the version in a comment; the workflow uses least privilege (`permissions: contents: read` at the top level, elevated only where a job genuinely needs it).
 - **[QA-72]** Secrets are never exposed to pull-request code from forks; no workflow prints an environment dump.
 - **[QA-73]** Jobs are independent where possible so one failure does not hide another, and a failure must show the exact command that failed.

@@ -33,10 +33,12 @@ export function injectedPgAdminUrl(): string {
  *
  * Default mode starts a real PostgreSQL 18 server from the embedded binaries (MIT-licensed
  * npm distribution of the official server; recorded in the dependency policy). This keeps the
- * documented command set identical on Linux and Windows — including the Windows CI matrix,
- * where Docker Linux service containers are not available — and in environments without
- * Docker. `TEST_DATABASE_URL` switches the harness to an externally provided server (for
- * example the Compose database) without changing a single test.
+ * documented command set identical on Linux and Windows and works in environments without
+ * Docker. One Windows constraint shapes the CI matrix: the postmaster refuses to run under an
+ * elevated administrator token (hosted Windows runners are elevated), so there the job
+ * provisions these same pinned binaries under a disposable standard user and passes the server
+ * in through `TEST_DATABASE_URL`, which switches the harness to an externally provided server
+ * (a Compose database, a CI-provisioned one) without changing a single test.
  *
  * Credentials created here are disposable values that exist only for the lifetime of a test
  * run on a loopback interface; they are never production-like secrets (OPS-70).

@@ -2,7 +2,7 @@
 
 Supported contributor environments, prerequisites, and the commands that exist at each phase. Commands are marked **available** (verified to work in this repository today) or **planned** (specified here, implemented in the named phase, and not yet runnable).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## 1. Supported platforms
 
@@ -30,6 +30,8 @@ Owner: Engineering. Reviewed: 2026-10-14.
 Node.js 26 becomes Active LTS on 2026-10-28; the CI matrix adds it once it is LTS, and the baseline moves after a green matrix run (see [dependency policy](02-dependency-policy.md) §4).
 
 Where Docker is unavailable (restricted machines, Windows without WSL2, sandboxed CI), `bun run dev:db` provides the same PostgreSQL 18 from the embedded server binaries the integration tests use (QA-06); the data persists under the git-ignored `var/pg-dev`, and the cluster bootstrap it runs is the same code path `bun run db:migrate` uses. Compose remains the single source of truth for service versions (OPS-66).
+
+One Windows constraint: the PostgreSQL postmaster refuses to run under an elevated administrator token (the same rule that forbids root on Unix). `bun run dev:db` therefore starts only from a standard — non-elevated — PowerShell session; an elevated Windows session runs the stack against a PostgreSQL service instead, exactly like the Windows CI matrix does (§4 of [CI and gate design](03-ci-and-gates.md), QA-06).
 
 ## 3. Getting started (available today)
 
