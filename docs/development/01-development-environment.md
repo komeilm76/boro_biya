@@ -48,7 +48,7 @@ The workspace gate suite (`bun run gate`, §4) includes this gate as its first s
 These commands are the Phase 1 contract, and they exist. Each behaves identically on Windows PowerShell 7 and Linux (OPS-65); the CI matrix proves it (QA-70).
 
 ```bash
-bun install                        # install workspaces (pinned versions, lockfile committed)
+bun install --frozen-lockfile      # install exactly the committed workspace versions
 bun run env:create                 # create .env from .env.example with development-safe values
 docker compose up -d db            # PostgreSQL 18 (container only)
 bun run db:migrate                 # ensure roles and schemas, apply versioned migrations
