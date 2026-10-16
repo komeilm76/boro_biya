@@ -13,7 +13,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 | 3 | [ARCHITECTURE.md](ARCHITECTURE.md) | Engineers | You need deployment, service boundaries, performance, and technology decisions |
 | 4 | [DIAGRAMS.md](DIAGRAMS.md) | Everyone | You want the picture: topology, the request path, the lifecycles, and how work moves through the phases |
 | 5 | [GLOSSARY.md](GLOSSARY.md) | Everyone | A term is used in a way you have not seen before |
-| 6 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping |
+| 6 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping (for vulnerability reporting, see [.github/SECURITY.md](../.github/SECURITY.md)) |
 | 7 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
 | 8 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
 | 9 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
@@ -51,6 +51,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
+| [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-16 |
 | [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-16 |
 | [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-15 |
 | [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-14 |

@@ -134,7 +134,7 @@ Enabling automated retention enforcement is a deployment action that follows an 
 
 ## Support and reporting route
 
-The route a user or a researcher follows to report a suspected account compromise, abuse, or a vulnerability — including what is reachable without signing in — is a requirement in its own right ([SECURITY](../SECURITY.md) §9) and is exercised as the "Account compromise report" runbook above. Support and incident contacts are updated as part of every release ([release plan](../development/06-release-plan.md) §6).
+The route a user or a researcher follows to report a suspected account compromise, abuse, or a vulnerability — including what is reachable without signing in — is a requirement in its own right ([SECURITY](../SECURITY.md) §9) and is exercised as the "Account compromise report" runbook above. Repository-level vulnerability reporting uses GitHub Private Vulnerability Reporting under the policy and response commitments in [`.github/SECURITY.md`](../../.github/SECURITY.md); the in-product unauthenticated reporting route and the "Account compromise report" runbook remain Phase 2 work. Support and incident contacts are updated as part of every release ([release plan](../development/06-release-plan.md) §6).
 
 ## Current state
 

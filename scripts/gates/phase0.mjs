@@ -88,6 +88,7 @@ const REQUIRED_DOCS = [
   'docs/operations/README.md',
   'README.md',
   'CONTRIBUTING.md',
+  '.github/SECURITY.md',
   '.env.example',
 ];
 
@@ -210,6 +211,7 @@ function checkInventory() {
     }
   }
   checkIndexAgreement();
+  checkSecurityPolicy();
 }
 
 /** The index rows carry an owner and a date column; both must match the document header. */
@@ -222,14 +224,15 @@ function checkIndexAgreement() {
     const [, , rel, , owner, date] = match;
     const target = join(ROOT, 'docs', rel);
     if (!existsSync(target)) continue; // the link check reports missing files
+    const targetRel = relative(ROOT, target).split('\\').join('/');
     const text = read(target);
     const header = /^Owner:\s*(.+?)\.\s*Reviewed:\s*(\d{4}-\d{2}-\d{2})/m.exec(text);
     if (!header) continue; // checkHeader reports the missing header
     if (header[1].trim() !== owner.trim()) {
-      failures.push(`[inventory] index owner "${owner.trim()}" does not match "${header[1].trim()}" in docs/${rel}`);
+      failures.push(`[inventory] index owner "${owner.trim()}" does not match "${header[1].trim()}" in ${targetRel}`);
     }
     if (date.trim() !== header[2] && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
-      failures.push(`[inventory] index date "${date.trim()}" does not match "${header[2]}" in docs/${rel}`);
+      failures.push(`[inventory] index date "${date.trim()}" does not match "${header[2]}" in ${targetRel}`);
     }
   }
 }
@@ -300,6 +303,7 @@ function checkLinks() {
   for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([
     join(ROOT, 'README.md'),
     join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.github/SECURITY.md'),
   ])) {
     const rel = relative(ROOT, file).split('\\').join('/');
     for (const { target, line } of links(file)) {
@@ -323,7 +327,7 @@ function checkLinks() {
 
 // -------------------------------------------------------------- check 5: placeholders
 function checkPlaceholders() {
-  for (const file of walk(DOCS, (f) => f.endsWith('.md'))) {
+  for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([join(ROOT, '.github/SECURITY.md')])) {
     const rel = relative(ROOT, file).split('\\').join('/');
     read(file)
       .split('\n')
@@ -538,7 +542,9 @@ function checkModelCoherence() {
     }
   }
 
-  for (const [rel, file] of byRel) {
+  const securityPolicy = join(ROOT, '.github/SECURITY.md');
+  const proseDocs = existsSync(securityPolicy) ? [...byRel, ['../.github/SECURITY.md', securityPolicy]] : [...byRel];
+  for (const [rel, file] of proseDocs) {
     let inFence = false;
     read(file)
       .split('\n')
@@ -687,6 +693,7 @@ function checkDiagrams() {
   for (const file of walk(DOCS, (f) => f.endsWith('.md')).concat([
     join(ROOT, 'README.md'),
     join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.github/SECURITY.md'),
   ])) {
     let inFence = false;
     let opened = 0;
@@ -966,7 +973,7 @@ function enclosingHeading(outline, line) {
  * the usual exclusions. The pack itself (and the three root files check 11 already reads) is skipped.
  */
 const SOURCE_SKIP =
-  /^(docs\/|README\.md$|CONTRIBUTING\.md$|\.env\.example$|bun\.lock$)|\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|map)$/;
+  /^(docs\/|README\.md$|CONTRIBUTING\.md$|\.github\/SECURITY\.md$|\.env\.example$|bun\.lock$)|\.(png|jpe?g|gif|ico|webp|svg|woff2?|ttf|map)$/;
 function trackedSourceFiles() {
   let list = [];
   try {
@@ -990,7 +997,12 @@ function trackedSourceFiles() {
 
 function checkReferences() {
   const docs = walk(DOCS, (file) => file.endsWith('.md'));
-  const scanned = docs.concat([join(ROOT, 'README.md'), join(ROOT, 'CONTRIBUTING.md'), join(ROOT, '.env.example')]);
+  const scanned = docs.concat([
+    join(ROOT, 'README.md'),
+    join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.github/SECURITY.md'),
+    join(ROOT, '.env.example'),
+  ]);
 
   // Definitions: the requirement handles, the ADR headings, and the open-question rows. Each
   // requirement handle also keeps its site (file and line), so a link whose text is the handle can
@@ -1255,6 +1267,7 @@ function checkLanguage() {
   const files = walk(DOCS, (file) => file.endsWith('.md')).concat([
     join(ROOT, 'README.md'),
     join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.github/SECURITY.md'),
     join(ROOT, '.env.example'),
   ]);
   for (const file of files) {
@@ -1333,6 +1346,7 @@ function checkReviewDates() {
   const files = walk(DOCS, (file) => file.endsWith('.md')).concat([
     join(ROOT, 'README.md'),
     join(ROOT, 'CONTRIBUTING.md'),
+    join(ROOT, '.github/SECURITY.md'),
   ]);
   for (const file of files) {
     const rel = relative(ROOT, file).split('\\').join('/');
@@ -1471,6 +1485,56 @@ function checkReviewRecord() {
     }
   }
   if (failures.length === 0) notes.push(`review record: ${recorded} passes, in order, and the introduction says so`);
+}
+
+/**
+ * GitHub resolves a repository security policy in the order `SECURITY.md`, `.github/SECURITY.md`,
+ * `docs/SECURITY.md`. In this repository `docs/SECURITY.md` is the engineering security baseline
+ * (SEC-01..SEC-75), so `.github/SECURITY.md` must exist as the repository security policy and no
+ * root `SECURITY.md` may shadow it. The policy must publish the owner-approved GitHub Private
+ * Vulnerability Reporting route and response commitments without inventing channels or bounties.
+ */
+function checkSecurityPolicy() {
+  const policyPath = join(ROOT, '.github/SECURITY.md');
+  if (!existsSync(policyPath)) return; // check 1 reports the missing required file
+  if (existsSync(join(ROOT, 'SECURITY.md'))) {
+    failures.push('[security-policy] root SECURITY.md exists and would shadow .github/SECURITY.md');
+  }
+  const text = read(policyPath);
+  const required = [
+    {
+      pattern: /https:\/\/github\.com\/komeilm76\/boro_biya\/security\/advisories\/new/,
+      label: 'GitHub Private Vulnerability Reporting advisory URL',
+    },
+    {
+      pattern: /Report a vulnerability/,
+      label: 'GitHub Security tab "Report a vulnerability" path',
+    },
+    {
+      pattern: /\bwithin (?:\*\*)?7 working days(?:\*\*)?/i,
+      label: '7 working days acknowledgement commitment',
+    },
+    {
+      pattern: /\bwithin (?:\*\*)?21 working days(?:\*\*)?/i,
+      label: '21 working days triage and initial accept/reject commitment',
+    },
+    {
+      pattern: /\bMonday through Friday\b/,
+      label: 'working-days definition',
+    },
+    {
+      pattern: /\bpre-release\b/i,
+      label: 'pre-release status and supported-version scope',
+    },
+  ];
+  for (const { pattern, label } of required) {
+    if (!pattern.test(text)) {
+      failures.push(`[security-policy] .github/SECURITY.md is missing ${label}`);
+    }
+  }
+  if (/mailto:/i.test(text)) {
+    failures.push('[security-policy] .github/SECURITY.md must not invent or publish a mailto: reporting channel');
+  }
 }
 
 const args = process.argv.slice(2);
