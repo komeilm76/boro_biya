@@ -21,9 +21,14 @@ ENV BUILD_COMMIT=${BUILD_COMMIT}
 # Compiled artefacts: TypeScript workspaces to dist/, the web bundle via Vite (QA-11).
 RUN node scripts/build.mjs
 
-# Clean-room production dependency set: devDependencies never reach the runtime layer.
+# Clean-room production dependency set: devDependencies never reach the runtime layer, and
+# only the backend workspaces (apps/api, services/relation, services/sos and their workspace
+# closure) are installed — the web, Android, and test-only workspaces (including the
+# test-only embedded-postgres binaries, OPS-38) never enter a backend image (Phase 1 exit
+# review §3 item 2).
 RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules services/*/node_modules \
-  && bun install --production --frozen-lockfile
+  && bun install --production --frozen-lockfile \
+    --filter @boro-biya/api --filter @boro-biya/relation --filter @boro-biya/sos
 
 FROM node:24.22.0-slim AS runtime
 
