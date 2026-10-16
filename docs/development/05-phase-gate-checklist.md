@@ -2,7 +2,7 @@
 
 The checklist a phase must satisfy before the next phase starts. It is runnable locally and in CI, and its results are copied into the phase report described in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## 1. Commands
 
@@ -40,7 +40,7 @@ bun run loadtest                     # baseline load profile with its pass/fail 
 | 16 | Phase 0 gate passes at the phase commit | Exit status of the command in §1, recorded in the phase report | Met |
 | 17 | Diagrams and lifecycles exist for the runtime, the data model, and the four declared state machines, and they agree with the requirement text | [DIAGRAMS](../DIAGRAMS.md) §9; gate check 10; parse evidence in the [review record](08-phase-0-review.md) §14 | Met |
 
-## 3. Phase 1 checklist (completed 2026-10-14)
+## 3. Phase 1 checklist (completed and owner-approved 2026-10-15)
 
 | # | Criterion | Evidence | Status |
 | --- | --- | --- | --- |
@@ -78,6 +78,9 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 9 | Message catalogue and RTL scaffolding in place with **both locales complete** (Persian and English), a language switch reachable before sign-in, English as the default language with a persisted explicit choice, and localization checks active | Hard-coded-string lint, catalogue-parity test comparing the key sets, pre-sign-in switch test, default-language test; `UI-21`, `UI-22`, `UI-28`, `QA-17` | Not started |
 | 10 | Retention and deletion defaults in place: automated deletion off by default, no administrator account-deletion path, deactivation preserving every record, and the temporary policy documented with its unresolved items (`PRIV-32` … `PRIV-34`, `QA-125`); the Phase 2 answers already given — `Q-01` … `Q-05` ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number) … [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)) and `Q-17` ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) — implemented as decided | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
+| 12 | The login route joins the baseline load profile with its own p95/p99 budget, and the profile still passes with its breach path intact | `bun run loadtest` exit status and the updated baseline table in the [performance policy](../performance/README.md); `OPS-86`, `QA-124` (the profile and its rule are Phase 1's; the route is Phase 2's) | Not started |
+| 13 | Migration runs are bounded: the run lock and every lock a migration requests time out, and every migration statement runs under a statement timeout, each from configuration with a safe default; a run that reaches a bound fails with a clear diagnostic and an unchanged ledger | Integration tests against real PostgreSQL — two runners racing for the run lock, a migration blocked by a held table lock, a statement that outlasts its bound; `OPS-90`, `OPS-91` (tracked from the [Phase 1 exit review](10-phase-1-exit-review.md) §6; they bind whichever runner [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) settles on) | Not started |
+| 14 | Client addresses reach the API only through trusted hops. The web edge discards client-sent `Forwarded`, `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Proto`, and `X-Real-IP` headers unless its peer is a configured trusted proxy, and appends its peer's address to a trusted chain. The API trusts only configured hops, refuses a trust-every-hop setting, and with nothing configured ignores forwarded headers. The per-origin and rate limits act on the resolved address | Web edge integration tests: spoofed values of each header from an untrusted peer never reach the upstream as sent, and the upstream sees the peer's address; with a trusted proxy configured, its chain is kept and the peer appended; malformed values are dropped. API tests: a direct peer with spoofed headers resolves to the peer; the web edge as the trusted hop resolves to the client it forwarded; a chain through a configured outer proxy resolves to the first untrusted address; a trust-every-hop value fails configuration validation at startup. End-to-end through the documented stack: two clients behind the web edge get separate per-origin counters, and a spoofed header neither moves a client into another client's counter nor frees it from its own; `SEC-75`, `SEC-14`, `SEC-43` (from the [Phase 1 exit review](10-phase-1-exit-review.md) §6.3, at the owner's request of 2026-10-16; not implemented until separately authorized) | Not started |
 
 ### Phase 3 — Map foundation and user settings
 
@@ -236,11 +239,13 @@ Status has three surfaces, each with one owner and one location. Nothing else re
 Rules:
 
 1. **Only evidence changes a status.** A checklist row moves to `Met` when the row's own evidence column has been produced, with the command and its exit status recorded in the phase report. An intention, a plan, or a code review is not evidence.
-2. **Phase status and the README table must agree**; gate check 9 fails when they do not. A phase is `Complete` only after the owner approves the phase report, and the transition is recorded in both places in the same change.
+2. **Phase status and the README table must agree**; gate check 9 fails when they do not. A phase reads `Complete, awaiting owner approval` once its evidence is recorded, and `Complete, owner-approved (date)` only after the owner approves the phase report; each transition is recorded in both places in the same change.
 3. **A phase's checklist is its working task list.** Before a phase starts, its checklist exists as a template (§4) derived from the phase deliver list and exit gate; during the phase, rows are the unit of work; at the gate, every row is `Met`, `Withdrawn`, or an `Exception` recorded with owner and expiry.
 4. **Requirement identifiers are not status.** The [traceability](07-traceability.md) table records where a requirement belongs (and any declared pull-forward), never whether it is done; requirement completion is claimed only in a phase report, and only for the requirements that phase owns.
 5. **An exception is not a status you can keep.** An `Exception` row carries an owner and an expiry date, and an expired exception fails the phase gate ([QUALITY_GATES](../QUALITY_GATES.md) §6).
 6. **Questions do not expire silently.** A decision that is not resolved by its decide-by phase blocks that phase's exit gate; the register row, the phase report, and the checklist row are updated together.
+7. **Phase status records authorization, not task completion.** A phase reads `In progress` only after the owner authorizes its start at the phase start gate (rule 8). Completing or merging one checklist row changes that row and never the phase status, and approval is never inferred from a merge, a passing CI run, or a completed row. A row completed before its phase is authorized is a **pre-phase item**: it may read `Met` once its acceptance criteria are satisfied and its evidence is verified; the row names its completion reference — the pull request and its CI run, then the merge commit once it lands — and the phase report carries it when the phase ends; the phase status stays `Not started`.
+8. **The phase start gate.** Before a phase's status changes to `In progress`, the change that makes it records, and the owner explicitly approves, that: every mandatory exit condition of the previous phase is met; the owner decisions the phase depends on are recorded, and work that depends on an unratified decision is either approved or excluded from the authorized initial scope; the phase's scope, dependencies, acceptance criteria, and verification plan are documented; and no unresolved blocker prevents the authorized initial work. If any condition is ambiguous or an approval is missing, the status stays unchanged and the change reports the exact missing condition. ROADMAP, the README status table, and the phase's checklist are updated together.
 
 ## 8. Reporting the gate result
 
@@ -249,7 +254,7 @@ The phase report states, in this order:
 1. Phase, commit SHA, and date.
 2. Commands executed, and the exit status of each (a command that was not run must be listed as not run).
 3. For each checklist row: met / not met / withdrawn, with the evidence that proves it.
-4. The phase affiliation audit from §4, including any mapping change made during the phase and its reason.
+4. The phase affiliation audit from §5, including any mapping change made during the phase and its reason.
 5. Deviations from the plan, each with the reason and the decision that records it.
 6. Residual risks handed to the next phase, with owners.
 7. Owner approval (name/role and date), or the explicit statement that approval is pending.

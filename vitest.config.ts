@@ -66,7 +66,7 @@ export default defineConfig({
         // Pure re-export barrels: no executable behaviour of their own.
         'packages/*/src/index.ts',
       ],
-      // Initial floors (QA-66): a meaningful bound set just below the Phase 1 measured
+      // Initial floors of the unit-test gate (QA-05): a meaningful bound set just below the Phase 1 measured
       // coverage, raised as the suite grows. Measured values are recorded in the phase report.
       thresholds: {
         lines: 85,

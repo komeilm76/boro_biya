@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The admin namespace screen (UI-04), behind the UX-only role guard. Server-side role checks
-// (ADM-01 … ADM-21) arrive with Phase 2; the guard here only keeps navigation honest.
+// (ADM-01 … ADM-07) arrive with Phase 2; the guard here only keeps navigation honest.
 </script>
 
 <template>

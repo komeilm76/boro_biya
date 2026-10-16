@@ -2,14 +2,14 @@
 
 All notable changes to this project are documented in this file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html) (ADR-002). Versions before 1.0.0 are
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html) (QA-48, QA-87). Versions before 1.0.0 are
 non-production releases: they prove the release mechanics and mark phase boundaries, and they
 carry no deployment promise (docs/development/06-release-plan.md).
 
 ## [0.1.0] - 2026-10-14
 
 Phase 1 — Skeleton and developer experience. First tagged version; exercises the release plan
-with a non-production tag (QA-48 … QA-56 mechanics) ahead of any user-facing release.
+with a non-production tag (QA-48 … QA-54 mechanics) ahead of any user-facing release.
 
 ### Added
 

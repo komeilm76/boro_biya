@@ -1,5 +1,5 @@
 # Database image: the vendor postgres:18.6 image plus two build-time security corrections
-# (QA-47, QA-14, SEC-63).
+# (QA-101, QA-14, SEC-63).
 #
 # Why a wrapper: upstream tag rebuilds lag Debian security advisories — the pulled
 # postgres:18.6 image still shipped perl-base 5.36.0-7+deb12u3 with three published CRITICAL
@@ -7,7 +7,7 @@
 # for the vendor rebuild leaves the gate red, and suppressing findings violates GOV-12/SEC-63,
 # so the shipped layer applies every published OS security fix at build time.
 #
-# The PostgreSQL version pin stays exact (QA-47): the apt.postgresql.org (pgdg) repository is
+# The PostgreSQL version pin stays exact (QA-101): the apt.postgresql.org (pgdg) repository is
 # removed before upgrading, so an OS security upgrade can never pull a different PostgreSQL
 # version. Binaries, PGDATA layout (/var/lib/postgresql/18/docker), entrypoint, and
 # environment behaviour are the vendor image's, unchanged.

@@ -3,6 +3,10 @@
 // /api/* so the deployed site stays same-origin and needs no CORS allowance (SEC-44).
 // Dependency-free by design (GOV-13, GOV-80): node:http, node:fs, node:path, node:crypto only.
 //
+// Not an internet-facing edge: no TLS or HSTS, no connection, rate, or proxied-body limits, and
+// Node's default HTTP timeouts. Every real deployment puts a TLS-terminating reverse proxy in front
+// of it (SEC-40, PRIV-08); docs/operations/README.md lists the limitations and what the proxy must do.
+//
 // Security properties this file must keep (covered by apps/web/test/server/serve.test.ts):
 // - path traversal is rejected: every served path resolves inside WEB_STATIC_DIR;
 // - no directory listings ever; unknown paths fall back to index.html so the SPA router renders

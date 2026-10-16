@@ -2,7 +2,7 @@
 
 This directory holds the operational side of the project: the runbooks that say what to do when something breaks, the backup and restore policy, and the availability objective the deployment is held to. It exists before the first deployment so that "what do we do when the database is gone" has an answer written down before anyone is under pressure.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## Rules
 
@@ -46,7 +46,7 @@ One place naming the runtime and the exact versions each artefact is built and t
 | Production runtime | Node.js 24 LTS ("Krypton"). Container base pinned to `node:24.22.0-slim`, with published Debian security updates applied to the shipped layer at build time (`SEC-63`; base rebuilds lag advisories — [REFERENCES](../REFERENCES.md)); CI installs the current 24.x through `actions/setup-node` and records `node --version` in every job log; the runtime compatibility gate (`QA-123`) fails any artefact smoke that is not running the pinned major. |
 | Development toolchain | Bun 1.4.3 — package manager and script runner only, never a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). `bun.lock` is committed; installs are frozen-lockfile in CI. |
 | TypeScript | 6.0.3 — pinned to the 6.0.x line because `typescript-eslint` 8.71.2 supports `>=4.8.4 <6.1.0` (dependency policy §3). |
-| Database | PostgreSQL 18. The Compose `db` service is built from `docker/db.Dockerfile`: the vendor `postgres:18.6` image (exact minor pinned, `QA-47`) plus Debian security updates applied at build time — with the pgdg repository removed first so an OS upgrade can never drift the PostgreSQL version — and the entrypoint's `gosu` privilege-drop helper rebuilt from checksum-pinned source with a patched Go toolchain, because the official release binaries embed a vulnerable Go stdlib (`SEC-63`, [REFERENCES](../REFERENCES.md)). CI integration tests run against embedded PostgreSQL 18.4 binaries — the same major, disposable per run (QA-06). |
+| Database | PostgreSQL 18. The Compose `db` service is built from `docker/db.Dockerfile`: the vendor `postgres:18.6` image (exact minor pinned, `QA-101`) plus Debian security updates applied at build time — with the pgdg repository removed first so an OS upgrade can never drift the PostgreSQL version — and the entrypoint's `gosu` privilege-drop helper rebuilt from checksum-pinned source with a patched Go toolchain, because the official release binaries embed a vulnerable Go stdlib (`SEC-63`, [REFERENCES](../REFERENCES.md)). CI integration tests run against embedded PostgreSQL 18.4 binaries — the same major, disposable per run (QA-06). |
 | Backend artefacts | `apps/api`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.22.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
 | Web artefact | Vite production bundle served by the dependency-free `apps/web/server/serve.mjs` on the same Node 24 base, proxying `/api/*` to a fixed upstream (`OPS-64`, `SEC-48`). |
 | Android artefact | Capacitor packaging configuration only; the shell and its toolchain pins arrive in Phase 8. |
@@ -54,6 +54,29 @@ One place naming the runtime and the exact versions each artefact is built and t
 **Portability constraints (in one place, per `OPS-84`):** application code uses standard TypeScript and Web APIs only; no Bun-only runtime API is reachable outside an approved adapter — none exists, and `scripts/check-runtime.mjs` enforces it by source scan on every gate run; no native addon is in any runtime dependency path yet (the first candidate, `argon2`, arrives in Phase 2 behind the adapter rule of `GOV-82`); ESM everywhere; LF line endings enforced by `.gitattributes`; every documented command behaves identically on Windows PowerShell 7 and Linux (`OPS-65`), which CI proves with the Windows job.
 
 **How the runtime is changed:** one change containing a new ADR, the dependency-policy §4 runtime baseline, every Dockerfile base image, the CI `NODE_VERSION`, these notes, and a green `QA-123` run on the new runtime. A runtime change never rides along with a feature.
+
+## Web edge limitations and the reverse-proxy requirement
+
+The web edge (`apps/web/server/serve.mjs`) serves the built bundle and proxies `/api/*` to one upstream fixed at startup. It stays in place provisionally while the owner decides [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces), and it is deliberately small: **it is not an internet-facing edge.** What it does not do, verified on 2026-10-16 against the code and the defaults of Node 24.22.0:
+
+| Concern | The web edge today | Consequence |
+| --- | --- | --- |
+| Transport security | Plain HTTP (`node:http`): no TLS, no redirect to HTTPS, no `Strict-Transport-Security` header | It cannot meet `SEC-40`, `PRIV-08`, or the HSTS part of `SEC-45` on its own |
+| Timeouts | Node's defaults: 60 s to receive the request headers, 300 s for a whole request, 5 s for an idle keep-alive connection, and no idle limit on an open socket. A proxied API call answers 504 after 30 s without data (`SERVE_PROXY_TIMEOUT_MS`) — an idle limit, not a total one | A slow client can hold a connection for minutes |
+| Connections and rates | No connection cap, no per-client limit, no request-rate limit | One client can exhaust the container's connections or its memory limit (128 MB in Compose) |
+| Request bodies | Proxied bodies stream to the API without a cap; the API's own body limit is the only bound | An oversized body costs edge and API resources until the API rejects it |
+| Client address and forwarded headers | `X-Forwarded-For` is replaced with the TCP peer's address, client-sent `X-Forwarded-Proto` and `X-Forwarded-Host` pass through unchanged, and the API runs with `TRUST_PROXY=false`, so it ignores all three and sees the edge's own address on every proxied request | Client addresses do not reach the API. The per-origin counters of [ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) need a trusted forwarding chain first — tracked as the Phase 2 requirement [SEC-75](../SECURITY.md#3-account-lockout-and-abuse-controls) — and `TRUST_PROXY` must not be enabled behind the edge until the edge sets or strips the forwarded headers it passes through |
+| Protocol features | HTTP/1.1 only; no compression, range requests, or conditional requests; WebSocket upgrades are not proxied, and a streaming response that stays silent for 30 s is cut | The realtime transport decision ([ADR-004](../DECISIONS.md#adr-004--realtime-transport), Phase 4) has to account for both |
+
+**Every real deployment** — anything other than a single developer's machine — puts a properly configured TLS-terminating reverse proxy in front of the web edge, and nothing is reachable around it. The proxy product is chosen with the hosting decision ([Q-19](../DECISIONS.md#open-questions)); whichever it is, it must provide at least:
+
+1. TLS with a modern configuration and automated certificate renewal, with plain HTTP redirected or rejected (`SEC-40`, `PRIV-08`); certificate failure is the "Certificate expiry and TLS failure" runbook above.
+2. `Strict-Transport-Security` on production hosts, until the application sets it itself (`SEC-45`).
+3. Header and request timeouts, a connection cap, a request-body limit no larger than the API's, and request-rate limits as a first line of defence; the API's own limits ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) stay authoritative.
+4. Forwarded headers it controls: it overwrites, and never appends to, any `X-Forwarded-*` header a client sends. Until the web edge can trust a configured proxy (`SEC-75`, Phase 2), a deployment must not rely on client addresses at the API.
+5. One way in: only the proxy is reachable from untrusted networks, and the web edge, the API, the services, the metrics ports, and PostgreSQL listen on loopback or a private network.
+
+No deployment exists yet (see "Current state" below); the Compose stack is a development and CI environment.
 
 ## Backups and restore
 

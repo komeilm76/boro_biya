@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 /**
  * The session seam. Phase 1 has no authentication (GOV-02): the store starts unauthenticated
  * and nothing in this build can change that outside a test. Phase 2 replaces the contents with
- * the real session flow (AUTH-29 … AUTH-44) behind the same interface, so the route guards and
+ * the real session flow (ADR-021; AUTH-01 … AUTH-14) behind the same interface, so the route guards and
  * their tests do not change shape when authentication arrives.
  */
 export interface SessionState {

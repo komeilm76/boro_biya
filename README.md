@@ -2,9 +2,9 @@
 
 A security-first mapping, navigation, social-location, and SOS assistance platform: a responsive web application and installable PWA, an Android application, a core TypeScript API, and two independently deployable services (Relation and SOS).
 
-Owner: Repo owner. Reviewed: 2026-10-14.
+Owner: Repo owner. Reviewed: 2026-10-15.
 
-**Current status: Phase 1 — skeleton and developer experience, complete pending owner approval.** Phase 0 (repository foundation and documentation) was owner-approved on 2026-10-14. The workspace, the core API, the Relation and SOS service skeletons, the web client skeleton, the migration framework, the gate suite, and the application CI exist; no authentication, map, or business feature does yet — those follow the phase order in [ROADMAP](docs/ROADMAP.md), and the evidence for this phase is the [Phase 1 report](docs/development/09-phase-1-report.md).
+**Current status: Phase 1 — skeleton and developer experience — complete and owner-approved (2026-10-15); Phase 2 (authentication and account lifecycle) is next and has not started.** Phase 0 (repository foundation and documentation) was owner-approved on 2026-10-14. Two Phase 1 items await the owner's decision after an evidence review — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 — recorded in the [Phase 1 exit review](docs/development/10-phase-1-exit-review.md). The workspace, the core API, the Relation and SOS service skeletons, the web client skeleton, the migration framework, the gate suite, and the application CI exist; no authentication, map, or business feature does yet — those follow the phase order in [ROADMAP](docs/ROADMAP.md), and the evidence for this phase is the [Phase 1 report](docs/development/09-phase-1-report.md).
 
 ## Where to start
 

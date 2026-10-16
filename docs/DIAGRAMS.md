@@ -2,7 +2,7 @@
 
 The pictures of this project: what exists in the repository, how the runtime is put together, how the account, relation, SOS, and plugin lifecycles move through their states, and how work itself moves through the phases. Every diagram is drawn from requirements that are written elsewhere — this document adds no rules of its own.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## 1. How these diagrams are maintained
 
@@ -10,7 +10,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 - **Mermaid source, rendered by GitHub.** Each block is plain text, so it is reviewed, diffed, and linked like the rest of the pack. It also reads acceptably in a terminal, which is where agents without a renderer will meet it.
 - **Every diagram names its requirements.** The line above each block is a `Cited:` line: an unlabelled picture cannot be checked, and it is not evidence.
 - **The declared state machines are cross-checked.** §9 lists the four state vocabularies that are declared in the documents governing them. The documentation gate ([QA-118](development/03-ci-and-gates.md) §3) extracts the states from the sentence that declares them, compares them with §9, requires each one to be drawn in the section §9 names, and fails otherwise — so neither the table, nor the section reference, nor the picture can drift while the prose stays correct.
-- **Syntax is verified when the diagram is authored**, not assumed: every block in this file parsed with Mermaid 12.2.0 on 2026-10-14 (recorded in [REFERENCES](REFERENCES.md) and the [review record](development/08-phase-0-review.md) §14). A renderer check returns to CI in Phase 1 with the repository's other dependencies ([QA-60](development/03-ci-and-gates.md) §1).
+- **Syntax is verified when the diagram is authored**, not assumed: every block in this file parsed with Mermaid 12.2.0 on 2026-10-14 (recorded in [REFERENCES](REFERENCES.md) and the [review record](development/08-phase-0-review.md) §14). Parsing stays an authoring step rather than a CI gate: the documentation gate is dependency-free by design and runs the structural checks only ([CI and gates](development/03-ci-and-gates.md) §3), so a diagram that changes is re-parsed by the change that edits it, with the parser version recorded there.
 
 ## 2. The repository after Phase 1
 
@@ -18,7 +18,7 @@ Cited: `GOV-41` … `GOV-48`, `OPS-28` … `OPS-43`, `OPS-88`, `OPS-89`, `ADR-01
 
 ```mermaid
 flowchart LR
-  subgraph now["Phase 0 foundation"]
+  subgraph now["Repository foundation (Phase 0, extended in Phase 1)"]
     entry["README.md, CONTRIBUTING.md,<br/>.env.example, .editorconfig"]
     docs["docs/ — the normative pack:<br/>requirements, architecture, security, data model,<br/>decisions, roadmap, diagrams, glossary, guides"]
     gates["scripts/ — dependency-free tooling:<br/>gate runners, build/dev orchestration,<br/>policy checks, load baseline"]
@@ -116,7 +116,7 @@ stateDiagram-v2
 
 ### 5.2 Password recovery
 
-Cited: `AUTH-13` … `AUTH-20`, `DATA-09`, `SEC-24`.
+Cited: `AUTH-13` … `AUTH-20`, `DATA-09`, `SEC-07`, `SEC-12`.
 
 ```mermaid
 sequenceDiagram

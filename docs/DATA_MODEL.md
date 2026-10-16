@@ -2,7 +2,7 @@
 
 This is a logical starting point, not a final migration. It is converted into reviewed migrations and an ER diagram during the phase that builds each domain. Public identifiers use UUIDv7 (time-ordered, non-guessable); authorization never relies on identifier secrecy. Data classes (`C0`–`C3`) and retention rules are defined in [data classification](security/data-classification.md).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-15.
 
 ## Core identity
 
@@ -40,7 +40,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 - `sos_alerts`: id, creator_id, priority (`high` | `medium` | `low`), description, latitude, longitude (nullable), location_source, accuracy_m, status, created_at, updated_at, cancelled_at, resolved_at. Coordinates are nullable because manual entry may be unavailable at creation time.
 - `sos_attachments`: id, alert_id, storage_provider, private_object_key, content_type, byte_size, sha256, width, height, scan_status, created_at. Object keys are generated server-side; uploaded filenames are stored as inert metadata only.
-- `sos_alert_categories`: alert_id, category_id, assigned_at. Unique pair; at least one row per alert is enforced inside the creation transaction. The row references the catalogue by ID, and because categories are deactivated rather than deleted (invariant 21 below), an alert's categories stay resolvable and auditable after the catalogue changes.
+- `sos_alert_categories`: alert_id, category_id, assigned_at. Unique pair; at least one row per alert is enforced inside the creation transaction. The row references the catalogue by ID, and because categories are deactivated rather than deleted (the `categories` entry above, [ADR-015](DECISIONS.md#adr-015--assistance-categories-drive-sos-dispatch)), an alert's categories stay resolvable and auditable after the catalogue changes.
 - `sos_suggestions`: id, alert_id, recipient_id, matched_category_id (the category that made this recipient eligible, recorded so the dispatch decision can be audited later), status (`pending` | `accepted` | `declined` | `expired` | `cancelled`), sent_by, sent_at, responded_at, expires_at. Duplicate active suggestions for the same `(alert_id, recipient_id)` are prevented by a partial unique constraint.
 - `sos_tasks`: id, alert_id, assignee_id, status, claimed_at, arrived_at, resolved_at, closed_at, close_reason. One active task per user is enforced by a partial unique index on active statuses, and one active task per alert is enforced the same way in v1 ([DECISIONS](DECISIONS.md) Q-09).
 - `sos_task_events`: task_id, actor_id, prior_state, new_state, reason_code, created_at, idempotency_key. Append-only; the state machine ([PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) §7) is validated before insert.

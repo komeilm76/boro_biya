@@ -144,6 +144,7 @@ const PHASE_RULES = [
   ['SEC', 63, 71, 1], // security release gates
   ['SEC', 73, 73, 1], // correlation across service hops starts with the service skeleton
   ['SEC', 74, 74, 2], // reporting route is usable once accounts exist
+  ['SEC', 75, 75, 2], // client addresses from trusted hops only, for the per-origin limits that arrive with accounts
 
   // Location privacy and data lifecycle
   ['PRIV', 10, 12, 1], // classification rules apply from the first stored record
@@ -184,6 +185,7 @@ const PHASE_RULES = [
   ['OPS', 86, 86, 1], // the baseline load profile is fixed in the phase that builds the skeleton
   ['OPS', 87, 87, 8], // scaling prerequisites and adjustable capacity are documented with the hardening phase
   ['OPS', 88, 89, 1], // server harness and database/migration packages, created with the skeleton (ADR-029)
+  ['OPS', 90, 91, 2], // migration lock and statement bounds, before the first data-bearing tables (Phase 1 exit review)
 
   // Plugin/service contracts
   ['PLG', 1, 3, 1],
@@ -297,7 +299,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: a service identity for its calls',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: a service identity for its calls',
     },
   ],
   [
@@ -305,7 +307,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
     },
   ],
   [
@@ -313,7 +315,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §5), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all',
+        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all',
     },
   ],
 ]);

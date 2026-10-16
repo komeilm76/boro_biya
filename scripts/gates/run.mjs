@@ -61,7 +61,7 @@ const GATES = [
     name: 'Strict typecheck (QA-04, GOV-56)',
     run: () => node([join(ROOT, 'scripts', 'typecheck.mjs')]),
   },
-  { id: 'unit', name: 'Unit tests (QA-05, QA-66)', run: () => node([VITEST, 'run']) },
+  { id: 'unit', name: 'Unit tests (QA-05)', run: () => node([VITEST, 'run']) },
   { id: 'build', name: 'Production builds (QA-11)', run: () => node([join(ROOT, 'scripts', 'build.mjs')]) },
   {
     id: 'integration',

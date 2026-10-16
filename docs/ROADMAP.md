@@ -2,7 +2,7 @@
 
 Phases are sequential. Each phase ends with recorded evidence, not a status claim, and the repository owner approves the transition. Requirement identifiers referenced below are defined in the registry documents and mapped to phases in [traceability](development/07-traceability.md). The gate catalogue that each phase must run is in [CI and gates](development/03-ci-and-gates.md).
 
-Owner: Repo owner. Reviewed: 2026-10-14.
+Owner: Repo owner. Reviewed: 2026-10-16.
 
 ## Phase 0 — Repository foundation and documentation
 
@@ -32,8 +32,7 @@ Exit gate: documentation reviewed by the owner; every critical design question e
 
 ## Phase 1 — Skeleton and developer experience
 
-
-**Status: complete, awaiting owner approval (2026-10-14).**
+**Status: complete, owner-approved (2026-10-15).**
 
 Deliver: workspace and package setup with pinned dependencies and a committed lockfile; minimal Vue application with the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`), guards that never substitute for server authorization, and the safe not-found page (UI-01 … UI-07); Fastify API, PostgreSQL migration framework, and the two service skeletons; Docker-based startup on Windows and Linux on the pinned production runtime (Node 24 LTS); the runtime compatibility and portability check in CI (`QA-123`); deployment notes naming the runtime and tested versions (`OPS-84`); liveness/readiness endpoints; structured logging with the shared redaction layer (SEC-57, PRIV-10) and correlation identifiers propagated across service hops (SEC-73); validated configuration; the skeleton-level privacy default of no analytics or telemetry dependency (PRIV-19); the timestamp contract for the wire (API-36); strict TypeScript; test examples; application CI (format, lint, typecheck, unit, integration); the rollback runbook for the first migration (declared pull-forward of OPS-81, [GOV-88](development/00-repository-conventions.md) §8); the Bun-toolchain compatibility verification required by [ADR-025](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain); the baseline load profile and its pass/fail rule ([ADR-028](DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement), `OPS-86`).
 
@@ -41,15 +40,13 @@ Exit gate: a clean clone starts and passes every gate active in Phase 1 using on
 
 ## Phase 2 — Authentication and account lifecycle
 
-
 **Status: Not started.**
 
-Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; authentication and negative-case tests; OpenAPI contract for auth endpoints; the message catalogue and layout-direction scaffolding the first user-facing screens need, with **both locales complete from the start** — Persian and English — so no user-facing string is hard-coded and no surface ships in one language only ([GOV-87](development/00-repository-conventions.md), UI-21, UI-22, UI-28, [ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)); the session model of [ADR-021](DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android) (short-lived bearer access tokens, rotating refresh tokens, reuse detection); database-driven roles seeded as `admin` and `user` ([ADR-024](DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)); the audit event store and the first alerts on real signals (SEC-58 … SEC-60); the performance **baseline profile** with its measurable pass/fail rule, wired into CI (OPS-86, QA-124); deployment notes and the deployment-profile template, with every legal and retention item marked unresolved (OPS-84, OPS-85).
+Deliver: registration, login, logout, session management; admin-created accounts with forced first-login setup; security-question recovery; password change; lockout, ban, deactivation with audit events; rate limiting; client addresses propagated through the web edge to the API with trusted-proxy handling and client-sent forwarding headers discarded, so per-origin limits count real clients (`SEC-75`); authentication and negative-case tests; OpenAPI contract for auth endpoints; the message catalogue and layout-direction scaffolding the first user-facing screens need, with **both locales complete from the start** — Persian and English — so no user-facing string is hard-coded and no surface ships in one language only ([GOV-87](development/00-repository-conventions.md), UI-21, UI-22, UI-28, [ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)); the session model of [ADR-021](DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android) (short-lived bearer access tokens, rotating refresh tokens, reuse detection); database-driven roles seeded as `admin` and `user` ([ADR-024](DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)); the audit event store and the first alerts on real signals (SEC-58 … SEC-60); migration runs bounded by lock and statement timeouts before the identity tables' migrations land (`OPS-90`, `OPS-91`); the login route added to the baseline load profile that Phase 1 fixed, with its p95/p99 budget, as the [performance policy](performance/README.md) schedules for the phase that creates the route.
 
-Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; the auth OpenAPI contract validates and its generated client matches the implementation (QA-07); abuse controls are exercised in tests (lockout, rate limits with stable errors, CAPTCHA when enabled); audit events and alerting proven active on at least the authentication and rate-limit signals; privacy defaults verified (private by default, no telemetry, sessions revocable by their owner); the privacy notice is published and linked from sign-up and settings, naming the retention windows actually configured (PRIV-31); a reporting route for a suspected compromise or a vulnerability works without signing in (SEC-74); times and dates render in the user's locale and calendar, never as a raw value (UI-25), on the storage contract that keeps instants in UTC (DATA-27); localization checks active: no hard-coded user-facing strings and no key present in one catalogue and missing from the other, with the language switchable before sign-in (UI-28, QA-17); the abuse policy of [ADR-022](DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) exercised in tests (10 attempts per 15-minute window, self-expiring lockout, automatic bans off); the self-hosted CAPTCHA ([ADR-020](DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) validated server-side with replay, expiry, and accessibility tests; recovery-switch behaviour tested on and off (`AUTH-40`); roles and permissions resolved from data through the one authorization layer, with the last-administrator rule enforced (`ADM-06`, `ADM-07`); retention, deletion, export, and audit-log obligations are recorded the way [ADR-026](DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet) and [ADR-027](DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction) require — automated deletion off by default, no administrator account-deletion path, deactivation and deletion kept separate, the temporary policy documented, and the deployment profile's fields marked unresolved rather than blank; English is the default language and an explicit choice persists ([ADR-018](DECISIONS.md#adr-018--english-is-the-default-language-persian-is-a-complete-translation)).
+Exit gate: security and negative-case tests pass (including cross-user and replayed-grant cases); session and recovery behaviour reviewed against [SECURITY](SECURITY.md) §2–§4; account-state matrix tested; the auth OpenAPI contract validates and its generated client matches the implementation (QA-07); migration runs fail within their configured lock and statement bounds in tests against real PostgreSQL (`OPS-90`, `OPS-91`); abuse controls are exercised in tests (lockout, rate limits with stable errors, CAPTCHA when enabled); audit events and alerting proven active on at least the authentication and rate-limit signals; privacy defaults verified (private by default, no telemetry, sessions revocable by their owner); the privacy notice is published and linked from sign-up and settings, naming the retention windows actually configured (PRIV-31); a reporting route for a suspected compromise or a vulnerability works without signing in (SEC-74); times and dates render in the user's locale and calendar, never as a raw value (UI-25), on the storage contract that keeps instants in UTC (DATA-27); localization checks active: no hard-coded user-facing strings and no key present in one catalogue and missing from the other, with the language switchable before sign-in (UI-28, QA-17); the abuse policy of [ADR-022](DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) exercised in tests (10 attempts per 15-minute window, self-expiring lockout, automatic bans off); a spoofed forwarding header can neither choose nor hide the client address that per-origin and rate limits count against, through the web edge or directly (`SEC-75`); the self-hosted CAPTCHA ([ADR-020](DECISIONS.md#adr-020--self-hosted-privacy-first-captcha)) validated server-side with replay, expiry, and accessibility tests; recovery-switch behaviour tested on and off (`AUTH-40`); roles and permissions resolved from data through the one authorization layer, with the last-administrator rule enforced (`ADM-06`, `ADM-07`); retention, deletion, export, and audit-log obligations are recorded the way [ADR-026](DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet) and [ADR-027](DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction) require — automated deletion off by default, no administrator account-deletion path, deactivation and deletion kept separate, the temporary policy documented, and the deployment profile's fields marked unresolved rather than blank; English is the default language and an explicit choice persists ([ADR-018](DECISIONS.md#adr-018--english-is-the-default-language-persian-is-a-complete-translation)).
 
 ## Phase 3 — Map foundation and user settings
-
 
 **Status: Not started.**
 
@@ -59,7 +56,6 @@ Exit gate: denied-permission, unavailable-GPS, stale-fix, and manual-coordinate 
 
 ## Phase 4 — Relation Service
 
-
 **Status: Not started.**
 
 Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy rules, live/last-known location preferences with the visual and textual distinction between them (MAP-06) and the revoke controls that stop publishing promptly (MAP-08), service capability declaration and the fail-closed behaviour when the service is unavailable (PLG-35 … PLG-41), time-boxed per-follower live grants with expiry and revoke, history sharing with per-follower grants, retention and deletion, authorized location queries, realtime updates, and the location-sharing settings screens (remaining time per grant, "end now", history window, delete history, access list).
@@ -67,7 +63,6 @@ Deliver: user search, follow requests, accept/reject/unfollow, blocks, privacy r
 Exit gate: cross-user privacy tests and revocation tests pass (single-grant revoke, unfollow, block, disable sharing, grant expiry, history deletion); open streams close on every revocation path; Relation-unavailable behaviour is tested and fails closed with an explanation in the UI, never an implied grant (PLG-41); every sharing default is proven off in a fresh account and the consent/sharing change trail is queryable; retention purges are evidenced for the last-known row and for history rows past their window (DATA-17); the owner can review their own sharing history — when, with whom, and for how long — and share starts are rate-limited (MAP-10); ADR-004 (realtime transport) is accepted and ADR-005 (geospatial) is decided, implemented, and benchmarked; decisions Q-20, Q-21, Q-22 resolved.
 
 ## Phase 5 — SOS Service
-
 
 **Status: Not started.**
 
@@ -77,7 +72,6 @@ Exit gate: concurrent claim tests prove exactly one assignee; task-transition an
 
 ## Phase 6 — Routing and navigation
 
-
 **Status: Not started.**
 
 Deliver: routing provider adapter (MAP-13) with car/bicycle/foot alternatives, route selection, navigation UI, instructions and voice data where supported (MAP-15), distance and ETA, and speed limits and traffic only from licensed provider data (MAP-14).
@@ -85,7 +79,6 @@ Deliver: routing provider adapter (MAP-13) with car/bicycle/foot alternatives, r
 Exit gate: documented provider limits with graceful fallback; mobile performance measured against the Phase 1 budgets; no fabricated data (speed limits, traffic, instructions) anywhere in the UI; Q-10 resolved for routing, traffic, and speed-limit providers.
 
 ## Phase 7 — Secure plugin lifecycle
-
 
 **Status: Not started.**
 
@@ -95,7 +88,6 @@ Exit gate: adversarial archive tests and the container-isolation review pass; th
 
 ## Phase 8 — Android hardening and scale
 
-
 **Status: Not started.**
 
 Deliver: Capacitor Android build, permission review, secure token storage, deep links and lifecycle behaviour, load tests, profiling, database/index tuning, observability, backup/restore with a rehearsal and recorded objectives (OPS-82), the runbook set completed and exercised (OPS-81), and the availability objective and error-budget policy recorded (OPS-83).
@@ -103,7 +95,6 @@ Deliver: Capacitor Android build, permission review, secure token storage, deep 
 Exit gate: supported device/OS matrix and measured resource targets documented; permissions and secure token storage verified on a real or emulated device (nothing sensitive in plain storage, no permission requested that the build cannot justify); backup and restore rehearsal succeeds with the elapsed restore time recorded (OPS-82) and the availability objective recorded with its measurement point (OPS-83); Q-19 resolved.
 
 ## Phase 9 — Production release
-
 
 **Status: Not started.**
 
