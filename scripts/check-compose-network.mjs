@@ -157,7 +157,7 @@ function checkApiForwardingDocumentation() {
   const operations = readFileSync(OPERATIONS, 'utf8');
   assert.match(development, /WEB_PUBLISH_ADDRESS/);
   assert.match(development, /widening it also exposes the web edge's forwarded `\/api\/\*` requests/i);
-  assert.match(operations, /widen `WEB_PUBLISH_ADDRESS`[^\n]*forwarded `\/api\/\*`/i);
+  assert.match(operations, /widen(?:s)? `WEB_PUBLISH_ADDRESS`[^\n]*forwarded `\/api\/\*`/i);
 }
 
 function checkComposeConfig() {
