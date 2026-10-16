@@ -1,6 +1,6 @@
 # Security, Privacy, and Threat Model
 
-Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate. Security requirements are acceptance criteria, not optional cleanup.
+Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate. Security requirements are acceptance criteria, not optional cleanup. For reporting a vulnerability in this repository and the owner-approved response commitments, see [`.github/SECURITY.md`](../.github/SECURITY.md).
 
 Owner: Security. Reviewed: 2026-10-16.
 
@@ -123,7 +123,7 @@ Never extract an uploaded archive into an executable host path, and never run it
 - **[SEC-61]** An incident response procedure defines severity levels, contacts, evidence preservation, containment, user notification duties, and post-incident review; it is stored in the operational runbook written in Phase 8 and completed as a Phase 9 deliverable.
 - **[SEC-62]** Log and metric retention is defined in [data classification](security/data-classification.md) §4, and no sensitive location trail is stored in observability systems.
 - **[SEC-73]** One correlation identifier per user action is propagated across every service hop and appears in logs, error responses, audit records, and traces, so a request can be followed end to end without joining on user data; trace attributes carry no payloads, credentials, or coordinates, and trace sampling and retention follow the log and metric rules (SEC-62).
-- **[SEC-74]** A reporting route reaches the operators for a suspected account compromise, abuse, or a security vulnerability: it works without signing in, its contact and the response a reporter should expect are published in the repository's security policy and in the user guide, the repository enables private vulnerability reporting, and the "Account compromise report" runbook in [operations](operations/README.md) is the documented internal path.
+- **[SEC-74]** A reporting route reaches the operators for a suspected account compromise, abuse, or a security vulnerability: it works without signing in, its contact and the response a reporter should expect are published in the repository's [security policy](../.github/SECURITY.md) and in the user guide, the repository enables private vulnerability reporting, and the "Account compromise report" runbook in [operations](operations/README.md) is the documented internal path.
 
 ## 10. Security gates
 

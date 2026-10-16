@@ -2,7 +2,7 @@
 
 Thanks for helping. The full rules live in the documentation; this file is the short path to them.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## Before you start
 
@@ -47,7 +47,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 ## Reporting problems
 
-- **Security issues:** do not open a public issue. Report privately to the repository owner with reproduction steps, impact, and any suggested fix.
+- **Security issues:** do not open a public issue, pull request, or discussion. Report vulnerabilities through GitHub Private Vulnerability Reporting as described in [.github/SECURITY.md](.github/SECURITY.md), which specifies the required report details and target response times (acknowledgement within 7 working days; triage and initial accept/reject decision within 21 working days).
 - **Documentation defects:** open an issue naming the document and section, or fix it directly — a wrong document is a defect, not a preference.
 - **Bugs:** include the commit, the exact command, the observed behaviour, and the expected behaviour.
 
