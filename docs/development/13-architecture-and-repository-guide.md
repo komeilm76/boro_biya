@@ -1,6 +1,6 @@
 # Architecture and Repository Guide
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 This guide describes code and executable configuration that exist in the current Phase 0–1 checkout. The broader [architecture document](../ARCHITECTURE.md), [requirements](../PRODUCT_REQUIREMENTS.md), and [roadmap](../ROADMAP.md) also describe future design; they are not evidence that a planned capability is implemented.
 
@@ -74,7 +74,7 @@ The current communication paths are deliberately small:
 
 Compose starts a single PostgreSQL 18.6 container. The `migrate` service runs `packages/db/dist/cli.js init-cluster` once after `db` becomes healthy. It creates `core`, `relation`, and `sos` schemas and service roles, then applies each service's versioned migrations. The Compose API, Relation, and SOS services wait for migration completion and database health.
 
-The committed migrations currently bootstrap the schemas and least-privilege grants; they do not create account, location, relation, map, or SOS domain tables. Each service has its own up/down migration pair under its workspace. The migration runner tracks versions and checksums, serializes runs, and supports reversal; the local `db:rollback` command reverses one migration and can remove the schema objects it created. Consult the [failed-migration runbook](../operations/runbooks/failed-migration-rollback.md) before using rollback outside a disposable environment.
+The committed migrations bootstrap schemas and least-privilege grants. Phase 2 adds the core `0002_identity` up/down pair for accounts and database-driven roles/permissions; no session, location, relation, map or SOS tables exist yet. Each service owns its migrations under its workspace. The migration runner tracks versions and checksums, serializes runs, and supports reversal; the local `db:rollback` command reverses one migration and can remove the schema objects it created. Consult the [failed-migration runbook](../operations/runbooks/failed-migration-rollback.md) before using rollback outside a disposable environment.
 
 Integration tests normally start an isolated embedded PostgreSQL 18 instance and create/drop isolated test databases. `TEST_DATABASE_URL` changes that to a caller-provided server; use a disposable instance because the harness creates and drops databases there.
 

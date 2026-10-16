@@ -1,6 +1,6 @@
 # Boro_biya
 
-An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
+An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation and the initial Phase 2 identity entity/migration/repository: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
 
 Owner: Repo owner. Reviewed: 2026-10-17.
 

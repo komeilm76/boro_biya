@@ -39,7 +39,7 @@ Owner: Engineering. Reviewed: 2026-10-17.
 | [development/README.md](development/README.md) | Index for the Phase 0–1 developer onboarding and workflow manual | Engineering | 2026-10-16 |
 | [development/11-developer-onboarding.md](development/11-developer-onboarding.md) | Numbered zero-to-working-environment setup, run, verification, stop, reset, and setup diagnosis | Engineering | 2026-10-16 |
 | [development/12-development-workflow.md](development/12-development-workflow.md) | Current repository/workspace workflow, tests, scoped changes, Git, PR, review, and CI | Engineering | 2026-10-16 |
-| [development/13-architecture-and-repository-guide.md](development/13-architecture-and-repository-guide.md) | Implemented Phase 0–1 repository architecture, boundaries, migrations, Compose, and CI | Engineering | 2026-10-16 |
+| [development/13-architecture-and-repository-guide.md](development/13-architecture-and-repository-guide.md) | Implemented Phase 0–1 repository architecture, boundaries, migrations, Compose, and CI | Engineering | 2026-10-17 |
 | [development/14-environment-and-configuration.md](development/14-environment-and-configuration.md) | Environment variables, effective settings, secrets, defaults, ports, and networking | Engineering | 2026-10-16 |
 | [development/15-commands-and-testing.md](development/15-commands-and-testing.md) | Install, development, validation, test, build, and diagnosis commands with evidence | Engineering | 2026-10-16 |
 | [development/16-troubleshooting.md](development/16-troubleshooting.md) | Evidence-based setup, database, Docker, test, and contribution troubleshooting | Engineering | 2026-10-16 |

@@ -69,7 +69,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `
 
 | # | Criterion | Evidence that will prove it | Status |
 | --- | --- | --- | --- |
-| 1 | Registration, login, logout, and session management implemented and session-revocable by the owner | Integration tests; `AUTH-01 … AUTH-14`, `UI-10`, `PRIV-21` | Not started |
+| 1 | Registration, login, logout, and session management implemented and session-revocable by the owner | Integration tests; `AUTH-01 … AUTH-14`, `UI-10`, `PRIV-21`; identity entity/migration/repository tests recorded in [implementation status](17-implementation-status.md#phase-2-identity-foundation--partial-row-1-evidence); endpoints, sessions and UI still outstanding | In progress |
 | 2 | Admin-created accounts with forced first-login setup (password, then security questions) | Account-state matrix test; `AUTH-25 … AUTH-29`, `DATA-10` | Not started |
 | 3 | Security-question recovery end to end, short-lived and single-use, with attempt limits | Security tests; `AUTH-30 … AUTH-38`, `DATA-09` | Not started |
 | 4 | Lockout, ban, deactivation, and reactivation with distinct reasons and audit events | Abuse-control tests; `SEC-14 … SEC-19` | Not started |

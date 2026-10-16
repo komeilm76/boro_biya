@@ -10,7 +10,7 @@ This page separates what is implemented in the current checkout from what the ro
 | --- | --- | --- | --- |
 | 0 | Repository foundation and documentation | Complete | 2026-10-14 |
 | 1 | Skeleton and developer experience | Complete | 2026-10-15 |
-| 2 | Authentication and account lifecycle | Not started | — |
+| 2 | Authentication and account lifecycle | In progress | Start authorised 2026-10-17; exit not approved |
 | 3 | Map foundation and user settings | Not started | — |
 | 4 | Relation Service | Not started | — |
 | 5 | SOS Service | Not started | — |
@@ -36,11 +36,34 @@ Phase 2 is **In progress**, explicitly owner-authorised on 2026-10-17 for authen
 | Containers/CI | Development/CI Compose services; CI builds/smoke-tests images and checks private backend networking; tag-only release packaging mechanics | `docker-compose.yml`, `docker/`, `.github/workflows/ci.yml` |
 | Android | Capacitor configuration and TypeScript configuration only; the build orchestrator explicitly skips native packaging | `apps/android/`, `scripts/build.mjs` |
 
-The database migrations bootstrap schemas/roles and migration-ledger structures; they do not create user, session, map, relation, location, upload, or SOS business tables. The Relation and SOS processes are not called by a Phase 1 business workflow.
+The Phase 1 migrations bootstrap schemas/roles and migration-ledger structures. Phase 2 adds the `0002_identity` up/down migration for users, roles, permissions, role assignments and role-permission grants; session, map, relation, location, upload and SOS tables are not implemented. The Relation and SOS processes are not called by a Phase 1 business workflow.
+
+### Phase 2 identity foundation — partial row 1 evidence
+
+The owner directed that PR #12 remain open and unmerged until Phase 2 tasks are complete. Implementation commits therefore continue on the same branch and PR; no parallel pull request is opened.
+
+- `apps/api/src/identity/account.ts`: safe account projection, versioned username normalization (NFKC, trim, locale-independent lowercasing; 3–64 Unicode code points, letters/numbers/combining marks/underscore/hyphen; no contact identifiers), and the complete four-state × two-setup-flag session-eligibility predicate.
+- `apps/api/migrations/0002_identity.{up,down}.sql`: UUIDv7 identity tables, unique normalized usernames, version columns, separate setup flags, constrained account states, database-driven role/permission structure, and exactly `admin`/`user` roles seeded. The runtime role cannot delete accounts. Reversal destroys these development tables and their rows; do not use it as a production data-recovery procedure.
+- `apps/api/src/identity/repository.ts`: parameterized persistence through the existing database pool; account creation and default `user` assignment in one transaction, rollback on failure, credential-free lookup projection. This is an internal seam, not a registration endpoint: password policy, Argon2id adapter, security answers, audit events, abuse controls, sessions and API authorisation are not yet wired. The hash-marker guard is not cryptographic validation.
+- Unit tests: normalization vectors, all 16 state/setup combinations, transaction/lookup failure paths and public projection. Integration tests: real PostgreSQL 18, concurrent username uniqueness, missing-default-role rollback, state constraints, runtime deletion denial, migration reversal/reapplication and seed consistency.
+
+Local evidence on Node 24.22.0 and Bun 1.4.3:
+
+| Command | Result |
+| --- | --- |
+| `bun install --frozen-lockfile` | Passed; no manifest or lockfile change |
+| `bun run typecheck` | Passed across every project |
+| `bun run lint` | Passed |
+| `bun run build` | Passed |
+| `bun run test:integration` | Passed: 17 tests in five files, disposable PostgreSQL 18.4 |
+| `bun run gate` | Passed all 15 active gates, including full-history documentation/traceability, build, real-PostgreSQL integration, runtime compatibility, container configuration assertions and the existing load baseline; no gate configuration changed |
+| `bun run coverage` | Passed: 183 tests in 25 files; statements 92.08%, branches 83.33%, functions 90.53%, lines 93.73%; both identity modules 100% |
+
+The initial integration invocation preceded the build and failed the existing built-artefact preconditions; the new seven identity tests passed in that invocation. Building and rerunning the complete integration command passed all 17 tests. No test or gate was weakened. Row 1 remains In progress; no complete acceptance criterion is claimed for endpoints or user-facing flows. Next: hashing/security-answer persistence and session lifecycle, then API and bilingual Vue wiring with negative-case tests.
 
 ## 3. Features that are not implemented
 
-No authentication or account lifecycle is implemented. In particular, the `/auth/login` page is a placeholder; route guards and the session store are client-side UX scaffolding, not server-side identity or authorization. There are no registration, login, password, session, role, account-recovery, audit-event, lockout, ban, or admin authorization APIs.
+The identity entity and persistence foundation are implemented; no end-to-end authentication or account-lifecycle workflow is implemented. In particular, the `/auth/login` page is a placeholder; route guards and the session store are client-side UX scaffolding, not server-side identity or authorization. There are no registration, login, password, session, role, account-recovery, audit-event, lockout, ban, or admin authorization APIs.
 
 The route shell and future names are not product features. The current checkout also has no:
 
