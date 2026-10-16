@@ -48,7 +48,7 @@ The workspace gate suite (`bun run gate`, §4) includes this gate as its first s
 These commands are the Phase 1 contract, and they exist. Each behaves identically on Windows PowerShell 7 and Linux (OPS-65); the CI matrix proves it (QA-70).
 
 ```bash
-bun install                        # install workspaces (pinned versions, lockfile committed)
+bun install --frozen-lockfile      # install exactly the committed workspace versions
 bun run env:create                 # create .env from .env.example with development-safe values
 docker compose up -d db            # PostgreSQL 18 (container only)
 bun run db:migrate                 # ensure roles and schemas, apply versioned migrations
@@ -61,9 +61,9 @@ bun run check:runtime              # runtime compatibility and portability check
 
 Without Docker, replace the two database steps with `bun run dev:db` (see §2); it stays running in its own terminal and serves the same roles and schemas.
 
-Production runs these artefacts on **Node 24 LTS** (`node dist/…`), not on Bun: Bun is the development toolchain and package manager ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). The Docker path below builds and starts the same artefacts on the pinned Node version, which is what the compatibility check verifies.
+Any future production release is specified to run these artefacts on **Node 24 LTS** (`node dist/…`), not on Bun: Bun is the development toolchain and package manager ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). This runtime decision is not evidence of an existing production deployment. The Docker path below builds and starts the same artefacts on the pinned Node version, which is what the compatibility check verifies.
 
-Docker-first alternative (no local Node required beyond the gate scripts):
+Docker-first alternative (application builds run in containers; local Node 24 and Bun are still needed for repository tooling and environment creation):
 
 ```bash
 bun run env:create                 # once, so Compose has its variables

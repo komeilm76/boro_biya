@@ -1,6 +1,6 @@
 # Boro_biya
 
-A security-first mapping, navigation, social-location, and SOS assistance platform: a responsive web application and installable PWA, an Android application, a core TypeScript API, and two independently deployable services (Relation and SOS).
+An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
 
 Owner: Repo owner. Reviewed: 2026-10-16.
 
@@ -8,6 +8,7 @@ Owner: Repo owner. Reviewed: 2026-10-16.
 
 ## Where to start
 
+- **New developers:** [Developer onboarding and manual](docs/development/README.md) — setup, architecture, configuration, commands, testing, troubleshooting, and current implementation status.
 - **Everyone:** [docs/README.md](docs/README.md) — the documentation index, normative language, requirement scheme, and phase status; [docs/DIAGRAMS.md](docs/DIAGRAMS.md) for the topology, flows, and lifecycles; [docs/GLOSSARY.md](docs/GLOSSARY.md) for the vocabulary.
 - **Agents and engineers:** [docs/MASTER_PROJECT_PROMPT.md](docs/MASTER_PROJECT_PROMPT.md) — the canonical instructions.
 - **Contributors:** [CONTRIBUTING.md](CONTRIBUTING.md) — workflow, gate command, and review rules.
@@ -19,14 +20,13 @@ Owner: Repo owner. Reviewed: 2026-10-16.
 The full active gate set runs through one entry point, locally and in CI (same commands, QA-58):
 
 ```bash
-bun install          # pinned toolchain: Bun 1.4.3 as package manager, Node 24 LTS as runtime
-bun run env:create   # .env with development-safe values
-bun run gate         # documentation, traceability, dependency direction, telemetry ban, licences,
-                     # advisories, format, lint, typecheck, unit, build, integration (disposable
-                     # PostgreSQL 18), container assertions, runtime compatibility, load baseline
+bun install --frozen-lockfile # pinned toolchain: Bun 1.4.3 as package manager, Node 24 LTS as runtime
+bun run gate                  # documentation, traceability, dependency direction, telemetry ban, licences,
+                              # advisories, format, lint, typecheck, unit, build, integration (disposable
+                              # PostgreSQL 18), container assertions, runtime compatibility, load baseline
 ```
 
-The documentation gate itself stays dependency-free and runs on Linux, Windows, and macOS without any install:
+The full gate does not require a local `.env`; for running the application, create development values with `bun run env:create` as described in the [developer onboarding guide](docs/development/11-developer-onboarding.md). The documentation gate itself stays dependency-free and runs on Linux, Windows, and macOS without any install:
 
 ```bash
 node scripts/gates/phase0.mjs
@@ -50,9 +50,9 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | `docs/performance/` | Baseline load profile, capacity policy, and measured results |
 | `scripts/` | Dependency-free Node tooling: gate runners, build/dev orchestration, policy checks, environment bootstrap, load baseline |
 | `.github/workflows/` | CI workflows: documentation gates and application gates |
-| `apps/web/` | Vue 3 web/PWA skeleton and its production static server |
+| `apps/web/` | Vue 3 client route shell and Node server for built static assets; no production deployment is verified, and PWA installation/offline behaviour is not implemented |
 | `apps/api/` | Core Fastify API skeleton |
-| `apps/android/` | Capacitor packaging configuration (the shell arrives in Phase 8) |
+| `apps/android/` | Capacitor packaging configuration only; the native shell arrives in Phase 8 |
 | `services/relation/`, `services/sos/` | The two service skeletons, each with its own schema and least-privilege role |
 | `packages/` | Shared workspaces: contracts, validation, config, server-runtime, db, api-client, ui, test-utils |
 | `docker/`, `docker-compose.yml` | Pinned image builds and the local stack (db, one-shot migrate, api, relation, sos, web) |

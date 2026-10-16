@@ -14,12 +14,14 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 ## Workflow
 
+For a complete Phase 0–1 environment and architecture walkthrough, start with the [developer onboarding manual](docs/development/README.md). This file remains the short contribution checklist.
+
 1. Create a short-lived branch: `<type>/<topic>`, where `<type>` is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `security` ([repository conventions](docs/development/00-repository-conventions.md) §3).
 2. Make the smallest change that satisfies a requirement, and update the documents it affects **in the same commit** — including the `Reviewed:` date in each changed document's header, which gate check 13 verifies. Requirement IDs are the reference handles — quote them in the commit body and the pull request.
 3. Run the gates that are active for the current phase ([docs/development/03-ci-and-gates.md](docs/development/03-ci-and-gates.md)). From Phase 1 that is one command:
 
    ```bash
-   bun install
+   bun install --frozen-lockfile
    bun run gate
    ```
 

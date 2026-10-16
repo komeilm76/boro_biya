@@ -8,19 +8,20 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 | # | Document | Audience | Read it when |
 | --- | --- | --- | --- |
-| 1 | [MASTER_PROJECT_PROMPT.md](MASTER_PROJECT_PROMPT.md) | Agents, engineers | You are about to change anything — the canonical instructions |
-| 2 | [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) | Everyone | You need functional scope and acceptance criteria |
-| 3 | [ARCHITECTURE.md](ARCHITECTURE.md) | Engineers | You need deployment, service boundaries, performance, and technology decisions |
-| 4 | [DIAGRAMS.md](DIAGRAMS.md) | Everyone | You want the picture: topology, the request path, the lifecycles, and how work moves through the phases |
-| 5 | [GLOSSARY.md](GLOSSARY.md) | Everyone | A term is used in a way you have not seen before |
-| 6 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping (for vulnerability reporting, see [.github/SECURITY.md](../.github/SECURITY.md)) |
-| 7 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
-| 8 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
-| 9 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
-| 10 | [QUALITY_GATES.md](QUALITY_GATES.md) | Everyone | You need the gate catalogue, test strategy, or release criteria |
-| 11 | [ROADMAP.md](ROADMAP.md) | Everyone | You need phases, deliverables, and phase exit criteria |
-| 12 | [DECISIONS.md](DECISIONS.md) | Everyone | You need a recorded decision, the ADR template, or the open-question register |
-| 13 | [REFERENCES.md](REFERENCES.md) | Engineers | You are verifying external versions, standards, or provider terms |
+| 1 | [Developer onboarding and manual](development/README.md) | New developers | You need a working local environment, architecture, commands, tests, or contribution workflow |
+| 2 | [MASTER_PROJECT_PROMPT.md](MASTER_PROJECT_PROMPT.md) | Agents, engineers | You are about to change anything — the canonical instructions |
+| 3 | [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) | Everyone | You need functional scope and acceptance criteria |
+| 4 | [ARCHITECTURE.md](ARCHITECTURE.md) | Engineers | You need deployment, service boundaries, performance, and technology decisions |
+| 5 | [DIAGRAMS.md](DIAGRAMS.md) | Everyone | You want the picture: topology, the request path, the lifecycles, and how work moves through the phases |
+| 6 | [GLOSSARY.md](GLOSSARY.md) | Everyone | A term is used in a way you have not seen before |
+| 7 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping (for vulnerability reporting, see [.github/SECURITY.md](../.github/SECURITY.md)) |
+| 8 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
+| 9 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
+| 10 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
+| 11 | [QUALITY_GATES.md](QUALITY_GATES.md) | Everyone | You need the gate catalogue, test strategy, or release criteria |
+| 12 | [ROADMAP.md](ROADMAP.md) | Everyone | You need phases, deliverables, and phase exit criteria |
+| 13 | [DECISIONS.md](DECISIONS.md) | Everyone | You need a recorded decision, the ADR template, or the open-question register |
+| 14 | [REFERENCES.md](REFERENCES.md) | Engineers | You are verifying external versions, standards, or provider terms |
 
 ## Documentation map
 
@@ -35,6 +36,14 @@ Owner: Engineering. Reviewed: 2026-10-16.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
+| [development/README.md](development/README.md) | Index for the Phase 0–1 developer onboarding and workflow manual | Engineering | 2026-10-16 |
+| [development/11-developer-onboarding.md](development/11-developer-onboarding.md) | Numbered zero-to-working-environment setup, run, verification, stop, reset, and setup diagnosis | Engineering | 2026-10-16 |
+| [development/12-development-workflow.md](development/12-development-workflow.md) | Current repository/workspace workflow, tests, scoped changes, Git, PR, review, and CI | Engineering | 2026-10-16 |
+| [development/13-architecture-and-repository-guide.md](development/13-architecture-and-repository-guide.md) | Implemented Phase 0–1 repository architecture, boundaries, migrations, Compose, and CI | Engineering | 2026-10-16 |
+| [development/14-environment-and-configuration.md](development/14-environment-and-configuration.md) | Environment variables, effective settings, secrets, defaults, ports, and networking | Engineering | 2026-10-16 |
+| [development/15-commands-and-testing.md](development/15-commands-and-testing.md) | Install, development, validation, test, build, and diagnosis commands with evidence | Engineering | 2026-10-16 |
+| [development/16-troubleshooting.md](development/16-troubleshooting.md) | Evidence-based setup, database, Docker, test, and contribution troubleshooting | Engineering | 2026-10-16 |
+| [development/17-implementation-status.md](development/17-implementation-status.md) | Completed Phase 0–1 scope, future-phase boundary, user-manual and production status | Engineering | 2026-10-16 |
 | [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-14 |
 | [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-16 |
 | [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-16 |
