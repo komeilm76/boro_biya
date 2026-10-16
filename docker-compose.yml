@@ -10,9 +10,10 @@
 #   bun install && bun run env:create
 #   docker compose up --build          # web, api, relation, sos, db (+ one-shot migrate)
 #
-# Single replica per service by design (ADR-008); metrics ports are deliberately NOT published —
-# the metrics interface stays non-public (OPS-63). Resource limits are declared per container
-# (OPS-52) and overridable for the host at hand (OPS-87).
+# Single replica per service by design (ADR-008). Only PostgreSQL (for host-run development
+# tools) and the web edge (for the local browser) are published, and both bind to host loopback
+# by default. API, relation, SOS, and metrics remain on the Compose network (OPS-63). Resource
+# limits are declared per container (OPS-52) and overridable for the host at hand (OPS-87).
 name: boro-biya
 
 services:
@@ -34,7 +35,8 @@ services:
       # Fail closed on weak dev defaults: the password comes from the local .env, never from a
       # value baked into this file (OPS-70).
     ports:
-      - "${DB_PORT:-5432}:5432"
+      # Host-run development tools need PostgreSQL, but it must remain local to this machine.
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       # postgres:18+ stores data in a major-version subdirectory of /var/lib/postgresql
       # (PGDATA=/var/lib/postgresql/18/docker) and its entrypoint refuses the legacy
@@ -99,8 +101,6 @@ services:
       DB_STATEMENT_TIMEOUT_MS: ${DB_STATEMENT_TIMEOUT_MS:-5000}
       GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: ${GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS:-10}
       BUILD_COMMIT: ${BUILD_COMMIT:-dev}
-    ports:
-      - "${API_PORT:-3000}:3000"
     depends_on:
       db:
         condition: service_healthy
@@ -141,8 +141,6 @@ services:
       DATABASE_URL: postgres://boro_relation:${RELATION_DB_PASSWORD}@db:5432/${POSTGRES_DB:-boro_biya}
       # WEB_ORIGIN is core-API-only configuration; services do not serve browsers directly.
       WEB_ORIGIN: ""
-    ports:
-      - "${RELATION_PORT:-3001}:3001"
     depends_on:
       db:
         condition: service_healthy
@@ -182,8 +180,6 @@ services:
       METRICS_PORT: "9002"
       DATABASE_URL: postgres://boro_sos:${SOS_DB_PASSWORD}@db:5432/${POSTGRES_DB:-boro_biya}
       WEB_ORIGIN: ""
-    ports:
-      - "${SOS_PORT:-3002}:3002"
     depends_on:
       db:
         condition: service_healthy
@@ -221,7 +217,8 @@ services:
       API_ORIGIN: http://api:3000
       BUILD_COMMIT: ${BUILD_COMMIT:-dev}
     ports:
-      - "${WEB_PORT:-8080}:8080"
+      # Set WEB_PUBLISH_ADDRESS explicitly to widen this bind; it also exposes forwarded /api.
+      - "${WEB_PUBLISH_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:8080"
     depends_on:
       api:
         condition: service_healthy

@@ -46,6 +46,7 @@ const TABLE = {
   API_HOST: '127.0.0.1',
   METRICS_HOST: '127.0.0.1',
   WEB_HOST: '127.0.0.1',
+  WEB_PUBLISH_ADDRESS: '127.0.0.1',
   WEB_ORIGIN: 'http://localhost:5173',
   CORS_ALLOWED_ORIGINS: 'http://localhost:5173,http://localhost:8080',
   TRUST_PROXY: 'false',

@@ -248,6 +248,9 @@ jobs:
       - name: Create the local development environment
         run: bun run env:create
 
+      - name: Verify effective Compose port configuration
+        run: node scripts/check-compose-network.mjs
+
       # Build and start are separate steps, and both convert the tail of their log into
       # workflow annotations on failure, so a broken stack is diagnosable straight from the
       # check-run annotations (the job log archive needs a host this project's tooling cannot
@@ -285,28 +288,35 @@ jobs:
             exit 1
           }
 
+      - name: Verify live Compose host bindings
+        run: node scripts/check-compose-network.mjs --runtime
+
       - name: Smoke the running stack
         run: |
           set -euo pipefail
-          curl -fsS http://localhost:8080/healthz | tee /tmp/web-health.json
-          curl -fsS http://localhost:3000/healthz | tee /tmp/api-health.json
-          curl -fsS http://localhost:3000/readyz | tee /tmp/api-ready.json
-          curl -fsS http://localhost:3001/readyz | tee /tmp/relation-ready.json
-          curl -fsS http://localhost:3002/readyz | tee /tmp/sos-ready.json
+          curl -fsS http://127.0.0.1:8080/healthz | tee /tmp/web-health.json
+          docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/healthz').then(async r => { process.stdout.write(await r.text()); if (!r.ok) process.exitCode = 1; })" | tee /tmp/api-health.json
+          docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/readyz').then(async r => { process.stdout.write(await r.text()); if (!r.ok) process.exitCode = 1; })" | tee /tmp/api-ready.json
+          docker compose exec -T relation node -e "fetch('http://127.0.0.1:3001/readyz').then(async r => { process.stdout.write(await r.text()); if (!r.ok) process.exitCode = 1; })" | tee /tmp/relation-ready.json
+          docker compose exec -T sos node -e "fetch('http://127.0.0.1:3002/readyz').then(async r => { process.stdout.write(await r.text()); if (!r.ok) process.exitCode = 1; })" | tee /tmp/sos-ready.json
           node -e '
             const assert = require("node:assert");
             const web = JSON.parse(require("node:fs").readFileSync("/tmp/web-health.json", "utf8"));
             const api = JSON.parse(require("node:fs").readFileSync("/tmp/api-health.json", "utf8"));
             const ready = JSON.parse(require("node:fs").readFileSync("/tmp/api-ready.json", "utf8"));
+            const relation = JSON.parse(require("node:fs").readFileSync("/tmp/relation-ready.json", "utf8"));
+            const sos = JSON.parse(require("node:fs").readFileSync("/tmp/sos-ready.json", "utf8"));
             assert.equal(web.service, "web");
             assert.equal(api.service, "api");
             assert.equal(api.commit, process.env.BUILD_COMMIT ?? "dev", "healthz must report the build commit (OPS-61)");
             assert.match(api.serverTime, /Z$/);
             assert.equal(ready.status, "ready");
-            console.log("compose smoke: web + api healthy, readyz green, commit and timestamp contract verified");
+            assert.equal(relation.status, "ready");
+            assert.equal(sos.status, "ready");
+            console.log("compose smoke: web, api, relation, sos healthy; internal services checked inside Docker networking");
           '
           # The proxy path: an unknown /api/v1 route through the web edge returns the envelope.
-          status=$(curl -s -o /tmp/proxy-404.json -w "%{http_code}" http://localhost:8080/api/v1/definitely-not-a-route)
+          status=$(curl -s -o /tmp/proxy-404.json -w "%{http_code}" http://127.0.0.1:8080/api/v1/definitely-not-a-route)
           test "$status" = "404"
           grep -q '"code":"not_found"' /tmp/proxy-404.json
           grep -q '"requestId"' /tmp/proxy-404.json
