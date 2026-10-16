@@ -1,6 +1,6 @@
 # Runbook: failed migration and rollback
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 First runbook of the register in [operations/README.md](../README.md) — the `OPS-81` slice
 declared as a pull-forward into Phase 1 under `GOV-88`, because the first migration needs a
@@ -84,13 +84,16 @@ After any procedure above:
 
 ```sh
 bun run db:status                                   # ledger matches the files on disk
-curl -fsS http://localhost:3000/readyz              # {"status":"ready",...,"checks":{"database":true}}
-curl -fsS http://localhost:3001/readyz              # relation service
-curl -fsS http://localhost:3002/readyz              # sos service
 bun run test:integration                            # migration + permission tests against disposable PostgreSQL 18
 ```
 
-In Compose: `docker compose ps` shows `migrate` exited 0 and all services healthy.
+In Compose, `docker compose ps` shows `migrate` exited 0 and all services healthy. Internal service ports are not host-published; run readiness checks inside the corresponding container, for example:
+
+```sh
+docker compose exec -T api node -e "fetch('http://127.0.0.1:3000/readyz').then(async r => { console.log(await r.text()); if (!r.ok) process.exitCode = 1; })"
+docker compose exec -T relation node -e "fetch('http://127.0.0.1:3001/readyz').then(async r => { console.log(await r.text()); if (!r.ok) process.exitCode = 1; })"
+docker compose exec -T sos node -e "fetch('http://127.0.0.1:3002/readyz').then(async r => { console.log(await r.text()); if (!r.ok) process.exitCode = 1; })"
+```
 
 ## 5. Notification
 

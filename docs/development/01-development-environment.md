@@ -2,7 +2,7 @@
 
 Supported contributor environments, prerequisites, and the commands that exist at each phase. Commands are marked **available** (verified to work in this repository today) or **planned** (specified here, implemented in the named phase, and not yet runnable).
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-16.
 
 ## 1. Supported platforms
 
@@ -70,7 +70,22 @@ bun run env:create                 # once, so Compose has its variables
 docker compose up --build          # db, one-shot migrate job, api, relation, sos, web
 ```
 
-The Compose stack runs the one-shot `migrate` job before the services start (`service_completed_successfully`), publishes no metrics port (OPS-63), declares resource limits per container (OPS-52), and pins every image version (QA-14).
+The Compose stack runs the one-shot `migrate` job before the services start (`service_completed_successfully`), declares resource limits per container (OPS-52), and pins every image version (QA-14). Only PostgreSQL and the web edge are host-published; both bind to loopback by default. API, relation, SOS, and all metrics ports remain available only over Docker networking.
+
+### Compose host-published ports
+
+| Service | Container port/protocol | Default host binding/protocol | Required and intended audience | Role |
+| --- | --- | --- | --- | --- |
+| `db` (PostgreSQL) | `5432/tcp` | `127.0.0.1:${DB_PORT:-5432} → 5432/tcp` | Yes, for host-run `bun run dev`, migration, and database tooling; local developer only | Database; never publish it to non-loopback interfaces |
+| `web` | `8080/tcp` | `127.0.0.1:${WEB_PORT:-8080} → 8080/tcp` | Yes, for the developer's browser on the host | Web edge; proxies `/api/*` to `api:3000` |
+| `api` | `3000/tcp` | Not published | No host binding required | Internal API; reachable by Compose services and the web edge on the Compose network |
+| `relation` | `3001/tcp` | Not published | No host binding required | Internal service; reachable through Docker networking only |
+| `sos` | `3002/tcp` | Not published | No host binding required | Internal service; reachable through Docker networking only |
+| `api`, `relation`, `sos` metrics | `9000/tcp`, `9001/tcp`, `9002/tcp` | Not published | No | Internal metrics endpoints |
+
+`migrate` is a one-shot job and publishes no listener. Container listeners bind inside the container network; that does not itself publish a host port. In Compose, service-to-service calls use Docker DNS names and container ports, not host-published ports.
+
+`WEB_PUBLISH_ADDRESS` is optional and defaults to `127.0.0.1`. Set it explicitly in `.env` only when a wider web-edge bind is intended. Widening it also exposes the web edge's forwarded `/api/*` requests to that interface; the API is not private from clients that can reach the web edge merely because `api:3000` is unpublished. Do not use `0.0.0.0` as a default or casual convenience setting. A broader bind requires an explicit network exposure review, host/network firewall allowlisting, and a properly configured TLS-terminating reverse proxy; the current web edge itself is plain HTTP and is not an internet-facing production edge. Docker Engine loopback limitations and version caveats are documented in [operations](../operations/README.md#compose-port-binding-and-docker-engine-limitations).
 
 ## 5. Environment variables
 
@@ -94,8 +109,9 @@ See [`.env.example`](../../.env.example) for the current placeholder list.
 | --- | --- | --- |
 | `node: command not found` / wrong version | Node not installed or older than 24 | Install Node 24 LTS (nvm, fnm, or the official installer) and re-open the terminal. |
 | Gate script fails with `CRLF`-related link errors | Files checked out with CRLF before `.gitattributes` existed | Re-clone, or run `git add --renormalize .`. |
-| `docker compose` cannot reach the database | Container still starting, or port conflict on 5432 | `docker compose ps`, wait for healthy, then change the host port if a local PostgreSQL is already bound. |
-| Ports already in use on Windows | WSL2 or another service holds the port | Stop the conflicting service or change the host port mapping; application ports are configurable. |
+| `docker compose` cannot reach the database | Container still starting, or port conflict on loopback port 5432 | `docker compose ps`, wait for healthy, then change `DB_PORT` if a local PostgreSQL is already bound. PostgreSQL stays bound to `127.0.0.1`. |
+| Web edge port already in use | Another local service holds port 8080 | Stop the conflicting service or change `WEB_PORT`; keep `WEB_PUBLISH_ADDRESS` at `127.0.0.1` unless broader exposure is explicitly intended. |
+| Host-run service port already in use | Another process holds an API/relation/SOS development port | Change `API_PORT`, `RELATION_PORT`, or `SOS_PORT` for `bun run dev`; these are not Compose host publications. |
 | Slow file operations under WSL2 | Repository on the Windows filesystem | Clone into the WSL filesystem (`~/boro_biya`). |
 | Slow installs on Windows | Real-time antivirus scanning `node_modules` | Exclude the repository directory from real-time scanning. |
 | `bun run …` fails but `node` works (or the reverse) | A script reached a runtime-specific API, or Bun is incompatible with a pinned tool | Run the same script under Node 24 with `node`; if that passes, the script is relying on a Bun-only behaviour and must not be used from application code ([GOV-82](02-dependency-policy.md#4-runtime-baseline)). |

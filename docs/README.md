@@ -36,7 +36,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-14 |
-| [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-15 |
+| [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-16 |
 | [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-16 |
 | [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-15 |
 | [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-14 |
@@ -66,7 +66,7 @@ Owner: Engineering. Reviewed: 2026-10-16.
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-16 |
-| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-14 |
+| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-16 |
 
 ### Evidence
 
