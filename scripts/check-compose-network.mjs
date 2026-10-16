@@ -219,7 +219,7 @@ function inspectPortBindings(serviceName, expectedPorts) {
   const id = run('docker', ['compose', 'ps', '-q', serviceName]);
   assert.ok(id, `${serviceName} Compose container is running`);
   const raw = run('docker', ['inspect', '--format={{json .NetworkSettings.Ports}}', id]);
-  const mappings = JSON.parse(raw || '{}');
+  const mappings = JSON.parse(raw || '{}') ?? {};
   const actual = [];
   for (const [containerPort, bindings] of Object.entries(mappings)) {
     for (const binding of bindings ?? []) {
