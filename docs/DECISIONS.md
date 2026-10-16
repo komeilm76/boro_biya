@@ -2,7 +2,7 @@
 
 Decisions are recorded here, never inferred from code. An open question is never silently converted into a permanent assumption.
 
-Owner: Repo owner. Reviewed: 2026-10-16.
+Owner: Repo owner. Reviewed: 2026-10-17.
 
 ## Status vocabulary
 
@@ -12,6 +12,7 @@ Owner: Repo owner. Reviewed: 2026-10-16.
 | `Accepted` | Binding. Changes require a superseding ADR. |
 | `Accepted (mandatory)` | Binding security/product constraint from the security baseline; weakening it requires explicit owner risk acceptance with an expiry. |
 | `Accepted (owner decision, YYYY-MM-DD)` | Binding; the repository owner made the call personally on that date. Used where the decision needed the owner rather than an engineering default. |
+| `Accepted (YYYY-MM-DD, Engineering) — not owner-ratified` | An engineering acceptance under the pack's own rules; explicitly **not** an owner decision. The owner may ratify, revise, or reject it after review; work that depends on it waits until then. |
 | `Deferred` | Deliberately not decided yet, with a named phase and owner. |
 | `Superseded by ADR-xxx` | Kept for history; the newer ADR governs. |
 
@@ -19,7 +20,7 @@ Owner: Repo owner. Reviewed: 2026-10-16.
 
 ```text
 ### ADR-0NN — <short title>
-**Status:** Proposed | Accepted | Accepted (mandatory) | Accepted (owner decision, YYYY-MM-DD) | Deferred | Superseded by ADR-0NN
+**Status:** Proposed | Accepted | Accepted (mandatory) | Accepted (owner decision, YYYY-MM-DD) | Accepted (YYYY-MM-DD, Engineering) — not owner-ratified | Deferred | Superseded by ADR-0NN
 **Date:** YYYY-MM-DD  **Owner:** <role>
 **Context:** <the forces, constraints, and evidence that make a decision necessary>
 **Decision:** <what is decided, in one or two sentences, using MUST/SHOULD per README>
