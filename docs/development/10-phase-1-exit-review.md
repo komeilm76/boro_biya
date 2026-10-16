@@ -19,10 +19,11 @@ The documentation gate passed before the review started, with full history fetch
 | Counts and versions restated in prose | Recomputed from the generated traceability table, the manifests, the registry, and the image definitions | §2.3 |
 | Typos the language check cannot see | Dictionary pass over the prose (code spans and fences excluded); every out-of-dictionary word read | 1 defect (§2.4) |
 | What the images actually ship | The backend image's production install reproduced from the tracked manifests and the lockfile | §3, §5 |
+| Second pass, preparing the record for the owner's review (2026-10-16) | The files the held findings touch re-read; §5 re-derived from the lockfile, the installed tree, and the registry; every identifier cited in `.env.example` printed beside its definition | 3 defects (§2.6) |
 
 ## 2. Defects found and fixed
 
-Every defect below is fixed in the change that carries this record; none is deferred.
+The record holds 46 defects, numbered 1–46 across §2.1–§2.4 and §2.6 (rows 1–2 and 5–7 group defects of one kind in one place). Every one is fixed in the pull request that carries this record; none is deferred.
 
 ### 2.1 Identifier links and citations that point at the wrong place
 
@@ -47,7 +48,7 @@ Correcting the two links in the Phase 0 review record changes navigation only; t
 | # | Identifier and what it actually says | Cited for | Where | Fix |
 | --- | --- | --- | --- | --- |
 | 15 | `QA-47` — second reviewer for security-sensitive changes | The exact PostgreSQL image pin (eleven places) | REFERENCES, dependency policy, Phase 1 report (twice), operations notes, `docker/db.Dockerfile` (twice), `docker-compose.yml`, `ci.yml`, `scripts/check-images.mjs` (twice) | `QA-101` — base images pinned, no `latest` |
-| 16 | `QA-47` | "Failed releases roll back cleanly" | `packages/db/src/migrate.ts` | `QA-93` — migration rollback |
+| 16 | `QA-47` | "failed releases roll back cleanly" | `packages/db/src/migrate.ts` | `QA-93` — migration rollback |
 | 17 | `QA-66` — the placeholder check | The coverage floors, including a quoted "increases over time" that no document contains | dependency policy, Phase 1 report (twice), `scripts/gates/run.mjs`, `vitest.config.ts` | `QA-05`, the unit-test gate the floors belong to; the quote is replaced by what is true: no requirement fixes the level, and floors only rise |
 | 18 | `QA-13` — the Android build gate | Fixture fidelity | `packages/test-utils` (source and test) | `GOV-67` — fixtures come from shared builders |
 | 19 | `QA-99` — contract diff reviewed | Packaging artefacts and checksums | `ci.yml` release job | `QA-50` — the artefact set, checksums included |
@@ -56,8 +57,8 @@ Correcting the two links in the Phase 0 review record changes navigation only; t
 | 22 | `ADR-004` — realtime transport | "SQL-first, no ORM" for `pg`, a rule no decision records | dependency policy §3 | What [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) and `SEC-42` do say: the only new runtime dependency, used through the bounded pool with parameterized SQL |
 | 23 | `OPS-78` — run the active gates and report the real exit status | Configurable Compose host ports | `.env.example` | `OPS-67` — configuration through environment variables |
 | 24 | `SEC-24` — mass assignment | The password-recovery diagram | [DIAGRAMS](../DIAGRAMS.md) §5.2 `Cited:` line | `SEC-07`, `SEC-12` — what the diagram draws |
-| 25 | `DATA-21` — category changes audited, one category per user | "Categories are deactivated rather than deleted" | [DATA_MODEL](../DATA_MODEL.md) `sos_alert_categories` | The `categories` entry that states the rule, and ADR-015 |
-| 26 | `QA-49` — artefacts built once and promoted | "Deterministic collations" | Phase 1 report §7 item 12 | The reason stated plainly: collation order comes from the C library, so a lineage switch changes sorting between the tested and the shipped database |
+| 25 | `DATA-21` — category changes audited, one category per user | "categories are deactivated rather than deleted (invariant 21 below)" | [DATA_MODEL](../DATA_MODEL.md) `sos_alert_categories` | The `categories` entry that states the rule, and ADR-015 |
+| 26 | `QA-49` — artefacts built once and promoted | "QA-49's deterministic collations" | Phase 1 report §7 item 12 | The reason stated plainly: collation order comes from the C library, so a lineage switch changes sorting between the tested and the shipped database |
 
 `QA-49` stays where code and the runbook cite it for migration immutability: migrations are part of the artefact set (`QA-50`), and an applied one is never rebuilt.
 
@@ -70,7 +71,7 @@ Correcting the two links in the Phase 0 review record changes navigation only; t
 | 29 | DIAGRAMS §2 | The "Phase 0 foundation" box lists Phase 1 additions (`ci.yml`, `CODEOWNERS`, the policy checks, the load baseline) | Box retitled "Repository foundation (Phase 0, extended in Phase 1)" — a change inside a quoted label, so the diagram's syntax is unchanged |
 | 30 | [Phase 1 report](09-phase-1-report.md) §3, row 8 | The deployment notes are said to name Node 24.21.0; they name 24.22.0 since the 2026-10-15 security bump | Corrected, with the bump referenced |
 | 31 | Phase 1 report §4 | "The traceability file maps 279 requirements to Phase 1"; it maps 290 (the generated summary and the sum of its rows agree) | 290 |
-| 32 | [Dependency policy](02-dependency-policy.md) header | "Baseline verified 2026-10-13; next … the start of Phase 1", although §3 recorded the 2026-10-14 re-verification | Updated with this boundary's re-verification (§4) |
+| 32 | [Dependency policy](02-dependency-policy.md) header | "Baseline verified: 2026-10-13; next scheduled re-verification is the start of Phase 1", although §3 recorded the 2026-10-14 re-verification | Updated with this boundary's re-verification (§4) |
 | 33 | Dependency policy §6 | BlueOak-1.0.0 "ratified by the owner with the Phase 1 pull request", while the Phase 1 report said ratification was awaited — and the owner has not ratified it | Corrected to *pending*; the allowlist entries themselves are unchanged (§5) |
 | 34 | Dependency policy §6 | MPL-2.0 "present as the optional musl build of `lightningcss`, a Tailwind transitive": `lightningcss` and both platform builds are MPL-2.0, arrive through `vite` as well, and sit in the production install | Note rewritten with the real paths and the obligation (§5) |
 | 35 | Checklist §8 item 4 | "The phase affiliation audit from §4"; the audit is §5 | `§5` |
