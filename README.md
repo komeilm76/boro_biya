@@ -50,7 +50,7 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | `docs/performance/` | Baseline load profile, capacity policy, and measured results |
 | `scripts/` | Dependency-free Node tooling: gate runners, build/dev orchestration, policy checks, environment bootstrap, load baseline |
 | `.github/workflows/` | CI workflows: documentation gates and application gates |
-| `apps/web/` | Vue 3 client route shell and production static server; PWA installation/offline behaviour is not implemented |
+| `apps/web/` | Vue 3 client route shell and Node server for built static assets; no production deployment is verified, and PWA installation/offline behaviour is not implemented |
 | `apps/api/` | Core Fastify API skeleton |
 | `apps/android/` | Capacitor packaging configuration only; the native shell arrives in Phase 8 |
 | `services/relation/`, `services/sos/` | The two service skeletons, each with its own schema and least-privilege role |
