@@ -216,7 +216,9 @@ function checkComposeConfig() {
 }
 
 function inspectPortBindings(serviceName, expectedPorts) {
-  const id = run('docker', ['compose', 'ps', '-q', serviceName]);
+  const id = run('docker', ['compose', '--project-directory', ROOT, 'ps', '-q', serviceName], {
+    env: process.env,
+  });
   assert.ok(id, `${serviceName} Compose container is running`);
   const raw = run('docker', ['inspect', '--format={{json .NetworkSettings.Ports}}', id]);
   const mappings = JSON.parse(raw || '{}') ?? {};
