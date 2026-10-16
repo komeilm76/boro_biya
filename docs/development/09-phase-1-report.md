@@ -1,8 +1,8 @@
 # Phase 1 Report — Skeleton and Developer Experience
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
-Phase: **1 (Skeleton and developer experience)** · Date: **2026-10-14** · Branch: the Phase 1 pull-request branch (the commit that carries this report names the SHA; `git log -1 -- docs/development/09-phase-1-report.md`) · Status: **complete, awaiting owner approval**.
+Phase: **1 (Skeleton and developer experience)** · Date: **2026-10-14** · Branch: the Phase 1 pull-request branch (the commit that carries this report names the SHA; `git log -1 -- docs/development/09-phase-1-report.md`) · Status: **complete, owner-approved (2026-10-15)**.
 
 This report follows the phase-report format of [phase gate checklist](05-phase-gate-checklist.md) §8: what was delivered, the commands that were run with their exit statuses, the evidence per checklist row, the affiliation audit, the deviations, and the residual risks. Nothing here is claimed that was not run and checked ([GOV-11](../MASTER_PROJECT_PROMPT.md)).
 
@@ -159,6 +159,6 @@ Per the [release plan](06-release-plan.md), the mechanics are first exercised in
 
 ## 10. Approval
 
-Phase 1 is **complete and owner-approved** (record below). For approval, the owner reviewed: this report; the pull-request checks (the `gate` job on Node 24, the `windows` job, `containers`, `secrets`, and the documentation gates — all green on the final head); the two new requirements (OPS-88, OPS-89) with ADR-029; the deviations in §7 (notably items 3, 6, 8, 9); and the branch-protection state recorded against QA-77 … QA-81. Approval moves Phase 1 to owner-approved and unblocks Phase 2 (authentication and account lifecycle) — which, per the phase rule, starts only after that approval.
+Phase 1 is **complete and owner-approved** (record below). For approval, the owner reviewed: this report; the pull-request checks (the `gate` job on Node 24, the `windows` job, `containers`, `secrets`, and the documentation gates — all green on the final head); the two new requirements (OPS-88, OPS-89) with ADR-029; the deviations in §7 (notably items 3, 6, 8, 9); and the branch-protection state recorded against QA-77 … QA-81. Approval moves Phase 1 to owner-approved and clears the previous-phase condition for Phase 2 (authentication and account lifecycle); it does not authorize Phase 2 and does not change its status. Per the phase-start rule ([checklist](05-phase-gate-checklist.md) §7, rule 8), Phase 2 reads `In progress` only after the owner approves its start gate, with the owner decisions it depends on recorded — ADR-029 is engineering-accepted but **not owner-ratified** ([Phase 1 exit review](10-phase-1-exit-review.md) §6) — and the two held items recorded below remain undecided.
 
 **Approval record.** Approved by the repository owner (`komeilm76`, Repo owner) on **2026-10-15**: the owner merged the Phase 1 pull request (#4) at 2026-10-15T20:08:42Z and confirmed the approval explicitly when the Phase 1 exit review asked. Two items are **held out of the approval** at the owner's request, pending an evidence review: the BlueOak-1.0.0 licence-allowlist entry (§7 item 8) and ADR-029 (§7 item 9) — see the [Phase 1 exit review](10-phase-1-exit-review.md) §5–§6. Work that depends on either decision does not start until the owner decides.
