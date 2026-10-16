@@ -243,17 +243,23 @@ function checkLiveBindings() {
   }
 }
 
-checkVersionMatrix();
-process.stdout.write('Docker Engine version matrix: loopback and firewalld boundaries PASS\n');
+try {
+  checkVersionMatrix();
+  process.stdout.write('Docker Engine version matrix: loopback and firewalld boundaries PASS\n');
 
-if (process.argv.includes('--versions-only')) {
-  process.exit(0);
-}
+  if (!process.argv.includes('--versions-only')) {
+    checkComposeConfig();
+    process.stdout.write('Compose effective configuration: default and explicit web binding PASS\n');
+  }
 
-checkComposeConfig();
-process.stdout.write('Compose effective configuration: default and explicit web binding PASS\n');
-
-if (process.argv.includes('--runtime')) {
-  checkLiveBindings();
-  process.stdout.write('Docker Engine live bindings: db/web loopback-only; internal ports unpublished PASS\n');
+  if (process.argv.includes('--runtime')) {
+    checkLiveBindings();
+    process.stdout.write('Docker Engine live bindings: db/web loopback-only; internal ports unpublished PASS\n');
+  }
+} catch (error) {
+  const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  const annotation = detail.slice(0, 5000).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  process.stderr.write(`::error title=Compose network verification::${annotation}\n`);
+  process.stderr.write(`${detail}\n`);
+  process.exitCode = 1;
 }
