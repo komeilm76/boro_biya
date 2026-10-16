@@ -111,6 +111,37 @@ for (const name of dockerfiles) {
   notes.push(`${rel}: ${stages.length} stage(s), base ${stages[0]?.image ?? '?'}`);
 }
 
+// ------------------------------------------------- backend image contents (exit review §3.2)
+// The backend images must ship only the backend workspaces' production closure: the
+// Phase 1 exit review (§3 item 2) found the unfiltered production install carried the
+// test-only embedded-postgres binaries and the web build toolchain into every backend
+// image. Two static assertions keep that fixed without needing Docker here; the CI
+// `containers` job additionally lists the built api image's contents.
+{
+  const backendDockerfile = readFileSync(join(dockerDir, 'backend.Dockerfile'), 'utf8');
+  if (!/bun install --production --frozen-lockfile[\s\S]*?--filter @boro-biya\/api/.test(backendDockerfile)) {
+    problems.push(
+      'docker/backend.Dockerfile: the production install must be filtered to the backend workspaces (--filter @boro-biya/api …) so web/Android/test-only packages never enter a backend image (Phase 1 exit review §3 item 2)',
+    );
+  }
+  for (const service of ['@boro-biya/relation', '@boro-biya/sos']) {
+    if (!backendDockerfile.includes(`--filter ${service}`)) {
+      problems.push(
+        `docker/backend.Dockerfile: the production install is missing --filter ${service} (Phase 1 exit review §3 item 2)`,
+      );
+    }
+  }
+  const testUtilsManifest = JSON.parse(readFileSync(join(ROOT, 'packages', 'test-utils', 'package.json'), 'utf8'));
+  for (const testTool of ['embedded-postgres', 'pg']) {
+    if (testUtilsManifest.dependencies?.[testTool] !== undefined) {
+      problems.push(
+        `packages/test-utils/package.json: "${testTool}" is test-only tooling and must be a devDependency, not a runtime dependency (OPS-38, Phase 1 exit review §3 item 2)`,
+      );
+    }
+  }
+  notes.push('backend image contents: production install filtered to the backend workspaces; test tooling is dev-only');
+}
+
 // ------------------------------------------------------------------ compose file
 const composePath = join(ROOT, 'docker-compose.yml');
 if (!existsSync(composePath)) {

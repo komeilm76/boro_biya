@@ -270,6 +270,22 @@ jobs:
             exit 1
           }
 
+      # Image-content assertion (Phase 1 exit review §3 item 2): the backend production
+      # install is filtered to the backend workspaces, so test-only and web/Android
+      # packages must be absent from the built api image while the runtime closure stays.
+      - name: Verify backend image contents (no test-only or web packages)
+        run: |
+          docker run --rm --entrypoint node boro-biya/api:dev -e '
+            const { existsSync } = require("node:fs");
+            const roots = ["/repo/node_modules", "/repo/node_modules/.bun/node_modules"];
+            const absent = ["embedded-postgres", "@embedded-postgres/linux-x64", "vite", "vue", "typescript", "@boro-biya/test-utils", "@boro-biya/web"];
+            const present = ["fastify", "zod", "pg"];
+            const found = (name) => roots.some((root) => existsSync(`${root}/${name}`));
+            for (const name of absent) if (found(name)) { console.error(`unexpected package in backend image: ${name}`); process.exit(1); }
+            for (const name of present) if (!found(name)) { console.error(`missing runtime package in backend image: ${name}`); process.exit(1); }
+            console.log("backend image contents: backend-only production closure verified");
+          '
+
       - name: Start the documented stack (docker compose up -d --wait)
         run: |
           set -o pipefail
