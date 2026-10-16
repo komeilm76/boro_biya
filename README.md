@@ -2,9 +2,15 @@
 
 An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
 
-Owner: Repo owner. Reviewed: 2026-10-16.
+Owner: Repo owner. Reviewed: 2026-10-17.
 
-**Current status: Phase 1 — skeleton and developer experience — complete and owner-approved (2026-10-15); Phase 2 (authentication and account lifecycle) is next and has not started.** Phase 0 (repository foundation and documentation) was owner-approved on 2026-10-14. Two Phase 1 items await the owner's decision after an evidence review — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 — recorded in the [Phase 1 exit review](docs/development/10-phase-1-exit-review.md). The workspace, the core API, the Relation and SOS service skeletons, the web client skeleton, the migration framework, the gate suite, and the application CI exist; no authentication, map, or business feature does yet — those follow the phase order in [ROADMAP](docs/ROADMAP.md), and the evidence for this phase is the [Phase 1 report](docs/development/09-phase-1-report.md).
+**Current status: Phase 2 — authentication and account lifecycle — In progress (owner-authorised 2026-10-17).** Phase 1 is complete and owner-approved (2026-10-15). No authentication or business feature is claimed implemented by this status change. See [ROADMAP](docs/ROADMAP.md) and the [Phase 1 report](docs/development/09-phase-1-report.md).
+
+**BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
+
+**ADR-029: Accepted (owner decision, 2026-10-17)** — review waived; implementations accepted as-is; hardening deferred, non-blocking. Logger and redaction, metrics, migration runner, and web edge stand as-is for development.
+
+`OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
 
 ## Where to start
 

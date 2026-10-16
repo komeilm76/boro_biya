@@ -1,6 +1,6 @@
 # Implementation Status
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 This page separates what is implemented in the current checkout from what the roadmap schedules for later. Status labels below reproduce [`docs/ROADMAP.md`](../ROADMAP.md); this manual does not change, infer, or grant permission to change a phase status.
 
@@ -19,7 +19,7 @@ This page separates what is implemented in the current checkout from what the ro
 | 8 | Android hardening and scale | Not started | — |
 | 9 | Production release | Not started | — |
 
-The Phase 1 approval does not mean Phase 2 has started. The roadmap phase, gate, and owner approval are authoritative; the presence of a workspace, route namespace, template configuration value, requirement, or design document is not evidence of implementation.
+Phase 2 is **In progress**, explicitly owner-authorised on 2026-10-17 for authentication and account lifecycle. This authorisation does not claim any feature below is implemented; evidence remains authoritative.
 
 ## 2. What is implemented in Phase 1
 
@@ -59,14 +59,15 @@ No public build has been released. The existing [`docs/user/README.md`](../user/
 
 The public landing, login, user-area, and admin-area route components are placeholders. Do not use the local development shell as a released product, or describe its placeholders as working account features.
 
-## 5. Held Phase 1 review decisions and known inconsistencies
+## 5. Closed owner decisions and authorised scope
 
-The Phase 1 report records the phase as complete and owner-approved, while explicitly holding two matters out of that approval pending an evidence review. The later [`Phase 1 exit review`](10-phase-1-exit-review.md) states that on 2026-10-16 the owner kept the following decisions pending. This distinction is intentional; no status is changed here.
+**BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
 
-1. **ADR-029 — owned infrastructure:** Engineering accepted the decision on 2026-10-14, but it is **not owner-ratified**. The owner kept the four implementation choices (logging/redaction, metrics, migration runner, and web edge) pending after the evidence review. The existing code remains in place provisionally. Migration lock/statement bounds are tracked as Phase 2 requirements `OPS-90` and `OPS-91`; client-address propagation through the web edge is Phase 2 requirement `SEC-75`. Do not treat ADR-029's engineering acceptance as an owner decision or begin dependent Phase 2 work before the decision.
-2. **BlueOak-1.0.0 licence:** owner ratification is pending. `scripts/check-licenses.mjs` currently includes `BlueOak-1.0.0` in its allowed set and therefore passes on that entry, even though the owner has not ratified it. The Phase 1 exit review documents the mismatch, evidence, and owner options. The allowlist and policy are intentionally unchanged pending the owner decision; a green licence-gate result does not itself resolve the question.
+**ADR-029: Accepted (owner decision, 2026-10-17)** — review waived; implementations accepted as-is; hardening deferred, non-blocking. Logger and redaction, metrics, migration runner, and web edge stand as-is for development.
 
-Other planned bounds, provider choices, operational decisions, and phase-specific questions remain in their assigned roadmap/decision records. Do not implement a future item merely to remove a placeholder or satisfy an assumption.
+`OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
+
+Q-25 and Q-19 remain open in their later slots (before the first public release and Phase 8); neither blocks development.
 
 ## 6. Deployment and operational boundary
 

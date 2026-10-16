@@ -2,7 +2,7 @@
 
 This directory holds the operational side of the project: the runbooks that say what to do when something breaks, the backup and restore policy, and the availability objective the deployment is held to. It exists before the first deployment so that "what do we do when the database is gone" has an answer written down before anyone is under pressure.
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 ## Rules
 
@@ -66,7 +66,7 @@ These are separate protections: 28.0.0 is the minimum release for the specific l
 
 ## Web edge limitations and the reverse-proxy requirement
 
-The web edge (`apps/web/server/serve.mjs`) serves the built bundle and proxies `/api/*` to one upstream fixed at startup. It stays in place provisionally while the owner decides [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces), and it is deliberately small: **it is not an internet-facing edge.** Compose binds its host port to loopback by default. If an operator explicitly widens `WEB_PUBLISH_ADDRESS`, every request reaching that interface can also reach the edge's forwarded `/api/*` paths; an unpublished API port does not make the API private from those clients. Only widen the binding after an explicit exposure review, with firewall allowlisting and a properly configured TLS-terminating reverse proxy in front. Do not use `0.0.0.0` as the recommended default. What the edge does not do, verified on 2026-10-16 against the code and the defaults of Node 24.22.0:
+The web edge (`apps/web/server/serve.mjs`) serves the built bundle and proxies `/api/*` to one upstream fixed at startup. It is accepted as-is for development under [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) (owner decision, 2026-10-17; review waived; hardening deferred, non-blocking), and it is deliberately small: **it is not an internet-facing edge.** Compose binds its host port to loopback by default. If an operator explicitly widens `WEB_PUBLISH_ADDRESS`, every request reaching that interface can also reach the edge's forwarded `/api/*` paths; an unpublished API port does not make the API private from those clients. Only widen the binding after an explicit exposure review, with firewall allowlisting and a properly configured TLS-terminating reverse proxy in front. Do not use `0.0.0.0` as the recommended default. What the edge does not do, verified on 2026-10-16 against the code and the defaults of Node 24.22.0:
 
 | Concern | The web edge today | Consequence |
 | --- | --- | --- |
@@ -74,7 +74,7 @@ The web edge (`apps/web/server/serve.mjs`) serves the built bundle and proxies `
 | Timeouts | Node's defaults: 60 s to receive the request headers, 300 s for a whole request, 5 s for an idle keep-alive connection, and no idle limit on an open socket. A proxied API call answers 504 after 30 s without data (`SERVE_PROXY_TIMEOUT_MS`) — an idle limit, not a total one | A slow client can hold a connection for minutes |
 | Connections and rates | No connection cap, no per-client limit, no request-rate limit | One client can exhaust the container's connections or its memory limit (128 MB in Compose) |
 | Request bodies | Proxied bodies stream to the API without a cap; the API's own body limit is the only bound | An oversized body costs edge and API resources until the API rejects it |
-| Client address and forwarded headers | `X-Forwarded-For` is replaced with the TCP peer's address, client-sent `X-Forwarded-Proto` and `X-Forwarded-Host` pass through unchanged, and the API runs with `TRUST_PROXY=false`, so it ignores all three and sees the edge's own address on every proxied request | Client addresses do not reach the API. The per-origin counters of [ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) need a trusted forwarding chain first — tracked as the Phase 2 requirement [SEC-75](../SECURITY.md#3-account-lockout-and-abuse-controls) — and `TRUST_PROXY` must not be enabled behind the edge until the edge sets or strips the forwarded headers it passes through |
+| Client address and forwarded headers | `X-Forwarded-For` is replaced with the TCP peer's address, client-sent `X-Forwarded-Proto` and `X-Forwarded-Host` pass through unchanged, and the API runs with `TRUST_PROXY=false`, so it ignores all three and sees the edge's own address on every proxied request | Client addresses do not reach the API. The per-origin counters of [ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule) need a trusted forwarding chain first — retained as [SEC-75](../SECURITY.md#3-account-lockout-and-abuse-controls), deferred and non-gating, excluded from authorised scope by owner decision (2026-10-17) — and `TRUST_PROXY` must not be enabled behind the edge until the edge sets or strips the forwarded headers it passes through |
 | Protocol features | HTTP/1.1 only; no compression, range requests, or conditional requests; WebSocket upgrades are not proxied, and a streaming response that stays silent for 30 s is cut | The realtime transport decision ([ADR-004](../DECISIONS.md#adr-004--realtime-transport), Phase 4) has to account for both |
 
 **Every real deployment** — anything other than a single developer's machine — puts a properly configured TLS-terminating reverse proxy in front of the web edge, and nothing is reachable around it. The proxy product is chosen with the hosting decision ([Q-19](../DECISIONS.md#open-questions)); whichever it is, it must provide at least:
@@ -82,7 +82,7 @@ The web edge (`apps/web/server/serve.mjs`) serves the built bundle and proxies `
 1. TLS with a modern configuration and automated certificate renewal, with plain HTTP redirected or rejected (`SEC-40`, `PRIV-08`); certificate failure is the "Certificate expiry and TLS failure" runbook above.
 2. `Strict-Transport-Security` on production hosts, until the application sets it itself (`SEC-45`).
 3. Header and request timeouts, a connection cap, a request-body limit no larger than the API's, and request-rate limits as a first line of defence; the API's own limits ([ADR-022](../DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)) stay authoritative.
-4. Forwarded headers it controls: it overwrites, and never appends to, any `X-Forwarded-*` header a client sends. Until the web edge can trust a configured proxy (`SEC-75`, Phase 2), a deployment must not rely on client addresses at the API.
+4. Forwarded headers it controls: it overwrites, and never appends to, any `X-Forwarded-*` header a client sends. Until the web edge can trust a configured proxy (`SEC-75`, deferred and non-gating; no development implementation authorised), a deployment must not rely on client addresses at the API.
 5. One way in: only the proxy is reachable from untrusted networks, and the web edge, the API, the services, the metrics ports, and PostgreSQL listen on loopback or a private network.
 
 No deployment exists yet (see "Current state" below); the Compose stack is a development and CI environment.

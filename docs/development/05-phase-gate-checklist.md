@@ -2,7 +2,7 @@
 
 The checklist a phase must satisfy before the next phase starts. It is runnable locally and in CI, and its results are copied into the phase report described in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 ## 1. Commands
 
@@ -61,9 +61,11 @@ bun run loadtest                     # baseline load profile with its pass/fail 
 
 Each phase's checklist is authored **before the phase starts** from its deliver list and exit gate in [ROADMAP](../ROADMAP.md), and it is the working task list for that phase: work that is not on the checklist is either a defect or a row added in the same change as the plan. Rows carry no new requirements — every row cites the requirement identifiers and the evidence that will prove it. A row changes status only in the same change as its evidence.
 
-Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, and `Exception` (recorded with owner and expiry in [QUALITY_GATES](../QUALITY_GATES.md) §6). Every row starts `Not started`; only the evidence named in the row makes it `Met`. Phase 0's completed checklist is §2 and Phase 1's is §3.
+Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `Deferred` (owner-excluded and non-gating), and `Exception` (recorded with owner and expiry in [QUALITY_GATES](../QUALITY_GATES.md) §6). Every row starts `Not started`; only the evidence named in the row makes it `Met`. Phase 0's completed checklist is §2 and Phase 1's is §3.
 
 ### Phase 2 — Authentication and account lifecycle
+
+**Status: In progress.** Owner start authorisation (2026-10-17), §7 rule 8: Phase 1 exit conditions met and owner-approved (2026-10-15); dependent decisions closed; no unresolved blocker; initial scope rows 1–12. `OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
 
 | # | Criterion | Evidence that will prove it | Status |
 | --- | --- | --- | --- |
@@ -79,8 +81,8 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | 10 | Retention and deletion defaults in place: automated deletion off by default, no administrator account-deletion path, deactivation preserving every record, and the temporary policy documented with its unresolved items (`PRIV-32` … `PRIV-34`, `QA-125`); the Phase 2 answers already given — `Q-01` … `Q-05` ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number) … [ADR-023](../DECISIONS.md#adr-023--security-questions-stay-the-only-self-service-recovery-factor)) and `Q-17` ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) — implemented as decided | [DECISIONS](../DECISIONS.md) register rows updated | Not started |
 | 11 | Privacy notice published and linked from sign-up and settings with the retention windows actually configured; a reporting route for a suspected compromise or a vulnerability works without signing in; dates and times render in the user's locale and calendar over a UTC storage contract | Notice link check and text review, reporting-route test without a session, locale snapshot tests; `PRIV-31`, `SEC-74`, `UI-25`, `DATA-27` | Not started |
 | 12 | The login route joins the baseline load profile with its own p95/p99 budget, and the profile still passes with its breach path intact | `bun run loadtest` exit status and the updated baseline table in the [performance policy](../performance/README.md); `OPS-86`, `QA-124` (the profile and its rule are Phase 1's; the route is Phase 2's) | Not started |
-| 13 | Migration runs are bounded: the run lock and every lock a migration requests time out, and every migration statement runs under a statement timeout, each from configuration with a safe default; a run that reaches a bound fails with a clear diagnostic and an unchanged ledger | Integration tests against real PostgreSQL — two runners racing for the run lock, a migration blocked by a held table lock, a statement that outlasts its bound; `OPS-90`, `OPS-91` (tracked from the [Phase 1 exit review](10-phase-1-exit-review.md) §6; they bind whichever runner [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) settles on) | Not started |
-| 14 | Client addresses reach the API only through trusted hops. The web edge discards client-sent `Forwarded`, `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Proto`, and `X-Real-IP` headers unless its peer is a configured trusted proxy, and appends its peer's address to a trusted chain. The API trusts only configured hops, refuses a trust-every-hop setting, and with nothing configured ignores forwarded headers. The per-origin and rate limits act on the resolved address | Web edge integration tests: spoofed values of each header from an untrusted peer never reach the upstream as sent, and the upstream sees the peer's address; with a trusted proxy configured, its chain is kept and the peer appended; malformed values are dropped. API tests: a direct peer with spoofed headers resolves to the peer; the web edge as the trusted hop resolves to the client it forwarded; a chain through a configured outer proxy resolves to the first untrusted address; a trust-every-hop value fails configuration validation at startup. End-to-end through the documented stack: two clients behind the web edge get separate per-origin counters, and a spoofed header neither moves a client into another client's counter nor frees it from its own; `SEC-75`, `SEC-14`, `SEC-43` (from the [Phase 1 exit review](10-phase-1-exit-review.md) §6.3, at the owner's request of 2026-10-16; not implemented until separately authorized) | Not started |
+| 13 | Deferred; excluded from authorised scope, non-gating | `OPS-90`, `OPS-91`; owner decision 2026-10-17; retained for traceability only; no implementation authorised unless named in a later owner message | Deferred |
+| 14 | Deferred; excluded from authorised scope, non-gating | `SEC-75`; owner decision 2026-10-17; retained for traceability only; no implementation authorised unless named in a later owner message | Deferred |
 
 ### Phase 3 — Map foundation and user settings
 
@@ -176,7 +178,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, a
 | --- | --- | --- | --- |
 | 1 | Release artefacts produced: checksums, SBOM where practical, changelog, migration plan | Artefact digests; `QA-50`, `QA-87 … QA-91` | Not started |
 | 2 | Full gate set passes on the exact tagged commit, exit statuses recorded | Gate transcript per command; `QA-95 … QA-97` | Not started |
-| 3 | Migration dry-run and restore rehearsal complete on a restored backup | Rehearsal record; `QA-102` | Not started |
+| 3 | Deferred; excluded from authorised scope, non-gating | `QA-102`; owner decision 2026-10-17; retained for traceability only; no implementation authorised unless named in a later owner message | Deferred |
 | 4 | Rollback path stated and rehearsed where risky; production verification (health, smoke login and map shell) | Rollback note + smoke output; `QA-92 … QA-94`, `QA-103`, `QA-104` | Not started |
 | 5 | Monitoring and alerts cover replication and backup failures; incident-response procedure exists and was exercised once; the availability objective is met on the release candidate's deployment or the deviation is recorded | Exercise record and availability measurement; `SEC-60`, `SEC-61`, `OPS-83` | Not started |
 | 6 | Security review complete with a resolved or accepted risk register; no unresolved critical findings | Risk register; `SEC-63 … SEC-71` | Not started |
