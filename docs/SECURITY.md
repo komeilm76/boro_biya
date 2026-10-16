@@ -2,7 +2,7 @@
 
 Requirement identifiers (`SEC-…`, `PRIV-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate. Security requirements are acceptance criteria, not optional cleanup.
 
-Owner: Security. Reviewed: 2026-10-15.
+Owner: Security. Reviewed: 2026-10-16.
 
 ## 1. Security baseline
 
@@ -46,6 +46,7 @@ Owner: Security. Reviewed: 2026-10-15.
 - **[SEC-18]** Inactivity alone never triggers automated deactivation.
 - **[SEC-19]** Thresholds, windows, backoff, and unlock policy are configuration values ([ADR-022](DECISIONS.md#adr-022--abuse-protection-thresholds-and-the-no-automatic-ban-rule)): development runs the relaxed set, production runs a stricter set reviewed before release, every value has a safe default in [`.env.example`](../.env.example), and each threshold is exercised in integration tests.
 - **[SEC-20]** Distinct storage of rate-limit and lockout counters is required for correctness across replicas — see [ARCHITECTURE](ARCHITECTURE.md) §3 and [DECISIONS](DECISIONS.md) ADR-008.
+- **[SEC-75]** **Client addresses come only from trusted hops.** Wherever the platform acts on a client's network address — the per-origin limits of `SEC-14` and the rate limits of `SEC-43` — it uses one address per request, resolved by walking back from the TCP peer through configured trusted proxies only; the first address that is not a trusted proxy is the client. The web edge discards client-sent `Forwarded`, `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Proto`, and `X-Real-IP` headers unless its peer is a configured trusted proxy, in which case it keeps that proxy's chain and appends the peer's address. The API trusts forwarded headers only from configured hops — the web edge and any proxy configured in front of it, named by address or hop count — refuses to start with a trust-every-hop setting, and with nothing configured ignores forwarded headers and uses the peer's address. A spoofed header therefore cannot choose the address a limit counts against, or hide the real peer. Recording a client address in logs or audit events is outside this rule and needs its own row in the [data classification](security/data-classification.md) first.
 
 ## 4. Authorization
 

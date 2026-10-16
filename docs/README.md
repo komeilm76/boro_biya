@@ -97,13 +97,13 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `REL` | Relation Service | 14 | `1 … 14` |
 | `SOS` | SOS Service | 31 | `1 … 31` |
 | `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
-| `SEC` | Platform security controls | 73 | `1 … 74` |
+| `SEC` | Platform security controls | 74 | `1 … 75` |
 | `PRIV` | Location privacy, retention, and data lifecycle | 35 | `1 … 35` |
 | `OPS` | Architecture, operations, configuration, performance, observability | 91 | `1 … 91` |
 | `UI` | Client routes, settings, accessibility, localization | 28 | `1 … 28` |
 | `DATA` | Data model invariants | 27 | `1 … 27` |
 
-Total: **693** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 74 while the count is 73 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
+Total: **694** identifiers. Every one of them appears with its phase, document, and section in the generated [identifier index](development/07-traceability.md#identifier-index) — the traceability file lists ranges per section, and the index lists every identifier individually. The span for `SEC` ends at 75 while the count is 74 because `SEC-72` was never assigned; the gate reports such holes rather than hiding them, because a gap in the numbering is legitimate but must never be mistaken for a lost requirement.
 
 Rules:
 

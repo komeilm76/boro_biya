@@ -7,7 +7,7 @@ Owner: Engineering. Reviewed: 2026-10-14.
 
 Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.
 
-Total requirements: **693** across 125 groups.
+Total requirements: **694** across 125 groups.
 
 ## Declared pull-forwards
 
@@ -27,7 +27,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | --- | --- |
 | 0 (foundation) | 27 |
 | 1 | 290 |
-| 2 | 128 |
+| 2 | 129 |
 | 3 | 41 |
 | 4 | 66 |
 | 5 | 58 |
@@ -100,7 +100,7 @@ A pull-forward (GOV-88) lets a phase implement the minimal slice of a later-phas
 | 2 | `AUTH-26 … AUTH-30` | 5 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Admin-created account |
 | 2 | `AUTH-31 … AUTH-38` | 8 | [PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) | Account states |
 | 2 | `SEC-04 … SEC-13` | 10 | [SECURITY.md](../SECURITY.md) | 2. Identity and credentials |
-| 2 | `SEC-14 … SEC-20` | 7 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
+| 2 | `SEC-14 … SEC-75` | 8 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
 | 2 | `SEC-21 … SEC-28` | 8 | [SECURITY.md](../SECURITY.md) | 4. Authorization |
 | 2 | `SEC-40 … SEC-49` | 10 | [SECURITY.md](../SECURITY.md) | 7. API, transport, and data validation |
 | 2 | `SEC-58 … SEC-74` | 4 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
@@ -490,6 +490,7 @@ Every identifier the documents define, with the phase that must deliver it and t
 | SEC-71 | 1 | [SECURITY.md](../SECURITY.md) | 10. Security gates |
 | SEC-73 | 1 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
 | SEC-74 | 2 | [SECURITY.md](../SECURITY.md) | 9. Observability and incident response |
+| SEC-75 | 2 | [SECURITY.md](../SECURITY.md) | 3. Account lockout and abuse controls |
 | PRIV-01 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | PRIV-02 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |
 | PRIV-03 | 4 | [SECURITY.md](../SECURITY.md) | 5. Location privacy |

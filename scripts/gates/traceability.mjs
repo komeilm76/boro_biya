@@ -144,6 +144,7 @@ const PHASE_RULES = [
   ['SEC', 63, 71, 1], // security release gates
   ['SEC', 73, 73, 1], // correlation across service hops starts with the service skeleton
   ['SEC', 74, 74, 2], // reporting route is usable once accounts exist
+  ['SEC', 75, 75, 2], // client addresses from trusted hops only, for the per-origin limits that arrive with accounts
 
   // Location privacy and data lifecycle
   ['PRIV', 10, 12, 1], // classification rules apply from the first stored record
