@@ -46,4 +46,16 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
     expect(result.stdout).toContain('original/JSON Schema/generated validation and exact manifest round trip passed');
   });
+  it('preserves UUIDv7 in required, optional, nullable and array contracts', () => {
+    const result = spawnSync('bun', ['scripts/contracts/fixtures/portable-uuid.mjs'], {
+      cwd: root,
+      encoding: 'utf8',
+      timeout: 30_000,
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain(
+      'portable UUIDv7: original/JSON Schema/generated validation and exact manifest round trip passed',
+    );
+  });
 });

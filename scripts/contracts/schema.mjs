@@ -22,6 +22,11 @@ export function findExecutableValidation(schema) {
       if (['custom', 'overwrite', 'transform', 'pipe', 'lazy'].includes(kind)) {
         findings.push({ at, kind });
       }
+      // The pinned converter drops the UUID version pattern while retaining generic uuid.
+      // Refuse that silent widening; explicit regex-based UUID schemas remain portable.
+      if (definition.type === 'string' && definition.format === 'uuid' && definition.version !== undefined) {
+        findings.push({ at, kind: 'versioned_uuid' });
+      }
       // This exact string-array check has a faithful JSON Schema keyword. Metadata alone
       // never authorises a refinement: require check identity, array/string shape and only
       // the matching declaration. Any additional executable check still fails closed.

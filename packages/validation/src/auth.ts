@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
+import { uuidV7Schema } from './uuid.js';
 import { uniqueStringItemsCheck } from './unique-strings.js';
 
 export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
@@ -29,7 +30,7 @@ export const registrationSchema = z.strictObject({
 });
 export const loginSchema = z.strictObject({ username: z.string().min(1).max(256), password: z.string().max(1024) });
 export const accountResponseSchema = z.strictObject({
-  id: z.uuidv7(),
+  id: uuidV7Schema,
   username: z.string(),
   status: z.enum(['active', 'locked', 'banned', 'deactivated']),
   passwordSetupRequired: z.boolean(),
@@ -55,7 +56,7 @@ export const accessResponseSchema = z.strictObject({
 export const csrfResponseSchema = z.strictObject({ csrfToken: z.string().length(43) });
 export const sessionListResponseSchema = z.array(
   z.strictObject({
-    familyId: z.uuidv7(),
+    familyId: uuidV7Schema,
     issuedAt: utcInstantSchema,
     expiresAt: utcInstantSchema,
     lastSeenAt: utcInstantSchema,
@@ -99,7 +100,7 @@ export const adminCreateAccountSchema = z.strictObject({
   temporaryPassword: z.string().max(1024).optional(),
 });
 export const createdAccountSchema = z.strictObject({
-  id: z.uuidv7(),
+  id: uuidV7Schema,
   username: z.string(),
   expiresAt: utcInstantSchema,
   setupCredential: z.string().optional(),
@@ -115,11 +116,7 @@ export const setupSecuritySchema = z.strictObject({ answers: z.array(securityAns
 
 // A generic JSON Schema uuid format loses the version restriction; use the same
 // built-in UUIDv7 regex explicitly so both runtime and projection retain it.
-const uniqueIds = z
-  .array(z.string().regex(z.regexes.uuid7))
-  .max(20)
-  .check(uniqueStringItemsCheck)
-  .meta({ uniqueItems: true });
+const uniqueIds = z.array(uuidV7Schema).max(20).check(uniqueStringItemsCheck).meta({ uniqueItems: true });
 const permissionKeys = z
   .array(z.string().regex(/^[a-z]+\.[a-z]+$/))
   .max(50)
@@ -142,7 +139,7 @@ export const adminRoleCreateSchema = z.strictObject({
   permissions: permissionKeys,
 });
 export const adminRoleUpdateSchema = adminRoleCreateSchema.omit({ key: true });
-export const adminCursorSchema = z.strictObject({ cursor: z.uuidv7().optional() });
+export const adminCursorSchema = z.strictObject({ cursor: uuidV7Schema.optional() });
 /** Strict, bounded administrative search; usernames are literal substrings, not SQL patterns. */
 export const adminUsersQuerySchema = adminCursorSchema.extend({
   username: z
@@ -159,15 +156,15 @@ export const adminUsersQuerySchema = adminCursorSchema.extend({
     .optional(),
   status: z.enum(['active', 'locked', 'banned', 'deactivated']).optional(),
   setupRequired: z.enum(['true', 'false']).optional(),
-  roleId: z.uuidv7().optional(),
+  roleId: uuidV7Schema.optional(),
 });
 const auditKey = z.string().regex(/^[a-z][a-z0-9_]{0,79}$/);
 const instantKey = (value: string) => value.slice(0, 19) + '.' + value.slice(19, -1).replace('.', '').padEnd(9, '0');
 export const adminAuditQuerySchema = adminCursorSchema
   .extend({
-    actorId: z.uuidv7().optional(),
+    actorId: uuidV7Schema.optional(),
     action: auditKey.optional(),
-    targetId: z.uuidv7().optional(),
+    targetId: uuidV7Schema.optional(),
     targetType: auditKey.optional(),
     from: utcInstantSchema.optional(),
     to: utcInstantSchema.optional(),
@@ -177,10 +174,10 @@ export const adminAuditQuerySchema = adminCursorSchema
   });
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
 export type AdminAuditQuery = z.infer<typeof adminAuditQuerySchema>;
-export const adminIdSchema = z.strictObject({ id: z.uuidv7() });
+export const adminIdSchema = z.strictObject({ id: uuidV7Schema });
 
 const adminUserViewSchema = z.strictObject({
-  id: z.uuidv7(),
+  id: uuidV7Schema,
   username: z.string(),
   status: z.enum(['active', 'locked', 'banned', 'deactivated']),
   passwordSetupRequired: z.boolean(),
@@ -190,32 +187,32 @@ const adminUserViewSchema = z.strictObject({
 });
 export const adminUsersResponseSchema = z.strictObject({
   items: z.array(adminUserViewSchema).max(50),
-  nextCursor: z.uuidv7().nullable(),
+  nextCursor: uuidV7Schema.nullable(),
 });
 export const adminRolesResponseSchema = z.strictObject({
   items: z
-    .array(z.strictObject({ id: z.uuidv7(), key: z.string(), nameKey: z.string(), permissions: z.array(z.string()) }))
+    .array(z.strictObject({ id: uuidV7Schema, key: z.string(), nameKey: z.string(), permissions: z.array(z.string()) }))
     .max(50),
   permissions: z.array(z.string()),
-  nextCursor: z.uuidv7().nullable(),
+  nextCursor: uuidV7Schema.nullable(),
 });
 export const adminAuditResponseSchema = z.strictObject({
   items: z
     .array(
       z.strictObject({
-        id: z.uuidv7(),
-        actorId: z.uuidv7().nullable(),
+        id: uuidV7Schema,
+        actorId: uuidV7Schema.nullable(),
         action: z.string(),
         targetType: z.string(),
-        targetId: z.uuidv7().nullable(),
+        targetId: uuidV7Schema.nullable(),
         createdAt: utcInstantSchema,
         details: z.record(z.string(), z.unknown()),
       }),
     )
     .max(50),
-  nextCursor: z.uuidv7().nullable(),
+  nextCursor: uuidV7Schema.nullable(),
 });
-export const adminRoleSavedSchema = z.strictObject({ id: z.uuidv7() });
+export const adminRoleSavedSchema = z.strictObject({ id: uuidV7Schema });
 
 export const challengePurposeSchema = z.enum(['login', 'register', 'recovery', 'setup']);
 export type ChallengePurpose = z.infer<typeof challengePurposeSchema>;
@@ -288,10 +285,10 @@ export const securityStreamTicketSchema = z.strictObject({
 });
 export const securityStreamQuerySchema = z.strictObject({
   ticket: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
-  after: z.uuidv7().optional(),
+  after: uuidV7Schema.optional(),
 });
 export const securityNoticeEventSchema = z.strictObject({
-  id: z.uuidv7(),
+  id: uuidV7Schema,
   event: z.enum(['password_reset', 'password_changed', 'security_answers_changed']),
   createdAt: utcInstantSchema,
 });
@@ -305,5 +302,5 @@ export const questionCatalogueSchema = z
   .array(z.strictObject({ id: z.number().int().min(1).max(8), textKey: z.string() }))
   .max(8);
 export const adminUserResponseSchema = adminUsersResponseSchema.shape.items.element.extend({
-  roleIds: z.array(z.uuidv7()),
+  roleIds: z.array(uuidV7Schema),
 });

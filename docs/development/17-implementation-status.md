@@ -422,3 +422,14 @@ The new native-tool fixture verifies the actual schemas against JSON Schema and 
 Local verification: 630 unit tests across 57 files and 255 native integration tests across 19 files passed. `bun run coverage` passed with statements 90.90%, branches 86.06%, functions 88.97% and lines 92.80%, with unchanged floors. The first full invocation passed all application gates but caught an Oxford-spelling documentation error; that wording was corrected and the documentation gate rerun successfully. Final committed-head full-gate/CI evidence is recorded on PR #12 when available.
 
 This is not whole-row acceptance. Query canonicalisation, cross-field ordering, sanitization, broader format fidelity and discriminator drift remain unresolved for full application OpenAPI publication/manifest/released-contract comparison. Rows 1, 3 and 11 also still need their full browser/device/assistive acceptance; the §24 evidence remains specifically scoped. Phase 2 is incomplete; PR #12 stays draft/open/unmerged pending completion and owner review.
+
+
+## 26. Authentication UUIDv7 fidelity checkpoint (2026-10-17)
+
+Continued authorised Phase 2 row 6 work: replaced the twenty remaining native UUIDv7 declarations in shared authentication contracts with the same explicit built-in regex already proved for role IDs, now via a single shared schema. All previous acceptance and successful string output are preserved. Projection refuses bare/nested versioned UUID formats that the pinned converter would silently widen. No application validation rule, dependency, policy, CI check or threshold is relaxed.
+
+New prior-validator and schema-graph tests plus the actual-schema native manifest fixture cover required, optional, nullable and array contexts, UUID versions/variants, casing and malformed inputs. JSON Schema and generated request/response validation agree; maintained OpenAPI validation, `zopia validate` and exact reverse diff pass with no generation/reverse warnings. See [UUIDv7 fidelity](../API_AND_OPENAPI.md#12-authentication-uuidv7-projection-fidelity-2026-10-17). Exact-head final verification is recorded on PR #12 when available.
+
+Local source verification: 633 unit tests across 58 files and 255 native integration tests across 19 files passed. Coverage passed at 90.90% statements, 86.06% branches, 88.97% functions and 92.80% lines with unchanged floors. The initial full invocation caught a documentation spelling error while the application gates passed; the final corrected full-gate/CI results are recorded on PR #12.
+
+Row 6 remains In progress for the remaining conversion limitations and full application publication/manifest/released-contract evidence. Rows 1, 3 and 11 still require complete device/assistive acceptance. Phase 2 remains incomplete; PR #12 remains draft/open/unmerged pending completion and owner review. Owner exclusions and accepted infrastructure remain unchanged.
