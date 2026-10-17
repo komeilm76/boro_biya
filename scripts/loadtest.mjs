@@ -29,7 +29,9 @@ const flagNumber = (name) => {
   return hit === undefined ? undefined : Number(hit.slice(name.length + 3));
 };
 const reportFlag = argv.find((arg) => arg.startsWith('--report='));
-const reportPath = reportFlag === undefined ? undefined : reportFlag.slice('--report='.length);
+// The existing CI upload expects this ignored output even without an explicit --report flag.
+const reportPath =
+  reportFlag === undefined ? join(ROOT, 'var', 'load-baseline-report.json') : reportFlag.slice('--report='.length);
 // --baseline=<file> substitutes the pass/fail rule. Its purpose is proving the gate FAILS on a
 // breach (QA-124): CI and the gate suite use the committed baseline; a reviewer can point this
 // at a tightened copy and watch the run fail closed.
