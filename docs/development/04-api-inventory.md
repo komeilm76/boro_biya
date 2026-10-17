@@ -8,7 +8,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 ## 1. Authentication and account lifecycle (Phase 2)
 
-Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; user/state/role/audit administration now exists with effective database permissions, current-password confirmation for writes, audit records and a last-full-administrator guard; pending initial-setup credential reissuance now exists with reason/current-password confirmation and atomic proof revocation; bounded user/audit search filters now exist; enabled adaptive computational challenges now exist as described in [enabled challenge checkpoint](17-implementation-status.md#14-phase-2-enabled-computational-challenge-checkpoint-2026-10-17); generated OpenAPI client activation remains outstanding. Remaining planned rows are not availability claims.
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change/answer-change notices remain durable for the next authorized profile load and now have the narrow ticketed realtime security stream described in API_AND_OPENAPI §7. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; user/state/role/audit administration now exists with effective database permissions, current-password confirmation for writes, audit records and a last-full-administrator guard; pending initial-setup credential reissuance now exists with reason/current-password confirmation and atomic proof revocation; bounded user/audit search filters now exist; enabled adaptive computational challenges now exist as described in [enabled challenge checkpoint](17-implementation-status.md#14-phase-2-enabled-computational-challenge-checkpoint-2026-10-17); generated OpenAPI client activation remains outstanding. Remaining planned rows are not availability claims.
 
 | Method | Path | Access | Implemented supporting contract |
 | --- | --- | --- | --- |
@@ -137,15 +137,15 @@ Live location updates reach a granted viewer over the authenticated event stream
 | POST | `/sos/tasks/:id/transition` | auth | Validated state machine; append-only event |
 | GET | `/sos/tasks/mine` | auth | Active and historical tasks |
 
-## 6. Notifications and streams (Phase 5, streams Phase 4+)
+## 6. Notifications and streams (core security slice Phase 2; general notifications Phase 5, location streams Phase 4+)
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | GET | `/notifications` | auth | Paginated, with read state |
 | POST | `/notifications/:id/read` | auth | Idempotent |
 | POST | `/notifications/read-all` | auth | Idempotent |
-| POST | `/streams/ticket` | auth | Short-lived, single-use ticket for establishing an SSE connection |
-| GET | `/streams/events` | auth (ticket) | Server-Sent Events; per-user filtering, replay by last event ID |
+| POST | `/streams/ticket` | auth | Implemented Phase 2 core-security scope only: bearer/origin/CSRF, persisted quotas, empty body, hashed one-shot ticket bound to user/session and at most 15-second/access expiry |
+| GET | `/streams/events` | auth (ticket) | Implemented Phase 2 core-security notices only: strict ticket/cursor, owner-filtered bounded replay, one terminal own-credential-revocation notice, lease/access expiry and state rechecks; general streams remain planned |
 
 ## 7. Plugin lifecycle (Phase 7)
 

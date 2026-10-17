@@ -533,6 +533,16 @@ describe('complete current bearer-route account-state matrix', () => {
         'x-csrf-token': csrf,
       };
       expect(
+        (
+          await app.inject({
+            method: 'POST',
+            url: '/api/v1/streams/ticket',
+            headers: { ...cookieHeaders, authorization: `Bearer ${grants[0]!.accessToken}` },
+          })
+        ).statusCode,
+        `${state}: stream ticket`,
+      ).toBe(state === 'active' ? 200 : 401);
+      expect(
         (await app.inject({ method: 'POST', url: '/api/v1/auth/refresh', headers: cookieHeaders })).statusCode,
         `${state}: refresh`,
       ).toBe(state === 'active' ? 200 : 401);

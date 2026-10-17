@@ -101,7 +101,9 @@ describe('JOSE token binding', () => {
     const config = { secret: env.SESSION_SECRET, origin: env.WEB_ORIGIN, accessTtlSeconds: 900 };
     const tokens = createAccessTokens(config);
     const token = await tokens.sign('user', 'session');
-    expect(await tokens.verify(token)).toEqual({ userId: 'user', sessionId: 'session' });
+    const verified = await tokens.verify(token);
+    expect(verified).toMatchObject({ userId: 'user', sessionId: 'session' });
+    expect(verified?.accessExpiresAt.getTime()).toBeGreaterThan(Date.now());
     expect(await tokens.verify(token + 'bad')).toBeNull();
     expect(await tokens.verify('x'.repeat(4097))).toBeNull();
     expect(await createAccessTokens({ ...config, origin: 'https://other.test' }).verify(token)).toBeNull();
@@ -116,6 +118,14 @@ describe('JOSE token binding', () => {
         .sign(key);
       expect(await tokens.verify(malformed)).toBeNull();
     }
+    const missingExpiry = await new SignJWT({ sid: 'session' })
+      .setSubject('user')
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setIssuer('boro-biya')
+      .setAudience(config.origin)
+      .setIssuedAt()
+      .sign(key);
+    expect(await tokens.verify(missingExpiry)).toBeNull();
     const expired = await new SignJWT({ sid: 'session' })
       .setSubject('user')
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })

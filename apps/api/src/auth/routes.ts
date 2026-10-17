@@ -1,8 +1,10 @@
+import { applySecurityStreamRoute } from '../streams/routes.js';
 import { challengeCleanupEnabled, CHALLENGE_CLEANUP_GRACE_SECONDS } from '../privacy/retention.js';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
   securityReportSchema,
+  securityStreamPolicy,
   challengeIssueSchema,
   challengeVerifySchema,
   loginSchema,
@@ -84,6 +86,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       request.url.startsWith('/api/v1/users/me') ||
       request.url.startsWith('/api/v1/privacy/') ||
       request.url.startsWith('/api/v1/security/') ||
+      request.url.startsWith('/api/v1/streams/') ||
       request.url.startsWith('/api/v1/admin')
     ) {
       reply.header('cache-control', 'no-store');
@@ -103,6 +106,13 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     passwordMinLength: 12,
     captchaEnabled: auth.config.captchaEnabled,
   }));
+  applySecurityStreamRoute(app, auth);
+  app.post('/api/v1/streams/ticket', { bodyLimit: 256 }, async (request) => {
+    csrf(request);
+    if (request.body !== undefined) throw new AuthFailure(400);
+    const identity = await auth.authenticate(request.headers.authorization);
+    return auth.streams.ticket(identity, request.ip, request.correlationId);
+  });
   app.post('/api/v1/security/reports', { bodyLimit: 20_480 }, async (request, reply) => {
     csrf(request);
     const parsed = securityReportSchema.safeParse(request.body);
@@ -113,6 +123,8 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.get('/api/v1/privacy/policy', () => ({
     status: 'development_unapproved',
+    securityStreamTicketTtlSeconds: securityStreamPolicy.ticketTtlSeconds,
+    securityStreamMaxSeconds: securityStreamPolicy.maxConnectionSeconds,
     automaticAccountDeletion: false,
     automatedDeletionRequested: auth.config.retentionPolicy?.automatedDeletionEnabled ?? false,
     challengeCleanupEnabled: challengeCleanupEnabled(auth.config),

@@ -1,3 +1,4 @@
+import { createSecurityStreams } from '../streams/security.js';
 import { createReportingService } from '../security/reports.js';
 import { createChallengeService } from './challenge.js';
 import { createHash, createHmac } from 'node:crypto';
@@ -119,6 +120,7 @@ export async function createAuthService(
     config,
     challenge,
     reports: createReportingService(db, reserve),
+    streams: createSecurityStreams(db, reserve),
     administration: createAdministration(db, config, hasher, dummyHash, reserve),
     setup: createSetupService(db, config, hasher, dummyHash, reserve),
     changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),

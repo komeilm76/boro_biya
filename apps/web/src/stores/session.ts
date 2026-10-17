@@ -106,6 +106,22 @@ export const useSessionStore = defineStore('session', {
         }
       });
     },
+    async issueSecurityStreamTicket() {
+      const token = this.accessToken,
+        version = this.authVersion;
+      const current = () => {
+        if (!this.isAuthenticated || !token || this.accessToken !== token || this.authVersion !== version)
+          throw new Error('auth_request_rejected');
+      };
+      return serialized(this, async () => {
+        current();
+        const { csrfToken } = await authClient.csrf();
+        current();
+        const ticket = await authClient.securityStreamTicket(token!, csrfToken);
+        current();
+        return ticket;
+      });
+    },
     async saveLocale(locale: 'en' | 'fa'): Promise<boolean> {
       const token = this.accessToken;
       if (!this.isAuthenticated || !token) throw new Error('auth_request_rejected');

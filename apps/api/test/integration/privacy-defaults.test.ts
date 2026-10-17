@@ -58,7 +58,7 @@ beforeAll(async () => {
   csrf = (await app.inject('/api/v1/auth/csrf')).json<{ csrfToken: string }>().csrfToken;
 });
 beforeEach(async () => {
-  await root.query('TRUNCATE core.sessions,core.session_families,core.auth_buckets');
+  await root.query('TRUNCATE core.security_stream_tickets,core.sessions,core.session_families,core.auth_buckets');
   current = await auth.login('privacy_owner', password, 'fixture', 'login');
   other = await auth.login('privacy_owner', password, 'fixture', 'login');
   foreign = await auth.login('privacy_foreign', password, 'fixture', 'login');

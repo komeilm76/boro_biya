@@ -67,6 +67,14 @@ function number(value: number) {
       <p v-if="policy.captchaEnabled && policy.captchaTtlSeconds">
         {{ $t('privacy.captchaWindow', { seconds: number(policy.captchaTtlSeconds) }) }}
       </p>
+      <p>
+        {{
+          $t('privacy.streamWindows', {
+            ticket: number(policy.securityStreamTicketTtlSeconds),
+            stream: number(policy.securityStreamMaxSeconds),
+          })
+        }}
+      </p>
       <p>{{ $t('privacy.unapproved') }}</p>
     </div>
     <RouterLink to="/_public/report">{{ $t('privacy.report') }}</RouterLink>

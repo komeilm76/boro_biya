@@ -9,6 +9,8 @@ import Privacy from '../../src/pages/PrivacyNotice.vue';
 import { privacyPolicySchema } from '@boro-biya/validation';
 const policy = {
   status: 'development_unapproved' as const,
+  securityStreamTicketTtlSeconds: 15 as const,
+  securityStreamMaxSeconds: 60 as const,
   automaticAccountDeletion: false as const,
   automatedDeletionRequested: false,
   challengeCleanupEnabled: false,
@@ -44,7 +46,7 @@ describe('effective development privacy notice', () => {
       await flushPromises();
       const text = wrapper.get('[data-policy="effective"]').text();
       const number = new Intl.NumberFormat(locale === 'fa' ? 'fa-IR' : 'en-GB');
-      for (const value of [120, 604800, 600, 365, 30, 180, 300]) expect(text).toContain(number.format(value));
+      for (const value of [120, 604800, 600, 365, 30, 180, 300, 15, 60]) expect(text).toContain(number.format(value));
       expect(text).not.toContain('privacy.');
       expect(wrapper.find('a[href="/_public/report"]').exists()).toBe(true);
       expect(authClient.privacyPolicy).toHaveBeenCalledTimes(1);

@@ -467,7 +467,11 @@ const checks = [
     logBytesPer1k <= baseline.pass.logBytesPer1kRequestsMax,
     `${Math.round(logBytesPer1k)} B/1k requests <= ${baseline.pass.logBytesPer1kRequestsMax} B/1k`,
   ],
-  ['stream surface absent (Phase 4 owns SSE)', streamSurfaceAbsent, 'GET /api/v1/streams answers 404'],
+  [
+    'legacy stream collection absent (core security uses ticketed /streams/events)',
+    streamSurfaceAbsent,
+    'GET /api/v1/streams answers 404',
+  ],
 ];
 checks.push(
   [

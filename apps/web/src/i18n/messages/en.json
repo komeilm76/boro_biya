@@ -80,7 +80,8 @@
     "candidates": "Candidate retention values in days: audit {audit}; operational records {operational}. Zero means no scheduled deletion. Neither value currently causes audit or operational-record deletion.",
     "recoveryWindows": "Configured recovery lifetimes in seconds: question challenge {challenge}; verified grant {grant}. Expiry prevents reuse; expiry alone does not erase records.",
     "captchaWindow": "Configured computational challenge lifetime: {seconds} seconds.",
-    "unapproved": "This development policy is not a deployment approval or a production privacy guarantee. Automated export, account deletion and general retention enforcement are not implemented."
+    "unapproved": "This development policy is not a deployment approval or a production privacy guarantee. Automated export, account deletion and general retention enforcement are not implemented.",
+    "streamWindows": "Security-stream tickets expire within {ticket} seconds and are single-use. Each connection ends within {stream} seconds or at access expiry, whichever comes first. Expired/consumed ticket records are retained; no automatic ticket deletion is enabled."
   },
   "report": {
     "title": "Report a security concern",
@@ -209,5 +210,9 @@
     "inspect": "Inspect UTC instant",
     "utc": "Underlying UTC instant:",
     "unavailable": "Time unavailable"
+  },
+  "securityStream": {
+    "label": "Account security notices",
+    "unavailable": "Live security notices are connecting or unavailable. Previously stored notices remain available in account settings after sign-in. A notice is informational; use the normal sign-in and session controls."
   }
 }

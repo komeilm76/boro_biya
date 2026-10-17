@@ -15,7 +15,7 @@ export function createAccessTokens(config: Pick<AuthConfig, 'secret' | 'origin' 
         .setExpirationTime(`${config.accessTtlSeconds}s`)
         .sign(key);
     },
-    async verify(token: string): Promise<{ userId: string; sessionId: string } | null> {
+    async verify(token: string): Promise<{ userId: string; sessionId: string; accessExpiresAt: Date } | null> {
       if (token.length > 4_096) return null;
       try {
         const { payload } = await jwtVerify(token, key, {
@@ -25,8 +25,9 @@ export function createAccessTokens(config: Pick<AuthConfig, 'secret' | 'origin' 
           typ: 'JWT',
           maxTokenAge: `${config.accessTtlSeconds}s`,
         });
-        if (typeof payload.sub !== 'string' || typeof payload['sid'] !== 'string') return null;
-        return { userId: payload.sub, sessionId: payload['sid'] };
+        if (typeof payload.sub !== 'string' || typeof payload['sid'] !== 'string' || !Number.isSafeInteger(payload.exp))
+          return null;
+        return { userId: payload.sub, sessionId: payload['sid'], accessExpiresAt: new Date(payload.exp! * 1000) };
       } catch {
         return null;
       }

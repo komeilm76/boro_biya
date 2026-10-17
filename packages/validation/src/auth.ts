@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
 
+export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
+
 export const administrativePermissionKeys = [
   'users.create',
   'users.read',
@@ -233,6 +235,8 @@ export const challengeGrantSchema = z.strictObject({ grant: challengeToken, expi
 /** Public effective development policy; candidate retention days are not enforcement promises. */
 export const privacyPolicySchema = z.strictObject({
   status: z.literal('development_unapproved'),
+  securityStreamTicketTtlSeconds: z.literal(securityStreamPolicy.ticketTtlSeconds),
+  securityStreamMaxSeconds: z.literal(securityStreamPolicy.maxConnectionSeconds),
   automaticAccountDeletion: z.literal(false),
   automatedDeletionRequested: z.boolean(),
   challengeCleanupEnabled: z.boolean(),
@@ -271,4 +275,18 @@ export const securityReportSchema = z.strictObject({
       }),
     ),
   locale: z.enum(['en', 'fa']),
+});
+
+export const securityStreamTicketSchema = z.strictObject({
+  ticket: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+  expiresAt: utcInstantSchema,
+});
+export const securityStreamQuerySchema = z.strictObject({
+  ticket: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+  after: z.uuidv7().optional(),
+});
+export const securityNoticeEventSchema = z.strictObject({
+  id: z.uuidv7(),
+  event: z.enum(['password_reset', 'password_changed', 'security_answers_changed']),
+  createdAt: utcInstantSchema,
 });

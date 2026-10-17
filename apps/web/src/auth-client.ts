@@ -6,6 +6,7 @@ import {
   challengeResponseSchema,
   privacyPolicySchema,
   securityReportSchema,
+  securityStreamTicketSchema,
   challengeGrantSchema,
   type ChallengePurpose,
   accessResponseSchema,
@@ -90,6 +91,8 @@ function searchQuery(query: Record<string, string | undefined>): string {
   return encoded ? `?${encoded}` : '';
 }
 export const authClient = {
+  securityStreamTicket: (token: string, csrf: string) =>
+    authRequest('/api/v1/streams/ticket', securityStreamTicketSchema, { method: 'POST', token, csrf }),
   reportSecurity: (input: unknown, csrf: string) =>
     authRequest('/api/v1/security/reports', acceptedResponse, {
       method: 'POST',
