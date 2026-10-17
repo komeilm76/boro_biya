@@ -173,10 +173,10 @@ describe('application audit hash chain and independent checkpoints', () => {
   it('backfills existing history on migration and detects rewritten history against its earlier independent checkpoint', async () => {
     await append();
     const anchor = await verifyAuditIntegrity(db);
-    expect(await migrateDown(root.pool, { schema: 'core', migrationsDir, steps: 1 })).toEqual([11]);
+    expect(await migrateDown(root.pool, { schema: 'core', migrationsDir, steps: 2 })).toEqual([12, 11]);
     await root.query("UPDATE core.audit_events SET action='privileged_history_rewrite'");
     await append('before_backfill');
-    expect((await migrateUp(root.pool, { schema: 'core', migrationsDir })).applied).toEqual([11]);
+    expect((await migrateUp(root.pool, { schema: 'core', migrationsDir })).applied).toEqual([11, 12]);
     expect((await verifyAuditIntegrity(db)).index).toBe('2');
     await expect(verifyAuditIntegrity(db, anchor)).rejects.toThrow('audit integrity mismatch');
     await append('after_backfill');

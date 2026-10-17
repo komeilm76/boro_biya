@@ -39,10 +39,10 @@ async function signIn() {
     <RecoveryWarning @policy="captchaEnabled = $event" />
     <AuthChallenge
       v-model="challenge"
-      @working="challengeBusy = $event"
       :enabled="captchaEnabled"
       :disabled="busy"
       purpose="login"
+      @working="challengeBusy = $event"
     />
     <form @submit.prevent="signIn">
       <label for="username">{{ $t('auth.username') }}</label>

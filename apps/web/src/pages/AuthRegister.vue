@@ -68,10 +68,10 @@ async function register() {
     <AuthChallenge
       v-if="!accepted"
       v-model="challenge"
-      @working="challengeBusy = $event"
       :enabled="captchaEnabled"
       :disabled="busy"
       purpose="register"
+      @working="challengeBusy = $event"
     />
     <form v-if="!accepted" @submit.prevent="register">
       <label for="register-user">{{ $t('auth.username') }}</label

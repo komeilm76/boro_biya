@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createVuetify } from 'vuetify';
 import { VApp, VBtn, VMain } from 'vuetify/components';
@@ -12,7 +12,8 @@ import PublicLanding from '../../src/pages/PublicLanding.vue';
 import SignInPlaceholder from '../../src/pages/SignInPlaceholder.vue';
 import UserArea from '../../src/pages/UserArea.vue';
 import { createAppRouter } from '../../src/router/index.js';
-import { createAppI18n } from '../../src/i18n/index.js';
+import { useSessionStore } from '../../src/stores/session.js';
+import { createAppI18n, savedLocale } from '../../src/i18n/index.js';
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network not part of page rendering test')));
@@ -74,4 +75,38 @@ describe('the application shell composes (Vuetify + router + i18n + Pinia)', () 
     expect(wrapper.html()).toContain('Welcome to Boro biya');
     expect(router.currentRoute.value.meta['namespace']).toBe('public');
   });
+});
+
+describe('pre-sign-in locale acceptance through the application shell', () => {
+  it.each(['/_auth/login', '/_auth/register', '/_auth/recover'])(
+    'keeps both languages reachable and the explicit device choice persistent on %s',
+    async (path) => {
+      localStorage.clear();
+      const pinia = createPinia();
+      setActivePinia(pinia);
+      const router = createAppRouter(createMemoryHistory());
+      await router.push(path);
+      const i18n = createAppI18n(savedLocale());
+      const wrapper = mount(App, { global: { plugins: [pinia, router, i18n, makeVuetify()] } });
+      await router.isReady();
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('en');
+      expect(useSessionStore().isAuthenticated).toBe(false);
+      await wrapper.get('nav button[lang="fa"]').trigger('click');
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('fa');
+      expect(document.documentElement.dir).toBe('rtl');
+      expect(document.documentElement.lang).toBe('fa');
+      expect(savedLocale()).toBe('fa');
+      expect(createAppI18n(savedLocale()).global.locale.value).toBe('fa');
+      expect(router.currentRoute.value.path).toBe(path);
+      await wrapper.get('nav button[lang="en"]').trigger('click');
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('en');
+      expect(document.documentElement.dir).toBe('ltr');
+      expect(savedLocale()).toBe('en');
+      wrapper.unmount();
+      localStorage.clear();
+    },
+  );
 });

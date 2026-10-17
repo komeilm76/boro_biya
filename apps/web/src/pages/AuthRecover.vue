@@ -84,10 +84,10 @@ async function submit() {
     <AuthChallenge
       v-if="stage === 'username'"
       v-model="challenge"
-      @working="challengeBusy = $event"
       :enabled="captchaEnabled"
       :disabled="busy"
       purpose="recovery"
+      @working="challengeBusy = $event"
     />
     <form v-if="enabled && stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
       <fieldset :disabled="busy || challengeBusy" class="grid gap-3">
