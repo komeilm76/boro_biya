@@ -2,8 +2,10 @@
 // API requests, SHA work, proof verification, grant clocks and admission stay real.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createCredentialSequence } from './credential-sequence.mjs';
 
 export async function runChallengeBrowserEdges({ browser, origin, password }) {
+  const withCredentials = createCredentialSequence();
   const outcomes = await Promise.allSettled(
     ['en', 'fa'].flatMap((locale) =>
       [false, true].map(async (mobile) => {
@@ -189,22 +191,24 @@ export async function runChallengeBrowserEdges({ browser, origin, password }) {
           result.expiredAdmission = 'pass (403 and generic feedback; password cleared; no automatic retry)';
 
           stage = 'explicit new proof and deliberate new credential submission';
-          await page.locator('#password').fill(password);
-          await solve();
-          assert.equal(counts.credentials, 1);
-          assert.equal(counts.verification, 2);
-          const [accepted] = await Promise.all([
-            page.waitForResponse(
-              (response) => response.url().endsWith('/api/v1/auth/login') && response.request().method() === 'POST',
-            ),
-            page.locator('#password').press('Enter'),
-          ]);
-          result.finalLoginStatus = accepted.status();
-          assert.equal(accepted.status(), 200);
-          await page.waitForURL(`${origin}/_user`);
-          await page.locator('time').first().waitFor();
-          assert.equal(counts.credentials, 2);
-          assert.equal(counts.verification, 2);
+          await withCredentials(async () => {
+            await page.locator('#password').fill(password);
+            await solve();
+            assert.equal(counts.credentials, 1);
+            assert.equal(counts.verification, 2);
+            const [accepted] = await Promise.all([
+              page.waitForResponse(
+                (response) => response.url().endsWith('/api/v1/auth/login') && response.request().method() === 'POST',
+              ),
+              page.locator('#password').press('Enter'),
+            ]);
+            result.finalLoginStatus = accepted.status();
+            assert.equal(accepted.status(), 200);
+            await page.waitForURL(`${origin}/_user`);
+            await page.locator('time').first().waitFor();
+            assert.equal(counts.credentials, 2);
+            assert.equal(counts.verification, 2);
+          });
           result.manualRetry = 'pass (fresh real proof and explicit login)';
           result.passed = true;
         } catch (error) {

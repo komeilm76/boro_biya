@@ -17,6 +17,8 @@ import { runChallengeBrowserEdges } from './challenge-browser.mjs';
 import { runRecoveryBrowserEdges } from './recovery-browser.mjs';
 import { runReportBrowserEdges } from './report-browser.mjs';
 import { runTimeBrowserEdges, seedTimeFixtures } from './time-browser.mjs';
+import { runStreamBrowserEdges } from './stream-browser.mjs';
+import { runRecoveryExpiryBrowserEdges } from './recovery-expiry-browser.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 if (!process.env.PHASE2_BROWSER_TOOLS || !process.env.PHASE2_BROWSER_EXECUTABLE) {
@@ -43,9 +45,11 @@ const report = {
   challengeEdgeCases: [],
   reportingEdgeCases: [],
   timestampEdgeCases: [],
+  realtimeEdgeCases: [],
+  recoveryExpiryEdgeCases: [],
   passed: false,
 };
-let pg, database, db, app, web, browser;
+let pg, database, db, app, web, browser, recoveryExpiryWork;
 let step = 'setup';
 try {
   const { chromium } = tools('playwright-core');
@@ -103,6 +107,8 @@ try {
       sink: () => {},
     }),
   });
+  // Test-owned transport fault injection: retain sockets only, never ticket-bearing URLs.
+  const streamSockets = new Set();
   await app.listen({ host: '0.0.0.0', port: 39201 });
   process.env.API_PROXY_TARGET = 'http://127.0.0.1:39201';
   web = await createServer({
@@ -110,6 +116,11 @@ try {
     configFile: join(root, 'apps/web/vite.config.ts'),
     logLevel: 'error',
     server: { host: '0.0.0.0', port: 39202, strictPort: true },
+  });
+  web.httpServer.on('request', (request, response) => {
+    if (!request.url?.startsWith('/api/v1/streams/events?')) return;
+    streamSockets.add(request.socket);
+    response.once('close', () => streamSockets.delete(request.socket));
   });
   await web.listen();
   // Container sandboxing is unavailable; browser web-security/isolation checks stay enabled.
@@ -286,6 +297,21 @@ try {
       step = `${label}: inbox verification`;
       const reports = await db.query('SELECT count(*)::int AS count FROM core.security_reports');
       assert.equal(reports.rows[0].count, report.results.length + 1);
+      const realtimeEdges = await runStreamBrowserEdges({
+        context,
+        page,
+        db,
+        username: `browser_${locale}_${mobile ? 'mobile' : 'desktop'}`,
+        disconnect: () => {
+          const sockets = [...streamSockets];
+          for (const socket of sockets) socket.destroy();
+          return sockets.length;
+        },
+        onStep: (stage) => {
+          step = `${label}: ${stage}`;
+        },
+      });
+      report.realtimeEdgeCases.push({ locale, viewport: mobile ? '390x844 (emulated)' : '1280x900', ...realtimeEdges });
       assert.deepEqual(pageErrors, []);
       report.results.push({
         locale,
@@ -343,6 +369,20 @@ try {
   ])
     assert.equal((await db.query(sql)).rows[0].count, 5);
   console.log('EN/FA desktop/mobile-emulation reporting outage/lost-receipt/quota checks passed');
+  step = 'recovery expiry setup';
+  const expiryReady = Promise.withResolvers();
+  let preparedExpiryCells = 0;
+  recoveryExpiryWork = runRecoveryExpiryBrowserEdges({
+    browser,
+    origin,
+    db,
+    onReady: () => {
+      if (++preparedExpiryCells === 4) expiryReady.resolve();
+    },
+  });
+  // Finish all starts/verification before enabling challenge admission. The actual
+  // five-minute waits then overlap the existing challenge matrix, not shorter clocks.
+  await expiryReady.promise;
   // The same disposable configuration now exercises the enabled branch at default work/risk
   // settings. This is a rehearsal setting, never a change to application defaults or CI budgets.
   authConfig.captchaEnabled = true;
@@ -382,7 +422,15 @@ try {
     await context.close();
   }
   step = 'challenge cancellation/failure/expiry/manual-retry matrix';
-  report.challengeEdgeCases = await runChallengeBrowserEdges({ browser, origin, password: replacement });
+  [report.challengeEdgeCases, report.recoveryExpiryEdgeCases] = await Promise.all([
+    runChallengeBrowserEdges({ browser, origin, password: replacement }),
+    recoveryExpiryWork,
+  ]);
+  step = 'recovery natural expiry/outage/replay matrix';
+  assert.equal(report.recoveryExpiryEdgeCases.length, 4);
+  assert(report.recoveryExpiryEdgeCases.every((result) => result.passed));
+  console.log('EN/FA desktop/mobile-emulation recovery outage/natural expiry/expired-proof replay passed');
+  step = 'challenge cancellation/failure/expiry/manual-retry matrix';
   assert.equal(report.challengeEdgeCases.length, 4);
   assert(report.challengeEdgeCases.every((result) => result.passed));
   for (const result of report.challengeEdgeCases) {
@@ -412,6 +460,8 @@ try {
   report.failure = step;
   console.error(`phase2 browser rehearsal failed at ${step}; credential-bearing traces are intentionally suppressed`);
 } finally {
+  // Do not abandon owned expiry contexts/timers if an earlier independent case failed.
+  if (recoveryExpiryWork) report.recoveryExpiryEdgeCases = await recoveryExpiryWork;
   for (const close of [
     () => browser?.close(),
     () => web?.close(),
