@@ -88,6 +88,7 @@ describe('computational challenge bounds and orchestration', () => {
     expect(await f.service.issue('login', 'origin', 'low')).toEqual({ required: false });
     f.state.count = 300;
     f.config.captchaPolicy!.cleanup = true;
+    f.config.retentionPolicy!.automatedDeletionEnabled = true;
     expect(await f.service.issue('login', 'origin', 'high')).toMatchObject({ required: true, bits: 20 });
     expect(f.query.mock.calls.some(([sql]) => sql.startsWith('DELETE'))).toBe(true);
     f.config.captchaPolicy!.adaptive = false;

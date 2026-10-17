@@ -1,3 +1,4 @@
+import { challengeCleanupEnabled, CHALLENGE_CLEANUP_GRACE_SECONDS } from '../privacy/retention.js';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
@@ -80,6 +81,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     if (
       request.url.startsWith('/api/v1/auth') ||
       request.url.startsWith('/api/v1/users/me') ||
+      request.url.startsWith('/api/v1/privacy/') ||
       request.url.startsWith('/api/v1/admin')
     ) {
       reply.header('cache-control', 'no-store');
@@ -98,6 +100,24 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     recoveryEnabled: auth.config.recoveryEnabled,
     passwordMinLength: 12,
     captchaEnabled: auth.config.captchaEnabled,
+  }));
+  app.get('/api/v1/privacy/policy', () => ({
+    status: 'development_unapproved',
+    automaticAccountDeletion: false,
+    automatedDeletionRequested: auth.config.retentionPolicy?.automatedDeletionEnabled ?? false,
+    challengeCleanupEnabled: challengeCleanupEnabled(auth.config),
+    challengeCleanupGraceSeconds: CHALLENGE_CLEANUP_GRACE_SECONDS,
+    auditDaysCandidate: auth.config.retentionPolicy?.auditDaysCandidate ?? 0,
+    operationalDaysCandidate: auth.config.retentionPolicy?.operationalDaysCandidate ?? 0,
+    recordRetentionEnforced: false,
+    accessTtlSeconds: auth.config.accessTtlSeconds,
+    refreshTtlSeconds: auth.config.refreshTtlSeconds,
+    loginWindowSeconds: auth.config.windowSeconds,
+    recoveryEnabled: auth.config.recoveryEnabled,
+    recoveryChallengeTtlSeconds: auth.config.recoveryChallengeTtlSeconds,
+    recoveryGrantTtlSeconds: auth.config.recoveryGrantTtlSeconds,
+    captchaEnabled: auth.config.captchaEnabled,
+    captchaTtlSeconds: auth.config.captchaEnabled ? (auth.config.captchaPolicy?.ttlSeconds ?? null) : null,
   }));
   app.post('/api/v1/auth/challenge', { bodyLimit: 1024 }, async (request) => {
     csrf(request);

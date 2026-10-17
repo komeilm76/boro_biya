@@ -1,3 +1,4 @@
+import { pruneExpiredChallenges } from '../privacy/retention.js';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import { identityTransaction } from '../identity/transaction.js';
@@ -59,10 +60,7 @@ export function createChallengeService(db: Pick<Db, 'pool'>, config: AuthConfig,
       const bits = Math.min(20, p.bits + (p.adaptive ? Math.floor(count / p.threshold) - 1 : 0));
       const token = randomBytes(32).toString('base64url');
       const expiresAt = await identityTransaction(db, async (client) => {
-        if (p.cleanup)
-          await client.query(
-            "DELETE FROM core.captcha_challenges WHERE token_hash IN (SELECT token_hash FROM core.captcha_challenges WHERE expires_at < clock_timestamp() - interval '5 minutes' ORDER BY expires_at LIMIT 100)",
-          );
+        await pruneExpiredChallenges(client, config);
         const row = await client.query<{ expires_at: Date }>(
           "INSERT INTO core.captcha_challenges(token_hash,origin_hash,purpose,work_bits,expires_at) VALUES ($1,$2,$3,$4,clock_timestamp() + $5 * interval '1 second') RETURNING expires_at",
           [keyed('token', token), keyed('origin', origin), purpose, bits, p.ttlSeconds],

@@ -229,3 +229,27 @@ export const challengeResponseSchema = z.discriminatedUnion('required', [
   }),
 ]);
 export const challengeGrantSchema = z.strictObject({ grant: challengeToken, expiresAt: utcInstantSchema });
+
+/** Public effective development policy; candidate retention days are not enforcement promises. */
+export const privacyPolicySchema = z.strictObject({
+  status: z.literal('development_unapproved'),
+  automaticAccountDeletion: z.literal(false),
+  automatedDeletionRequested: z.boolean(),
+  challengeCleanupEnabled: z.boolean(),
+  challengeCleanupGraceSeconds: z.literal(300),
+  auditDaysCandidate: z.number().int().min(0).max(36500),
+  operationalDaysCandidate: z.number().int().min(0).max(36500),
+  recordRetentionEnforced: z.literal(false),
+  accessTtlSeconds: z.number().int().positive().max(900),
+  refreshTtlSeconds: z
+    .number()
+    .int()
+    .positive()
+    .max(90 * 86400),
+  loginWindowSeconds: z.number().int().positive().max(3600),
+  recoveryEnabled: z.boolean(),
+  recoveryChallengeTtlSeconds: z.number().int().positive().max(900),
+  recoveryGrantTtlSeconds: z.number().int().positive().max(900),
+  captchaEnabled: z.boolean(),
+  captchaTtlSeconds: z.number().int().positive().max(300).nullable(),
+});

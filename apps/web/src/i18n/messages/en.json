@@ -68,9 +68,19 @@
     "title": "Development privacy notice",
     "development": "This is a development build, not a released safety service. Do not enter sensitive personal information.",
     "data": "We store your username, password hash, hashed security answers, account state, hashed session secrets and security audit events. We do not collect an email address or mobile number. No telemetry is sent.",
-    "retention": "Automatic account/data deletion is off. Account deactivation does not erase records. Development identities, answer hashes, consumed session hashes and audit records are retained; a deployment-specific retention/export/deletion policy is required before public release.",
-    "sessions": "The current defaults are 15-minute access tokens, 30-day refresh families and a rolling 15-minute login-attempt window. Refresh rotation does not extend the family expiry. You can revoke your sessions in security settings.",
-    "report": "Report a security concern"
+    "retention": "Account deactivation preserves records; there is no account-deletion feature. Audit and operational records remain retained. Candidate retention windows below are not enforced schedules. A deployment-specific retention, export and deletion policy must be approved before public use.",
+    "sessions": "Configured lifetimes in seconds: access token {access}; refresh family {refresh}; login-attempt window {login}. Refresh rotation does not extend the family expiry. You can revoke sessions in security settings.",
+    "report": "Report a security concern",
+    "unavailable": "Current configuration could not be loaded. Do not rely on previously published default windows; try again or contact the deployment operator.",
+    "loading": "Loading the current development policy.",
+    "requestedOn": "The automated-deletion switch is enabled. Only the implemented scope below is active; it does not enable account, audit or operational-record deletion.",
+    "requestedOff": "The automated-deletion switch is disabled. No automated retention pass deletes records.",
+    "cleanupOn": "Expired computational challenges may be removed in bounded batches after a grace of {grace} seconds. This is the only implemented deletion scope.",
+    "cleanupOff": "Computational challenge cleanup is inactive. Expired challenges remain unusable even when retained.",
+    "candidates": "Candidate retention values in days: audit {audit}; operational records {operational}. Zero means no scheduled deletion. Neither value currently causes audit or operational-record deletion.",
+    "recoveryWindows": "Configured recovery lifetimes in seconds: question challenge {challenge}; verified grant {grant}. Expiry prevents reuse; expiry alone does not erase records.",
+    "captchaWindow": "Configured computational challenge lifetime: {seconds} seconds.",
+    "unapproved": "This development policy is not a deployment approval or a production privacy guarantee. Automated export, account deletion and general retention enforcement are not implemented."
   },
   "report": {
     "title": "Report a security concern",

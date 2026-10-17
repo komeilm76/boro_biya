@@ -244,6 +244,7 @@ describe('enabled self-hosted adaptive computational challenge', () => {
     const cleanup = await createAuthService(db, {
       ...config,
       captchaPolicy: { ...config.captchaPolicy!, cleanup: true },
+      retentionPolicy: { ...config.retentionPolicy!, automatedDeletionEnabled: true },
     });
     await cleanup.challenge.issue('login', 'origin', 'cleanup');
     expect((await db.pool.query('SELECT token_hash FROM core.captcha_challenges')).rowCount).toBe(2);
