@@ -23,6 +23,7 @@ describe('authentication configuration and resource bounds', () => {
         NODE_ENV: 'production',
         SECURITY_QUESTIONS_ENABLED: 'false',
         CAPTCHA_ENABLED: 'true',
+        CAPTCHA_TOKEN_SECRET: 'disposable-captcha-test-only-signing-material',
       }),
     ).toMatchObject({ secureCookies: false, recoveryEnabled: false, captchaEnabled: true });
     expect(

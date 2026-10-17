@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthChallenge from '../components/AuthChallenge.vue';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
@@ -9,6 +10,8 @@ const password = ref('');
 const repeatPassword = ref('');
 const questions = ref([1, 2, 3, 4, 5]);
 const answers = ref(['', '', '', '', '']);
+const captchaEnabled = ref(false);
+const challenge = ref('');
 const busy = ref(false);
 const failed = ref(false);
 const accepted = ref(false);
@@ -31,6 +34,7 @@ async function register() {
     await authRequest('/api/v1/auth/register', acceptedResponse, {
       method: 'POST',
       csrf: csrfToken,
+      challenge: challenge.value || undefined,
       body: {
         username: username.value,
         locale: locale.value,
@@ -43,6 +47,7 @@ async function register() {
   } catch {
     failed.value = true;
   } finally {
+    challenge.value = '';
     password.value = '';
     repeatPassword.value = '';
     answers.value = ['', '', '', '', ''];
@@ -54,12 +59,13 @@ async function register() {
   <section class="mx-auto max-w-prose px-6 py-12" aria-labelledby="register-title">
     <h1 id="register-title" class="text-2xl font-semibold mb-4">{{ $t('auth.register') }}</h1>
     <RouterLink to="/_public/privacy">{{ $t('auth.privacy') }}</RouterLink>
-    <RecoveryWarning />
+    <RecoveryWarning @policy="captchaEnabled = $event" />
     <p>{{ $t('auth.passwordPolicy') }}</p>
     <p v-if="accepted" role="status">
       {{ $t('auth.registered') }} <RouterLink to="/_auth/login">{{ $t('signIn.title') }}</RouterLink>
     </p>
-    <form v-else @submit.prevent="register">
+    <AuthChallenge v-if="!accepted" v-model="challenge" :enabled="captchaEnabled" :disabled="busy" purpose="register" />
+    <form v-if="!accepted" @submit.prevent="register">
       <label for="register-user">{{ $t('auth.username') }}</label
       ><input
         id="register-user"

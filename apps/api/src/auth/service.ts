@@ -1,3 +1,4 @@
+import { createChallengeService } from './challenge.js';
 import { createHash, createHmac } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import { normalizeUsername } from '../identity/account.js';
@@ -69,6 +70,8 @@ export async function createAuthService(
     }
   }
 
+  const challenge = createChallengeService(db, config, reserve);
+
   async function failLogin(
     accountId: string | undefined,
     accountKey: string,
@@ -113,6 +116,7 @@ export async function createAuthService(
 
   return {
     config,
+    challenge,
     administration: createAdministration(db, config, hasher, dummyHash, reserve),
     setup: createSetupService(db, config, hasher, dummyHash, reserve),
     changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),
@@ -125,9 +129,10 @@ export async function createAuthService(
       );
       return result.rows.map((row) => ({ id: row.id, textKey: row.text_key }));
     },
-    async register(input: Registration, origin: string, requestId: string) {
-      if (config.captchaEnabled) throw new AuthFailure(503);
+    async register(input: Registration, origin: string, requestId: string, proof?: string) {
+      challenge.configured();
       await reserve('register-origin', origin, config.maxOriginAttempts, requestId);
+      await challenge.admit('register', origin, requestId, proof);
       let username: ReturnType<typeof normalizeUsername>;
       let answers: string[];
       try {
@@ -172,8 +177,8 @@ export async function createAuthService(
         throw new Error('account registration storage failed', { cause: error });
       }
     },
-    async login(usernameInput: string, password: string, origin: string, requestId: string) {
-      if (config.captchaEnabled) throw new AuthFailure(503);
+    async login(usernameInput: string, password: string, origin: string, requestId: string, proof?: string) {
+      challenge.configured();
       await reserve('login-origin', origin, config.maxOriginAttempts, requestId);
       let username = '';
       try {
@@ -188,6 +193,7 @@ export async function createAuthService(
         await audit('login_backoff_denied', requestId);
         throw new AuthFailure(429, retryAfter);
       }
+      await challenge.admit('login', origin, requestId, proof);
       const lookup = await db.pool.query<{ id: string; password_hash: string }>(
         'SELECT id, password_hash FROM core.users WHERE username_normalized = $1',
         [username],

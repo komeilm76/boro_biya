@@ -3,6 +3,9 @@ import {
   type AdminAuditQuery,
   adminUsersQuerySchema,
   adminAuditQuerySchema,
+  challengeResponseSchema,
+  challengeGrantSchema,
+  type ChallengePurpose,
   accessResponseSchema,
   adminUsersResponseSchema,
   adminRolesResponseSchema,
@@ -39,6 +42,7 @@ export async function authRequest<T>(
     body?: unknown;
     token?: string;
     csrf?: string;
+    challenge?: string | undefined;
   } = {},
 ): Promise<T> {
   if (!path.startsWith('/api/v1/')) throw new Error('invalid API path');
@@ -48,7 +52,7 @@ export async function authRequest<T>(
     headers: {
       accept: 'application/json',
       ...(options.body !== undefined ? { 'content-type': 'application/json' } : {}),
-      ...(options.token ? { authorization: `Bearer ${options.token}` } : {}),
+      ...(options.token || options.challenge ? { authorization: `Bearer ${options.token ?? options.challenge}` } : {}),
       ...(options.csrf ? { 'x-csrf-token': options.csrf } : {}),
     },
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
@@ -84,6 +88,14 @@ function searchQuery(query: Record<string, string | undefined>): string {
   return encoded ? `?${encoded}` : '';
 }
 export const authClient = {
+  challenge: (purpose: ChallengePurpose, csrf: string) =>
+    authRequest('/api/v1/auth/challenge', challengeResponseSchema, { method: 'POST', csrf, body: { purpose } }),
+  verifyChallenge: (purpose: ChallengePurpose, token: string, counter: number, csrf: string) =>
+    authRequest('/api/v1/auth/challenge/verify', challengeGrantSchema, {
+      method: 'POST',
+      csrf,
+      body: { purpose, token, counter },
+    }),
   changeSecurityAnswers: (
     currentPassword: string,
     answers: Array<{ questionId: number; answer: string }>,
@@ -150,8 +162,13 @@ export const authClient = {
       token,
       body: { username, currentPassword, ...(temporaryPassword ? { temporaryPassword } : {}) },
     }),
-  setupStart: (username: string, password: string, csrf: string) =>
-    authRequest('/api/v1/auth/setup/start', acceptedResponse, { method: 'POST', csrf, body: { username, password } }),
+  setupStart: (username: string, password: string, csrf: string, challenge?: string) =>
+    authRequest('/api/v1/auth/setup/start', acceptedResponse, {
+      method: 'POST',
+      csrf,
+      challenge,
+      body: { username, password },
+    }),
   setupStatus: () => authRequest('/api/v1/auth/setup/status', setupStatusSchema),
   setupPassword: (password: string, repeatPassword: string, csrf: string) =>
     authRequest('/api/v1/auth/setup/password', acceptedResponse, {
@@ -162,8 +179,13 @@ export const authClient = {
   setupSecurity: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
     authRequest('/api/v1/auth/setup/security-questions', acceptedResponse, { method: 'POST', csrf, body: { answers } }),
   recoveryPolicy: () => authRequest('/api/v1/auth/policy', recoveryPolicySchema),
-  forgot: (username: string, csrf: string) =>
-    authRequest('/api/v1/auth/password/forgot', acceptedResponse, { method: 'POST', csrf, body: { username } }),
+  forgot: (username: string, csrf: string, challenge?: string) =>
+    authRequest('/api/v1/auth/password/forgot', acceptedResponse, {
+      method: 'POST',
+      csrf,
+      challenge,
+      body: { username },
+    }),
   recoveryQuestions: (csrf: string) =>
     authRequest('/api/v1/auth/password/recover/questions', recoveryQuestionsSchema, { method: 'POST', csrf }),
   verifyRecovery: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
@@ -175,8 +197,13 @@ export const authClient = {
       body: { password, repeatPassword },
     }),
   csrf: () => authRequest('/api/v1/auth/csrf', csrfResponseSchema),
-  login: (username: string, password: string, csrf: string) =>
-    authRequest('/api/v1/auth/login', accessResponseSchema, { method: 'POST', csrf, body: { username, password } }),
+  login: (username: string, password: string, csrf: string, challenge?: string) =>
+    authRequest('/api/v1/auth/login', accessResponseSchema, {
+      method: 'POST',
+      csrf,
+      challenge,
+      body: { username, password },
+    }),
   refresh: (csrf: string) => authRequest('/api/v1/auth/refresh', accessResponseSchema, { method: 'POST', csrf }),
   me: (token: string) => authRequest('/api/v1/users/me', accountResponseSchema, { token }),
   savePreferences: (token: string, locale: 'en' | 'fa') =>

@@ -171,5 +171,15 @@
     "utc": "Enter UTC instants such as 2026-10-17T12:00:00Z. The start is inclusive; the end is exclusive.",
     "from": "From (UTC, inclusive)",
     "to": "To (UTC, exclusive)"
+  },
+  "challenge": {
+    "title": "Privacy-first security challenge",
+    "notice": "Check before submitting. If required, this device computes a short proof of work without puzzles, third-party requests or tracking. This is not proof of human identity and does not replace rate limits.",
+    "working": "Computing a proof of work. You can cancel without submitting your credentials.",
+    "ready": "Check complete. Submit the form now; a proof expires quickly and is single-use.",
+    "idle": "Check whether a challenge is required, then submit the form.",
+    "failed": "The check could not finish or has expired. Try again. Unsupported devices cannot bypass the check; contact an administrator for assistance.",
+    "start": "Check security challenge",
+    "cancel": "Cancel computation"
   }
 }

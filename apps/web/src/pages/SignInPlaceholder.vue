@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthChallenge from '../components/AuthChallenge.vue';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -8,6 +9,8 @@ const session = useSessionStore();
 const router = useRouter();
 const username = ref('');
 const password = ref('');
+const captchaEnabled = ref(false);
+const challenge = ref('');
 const busy = ref(false);
 const failed = ref(false);
 const retryAfter = ref(0);
@@ -17,12 +20,13 @@ async function signIn() {
   failed.value = false;
   retryAfter.value = 0;
   try {
-    await session.login(username.value, password.value);
+    await session.login(username.value, password.value, challenge.value || undefined);
     await router.push('/_user');
   } catch (error) {
     failed.value = true;
     if (error instanceof AuthRequestError) retryAfter.value = error.retryAfterSeconds ?? 0;
   } finally {
+    challenge.value = '';
     password.value = '';
     busy.value = false;
   }
@@ -31,7 +35,8 @@ async function signIn() {
 <template>
   <section class="mx-auto max-w-prose px-6 py-16" aria-labelledby="sign-in-title">
     <h1 id="sign-in-title" class="text-2xl font-semibold mb-4">{{ $t('signIn.title') }}</h1>
-    <RecoveryWarning />
+    <RecoveryWarning @policy="captchaEnabled = $event" />
+    <AuthChallenge v-if="true" v-model="challenge" :enabled="captchaEnabled" :disabled="busy" purpose="login" />
     <form @submit.prevent="signIn">
       <label for="username">{{ $t('auth.username') }}</label>
       <input

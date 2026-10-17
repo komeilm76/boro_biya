@@ -51,7 +51,7 @@ export const useSessionStore = defineStore('session', {
       administrativePermissionKeys.some((permission) => state.permissions?.includes(permission)),
   },
   actions: {
-    async login(username: string, password: string): Promise<void> {
+    async login(username: string, password: string, challenge?: string): Promise<void> {
       this.clearSession();
       const version = this.authVersion;
       return serialized(this, async () => {
@@ -61,7 +61,7 @@ export const useSessionStore = defineStore('session', {
         current();
         const { csrfToken } = await authClient.csrf();
         current();
-        const grant = await authClient.login(username, password, csrfToken);
+        const grant = await authClient.login(username, password, csrfToken, challenge);
         current();
         const account = await authClient.me(grant.accessToken);
         current();

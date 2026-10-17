@@ -80,6 +80,7 @@ export const securityNoticeSchema = z.strictObject({
 });
 export const securityNoticesSchema = z.array(securityNoticeSchema).max(10);
 export const recoveryPolicySchema = z.strictObject({
+  captchaEnabled: z.boolean().optional(),
   recoveryEnabled: z.boolean(),
   passwordMinLength: z.number().int().positive(),
 });
@@ -208,3 +209,23 @@ export const adminAuditResponseSchema = z.strictObject({
   nextCursor: z.uuidv7().nullable(),
 });
 export const adminRoleSavedSchema = z.strictObject({ id: z.uuidv7() });
+
+export const challengePurposeSchema = z.enum(['login', 'register', 'recovery', 'setup']);
+export type ChallengePurpose = z.infer<typeof challengePurposeSchema>;
+const challengeToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
+export const challengeIssueSchema = z.strictObject({ purpose: challengePurposeSchema });
+export const challengeVerifySchema = z.strictObject({
+  purpose: challengePurposeSchema,
+  token: challengeToken,
+  counter: z.number().int().min(0).max(0xffffffff),
+});
+export const challengeResponseSchema = z.discriminatedUnion('required', [
+  z.strictObject({ required: z.literal(false) }),
+  z.strictObject({
+    required: z.literal(true),
+    token: challengeToken,
+    bits: z.number().int().min(12).max(20),
+    expiresAt: utcInstantSchema,
+  }),
+]);
+export const challengeGrantSchema = z.strictObject({ grant: challengeToken, expiresAt: utcInstantSchema });

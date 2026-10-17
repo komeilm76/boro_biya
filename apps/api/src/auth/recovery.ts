@@ -1,3 +1,4 @@
+import { createChallengeService } from './challenge.js';
 import { createHash, createHmac, randomBytes, randomInt } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import { identityTransaction } from '../identity/transaction.js';
@@ -43,9 +44,11 @@ export function createRecoveryService(
   dummyHash: string,
   reserve: Reserve,
 ) {
+  const challenge = createChallengeService(db, config, reserve);
   const keyed = (value: string) => createHmac('sha256', config.secret).update(`recovery:${value}`).digest('hex');
   function enabled() {
-    if (!config.recoveryEnabled || config.captchaEnabled) throw new AuthFailure(503);
+    if (!config.recoveryEnabled) throw new AuthFailure(503);
+    challenge.configured();
   }
   async function account(client: Client, id: string) {
     const result = await client.query<Account>(
@@ -106,9 +109,10 @@ export function createRecoveryService(
     return flow;
   }
   return {
-    async forgot(usernameInput: string, origin: string, requestId: string) {
+    async forgot(usernameInput: string, origin: string, requestId: string, proof?: string) {
       enabled();
       await reserve('recovery-forgot-origin', origin, config.maxOriginAttempts, requestId);
+      await challenge.admit('recovery', origin, requestId, proof);
       let username = '';
       try {
         username = normalizeUsername(usernameInput).normalized;

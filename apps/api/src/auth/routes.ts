@@ -1,6 +1,8 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
+  challengeIssueSchema,
+  challengeVerifySchema,
   loginSchema,
   registrationSchema,
   passwordChangeSchema,
@@ -58,6 +60,15 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     )
       throw new AuthFailure(403);
   }
+  function challengeProof(request: FastifyRequest) {
+    if (!auth.config.captchaEnabled) return undefined;
+    const supplied = request.headers.authorization;
+    if (supplied === undefined) return undefined;
+    const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(supplied);
+    if (!match) throw new AuthFailure(400);
+    return match[1];
+  }
+
   function setRefresh(reply: FastifyReply, secret: string, expires: Date) {
     reply.header('set-cookie', `${refreshName}=${secret}; HttpOnly; Expires=${expires.toUTCString()}${suffix}`);
   }
@@ -83,7 +94,29 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     return { csrfToken };
   });
   app.get('/api/v1/auth/security-questions', async () => auth.catalogue());
-  app.get('/api/v1/auth/policy', () => ({ recoveryEnabled: auth.config.recoveryEnabled, passwordMinLength: 12 }));
+  app.get('/api/v1/auth/policy', () => ({
+    recoveryEnabled: auth.config.recoveryEnabled,
+    passwordMinLength: 12,
+    captchaEnabled: auth.config.captchaEnabled,
+  }));
+  app.post('/api/v1/auth/challenge', { bodyLimit: 1024 }, async (request) => {
+    csrf(request);
+    const body = challengeIssueSchema.safeParse(request.body);
+    if (!body.success) throw new AuthFailure(400);
+    return auth.challenge.issue(body.data.purpose, request.ip, request.correlationId);
+  });
+  app.post('/api/v1/auth/challenge/verify', { bodyLimit: 2048 }, async (request) => {
+    csrf(request);
+    const body = challengeVerifySchema.safeParse(request.body);
+    if (!body.success) throw new AuthFailure(400);
+    return auth.challenge.verify(
+      body.data.token,
+      body.data.counter,
+      body.data.purpose,
+      request.ip,
+      request.correlationId,
+    );
+  });
   app.get('/api/v1/admin/users', async (request) => {
     const actor = await auth.authenticate(request.headers.authorization);
     const parsed = adminUsersQuerySchema.safeParse(request.query);
@@ -204,7 +237,13 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     csrf(request);
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) throw new AuthFailure(400);
-    const proof = await auth.setup.begin(parsed.data.username, parsed.data.password, request.ip, request.correlationId);
+    const proof = await auth.setup.begin(
+      parsed.data.username,
+      parsed.data.password,
+      request.ip,
+      request.correlationId,
+      challengeProof(request),
+    );
     reply.header(
       'set-cookie',
       `${setupName}=${proof.token}; HttpOnly; Expires=${proof.expiresAt.toUTCString()}${suffix}`,
@@ -237,14 +276,20 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     csrf(request);
     const parsed = registrationSchema.safeParse(request.body);
     if (!parsed.success) throw new AuthFailure(400);
-    await auth.register(parsed.data, request.ip, request.correlationId);
+    await auth.register(parsed.data, request.ip, request.correlationId, challengeProof(request));
     return reply.code(201).send({ accepted: true });
   });
   app.post('/api/v1/auth/login', { bodyLimit: 4096 }, async (request, reply) => {
     csrf(request);
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) throw new AuthFailure(400);
-    const grant = await auth.login(parsed.data.username, parsed.data.password, request.ip, request.correlationId);
+    const grant = await auth.login(
+      parsed.data.username,
+      parsed.data.password,
+      request.ip,
+      request.correlationId,
+      challengeProof(request),
+    );
     setRefresh(reply, grant.refreshToken, grant.expiresAt);
     return { accessToken: grant.accessToken, expiresIn: auth.config.accessTtlSeconds };
   });
@@ -266,7 +311,12 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     csrf(request);
     const parsed = recoveryStartSchema.safeParse(request.body);
     if (!parsed.success) throw new AuthFailure(400);
-    const flow = await auth.recovery.forgot(parsed.data.username, request.ip, request.correlationId);
+    const flow = await auth.recovery.forgot(
+      parsed.data.username,
+      request.ip,
+      request.correlationId,
+      challengeProof(request),
+    );
     reply.header('set-cookie', [
       `${flowName}=${flow.token}; HttpOnly; Expires=${flow.expiresAt.toUTCString()}${suffix}`,
       `${grantName}=; HttpOnly; Max-Age=0${suffix}`,

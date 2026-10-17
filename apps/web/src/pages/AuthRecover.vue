@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthChallenge from '../components/AuthChallenge.vue';
 import { onMounted, ref } from 'vue';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
@@ -7,6 +8,8 @@ const session = useSessionStore();
 const stage = ref<'username' | 'answers' | 'reset' | 'done'>('username');
 const enabled = ref(false);
 const ready = ref(false);
+const captchaEnabled = ref(false);
+const challenge = ref('');
 const busy = ref(false);
 const failed = ref(false);
 const username = ref('');
@@ -17,7 +20,9 @@ const repeatPassword = ref('');
 
 onMounted(async () => {
   try {
-    enabled.value = (await authClient.recoveryPolicy()).recoveryEnabled;
+    const policy = await authClient.recoveryPolicy();
+    enabled.value = policy.recoveryEnabled;
+    captchaEnabled.value = policy.captchaEnabled === true;
   } catch {
     failed.value = true;
   } finally {
@@ -41,7 +46,7 @@ async function submit() {
   try {
     const { csrfToken } = await authClient.csrf();
     if (stage.value === 'username') {
-      await authClient.forgot(username.value, csrfToken);
+      await authClient.forgot(username.value, csrfToken, challenge.value || undefined);
       questions.value = await authClient.recoveryQuestions(csrfToken);
       answers.value = questions.value.map(() => '');
       stage.value = 'answers';
@@ -60,6 +65,7 @@ async function submit() {
   } catch {
     failed.value = true;
   } finally {
+    challenge.value = '';
     password.value = '';
     repeatPassword.value = '';
     busy.value = false;
@@ -74,7 +80,14 @@ async function submit() {
     <p v-if="ready && !enabled" role="status">{{ $t('recovery.disabled') }}</p>
     <p v-if="failed" role="alert">{{ $t('recovery.failed') }}</p>
     <p v-if="stage === 'done'" role="status">{{ $t('recovery.done') }}</p>
-    <form v-else-if="enabled" :aria-busy="busy" @submit.prevent="submit">
+    <AuthChallenge
+      v-if="stage === 'username'"
+      v-model="challenge"
+      :enabled="captchaEnabled"
+      :disabled="busy"
+      purpose="recovery"
+    />
+    <form v-if="enabled && stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
       <fieldset :disabled="busy" class="grid gap-3">
         <template v-if="stage === 'username'">
           <label for="recovery-username">{{ $t('auth.username') }}</label>

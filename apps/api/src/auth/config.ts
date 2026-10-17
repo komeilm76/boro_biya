@@ -18,6 +18,15 @@ export interface AuthConfig {
   recoveryChallengeTtlSeconds: number;
   recoveryGrantTtlSeconds: number;
   captchaEnabled: boolean;
+  captchaPolicy?: {
+    secret: string;
+    adaptive: boolean;
+    bits: number;
+    threshold: number;
+    ttlSeconds: number;
+    maxAttempts: number;
+    cleanup: boolean;
+  };
 }
 export function readAuthConfig(env: Readonly<Record<string, string | undefined>> = process.env): AuthConfig {
   const file = resolve('.env');
@@ -46,6 +55,27 @@ export function readAuthConfig(env: Readonly<Record<string, string | undefined>>
   if (!['true', 'false'].includes(recovery)) throw new Error('invalid SECURITY_QUESTIONS_ENABLED');
   const captcha = source['CAPTCHA_ENABLED'] ?? 'false';
   if (!['true', 'false'].includes(captcha)) throw new Error('invalid CAPTCHA_ENABLED');
+  let captchaPolicy: AuthConfig['captchaPolicy'];
+  if (captcha === 'true') {
+    const tokenSecret = source['CAPTCHA_TOKEN_SECRET'];
+    if (!tokenSecret || tokenSecret.startsWith('<') || Buffer.byteLength(tokenSecret) < 32)
+      throw new Error('CAPTCHA_TOKEN_SECRET must contain at least 32 bytes');
+    const adaptive = source['CAPTCHA_ADAPTIVE'] ?? 'true';
+    const cleanup = source['RETENTION_AUTOMATED_DELETION_ENABLED'] ?? 'false';
+    if (!['true', 'false'].includes(adaptive) || !['true', 'false'].includes(cleanup))
+      throw new Error('invalid challenge policy switch');
+    const bits = number('CAPTCHA_WORK_BITS', 14, 20);
+    if (bits < 12) throw new Error('CAPTCHA_WORK_BITS must be between 12 and 20');
+    captchaPolicy = {
+      secret: tokenSecret,
+      adaptive: adaptive === 'true',
+      bits,
+      threshold: number('CAPTCHA_RISK_THRESHOLD', 3, 30),
+      ttlSeconds: number('CAPTCHA_CHALLENGE_TTL_SECONDS', 300, 300),
+      maxAttempts: number('CAPTCHA_MAX_ATTEMPTS', 5, 10),
+      cleanup: cleanup === 'true',
+    };
+  }
   return {
     secret,
     origin: url.origin,
@@ -62,5 +92,6 @@ export function readAuthConfig(env: Readonly<Record<string, string | undefined>>
     recoveryChallengeTtlSeconds: number('RECOVERY_CHALLENGE_TTL_SECONDS', 300, 900),
     recoveryGrantTtlSeconds: number('RECOVERY_GRANT_TTL_SECONDS', 300, 900),
     captchaEnabled: captcha === 'true',
+    ...(captchaPolicy ? { captchaPolicy } : {}),
   };
 }

@@ -1,3 +1,4 @@
+import { createChallengeService } from './challenge.js';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import type { AuthConfig } from './config.js';
@@ -27,6 +28,7 @@ export function createSetupService(
   dummyHash: string,
   reserve: Reserve,
 ) {
+  const challenge = createChallengeService(db, config, reserve);
   async function user(client: Client, id: string) {
     const result = await client.query<User>(
       `SELECT id, password_hash, username_normalized, account_status, password_setup_required, security_setup_required,
@@ -50,7 +52,7 @@ export function createSetupService(
     raw: string | undefined,
     operation: (client: Client, current: User, tokenHash: string) => Promise<T> | T,
   ) {
-    if (config.captchaEnabled) throw new AuthFailure(503);
+    challenge.configured();
     if (!raw || !/^[A-Za-z0-9_-]{43}$/.test(raw)) throw new AuthFailure();
     const tokenHash = hash(raw);
     const found = await db.pool.query<{ user_id: string }>(
@@ -87,7 +89,7 @@ export function createSetupService(
       origin: string,
       requestId: string,
     ) {
-      if (config.captchaEnabled) throw new AuthFailure(503);
+      challenge.configured();
       await reserve('admin-create-origin', origin, config.maxOriginAttempts, requestId);
       await reserve('admin-create-account', actorId, config.maxAccountAttempts, requestId);
       const snapshot = await identityTransaction(db, (client) => admin(client, actorId, sessionId));
@@ -132,9 +134,10 @@ export function createSetupService(
         throw error;
       }
     },
-    async begin(usernameInput: string, credential: string, origin: string, requestId: string) {
-      if (config.captchaEnabled) throw new AuthFailure(503);
+    async begin(usernameInput: string, credential: string, origin: string, requestId: string, proof?: string) {
+      challenge.configured();
       await reserve('setup-start-origin', origin, config.maxOriginAttempts, requestId);
+      await challenge.admit('setup', origin, requestId, proof);
       let username = '';
       try {
         username = normalizeUsername(usernameInput).normalized;

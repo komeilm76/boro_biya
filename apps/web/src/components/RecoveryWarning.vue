@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { authClient } from '../auth-client.js';
+const emit = defineEmits<{ policy: [enabled: boolean] }>();
 const unavailable = ref(true);
 onMounted(async () => {
   try {
-    unavailable.value = !(await authClient.recoveryPolicy()).recoveryEnabled;
+    const policy = await authClient.recoveryPolicy();
+    unavailable.value = !policy.recoveryEnabled;
+    emit('policy', policy.captchaEnabled === true);
   } catch {
     // An unavailable policy must not imply that recovery will be possible.
     unavailable.value = true;

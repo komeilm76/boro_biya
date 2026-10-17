@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AuthChallenge from '../components/AuthChallenge.vue';
 import { ref } from 'vue';
 import { authClient } from '../auth-client.js';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
@@ -9,6 +10,8 @@ const repeatPassword = ref('');
 const questions = ref([1, 2, 3, 4, 5]);
 const answers = ref(['', '', '', '', '']);
 const failed = ref(false);
+const captchaEnabled = ref(false);
+const challenge = ref('');
 const busy = ref(false);
 const keys = [
   'firstBook',
@@ -40,7 +43,7 @@ async function submit() {
   try {
     const { csrfToken } = await authClient.csrf();
     if (stage.value === 'start') {
-      await authClient.setupStart(username.value, password.value, csrfToken);
+      await authClient.setupStart(username.value, password.value, csrfToken, challenge.value || undefined);
       stage.value = 'password';
     } else if (stage.value === 'password') {
       await authClient.setupPassword(password.value, repeatPassword.value, csrfToken);
@@ -55,6 +58,7 @@ async function submit() {
   } catch {
     failed.value = true;
   } finally {
+    challenge.value = '';
     password.value = '';
     repeatPassword.value = '';
     answers.value = ['', '', '', '', ''];
@@ -66,10 +70,17 @@ async function submit() {
   <section class="mx-auto max-w-prose p-6">
     <h1>{{ $t('setup.title') }}</h1>
     <p>{{ $t('setup.notice') }}</p>
-    <RecoveryWarning />
+    <RecoveryWarning @policy="captchaEnabled = $event" />
     <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
     <p v-if="stage === 'done'" role="status">{{ $t('setup.done') }}</p>
-    <form v-else :aria-busy="busy" @submit.prevent="submit">
+    <AuthChallenge
+      v-if="stage === 'start'"
+      v-model="challenge"
+      :enabled="captchaEnabled"
+      :disabled="busy"
+      purpose="setup"
+    />
+    <form v-if="stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
       <fieldset :disabled="busy" class="grid gap-3">
         <template v-if="stage === 'start'">
           <label for="setup-username">{{ $t('auth.username') }}</label>
