@@ -81,9 +81,10 @@ beforeEach(async () => {
     "UPDATE core.users SET password_hash = $2, account_status = 'active', locked_until = NULL, state_reason = NULL, password_setup_required = false, security_setup_required = false WHERE id = $1",
     [userId, passwordHash],
   );
+  await admin.query('DELETE FROM core.user_security_answers WHERE user_id = $1', [userId]);
   for (const answer of answers)
     await admin.query(
-      'UPDATE core.user_security_answers SET answer_hash = $3 WHERE user_id = $1 AND question_id = $2',
+      'INSERT INTO core.user_security_answers(user_id, question_id, answer_hash, normalization_version) VALUES ($1, $2, $3, 1)',
       [userId, answer.question_id, answer.answer_hash],
     );
   await admin.query(
@@ -285,7 +286,7 @@ describe('persisted recovery workflow (AUTH-13 … AUTH-20, AUTH-40)', () => {
     async (state) => {
       await verified();
       await admin.query(
-        "UPDATE core.users SET account_status = $2, state_reason = 'test', password_setup_required = $3, security_setup_required = $4 WHERE id = $1",
+        "UPDATE core.users SET account_status = $2, locked_until = CASE WHEN $2 = 'locked' THEN clock_timestamp() + interval '1 hour' ELSE NULL END, state_reason = 'test', password_setup_required = $3, security_setup_required = $4 WHERE id = $1",
         [
           userId,
           ['password', 'security'].includes(state) ? 'active' : state,
@@ -318,4 +319,154 @@ describe('persisted recovery workflow (AUTH-13 … AUTH-20, AUTH-40)', () => {
     expect((await db.query('SELECT token_hash FROM core.password_reset_challenges')).rows).toHaveLength(0);
     expect((await db.query('SELECT key_hash FROM core.auth_buckets')).rows).toHaveLength(0);
   });
+});
+
+describe('authenticated security-answer replacement', () => {
+  const replacement = [4, 5, 6, 7, 8].map((questionId) => ({ questionId, answer: `replacement answer ${questionId}` }));
+  it('replaces five hashes, consumes verified recovery, revokes every session and persists an audit/notice', async () => {
+    await verified();
+    const login = await auth.login('alice', password, 'origin', 'login');
+    const other = await auth.login('alice', password, 'origin', 'login');
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/security-questions/change',
+      headers: { authorization: `Bearer ${login.accessToken}` },
+      payload: { currentPassword: password, answers: replacement },
+    });
+    expect(response.statusCode).toBe(200);
+    const rows = await db.pool.query<{ question_id: number; answer_hash: string; normalization_version: number }>(
+      'SELECT question_id, answer_hash, normalization_version FROM core.user_security_answers WHERE user_id = $1 ORDER BY question_id',
+      [userId],
+    );
+    expect(rows.rows.map((row) => row.question_id)).toEqual([4, 5, 6, 7, 8]);
+    for (const row of rows.rows) {
+      expect(row.answer_hash).toMatch(/^\$argon2id\$/);
+      expect(row.normalization_version).toBe(1);
+    }
+    await expect(auth.authenticate(`Bearer ${login.accessToken}`)).rejects.toBeDefined();
+    await expect(auth.refresh(other.refreshToken, 'origin', 'refresh')).rejects.toBeDefined();
+    expect((await request('recover/reset', { password: newPassword, repeatPassword: newPassword })).statusCode).toBe(
+      401,
+    );
+    const notices = await auth.securityNotices(userId);
+    expect(notices).toHaveLength(1);
+    expect(notices[0]?.event).toBe('security_answers_changed');
+    expect(notices[0]?.createdAt).toEqual(expect.any(String));
+    expect(
+      (await db.query("SELECT action FROM core.audit_events WHERE action = 'security_answers_changed'")).rows,
+    ).toHaveLength(1);
+    const selected = await start();
+    expect(selected.every((question) => [4, 5, 6, 7, 8].includes(question.id))).toBe(true);
+    expect(
+      (
+        await request('recover/verify', {
+          answers: selected.map((question) => ({
+            questionId: question.id,
+            answer: `replacement answer ${question.id}`,
+          })),
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(capture.raw.join('')).not.toContain('replacement answer');
+  });
+  it('rejects wrong current credentials and duplicate selections without changing any hashes', async () => {
+    const login = await auth.login('alice', password, 'origin', 'login');
+    await expect(
+      auth.changeSecurityAnswers(userId, login.sessionId, 'wrong', replacement, 'origin', 'change'),
+    ).rejects.toBeDefined();
+    await expect(
+      auth.changeSecurityAnswers(
+        userId,
+        login.sessionId,
+        password,
+        [replacement[0]!, ...replacement.slice(0, 4)],
+        'origin',
+        'change',
+      ),
+    ).rejects.toBeDefined();
+    expect(
+      (
+        await db.query(
+          'SELECT question_id, answer_hash FROM core.user_security_answers WHERE user_id = $1 ORDER BY question_id',
+          [userId],
+        )
+      ).rows,
+    ).toEqual(answers);
+    expect((await db.query('SELECT id FROM core.notifications')).rows).toHaveLength(0);
+  });
+  it.each(['locked', 'banned', 'deactivated', 'password', 'security'])(
+    'denies replacement for %s accounts',
+    async (state) => {
+      const login = await auth.login('alice', password, 'origin', 'login');
+      await admin.query(
+        "UPDATE core.users SET account_status = $2, locked_until = CASE WHEN $2 = 'locked' THEN clock_timestamp() + interval '1 hour' ELSE NULL END, state_reason = 'test', password_setup_required = $3, security_setup_required = $4 WHERE id = $1",
+        [
+          userId,
+          ['password', 'security'].includes(state) ? 'active' : state,
+          state === 'password',
+          state === 'security',
+        ],
+      );
+      expect(
+        (
+          await app.inject({
+            method: 'POST',
+            url: '/api/v1/auth/security-questions/change',
+            headers: { authorization: `Bearer ${login.accessToken}` },
+            payload: { currentPassword: password, answers: replacement },
+          })
+        ).statusCode,
+      ).toBe(401);
+    },
+  );
+  it('admits only one simultaneous replacement against the same session', async () => {
+    const login = await auth.login('alice', password, 'origin', 'login');
+    const changes = await Promise.allSettled([
+      auth.changeSecurityAnswers(userId, login.sessionId, password, replacement, 'origin', 'first'),
+      auth.changeSecurityAnswers(userId, login.sessionId, password, replacement, 'origin', 'second'),
+    ]);
+    expect(changes.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(
+      (await db.query("SELECT id FROM core.notifications WHERE event_type = 'security_answers_changed'")).rows,
+    ).toHaveLength(1);
+  });
+});
+
+it('rolls back answer changes, recovery consumption and revocation when notice persistence fails', async () => {
+  await verified();
+  const login = await auth.login('alice', password, 'origin', 'login');
+  await admin.query(
+    "CREATE FUNCTION core.reject_answer_notice() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'disposable notice failure'; END $$",
+  );
+  await admin.query(
+    "CREATE TRIGGER reject_answer_notice BEFORE INSERT ON core.notifications FOR EACH ROW WHEN (NEW.event_type = 'security_answers_changed') EXECUTE FUNCTION core.reject_answer_notice()",
+  );
+  try {
+    await expect(
+      auth.changeSecurityAnswers(
+        userId,
+        login.sessionId,
+        password,
+        [1, 2, 3, 4, 5].map((questionId) => ({ questionId, answer: 'changed answer' })),
+        'origin',
+        'rollback',
+      ),
+    ).rejects.toBeDefined();
+    expect(
+      (
+        await db.query(
+          'SELECT question_id, answer_hash FROM core.user_security_answers WHERE user_id = $1 ORDER BY question_id',
+          [userId],
+        )
+      ).rows,
+    ).toEqual(answers);
+    await expect(auth.authenticate(`Bearer ${login.accessToken}`)).resolves.toMatchObject({ userId });
+    expect(
+      (await db.query("SELECT id FROM core.audit_events WHERE action = 'security_answers_changed'")).rows,
+    ).toHaveLength(0);
+    expect((await db.query('SELECT phase FROM core.password_reset_challenges')).rows).toEqual([{ phase: 'verified' }]);
+  } finally {
+    await admin.query('DROP TRIGGER reject_answer_notice ON core.notifications');
+    await admin.query('DROP FUNCTION core.reject_answer_notice()');
+  }
 });

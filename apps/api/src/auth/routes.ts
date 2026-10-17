@@ -8,6 +8,7 @@ import {
   recoveryStartSchema,
   recoveryAnswersSchema,
   recoveryResetSchema,
+  securityAnswersChangeSchema,
 } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
 
@@ -138,6 +139,24 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       stored.get(grantName),
       parsed.data.password,
       parsed.data.repeatPassword,
+      request.ip,
+      request.correlationId,
+    );
+    reply.header(
+      'set-cookie',
+      [flowName, grantName, refreshName].map((name) => `${name}=; HttpOnly; Max-Age=0${suffix}`),
+    );
+    return { accepted: true };
+  });
+  app.post('/api/v1/auth/security-questions/change', { bodyLimit: 32768 }, async (request, reply) => {
+    const identity = await auth.authenticate(request.headers.authorization);
+    const parsed = securityAnswersChangeSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    await auth.changeSecurityAnswers(
+      identity.userId,
+      identity.sessionId,
+      parsed.data.currentPassword,
+      parsed.data.answers,
       request.ip,
       request.correlationId,
     );

@@ -67,6 +67,16 @@ export const emptyResponse = {
   },
 };
 export const authClient = {
+  changeSecurityAnswers: (
+    currentPassword: string,
+    answers: Array<{ questionId: number; answer: string }>,
+    token: string,
+  ) =>
+    authRequest('/api/v1/auth/security-questions/change', acceptedResponse, {
+      method: 'POST',
+      token,
+      body: { currentPassword, answers },
+    }),
   recoveryPolicy: () => authRequest('/api/v1/auth/policy', recoveryPolicySchema),
   forgot: (username: string, csrf: string) =>
     authRequest('/api/v1/auth/password/forgot', acceptedResponse, { method: 'POST', csrf, body: { username } }),

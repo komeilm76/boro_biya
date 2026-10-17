@@ -91,6 +91,12 @@
   },
   "securityNotices": {
     "password_reset": "Your password was reset through recovery. If this was not you, change your password and report the concern.",
-    "password_changed": "Your password was changed. All older sessions were revoked."
+    "password_changed": "Your password was changed. All older sessions were revoked.",
+    "security_answers_changed": "Your security questions were changed. All previous sessions were revoked."
+  },
+  "securityAnswers": {
+    "title": "Change security questions",
+    "notice": "Confirm your current password and choose five distinct questions. This replaces every answer, cancels recovery attempts and signs out all sessions.",
+    "submit": "Replace questions and sign out"
   }
 }

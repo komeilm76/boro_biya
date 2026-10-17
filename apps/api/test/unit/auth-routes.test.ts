@@ -31,6 +31,7 @@ function fixture(secure = true) {
     securityNotices: vi.fn().mockResolvedValue([]),
     preferences: vi.fn().mockResolvedValue({ locale: 'en' }),
     savePreferences: vi.fn().mockResolvedValue({ locale: 'fa' }),
+    changeSecurityAnswers: vi.fn().mockResolvedValue(undefined),
     changePassword: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn().mockResolvedValue(undefined),
     revokeOthers: vi.fn().mockResolvedValue(undefined),
@@ -246,4 +247,42 @@ describe('recovery HTTP proof boundaries', () => {
     expect(auth.recovery.verify).not.toHaveBeenCalled();
     expect(auth.recovery.reset).not.toHaveBeenCalled();
   });
+});
+
+it('validates security-answer replacement, forwards only authenticated ownership and clears proof cookies', async () => {
+  const { app, auth, headers } = fixture();
+  const payload = {
+    currentPassword: 'secret',
+    answers: [1, 2, 3, 4, 5].map((questionId) => ({ questionId, answer: 'new answer' })),
+  };
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/v1/auth/security-questions/change',
+    headers,
+    payload,
+  });
+  expect(response.statusCode).toBe(200);
+  expect(response.headers['set-cookie']).toHaveLength(3);
+  expect(auth.changeSecurityAnswers).toHaveBeenCalledWith(
+    'user',
+    'session',
+    'secret',
+    payload.answers,
+    expect.any(String),
+    expect.any(String),
+  );
+  expect(
+    (
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/security-questions/change',
+        headers,
+        payload: { ...payload, userId: 'other' },
+      })
+    ).statusCode,
+  ).toBe(400);
+  auth.authenticate.mockRejectedValueOnce(new AuthFailure());
+  expect(
+    (await app.inject({ method: 'POST', url: '/api/v1/auth/security-questions/change', headers, payload })).statusCode,
+  ).toBe(401);
 });

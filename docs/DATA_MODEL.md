@@ -91,3 +91,8 @@ Each invariant names its enforcement mechanism; enforcement is verified by the t
 - **[DATA-24]** If PostGIS is not adopted, the alternative (indexed bounding box on `(latitude, longitude)` plus exact distance over the candidate set) is benchmarked, documented with numbers, and covered by a test that fails if the query loses its index.
 - **[DATA-25]** "Nearby eligible users" for SOS dispatch uses the same mechanism, with eligibility (matching category, opt-in, not blocked, no active task, account status) applied as a filter before distance ordering.
 - **[DATA-26]** Location-history reads are bounded by the retention window, paginated, and served from the `(user_id, recorded_at)` index; no query may scan a full history table.
+
+
+### Security-answer maintenance checkpoint (2026-10-17)
+
+Authenticated answer replacement writes exactly five normalized Argon2id hashes under the user lock after checking the current password and current session binding. It replaces the old rows in one transaction, consumes all recovery proofs and revokes all session families. An audit event and empty-payload `security_answers_changed` notice are persisted atomically; migration `0007_security_answer_changes` extends the notice event constraint. No answer or answer hash is returned, logged or placed in a notification. This maintenance operation remains available with self-service recovery disabled; the switch controls recovery, not authenticated credential maintenance. Runtime account deletion remains forbidden. Migration reversal is destructive development tooling, not a production retention mechanism.

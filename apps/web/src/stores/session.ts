@@ -9,7 +9,10 @@ export interface SessionState {
   username?: string;
   csrf?: string;
   preferredLocale?: 'en' | 'fa';
-  securityNotices?: Array<{ event: 'password_reset' | 'password_changed'; createdAt: string }>;
+  securityNotices?: Array<{
+    event: 'password_reset' | 'password_changed' | 'security_answers_changed';
+    createdAt: string;
+  }>;
 }
 
 export const useSessionStore = defineStore('session', {

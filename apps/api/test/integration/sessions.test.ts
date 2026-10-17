@@ -224,9 +224,9 @@ describe('session persistence and adversarial lifecycle (ADR-021, SEC-08, SEC-10
   it('reverses and reapplies the session migration without destroying identities', async () => {
     const account = await user();
     const migrationsDir = resolve('apps/api/migrations');
-    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 4 })).toEqual([6, 5, 4, 3]);
+    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 5 })).toEqual([7, 6, 5, 4, 3]);
     expect(await identities.findById(account.id)).not.toBeNull();
-    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([3, 4, 5, 6]);
+    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([3, 4, 5, 6, 7]);
     expect(await sessions.issue(account.id)).not.toBeNull();
   });
 });

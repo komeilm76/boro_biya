@@ -6,6 +6,8 @@ import { createAppI18n, savedLocale } from '../../src/i18n/index.js';
 import { createAppRouter } from '../../src/router/index.js';
 import { authClient, authRequest, AuthRequestError, acceptedResponse, emptyResponse } from '../../src/auth-client.js';
 import { useSessionStore } from '../../src/stores/session.js';
+import RecoveryWarning from '../../src/components/RecoveryWarning.vue';
+import SecurityAnswersForm from '../../src/components/SecurityAnswersForm.vue';
 import Recover from '../../src/pages/AuthRecover.vue';
 import SignIn from '../../src/pages/SignInPlaceholder.vue';
 import Register from '../../src/pages/AuthRegister.vue';
@@ -32,6 +34,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 function response(body: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(body), {
@@ -39,7 +42,9 @@ function response(body: unknown, status = 200) {
     headers: { 'content-type': 'application/json' },
   });
 }
-function mountPage(component: Parameters<typeof mount>[0], language: 'en' | 'fa' = 'en') {
+function mountPage(component: Parameters<typeof mount>[0], language: 'en' | 'fa' = 'en', recoveryEnabled = true) {
+  if (component === SignIn || component === Register)
+    vi.spyOn(authClient, 'recoveryPolicy').mockResolvedValue({ recoveryEnabled, passwordMinLength: 12 });
   const router = createAppRouter(createMemoryHistory());
   const wrapper = mount(component, {
     global: {
@@ -389,4 +394,58 @@ describe('recovery browser workflow', () => {
     expect(wrapper.find('#recovery-username').exists()).toBe(true);
     expect(wrapper.findAll('input[type="password"]')).toHaveLength(0);
   });
+});
+
+describe('recovery policy warnings and security-answer settings', () => {
+  it.each(['en', 'fa'] as const)('shows switch-off warnings on login and registration in %s', async (language) => {
+    for (const page of [SignIn, Register]) {
+      const { wrapper } = mountPage(page, language, false);
+      await flushPromises();
+      const warning = wrapper.get('aside[role="note"]');
+      expect(warning.get('[role="status"]').text()).not.toContain('recovery.disabled');
+      if (language === 'en') expect(warning.text()).toContain('only administrator-assisted recovery');
+    }
+  });
+  it('warns while policy is pending before credentials can be relied on', async () => {
+    vi.spyOn(authClient, 'recoveryPolicy').mockImplementation(() => new Promise(() => {}));
+    const { wrapper } = mountPage(RecoveryWarning);
+    expect(wrapper.get('[role="status"]').text()).toContain('only administrator-assisted recovery');
+    await flushPromises();
+    expect(wrapper.find('[role="status"]').exists()).toBe(true);
+  });
+  it('warns rather than promising recovery when policy cannot be loaded', async () => {
+    vi.spyOn(authClient, 'recoveryPolicy').mockRejectedValue(new Error('offline'));
+    const { wrapper } = mountPage(RecoveryWarning);
+    await flushPromises();
+    expect(wrapper.get('[role="status"]').text()).toContain('Self-service recovery is unavailable');
+  });
+  it.each(['en', 'fa'] as const)(
+    'submits five new answers in %s and clears secrets on success/failure',
+    async (language) => {
+      const { wrapper, session, router } = mountPage(SecurityAnswersForm, language);
+      session.$patch({ isAuthenticated: true, accessToken: 'signed' });
+      await wrapper.get('#answers-current-password').setValue('current password');
+      for (const field of wrapper.findAll('input[autocomplete="off"]')) await field.setValue('new answer');
+      fetcher.mockResolvedValueOnce(response({ accepted: true }));
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      const body = fetcher.mock.calls[0]?.[1]?.body;
+      if (typeof body !== 'string') throw new Error('expected JSON');
+      expect(JSON.parse(body)).toEqual({
+        currentPassword: 'current password',
+        answers: [1, 2, 3, 4, 5].map((questionId) => ({ questionId, answer: 'new answer' })),
+      });
+      expect(wrapper.findAll('select')).toHaveLength(5);
+      expect(session.isAuthenticated).toBe(false);
+      expect(router.currentRoute.value.path).toBe('/_auth/login');
+      for (const field of wrapper.findAll('input')) expect((field.element as HTMLInputElement).value).toBe('');
+      fetcher.mockRejectedValueOnce(new Error('offline'));
+      await wrapper.get('#answers-current-password').setValue('secret');
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+      expect((wrapper.get('#answers-current-password').element as HTMLInputElement).value).toBe('');
+      expect(localStorage.length).toBe(0);
+    },
+  );
 });

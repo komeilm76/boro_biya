@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import { authClient, authRequest, acceptedResponse } from '../auth-client.js';
@@ -53,7 +54,7 @@ async function register() {
   <section class="mx-auto max-w-prose px-6 py-12" aria-labelledby="register-title">
     <h1 id="register-title" class="text-2xl font-semibold mb-4">{{ $t('auth.register') }}</h1>
     <RouterLink to="/_public/privacy">{{ $t('auth.privacy') }}</RouterLink>
-    <p>{{ $t('auth.recoveryWarning') }}</p>
+    <RecoveryWarning />
     <p>{{ $t('auth.passwordPolicy') }}</p>
     <p v-if="accepted" role="status">
       {{ $t('auth.registered') }} <RouterLink to="/_auth/login">{{ $t('signIn.title') }}</RouterLink>

@@ -22,7 +22,12 @@ export const accountResponseSchema = z.strictObject({
   passwordSetupRequired: z.boolean(),
   securitySetupRequired: z.boolean(),
   securityNotices: z
-    .array(z.strictObject({ event: z.enum(['password_reset', 'password_changed']), createdAt: utcInstantSchema }))
+    .array(
+      z.strictObject({
+        event: z.enum(['password_reset', 'password_changed', 'security_answers_changed']),
+        createdAt: utcInstantSchema,
+      }),
+    )
     .max(10)
     .default([]),
   preferredLocale: z.enum(['en', 'fa']).default('en'),
@@ -58,11 +63,16 @@ export const recoveryQuestionsSchema = z
   .array(z.strictObject({ id: z.number().int().min(1).max(8), textKey: z.string() }))
   .length(3);
 export const securityNoticeSchema = z.strictObject({
-  event: z.enum(['password_reset', 'password_changed']),
+  event: z.enum(['password_reset', 'password_changed', 'security_answers_changed']),
   createdAt: utcInstantSchema,
 });
 export const securityNoticesSchema = z.array(securityNoticeSchema).max(10);
 export const recoveryPolicySchema = z.strictObject({
   recoveryEnabled: z.boolean(),
   passwordMinLength: z.number().int().positive(),
+});
+
+export const securityAnswersChangeSchema = z.strictObject({
+  currentPassword: z.string().max(1024),
+  answers: z.array(securityAnswerSchema).length(5),
 });

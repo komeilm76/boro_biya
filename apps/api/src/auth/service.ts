@@ -11,6 +11,7 @@ import { createPasswordHasher, normalizeAnswer, validPassword, type PasswordHash
 import { createAccessTokens } from './tokens.js';
 
 import { AuthFailure } from './failure.js';
+import { createSecurityAnswerService } from './security-answers.js';
 import { createRecoveryService } from './recovery.js';
 export { AuthFailure } from './failure.js';
 
@@ -109,6 +110,7 @@ export async function createAuthService(
 
   return {
     config,
+    changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),
     recovery: createRecoveryService(db, config, hasher, dummyHash, reserve),
     sessions,
     tokens,
@@ -234,7 +236,10 @@ export async function createAuthService(
       return { ...grant, accessToken: await tokens.sign(grant.userId, grant.sessionId) };
     },
     async securityNotices(userId: string) {
-      const result = await db.pool.query<{ event_type: 'password_reset' | 'password_changed'; created_at: Date }>(
+      const result = await db.pool.query<{
+        event_type: 'password_reset' | 'password_changed' | 'security_answers_changed';
+        created_at: Date;
+      }>(
         `SELECT event_type, created_at FROM core.notifications WHERE recipient_id = $1
          AND read_at IS NULL AND expires_at > clock_timestamp() ORDER BY created_at DESC, id DESC LIMIT 10`,
         [userId],

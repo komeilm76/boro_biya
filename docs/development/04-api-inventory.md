@@ -27,6 +27,7 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/password/recover/questions` | public | Implemented: three persisted question IDs/message keys; requires flow cookie and origin/CSRF |
 | POST | `/auth/password/recover/verify` | public | Implemented: all three answers required; persistent attempt limit; HttpOnly single-use grant cookie, never a body/URL token |
 | POST | `/auth/password/recover/reset` | public | Implemented: flow/grant cookies plus origin/CSRF; atomic password reset, unlock, family revocation, audit and persisted notice; clears proof/refresh cookies |
+| POST | `/auth/security-questions/change` | auth | Implemented: current-password confirmation, five distinct active question IDs and normalized/hashed replacement answers; persisted account/origin limits; owner/current-binding and credential recheck after hashing; atomically cancels recovery, revokes all sessions, audits and stores a minimal notice; clears proof cookies |
 | POST | `/auth/password/change` | auth | Current + new password; revokes all sessions and recovery flows, persists a security notice |
 | GET | `/auth/setup/status` | auth | Which first-login steps remain (`password_setup_required`, `security_setup_required`) |
 | POST | `/auth/setup/password` | auth | First-login password set (admin-created accounts) |

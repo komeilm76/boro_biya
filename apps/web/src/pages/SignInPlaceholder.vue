@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { AuthRequestError } from '../auth-client.js';
@@ -30,7 +31,7 @@ async function signIn() {
 <template>
   <section class="mx-auto max-w-prose px-6 py-16" aria-labelledby="sign-in-title">
     <h1 id="sign-in-title" class="text-2xl font-semibold mb-4">{{ $t('signIn.title') }}</h1>
-    <p class="mb-4">{{ $t('auth.recoveryWarning') }}</p>
+    <RecoveryWarning />
     <form @submit.prevent="signIn">
       <label for="username">{{ $t('auth.username') }}</label>
       <input

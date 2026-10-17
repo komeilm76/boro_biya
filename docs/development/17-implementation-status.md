@@ -144,7 +144,7 @@ Local validation of the account-locale/race checkpoint (Node 24.22.0 / Bun 1.4.3
 
 ## 3. Features that are not implemented
 
-Phase 2 still lacks administrator creation and forced first-login setup; full recovery policy-warning and realtime notification acceptance; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
+Phase 2 still lacks administrator creation and forced first-login setup; realtime recovery notification acceptance; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
 
 The route shell and future names are not product features. The current checkout also has no:
 
@@ -210,3 +210,12 @@ Evidence sources: `apps/api/test/integration/recovery.test.ts` (14 real PostgreS
 
 
 Recovery validation checkpoint: 297 unit tests across 33 files and 71 integration tests across ten files passed locally on Node 24.22.0/Bun 1.4.3 with disposable PostgreSQL 18.4. Unit coverage is 94.55% statements, 88.84% branches, 93.20% functions and 95.84% lines; thresholds and exclusions are unchanged. The full fifteen-gate rerun and remote head checks are recorded separately in PR #12; these local counts alone are not a claim of green remote CI, realtime notification delivery, complete recovery acceptance or Phase 2 completion.
+
+
+## 9. Phase 2 security-question maintenance and policy-warning checkpoint (2026-10-17)
+
+`POST /api/v1/auth/security-questions/change` now requires a bearer and current-password confirmation on every request. Account/origin attempt budgets precede native hashing. Five distinct active catalogue IDs and normalized answers are validated; native hashes are computed sequentially outside the lock, then current session/account binding and password hash are rechecked under the shared user lock. Replacement, recovery consumption, all-family revocation, audit and the new minimal security notice commit together. Failures leave the original credential state intact. Existing recovery cannot survive an answer change, and concurrent replacements cannot both succeed against the revoked session. Migration `0007_security_answer_changes` extends only the core notice event vocabulary.
+
+Security settings now provide labelled EN/FA selectors and secret fields; secrets are cleared on success/failure and successful replacement requires a new sign-in. Sign-in and registration now load the public recovery policy and display the explicit permanent-loss/administrator-only warning when recovery is switched off or policy is unavailable, in addition to the existing weak-factor warning. The recovery screen already has its switch-off handling. Browser regression tests cover both locales and server integration tests cover credential errors, duplicates, all denial states, recovery invalidation, concurrent replacement and transactional rollback on failed notification persistence.
+
+Evidence sources: `security-answers.test.ts` (unit orchestration), `recovery.test.ts` (PostgreSQL/native-hash replacement regressions), `auth-routes.test.ts` (strict input, authenticated ownership, proof-cookie clearing) and web `auth.test.ts` (policy warnings and bilingual settings). Actual full-suite and head CI outcomes are recorded on PR #12 for the exact revision. This does not complete forced first-login setup, CAPTCHA, administrative lifecycle/permissions, realtime notifications, contracts/client or the remaining acceptance work. Phase 2 stays in progress; PR #12 stays draft/unmerged.

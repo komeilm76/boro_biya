@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SecurityAnswersForm from '../components/SecurityAnswersForm.vue';
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -114,6 +115,7 @@ onMounted(load);
       />
       <v-btn type="submit" :disabled="busy">{{ $t('auth.changePassword') }}</v-btn>
     </form>
+    <SecurityAnswersForm />
     <p v-if="failed" role="alert">{{ $t('auth.loadFailed') }}</p>
     <v-btn data-action="load" @click="load">{{ $t('auth.refreshSessions') }}</v-btn>
     <ul>
