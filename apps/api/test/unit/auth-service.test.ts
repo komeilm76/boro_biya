@@ -48,8 +48,10 @@ function fixture(overrides: Partial<AuthConfig> = {}) {
   let limit = 0;
   let found = true;
   let failed = 1;
+  let bindingActive = true;
   const query = vi.fn(async (sql: string) => {
     await Promise.resolve();
+    if (sql.includes('SELECT s.id FROM core.sessions')) return { rows: [], rowCount: bindingActive ? 1 : 0 };
     if (sql.includes('SELECT user_id, family_id'))
       return { rows: found ? [{ user_id: 'user', family_id: 'family' }] : [], rowCount: found ? 1 : 0 };
     if (sql.includes('extract(epoch FROM')) return { rows: [], rowCount: 0 };
@@ -79,6 +81,9 @@ function fixture(overrides: Partial<AuthConfig> = {}) {
     },
     found: (v: boolean) => {
       found = v;
+    },
+    binding: (active: boolean) => {
+      bindingActive = active;
     },
     failed: (n: number) => {
       failed = n;
@@ -180,21 +185,35 @@ describe('auth orchestration and failure boundaries', () => {
   it('changes only a freshly verified current password and revokes all families atomically', async () => {
     const f = fixture();
     const service = await f.service();
-    await service.changePassword('user', 'old password', 'Another!violet42', 'Another!violet42', 'req');
+    await service.changePassword('user', 'session', 'old password', 'Another!violet42', 'Another!violet42', 'req');
     expect(f.query.mock.calls.some(([sql]) => sql.includes("revocation_reason = 'password_changed'"))).toBe(true);
-    await expect(service.changePassword('user', 'old password', 'short', 'short', 'req')).rejects.toMatchObject({
+    await expect(
+      service.changePassword('user', 'session', 'old password', 'short', 'short', 'req'),
+    ).rejects.toMatchObject({
       statusCode: 400,
     });
     f.hasher.verify.mockResolvedValueOnce(false);
     await expect(
-      service.changePassword('user', 'wrong', 'Another!violet42', 'Another!violet42', 'req'),
+      service.changePassword('user', 'session', 'wrong', 'Another!violet42', 'Another!violet42', 'req'),
     ).rejects.toMatchObject({ statusCode: 401 });
     f.found(false);
     await expect(
-      service.changePassword('user', 'wrong', 'Another!violet42', 'Another!violet42', 'req'),
+      service.changePassword('user', 'session', 'wrong', 'Another!violet42', 'Another!violet42', 'req'),
     ).rejects.toMatchObject({ statusCode: 401 });
   });
 
+  it('requires a current binding under the user lock for credential, preference and revoke-others mutations', async () => {
+    const f = fixture();
+    const service = await f.service();
+    expect(await service.preferences('user')).toEqual({ locale: 'en' });
+    expect(await service.savePreferences('user', 'session', 'fa')).toEqual({ locale: 'fa' });
+    f.binding(false);
+    await expect(service.savePreferences('user', 'session', 'en')).rejects.toMatchObject({ statusCode: 401 });
+    await expect(service.revokeOthers('user', 'session', 'req')).rejects.toMatchObject({ statusCode: 401 });
+    await expect(
+      service.changePassword('user', 'session', 'old password', 'Another!violet42', 'Another!violet42', 'req'),
+    ).rejects.toMatchObject({ statusCode: 401 });
+  });
   it('refreshes and commits revoke-current/revoke-others audit operations', async () => {
     const f = fixture();
     const service = await f.service();

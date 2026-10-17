@@ -1,18 +1,14 @@
 import { defineStore } from 'pinia';
 import { authClient, authRequest, emptyResponse } from '../auth-client.js';
 
-/**
- * The session seam. Phase 1 has no authentication (GOV-02): the store starts unauthenticated
- * and nothing in this build can change that outside a test. Phase 2 replaces the contents with
- * the real session flow (ADR-021; AUTH-01 … AUTH-14) behind the same interface, so the route guards and
- * their tests do not change shape when authentication arrives.
- */
+/** Memory-only bearer state. Route guards are UX only; the server authorizes requests. */
 export interface SessionState {
   isAuthenticated: boolean;
   roles: string[];
   accessToken?: string;
   username?: string;
   csrf?: string;
+  preferredLocale?: 'en' | 'fa';
 }
 
 export const useSessionStore = defineStore('session', {
@@ -22,6 +18,7 @@ export const useSessionStore = defineStore('session', {
     accessToken: '',
     username: '',
     csrf: '',
+    preferredLocale: 'en',
   }),
   getters: {
     isAdmin: (state): boolean => state.roles.includes('admin'),
@@ -36,6 +33,7 @@ export const useSessionStore = defineStore('session', {
         isAuthenticated: true,
         accessToken: grant.accessToken,
         username: account.username,
+        preferredLocale: account.preferredLocale,
         csrf: csrfToken,
         roles: [],
       });
@@ -49,12 +47,22 @@ export const useSessionStore = defineStore('session', {
           isAuthenticated: true,
           accessToken: grant.accessToken,
           username: account.username,
+          preferredLocale: account.preferredLocale,
           csrf: csrfToken,
           roles: [],
         });
       } catch {
         this.clearSession();
       }
+    },
+    async saveLocale(locale: 'en' | 'fa'): Promise<boolean> {
+      const token = this.accessToken;
+      if (!this.isAuthenticated || !token) throw new Error('auth_request_rejected');
+      const saved = await authClient.savePreferences(token, locale);
+      // A response from a previous identity must never overwrite a newly signed-in account.
+      if (!this.isAuthenticated || this.accessToken !== token) return false;
+      this.preferredLocale = saved.locale;
+      return true;
     },
     async logout(): Promise<void> {
       try {

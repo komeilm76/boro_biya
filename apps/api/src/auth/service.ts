@@ -3,6 +3,7 @@ import type { Db } from '@boro-biya/db';
 import { normalizeUsername } from '../identity/account.js';
 import { createIdentityRepository } from '../identity/repository.js';
 import { createSessionRepository } from '../identity/sessions.js';
+import { lockCurrentBinding } from '../identity/binding.js';
 import { identityTransaction } from '../identity/transaction.js';
 import { createLoginBackoff } from './backoff.js';
 import type { AuthConfig } from './config.js';
@@ -22,6 +23,7 @@ export interface Registration {
   username: string;
   password: string;
   repeatPassword: string;
+  locale?: 'en' | 'fa' | undefined;
   answers: Array<{ questionId: number; answer: string }>;
 }
 
@@ -152,6 +154,7 @@ export async function createAuthService(
           securitySetupRequired: false,
           securityAnswers,
           auditRequestId: requestId,
+          locale: input.locale ?? 'en',
         });
       } catch (error) {
         // Never return duplicate-key details or the SQL driver's potentially credential-bearing text.
@@ -234,8 +237,27 @@ export async function createAuthService(
       await audit('session_refreshed', requestId, grant.userId);
       return { ...grant, accessToken: await tokens.sign(grant.userId, grant.sessionId) };
     },
+    async preferences(userId: string) {
+      const result = await db.pool.query<{ locale: 'en' | 'fa' }>(
+        "SELECT COALESCE((SELECT locale FROM core.user_preferences WHERE user_id = $1), 'en') AS locale",
+        [userId],
+      );
+      return { locale: result.rows[0]?.locale ?? 'en' };
+    },
+    async savePreferences(userId: string, sessionId: string, locale: 'en' | 'fa') {
+      await identityTransaction(db, async (client) => {
+        if (!(await lockCurrentBinding(client, userId, sessionId))) throw new AuthFailure();
+        await client.query(
+          `INSERT INTO core.user_preferences(user_id, locale) VALUES ($1, $2)
+          ON CONFLICT (user_id) DO UPDATE SET locale = EXCLUDED.locale, updated_at = clock_timestamp()`,
+          [userId, locale],
+        );
+      });
+      return { locale };
+    },
     async changePassword(
       userId: string,
+      sessionId: string,
       currentPassword: string,
       password: string,
       repeatPassword: string,
@@ -256,6 +278,7 @@ export async function createAuthService(
         throw new AuthFailure(400);
       const hash = await hasher.hash(password);
       await identityTransaction(db, async (client) => {
+        if (!(await lockCurrentBinding(client, userId, sessionId))) throw new AuthFailure();
         const current = await client.query<{ password_hash: string }>(
           "SELECT password_hash FROM core.users WHERE id = $1 AND account_status = 'active' FOR UPDATE",
           [userId],
@@ -303,7 +326,7 @@ export async function createAuthService(
     },
     async revokeOthers(userId: string, sessionId: string, requestId: string) {
       await identityTransaction(db, async (client) => {
-        await client.query('SELECT id FROM core.users WHERE id = $1 FOR UPDATE', [userId]);
+        if (!(await lockCurrentBinding(client, userId, sessionId))) throw new AuthFailure();
         await client.query(
           `UPDATE core.session_families SET revoked_at = clock_timestamp(), revocation_reason = 'owner_revoked_others'
            WHERE user_id = $1 AND revoked_at IS NULL AND id <> (

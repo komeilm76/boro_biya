@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
+import { lockCurrentBinding } from './binding.js';
 import { identityTransaction } from './transaction.js';
 
 const UUID_V7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -89,7 +90,7 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
           eligible: boolean;
         }>(
           `SELECT s.id, s.family_id, s.rotation_generation, s.consumed_at, f.expires_at,
-             (f.revoked_at IS NULL AND f.expires_at > clock_timestamp()
+             (f.revoked_at IS NULL AND f.expires_at > clock_timestamp() AND s.expires_at > clock_timestamp()
               AND u.account_status = 'active' AND NOT u.password_setup_required
               AND NOT u.security_setup_required) AS eligible
            FROM core.sessions s JOIN core.session_families f ON f.id = s.family_id
@@ -136,7 +137,7 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
         `SELECT s.id FROM core.sessions s JOIN core.session_families f ON f.id = s.family_id
          JOIN core.users u ON u.id = s.user_id
          WHERE s.id = $1 AND s.user_id = $2 AND s.consumed_at IS NULL
-           AND f.revoked_at IS NULL AND f.expires_at > clock_timestamp()
+           AND f.revoked_at IS NULL AND f.expires_at > clock_timestamp() AND s.expires_at > clock_timestamp()
            AND u.account_status = 'active' AND NOT u.password_setup_required AND NOT u.security_setup_required`,
         [sessionId, userId],
       );
@@ -153,8 +154,8 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
       }>(
         `SELECT f.id AS family_id, f.issued_at, f.expires_at, s.last_seen_at
          FROM core.session_families f JOIN core.sessions s ON s.family_id = f.id
-         WHERE f.user_id = $1 AND f.revoked_at IS NULL AND f.expires_at > clock_timestamp()
-           AND s.consumed_at IS NULL ORDER BY f.issued_at, f.id`,
+         WHERE f.user_id = $1 AND f.revoked_at IS NULL AND f.expires_at > clock_timestamp() AND s.expires_at > clock_timestamp()
+           AND s.consumed_at IS NULL AND s.expires_at > clock_timestamp() ORDER BY f.issued_at, f.id`,
         [userId],
       );
       return result.rows.map((row) => ({
@@ -166,10 +167,17 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
     },
 
     /** Ownership is part of the update, not an unchecked caller-supplied family ID. */
-    async revoke(userId: string, familyId: string): Promise<boolean> {
-      if (!UUID_V7.test(userId) || !UUID_V7.test(familyId)) return false;
+    async revoke(userId: string, familyId: string, currentSessionId?: string): Promise<boolean> {
+      if (
+        !UUID_V7.test(userId) ||
+        !UUID_V7.test(familyId) ||
+        (currentSessionId !== undefined && !UUID_V7.test(currentSessionId))
+      )
+        return false;
       return identityTransaction(db, async (client) => {
-        await client.query('SELECT id FROM core.users WHERE id = $1 FOR UPDATE', [userId]);
+        if (currentSessionId !== undefined) {
+          if (!(await lockCurrentBinding(client, userId, currentSessionId))) return false;
+        } else await client.query('SELECT id FROM core.users WHERE id = $1 FOR UPDATE', [userId]);
         const result = await client.query(
           `UPDATE core.session_families SET revoked_at = clock_timestamp(), revocation_reason = 'owner_revoked'
            WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL RETURNING id`,

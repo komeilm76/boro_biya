@@ -28,6 +28,7 @@ export interface CreateIdentity {
   securitySetupRequired: boolean;
   securityAnswers?: Array<{ questionId: number; hash: string }>;
   auditRequestId?: string;
+  locale?: 'en' | 'fa';
 }
 
 /** Internal persistence seam, not a registration endpoint. The caller must validate password
@@ -86,6 +87,11 @@ export function createIdentityRepository(db: Pick<Db, 'pool'>) {
             if (inserted.rowCount !== 1) throw new Error('security question unavailable');
           }
         }
+        if (input.locale !== undefined)
+          await client.query('INSERT INTO core.user_preferences(user_id, locale) VALUES ($1, $2)', [
+            row.id,
+            input.locale,
+          ]);
         if (input.auditRequestId !== undefined) {
           await client.query(
             `INSERT INTO core.audit_events(actor_id, actor_type, action, target_type, target_id, request_id)

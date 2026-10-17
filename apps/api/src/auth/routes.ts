@@ -1,6 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { loginSchema, registrationSchema, passwordChangeSchema } from '@boro-biya/validation';
+import { loginSchema, registrationSchema, passwordChangeSchema, preferencesSchema } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
 
 function cookies(request: FastifyRequest): Map<string, string> {
@@ -93,6 +93,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     if (!parsed.success) throw new AuthFailure(400);
     await auth.changePassword(
       identity.userId,
+      identity.sessionId,
       parsed.data.currentPassword,
       parsed.data.password,
       parsed.data.repeatPassword,
@@ -101,7 +102,20 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     reply.header('set-cookie', `${refreshName}=; HttpOnly; Max-Age=0${suffix}`);
     return { accepted: true };
   });
-  app.get('/api/v1/users/me', async (request) => (await auth.authenticate(request.headers.authorization)).account);
+  app.get('/api/v1/users/me', async (request) => {
+    const identity = await auth.authenticate(request.headers.authorization);
+    return { ...identity.account, preferredLocale: (await auth.preferences(identity.userId)).locale };
+  });
+  app.get('/api/v1/users/me/preferences', async (request) => {
+    const identity = await auth.authenticate(request.headers.authorization);
+    return auth.preferences(identity.userId);
+  });
+  app.put('/api/v1/users/me/preferences', { bodyLimit: 256 }, async (request) => {
+    const identity = await auth.authenticate(request.headers.authorization);
+    const parsed = preferencesSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    return auth.savePreferences(identity.userId, identity.sessionId, parsed.data.locale);
+  });
   app.get('/api/v1/auth/sessions', async (request) => {
     const identity = await auth.authenticate(request.headers.authorization);
     return (await auth.sessions.list(identity.userId)).map((session) => ({
@@ -113,7 +127,8 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.delete<{ Params: { id: string } }>('/api/v1/auth/sessions/:id', async (request, reply) => {
     const identity = await auth.authenticate(request.headers.authorization);
-    if (!(await auth.sessions.revoke(identity.userId, request.params.id))) throw new AuthFailure(404);
+    if (!(await auth.sessions.revoke(identity.userId, request.params.id, identity.sessionId)))
+      throw new AuthFailure(404);
     return reply.code(204).send();
   });
   app.delete('/api/v1/auth/sessions', async (request, reply) => {

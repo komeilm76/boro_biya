@@ -1,5 +1,6 @@
 import {
   accessResponseSchema,
+  preferencesSchema,
   accountResponseSchema,
   csrfResponseSchema,
   sessionListResponseSchema,
@@ -69,5 +70,7 @@ export const authClient = {
     authRequest('/api/v1/auth/login', accessResponseSchema, { method: 'POST', csrf, body: { username, password } }),
   refresh: (csrf: string) => authRequest('/api/v1/auth/refresh', accessResponseSchema, { method: 'POST', csrf }),
   me: (token: string) => authRequest('/api/v1/users/me', accountResponseSchema, { token }),
+  savePreferences: (token: string, locale: 'en' | 'fa') =>
+    authRequest('/api/v1/users/me/preferences', preferencesSchema, { method: 'PUT', token, body: { locale } }),
   sessions: (token: string) => authRequest('/api/v1/auth/sessions', sessionListResponseSchema, { token }),
 };

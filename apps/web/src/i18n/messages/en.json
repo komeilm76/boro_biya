@@ -51,7 +51,8 @@
     "changePassword": "Change password",
     "currentPassword": "Current password",
     "passwordChangeNotice": "Your current password is required. Changing it signs out every session, including this one. Sign in again with your new password.",
-    "retryAfter": "Too many attempts. Try again after at least {seconds} seconds."
+    "retryAfter": "Too many attempts. Try again after at least {seconds} seconds.",
+    "localeSaveFailed": "Language preference could not be saved. Your previous choice is unchanged."
   },
   "questions": {
     "firstBook": "What was the first book you remember enjoying?",

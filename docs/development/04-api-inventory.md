@@ -8,7 +8,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 ## 1. Authentication and account lifecycle (Phase 2)
 
-Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. Password change revokes every family, including the current one, and asks the user to sign in again. Recovery, first-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Recovery, first-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
 
 | Method | Path | Access | Implemented supporting contract |
 | --- | --- | --- | --- |
@@ -22,7 +22,7 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/register` | public | Username, password, repeat, CAPTCHA, five security questions; rate-limited; generic errors |
 | POST | `/auth/login` | public | Username + password; self-hosted CAPTCHA when the risk policy requires it; returns the access token and sets the rotating refresh cookie |
 | POST | `/auth/refresh` | public (refresh cookie) | CSRF-protected; consumes the presented refresh token, rotates it, returns a new access token; a reused token revokes the family ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android), API-38) |
-| POST | `/auth/logout` | auth | Revokes the current session; CSRF-protected |
+| POST | `/auth/logout` | public (refresh cookie) | Revokes that cookie family; origin/CSRF-protected, idempotent, works without an unexpired bearer |
 | POST | `/auth/password/forgot` | public | Generic response, issues recovery challenge when eligible |
 | POST | `/auth/password/recover/questions` | public | Returns the challenge's question IDs (never answers) bound to the flow |
 | POST | `/auth/password/recover/verify` | public | Verifies answers; issues a single-use reset grant on success |
@@ -41,8 +41,8 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | --- | --- | --- | --- |
 | GET | `/users/me` | auth | Own profile and effective preferences |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
-| GET | `/users/me/preferences` | auth | Theme, locale, notification channels, SOS suggestion opt-in |
-| PUT | `/users/me/preferences` | auth | Validated against schema; audited when a privacy-relevant value changes |
+| GET | `/users/me/preferences` | auth | Implemented: locale only; theme, notification channels and SOS suggestion opt-in remain planned |
+| PUT | `/users/me/preferences` | auth | Implemented: strict locale-only replacement for the bearer owner, with a current binding recheck under lock; future privacy-relevant fields require audit |
 | GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
 | POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
 | GET | `/admin/users/:id` | admin | Administrative view; never includes credentials or answers |

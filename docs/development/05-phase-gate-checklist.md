@@ -73,7 +73,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `
 | 2 | Admin-created accounts with forced first-login setup (password, then security questions) | Account-state matrix test; `AUTH-25 … AUTH-29`, `DATA-10` | Not started |
 | 3 | Security-question recovery end to end, short-lived and single-use, with attempt limits | Security tests; `AUTH-30 … AUTH-38`, `DATA-09` | Not started |
 | 4 | Lockout, ban, deactivation, and reactivation with distinct reasons and audit events | Abuse-control tests; `SEC-14 … SEC-19` | In progress |
-| 5 | Account-state matrix tested: every state against every protected route class | Test output naming each state × route decision; `AUTH-31 … AUTH-33` | Not started |
+| 5 | Account-state matrix tested: every state against every protected route class | Test output naming each state × route decision; `AUTH-31 … AUTH-33`; existing normal route classes tested for lock/ban/deactivation/setup denial and logout exception in `preferences.test.ts`; future admin/setup/recovery classes remain | In progress |
 | 6 | Auth OpenAPI contract validates and the generated client matches the implementation, with the timestamp and prose-language conventions applied | `zopia validate` + contract tests; `QA-07`, `API-20 … API-30`, `API-36`, `API-37` | Not started |
 | 7 | Audit event store live; alerting proven on the authentication and rate-limit signals | Alert rule plus a triggered signal; `SEC-58 … SEC-60` | In progress |
 | 8 | Privacy defaults verified: private by default, no telemetry dependency, sessions listed and revocable | Test + dependency listing; `PRIV-15`, `PRIV-19`, `PRIV-21` | In progress |
@@ -85,7 +85,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `
 | 14 | Deferred; excluded from authorised scope, non-gating | `SEC-75`; owner decision 2026-10-17; retained for traceability only; no implementation authorised unless named in a later owner message | Deferred |
 
 
-Partial acceptance evidence for rows 4, 7, 8, 9 and 11: [implementation status](17-implementation-status.md#phase-2-authentication-http-and-vue-checkpoint). Audit storage and rolling budgets exist, but alerts/full abuse policy remain; session privacy controls exist, but their complete privacy proof remains; device locale switching exists, but account persistence remains; template prose/label/literal lint is now active with rejection tests; public privacy/report pages and localized session dates exist, but configured policy/retention and reporting-runbook proofs remain. No partial row is marked Met.
+Partial acceptance evidence for rows 4, 7, 8, 9 and 11: [implementation status](17-implementation-status.md#phase-2-authentication-http-and-vue-checkpoint). Audit storage and rolling budgets exist, but alerts/full abuse policy remain; session privacy controls exist, but their complete privacy proof remains; device and account locale choices are now persisted and tested; the future recovery screen and complete localization acceptance remain; template prose/label/literal lint is now active with rejection tests; public privacy/report pages and localized session dates exist, but configured policy/retention and reporting-runbook proofs remain. No partial row is marked Met.
 
 ### Phase 3 — Map foundation and user settings
 

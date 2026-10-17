@@ -22,6 +22,8 @@ function fixture(secure = true) {
     login: vi.fn().mockResolvedValue(grant),
     refresh: vi.fn().mockResolvedValue(grant),
     authenticate: vi.fn().mockResolvedValue({ userId: 'user', sessionId: 'session', account: { id: 'user' } }),
+    preferences: vi.fn().mockResolvedValue({ locale: 'en' }),
+    savePreferences: vi.fn().mockResolvedValue({ locale: 'fa' }),
     changePassword: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn().mockResolvedValue(undefined),
     revokeOthers: vi.fn().mockResolvedValue(undefined),
@@ -127,6 +129,20 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
       ).statusCode,
     ).toBe(401);
   });
+  it('uses the bearer identity for locale preferences and rejects unsupported/mass-assigned fields', async () => {
+    const { app, auth, headers } = fixture();
+    expect((await app.inject({ url: '/api/v1/users/me/preferences', headers })).json()).toEqual({ locale: 'en' });
+    for (const payload of [{ locale: 'de' }, { locale: 'fa', userId: 'other' }, {}])
+      expect(
+        (await app.inject({ url: '/api/v1/users/me/preferences', method: 'PUT', headers, payload })).statusCode,
+      ).toBe(400);
+    expect(
+      (
+        await app.inject({ url: '/api/v1/users/me/preferences', method: 'PUT', headers, payload: { locale: 'fa' } })
+      ).json(),
+    ).toEqual({ locale: 'fa' });
+    expect(auth.savePreferences).toHaveBeenCalledWith('user', 'session', 'fa');
+  });
   it('publishes bounded Retry-After without exposing account state or internal prose', async () => {
     const { app, auth, headers } = fixture();
     auth.login.mockRejectedValueOnce(new AuthFailure(429, 8));
@@ -161,7 +177,7 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
     const list = await app.inject({ url: '/api/v1/auth/sessions', headers });
     expect(list.body).toContain('2026-01-01T00:00:00.000Z');
     expect((await app.inject({ url: '/api/v1/auth/sessions/family', method: 'DELETE', headers })).statusCode).toBe(204);
-    expect(auth.sessions.revoke).toHaveBeenCalledWith('user', 'family');
+    expect(auth.sessions.revoke).toHaveBeenCalledWith('user', 'family', 'session');
     auth.sessions.revoke.mockResolvedValueOnce(false);
     expect((await app.inject({ url: '/api/v1/auth/sessions/other', method: 'DELETE', headers })).statusCode).toBe(404);
     expect((await app.inject({ url: '/api/v1/auth/sessions', method: 'DELETE', headers })).statusCode).toBe(204);

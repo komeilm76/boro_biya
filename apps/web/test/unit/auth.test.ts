@@ -141,7 +141,8 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     expect(wrapper.find('[role="status"]').text()).toContain('Account created');
     const rawBody = fetcher.mock.calls[1]?.[1]?.body;
     if (typeof rawBody !== 'string') throw new Error('expected JSON body');
-    const body = JSON.parse(rawBody) as { answers: unknown[] };
+    const body = JSON.parse(rawBody) as { answers: unknown[]; locale: string };
+    expect(body.locale).toBe('en');
     expect(body.answers).toHaveLength(5);
     const failed = mountPage(Register, 'fa');
     fetcher.mockRejectedValueOnce(new Error('offline'));
@@ -231,6 +232,49 @@ describe('bilingual authentication, settings and public privacy UI', () => {
       throw new Error('blocked');
     });
     await wrapper.findAll('button')[1]?.trigger('click');
+  });
+  it('restores the account language, saves explicit changes and preserves the prior choice on failure', async () => {
+    const { wrapper, session } = mountPage(LanguageSwitcher);
+    session.$patch({ isAuthenticated: true, accessToken: 'signed', preferredLocale: 'fa' });
+    await flushPromises();
+    expect(document.documentElement.dir).toBe('rtl');
+    expect(localStorage.getItem('boro-locale')).toBe('fa');
+    fetcher.mockResolvedValueOnce(response({ locale: 'en' }));
+    await wrapper.findAll('button')[0]?.trigger('click');
+    await flushPromises();
+    expect(session.preferredLocale).toBe('en');
+    expect(document.documentElement.lang).toBe('en');
+    expect(fetcher.mock.calls[0]?.[0]).toBe('/api/v1/users/me/preferences');
+    expect(fetcher.mock.calls[0]?.[1]?.method).toBe('PUT');
+    fetcher.mockRejectedValueOnce(new Error('offline'));
+    await wrapper.findAll('button')[1]?.trigger('click');
+    await flushPromises();
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    expect(localStorage.getItem('boro-locale')).toBe('en');
+    expect(session.preferredLocale).toBe('en');
+    session.clearSession();
+    await wrapper.findAll('button')[1]?.trigger('click');
+    await flushPromises();
+    expect(localStorage.getItem('boro-locale')).toBe('fa');
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+  it('never applies a delayed preference response to a different signed-in identity', async () => {
+    const store = useSessionStore();
+    store.$patch({ isAuthenticated: true, accessToken: 'old', preferredLocale: 'en' });
+    let finish: (value: Response) => void = () => {};
+    fetcher.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const pending = store.saveLocale('fa');
+    store.$patch({ accessToken: 'new', preferredLocale: 'en' });
+    finish(response({ locale: 'fa' }));
+    expect(await pending).toBe(false);
+    expect(store.preferredLocale).toBe('en');
+    store.clearSession();
+    await expect(store.saveLocale('fa')).rejects.toThrow('auth_request_rejected');
   });
   it('publishes bilingual privacy/reporting pages without an application session', () => {
     for (const locale of ['en', 'fa'] as const) {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import { authClient, authRequest, acceptedResponse } from '../auth-client.js';
+const { locale } = useI18n();
 const username = ref('');
 const password = ref('');
 const repeatPassword = ref('');
@@ -30,6 +32,7 @@ async function register() {
       csrf: csrfToken,
       body: {
         username: username.value,
+        locale: locale.value,
         password: password.value,
         repeatPassword: repeatPassword.value,
         answers: questions.value.map((questionId, i) => ({ questionId, answer: answers.value[i] ?? '' })),

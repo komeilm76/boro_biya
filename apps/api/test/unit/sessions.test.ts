@@ -44,6 +44,7 @@ describe('session boundary and failure paths (SEC-08, SEC-10)', () => {
     expect(await f.sessions.list('invalid')).toEqual([]);
     expect(await f.sessions.revoke('invalid', familyId)).toBe(false);
     expect(await f.sessions.revoke(userId, 'invalid')).toBe(false);
+    expect(await f.sessions.revoke(userId, familyId, 'invalid')).toBe(false);
     await f.sessions.revokeAll('invalid');
     expect(f.connect).not.toHaveBeenCalled();
     expect(f.poolQuery).not.toHaveBeenCalled();
@@ -130,6 +131,15 @@ describe('session boundary and failure paths (SEC-08, SEC-10)', () => {
     ]);
   });
 
+  it('rechecks the current API binding under lock before owner-scoped revocation', async () => {
+    const stale = fixture([begin, {}, { rowCount: 0 }]);
+    expect(await stale.sessions.revoke(userId, familyId, sessionId)).toBe(false);
+    expect(stale.query.mock.calls.some(([sql]) => sql.startsWith('UPDATE'))).toBe(false);
+    const active = fixture([begin, {}, { rowCount: 1 }, { rowCount: 1 }]);
+    expect(await active.sessions.revoke(userId, familyId, sessionId)).toBe(true);
+    expect(active.query.mock.calls[2]?.[1]).toEqual([sessionId, userId]);
+    expect(active.query.mock.calls[3]?.[1]).toEqual([familyId, userId]);
+  });
   it('binds owner identity on revoke and locks before revoking all', async () => {
     const f = fixture([begin, {}, { rowCount: 1 }]);
     expect(await f.sessions.revoke(userId, familyId)).toBe(true);
