@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import AuthChallenge from '../components/AuthChallenge.vue';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onUnmounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { loginDestination } from '../router/login-destination.js';
 import { AuthRequestError } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
 const router = useRouter();
+const route = useRoute();
+let active = true;
+onUnmounted(() => {
+  active = false;
+});
 const username = ref('');
 const password = ref('');
 const captchaEnabled = ref(false);
@@ -21,8 +27,13 @@ async function signIn() {
   failed.value = false;
   retryAfter.value = 0;
   try {
-    await session.login(username.value, password.value, challenge.value || undefined);
-    await router.push('/_user');
+    const entry = route.fullPath,
+      requested = route.query['redirect'];
+    const pending = session.login(username.value, password.value, challenge.value || undefined);
+    const version = session.authVersion;
+    await pending;
+    if (!active || route.fullPath !== entry || !session.isAuthenticated || session.authVersion !== version) return;
+    await router.replace(loginDestination(router, requested, session.isAdmin));
   } catch (error) {
     failed.value = true;
     if (error instanceof AuthRequestError) retryAfter.value = error.retryAfterSeconds ?? 0;

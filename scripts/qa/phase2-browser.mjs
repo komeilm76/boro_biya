@@ -35,6 +35,7 @@ const report = {
   startedAt: new Date().toISOString(),
   results: [],
   disabledRecoveryLocales: [],
+  returnNavigationRejections: [],
   passed: false,
 };
 let pg, database, db, app, web, browser;
@@ -130,11 +131,15 @@ try {
         assert.equal(await target.locator('html').getAttribute('dir'), locale === 'fa' ? 'rtl' : 'ltr');
       }
       async function login(target, secret) {
-        await target.goto(`${origin}/_auth/login`);
+        const destination = '/_user?tab=sessions#security';
+        await target.goto(`${origin}${destination}`);
+        await target.waitForURL(
+          (url) => url.pathname === '/_auth/login' && url.searchParams.get('redirect') === destination,
+        );
         await target.locator('#username').fill(`browser_${locale}_${mobile ? 'mobile' : 'desktop'}`);
         await target.locator('#password').fill(secret);
         await target.locator('#password').press('Enter');
-        await target.waitForURL(`${origin}/_user`);
+        await target.waitForURL(`${origin}${destination}`);
         await target.locator('time').first().waitFor();
       }
       step = `${label}: registration`;
@@ -261,6 +266,7 @@ try {
         viewport: mobile ? '390x844 (emulated)' : '1280x900',
         registration: 'pass',
         keyboardSubmit: 'pass',
+        privateReturnNavigation: 'pass (query and hash retained)',
         login: 'pass',
         sessionRevocation: 'pass',
         utcDisclosure: 'pass',
@@ -275,12 +281,32 @@ try {
       console.log(`${label}: selected real-browser journeys passed`);
       await context.close();
     }
+  // Real successful login must not follow an external target or grant administrative UX.
+  for (const locale of ['en', 'fa'])
+    for (const kind of ['external', 'unauthorised-admin']) {
+      step = `${locale}: rejected ${kind} return target`;
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      try {
+        const page = await context.newPage();
+        const destination = kind === 'external' ? 'https://example.invalid/never' : '/_admin?tab=roles';
+        await page.goto(`${origin}/_auth/login?redirect=${encodeURIComponent(destination)}`);
+        await page.locator(`button[lang="${locale}"]`).click();
+        await page.locator('#username').fill(`browser_${locale}_desktop`);
+        await page.locator('#password').fill(replacement);
+        await page.locator('#password').press('Enter');
+        await page.waitForURL(`${origin}/_user`);
+        await page.locator('time').first().waitFor();
+        report.returnNavigationRejections.push({ locale, kind, result: 'pass' });
+      } finally {
+        await context.close();
+      }
+    }
   // The same disposable configuration now exercises the enabled branch at default work/risk
   // settings. This is a rehearsal setting, never a change to application defaults or CI budgets.
   authConfig.captchaEnabled = true;
   for (const locale of ['en', 'fa']) {
     step = `${locale}: enabled challenge worker`;
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     page.setDefaultTimeout(30_000);
     await page.goto(`${origin}/_auth/login`);
@@ -316,7 +342,7 @@ try {
   authConfig.recoveryEnabled = false;
   for (const locale of ['en', 'fa']) {
     step = `${locale}: disabled recovery warning`;
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     await page.goto(`${origin}/_auth/recover`);
     await page.locator(`button[lang="${locale}"]`).click();

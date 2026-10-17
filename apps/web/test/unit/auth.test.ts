@@ -158,6 +158,54 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     await flushPromises();
     expect(wrapper.find('[role="alert"]').exists()).toBe(true);
   });
+  it.each(['en', 'fa'] as const)('returns to the preserved private destination after login in %s', async (language) => {
+    const { wrapper, router } = mountPage(SignIn, language);
+    await router.push({ path: '/_auth/login', query: { redirect: '/_user?tab=sessions#security' } });
+    loginResponses();
+    await wrapper.get('#username').setValue('Alice');
+    await wrapper.get('#password').setValue('password');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe('/_user?tab=sessions#security');
+    wrapper.unmount();
+  });
+  it.each([false, true])('uses effective administrative permission for default navigation: %s', async (allowed) => {
+    const { wrapper, router } = mountPage(SignIn);
+    await router.push('/_auth/login');
+    fetcher
+      .mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }))
+      .mockResolvedValueOnce(response({ accessToken: 'signed', expiresIn: 900 }))
+      .mockResolvedValueOnce(response({ ...account, roles: ['admin'], permissions: allowed ? ['users.read'] : [] }));
+    await wrapper.get('#username').setValue('Alice');
+    await wrapper.get('#password').setValue('password');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe(allowed ? '/_admin' : '/_user'));
+    wrapper.unmount();
+  });
+  it.each(['unmount', 'navigation', 'identity'] as const)('does not redirect a late login after %s', async (mode) => {
+    const { wrapper, router, session } = mountPage(SignIn);
+    await router.push({ path: '/_auth/login', query: { redirect: '/_user?tab=sessions' } });
+    let finish!: () => void;
+    vi.spyOn(session, 'login').mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await wrapper.get('#username').setValue('Alice');
+    await wrapper.get('#password').setValue('password');
+    await wrapper.get('form').trigger('submit');
+    session.$patch({ isAuthenticated: true });
+    if (mode === 'unmount') wrapper.unmount();
+    else if (mode === 'navigation') await router.push('/_public/privacy');
+    else session.replaceSession({ isAuthenticated: true, roles: [], userId: familyId, accessToken: 'replacement' });
+    const before = router.currentRoute.value.fullPath;
+    finish();
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe(before);
+    if (mode !== 'unmount') wrapper.unmount();
+  });
   it('collects five distinct question selections, submits registration and clears every secret', async () => {
     const { wrapper } = mountPage(Register);
     fetcher
