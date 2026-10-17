@@ -2,7 +2,7 @@
 
 This guide is for people who use Boro_biya. It is written to be understood without technical background, and it explains both what the app does and what it cannot do.
 
-Owner: Product. Reviewed: 2026-10-14.
+Owner: Product. Reviewed: 2026-10-17.
 
 **Current status:** no public build has been released yet, so none of the features below are available to use today. This guide is being written ahead of the release so that the wording, limits, and safety statements are reviewed before users depend on them. Pages are only published for features that exist in a released build, and a feature is never described as available before it is.
 
@@ -83,3 +83,14 @@ Owner: Product. Reviewed: 2026-10-14.
 - Limitations are stated plainly next to the feature they affect, in the same section — never in a separate "legal" page that users are unlikely to read.
 - Nothing here promises live traffic, speed limits, offline maps, push notifications, guaranteed response times, or emergency-service dispatch unless those capabilities are implemented, licensed, tested, and supported by an operational process.
 - This guide is written for users and does not describe the project's internal planning, engineering decisions, or test identifiers.
+
+
+## Reporting security concerns (development preview)
+
+No public build or end-user deployment is available yet. If an operator gives you access to a development installation, its **Report a security concern** page (`/_public/report`, also linked from the privacy notice) is the contact for that installation's operator. It works without signing in or creating an external account. Choose suspected account compromise, abuse or vulnerability, and provide a short description of 20–4,000 characters. English and Persian are supported.
+
+Use synthetic examples and only the minimum detail necessary. Never send passwords, security answers, tokens, private locations or other people's personal information. A report is not proof that you own an account and cannot reset a password. If you can still sign in after suspected compromise, revoke other sessions through your account settings.
+
+A successful receipt means your report was stored privately for manual operator review, not that a compromise was confirmed or any action taken. No email address or phone number is collected, and there is no reply or tracking channel, promised response time, emergency assistance or guaranteed recovery. If sending fails or receipt is uncertain, avoid repeated copies: the first attempt may already have been stored. If the page asks you to wait because too many reports were sent, wait before trying again.
+
+For a repository software vulnerability, the separate **private security reporting on GitHub** link opens the repository's private advisory form. That service requires a GitHub account. Do not post vulnerability details in a public issue. The installation form does not forward reports to GitHub.

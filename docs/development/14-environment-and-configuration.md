@@ -1,6 +1,6 @@
 # Environment and Configuration Reference
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 This is the Phase 1 configuration reference, derived from `.env.example`, `packages/config/src/server-config.ts`, the web/Vite source, the development scripts, Dockerfiles, and `docker-compose.yml`. A value shown in `.env.example` is a template suggestion, not necessarily an implemented setting or a runtime default.
 
@@ -91,7 +91,22 @@ The Compose resource-limit variables below are supported by `docker-compose.yml`
 
 ## 5. Template-only settings for later phases
 
-Every name in the tables below is present in `.env.example` but has no Phase 1 application or Compose consumer. For every row, the Phase 1 required status is **not required**, the Phase 1 runtime default is **none**, and there is **no current service consumer**. The value shown is either the template's suggested value or the development generator's safe local value; it is not evidence that the described behaviour is implemented. Configure the local file only through `bun run env:create` unless a later phase documents another process. There is no effective runtime verification in Phase 1; the documentation gate verifies placeholder-only template values, not feature behaviour. Secret-bearing values generated now are unused by Phase 1 and must never be treated as production secrets.
+The tables below preserve the Phase 1 template-only classification. The following keys now have a Phase 2 core-API consumer in `apps/api/src/auth/config.ts`; these overrides supersede their historical Phase 1 row:
+
+| Key | Current default/requirement | Verification |
+| --- | --- | --- |
+| `SESSION_SECRET` | Required, at least 32 bytes, no placeholder; generated locally and supplied to the API, never printed | Startup validation and signed-token tests |
+| `ACCESS_TOKEN_TTL_SECONDS` | 900, integer 1–900 | Token expiry/age tests |
+| `REFRESH_TOKEN_TTL_DAYS` | 30, integer 1–90; absolute family lifetime | PostgreSQL rotation/expiry tests |
+| `LOGIN_MAX_ATTEMPTS_PER_ACCOUNT` | 10, integer 1–100 | Persisted account budget and lockout tests |
+| `LOGIN_MAX_ATTEMPTS_PER_ORIGIN` | 30, integer 1–300 | Persisted keyed origin budget; refresh budget capped at 300 |
+| `LOGIN_WINDOW_SECONDS` | 900, integer 1–3600 | Rolling attempt-window persistence |
+| `LOCKOUT_SECONDS` | 900, integer 1–3600 | Self-expiring locked-account check |
+| `LOGIN_DELAY_MAX_SECONDS` | 30, integer 1–30; enforced server-side via 429/Retry-After, not an open-request timer | Persisted account/origin backoff and smaller-cap tests |
+| `SECURITY_QUESTIONS_ENABLED` | true, strict boolean; policy warning state only until recovery is implemented | Policy response/config tests; recovery endpoints remain unavailable |
+| `CAPTCHA_ENABLED` | false, strict boolean; true currently fails login/registration closed with 503 | No CAPTCHA bypass claim; implementation still outstanding |
+
+`WEB_ORIGIN` also controls strict mutation-origin checks and refresh-cookie security: remote production origins require HTTPS; loopback HTTP is explicitly a local development exception. Argon2 template tuning, automated bans, general request limits and remaining recovery/CAPTCHA tuning are not yet consumers; the adapter currently uses the SEC-05 starting parameters with bounded native concurrency. All other rows below remain template-only; none establishes a feature merely by appearing in `.env.example`.
 
 ### Database extensions and account/security configuration
 
@@ -192,3 +207,8 @@ Compose internal communication uses DNS service names and container ports (`api:
 - The ten `*_CPU_LIMIT` and `*_MEMORY_LIMIT` Compose substitutions are listed in §4. Compose defaults are the values in `docker-compose.yml`; they are not in `.env.example`.
 
 No map/provider, authentication, location-sharing, upload, push, retention-job, or plugin behaviour can be enabled by setting the template-only values in §5; those variables have no Phase 1 consumer.
+
+
+### Recovery configuration checkpoint
+
+`RECOVERY_MAX_ATTEMPTS` defaults to 10 (maximum 30). `RECOVERY_CHALLENGE_TTL_SECONDS` and `RECOVERY_GRANT_TTL_SECONDS` each default to 300 seconds and are bounded to 900 seconds. Values must be positive integers. Attempts and expiry are persisted, not process-local. `SECURITY_QUESTIONS_ENABLED=false` disables every recovery step before any database state is created. `CAPTCHA_ENABLED=true` currently fails closed with 503; the self-hosted challenge is still outstanding. Proof cookies are HttpOnly, SameSite=Strict and Secure with `__Host-` names on HTTPS; HTTP names are development-only. Expired rows are not automatically deleted. See the API inventory and classification record for delivery/retention limits.

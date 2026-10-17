@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Reviewed: 2026-10-16. Baseline verified: **2026-10-15** (Phase 1 → Phase 2 boundary); next scheduled re-verification is the Phase 2 → Phase 3 boundary.
+Owner: Engineering. Reviewed: 2026-10-17. Baseline verified: **2026-10-15** (Phase 1 → Phase 2 boundary); next scheduled re-verification is the Phase 2 → Phase 3 boundary.
 
 ## 1. Principles
 
@@ -107,7 +107,7 @@ Renovation tooling may open pull requests, but nothing merges automatically — 
 
 ## 6. Licence policy
 
-Allowed without further review: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, CC0-1.0, Unlicense, Python-2.0, PostgreSQL (the licence of the PostgreSQL server binaries bundled by the test-only `embedded-postgres` packages), BlueOak-1.0.0 (permissive and OSI-approved; carried by eleven packages that reach the tree only as development dependencies — through the root lint toolchain, `@vue/test-utils`, and `@capacitor/cli` — and by nothing in the production install or any distributed artefact; added 2026-10-14 by Engineering. **Owner ratification is pending:** the owner asked for an evidence review before deciding (2026-10-15, [Phase 1 exit review](10-phase-1-exit-review.md) §5), so the entry stays as it is and is not treated as owner-approved until a decision is recorded here; the review recommends ratifying it for development-only use).
+Allowed without further review: MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, CC0-1.0, Unlicense, Python-2.0, PostgreSQL (the licence of the PostgreSQL server binaries bundled by the test-only `embedded-postgres` packages), BlueOak-1.0.0 (**Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking). The allowlist and licence checks remain unchanged; no development-only policy is authorised. A licence/notice re-check is deferred, not cancelled, to just before the first public release.
 
 Allowed with a recorded note: MPL-2.0 (file-level copyleft — note the obligation; present as `lightningcss` and its platform builds: 1.32.0 through `@tailwindcss/vite`, and 1.33.0 through `vite`, which the `vue-router` peer range also pulls into the production install, so the backend images currently carry it — a distributed image therefore owes MPL's notice of where the source is available; see the [Phase 1 exit review](10-phase-1-exit-review.md) §5), CC-BY-4.0 (documentation/data attribution), SIL OFL (fonts).
 
@@ -140,3 +140,7 @@ Resolved by the Phase 1 re-verification (2026-10-14, full detail in [REFERENCES]
 
 - **`argon2` on Node (the production hashing path):** verified at 0.45.1, MIT, engines `node >=16.17.0`, prebuilt native bindings distributed with the package (no compile toolchain required on supported platforms), published 2026-07-21, no open registry advisories at verification. **Not installed in Phase 1** — no authentication exists yet (`GOV-02`); Phase 2 installs it behind the adapter rule of [GOV-82](#4-runtime-baseline) and benchmarks parameters on the deployment target before release (`SEC-04`).
 - **Image scanner and secret scanner:** Trivy (Apache-2.0) via `aquasecurity/trivy-action` v0.36.0 (SHA-pinned in `ci.yml`) scans built images (CRITICAL blocks, HIGH reported) and the repository tree for secrets; availability in CI is proven by the workflow itself, and runtime cost fits the job timeouts. Gitleaks was evaluated and not adopted (its GitHub Action's licensing for organization use adds friction the Trivy secret scan does not have).
+
+### Phase 2 authentication adapter adoption (2026-10-17)
+
+The authentication work installs the previously verified `argon2` 0.45.1 behind `PasswordHasher`, and pins `jose` 6.2.12 behind the access-token adapter; neither replaces an accepted infrastructure component. npm registry version metadata was read with `npm view argon2@0.45.1 version engines --json` and `npm view jose version engines --json`; native Node 24 hashing/verification and JOSE signing/verification have executable unit and HTTP/PostgreSQL tests. The Argon2id starting parameters remain those of SEC-05 and must still be benchmarked on the deployment target before release. This records authentication dependencies, not a change to licence policy or any licence/compliance determination.

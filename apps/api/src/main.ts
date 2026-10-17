@@ -7,6 +7,8 @@ import {
   registerProcessMetrics,
   startMetricsServer,
 } from '@boro-biya/server-runtime';
+import { readAuthConfig } from './auth/config.js';
+import { createAuthService } from './auth/service.js';
 import { buildApp } from './app.js';
 import { BUILD_VERSION } from './build-info.js';
 
@@ -35,7 +37,9 @@ const db = createDb({
   onUnexpectedError: (summary) => logger.error('unexpected database pool error', summary),
 });
 
+const auth = await createAuthService(db, readAuthConfig());
 const app = buildApp({
+  auth,
   config,
   logger,
   registry,

@@ -18,7 +18,9 @@
     "@boro-biya/db": "workspace:*",
     "@boro-biya/server-runtime": "workspace:*",
     "@boro-biya/validation": "workspace:*",
-    "fastify": "5.12.7"
+    "argon2": "0.45.1",
+    "fastify": "5.12.7",
+    "jose": "6.2.12"
   },
   "devDependencies": {
     "@boro-biya/test-utils": "workspace:*"

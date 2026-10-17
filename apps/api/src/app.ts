@@ -9,6 +9,8 @@ import {
   type Logger,
   type MetricsRegistry,
 } from '@boro-biya/server-runtime';
+import { applyAuthRoutes } from './auth/routes.js';
+import type { AuthService } from './auth/service.js';
 import { BUILD_VERSION } from './build-info.js';
 
 export interface BuildAppOptions {
@@ -17,6 +19,7 @@ export interface BuildAppOptions {
   registry: MetricsRegistry;
   /** Injected so tests can fake dependency states (GOV-61); production passes the pool ping. */
   readiness?: () => Promise<boolean>;
+  auth?: AuthService;
 }
 
 /**
@@ -48,5 +51,6 @@ export function buildApp(options: BuildAppOptions): FastifyInstance {
     ...(options.readiness !== undefined ? { readiness: options.readiness } : {}),
   });
 
+  if (options.auth !== undefined) applyAuthRoutes(app, options.auth);
   return app;
 }

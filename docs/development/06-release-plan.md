@@ -2,7 +2,7 @@
 
 How versions are cut, what is published, how an artefact moves from a commit to production, and how a release is undone. The gate set that must pass is defined in [QUALITY_GATES](../QUALITY_GATES.md); the phase that enables each part is in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-14. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
+Owner: Engineering. Reviewed: 2026-10-17. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
 
 ## 1. Versioning
 
@@ -63,7 +63,7 @@ Staging must not be a copy of production personal data: privacy obligations do n
 - **[QA-99]** Contract diff reviewed: no unintended breaking change.
 - **[QA-100]** Secrets: no new secret in the repository, images, or logs; required production values documented as placeholders.
 - **[QA-101]** Images scanned; base images pinned; no `latest` tags.
-- **[QA-102]** Migration dry-run and restore rehearsal complete.
+- **[QA-102]** **Deferred (owner decision, 2026-10-17); non-gating; excluded from every authorised scope unless named in a later owner message. Retained definition for traceability only:** Migration dry-run and restore rehearsal complete.
 - **[QA-103]** Rollback path stated and, for risky releases, actually rehearsed.
 - **[QA-104]** Monitoring and alerts cover the new behaviour; failure modes from the threat model have a signal.
 - **[QA-105]** Support/incident contacts updated.

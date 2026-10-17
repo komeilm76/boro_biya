@@ -8,3 +8,5 @@ export * from './pagination.js';
 export * from './services.js';
 export * from './time.js';
 export * from './web-client.js';
+export * from './auth.js';
+export * from './uuid.js';

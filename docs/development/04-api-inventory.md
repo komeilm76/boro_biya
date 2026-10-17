@@ -1,27 +1,42 @@
 # API Inventory
 
-Planned endpoints, grouped by area, with the access level and the phase that delivers them. This is a planning inventory: nothing here exists yet. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
+Planned endpoints, grouped by area, with the access level and the phase that delivers them. This inventory includes implemented and planned endpoints; the implementation checkpoint below is authoritative for availability. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are not part of this inventory and are documented in [ARCHITECTURE](../ARCHITECTURE.md) §8.
 
 ## 1. Authentication and account lifecycle (Phase 2)
+
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change/answer-change notices remain durable for the next authorized profile load and now have the narrow ticketed realtime security stream described in API_AND_OPENAPI §7. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; user/state/role/audit administration now exists with effective database permissions, current-password confirmation for writes, audit records and a last-full-administrator guard; pending initial-setup credential reissuance now exists with reason/current-password confirmation and atomic proof revocation; bounded user/audit search filters now exist; enabled adaptive computational challenges now exist as described in [enabled challenge checkpoint](17-implementation-status.md#14-phase-2-enabled-computational-challenge-checkpoint-2026-10-17); generated OpenAPI client activation remains outstanding. Remaining planned rows are not availability claims.
+
+| Method | Path | Access | Implemented supporting contract |
+| --- | --- | --- | --- |
+| GET | `/auth/csrf` | public | Random double-submit CSRF token/cookie; mutation requests require the exact configured origin |
+| GET | `/auth/security-questions` | public | Active server-owned question IDs and message keys only; never answers |
+| POST | `/auth/challenge` | public | Origin/CSRF-protected, quota-bound issuance for login/register/recovery/setup; returns required:false below the risk threshold, otherwise nonce/bits/expiry |
+| POST | `/auth/challenge/verify` | public | Origin/CSRF-protected, bounded work counter; returns a short-lived single-use grant; no-store |
+| GET | `/auth/policy` | public | Recovery/CAPTCHA switches and minimum password length |
+| GET | `/privacy/policy` | public | No-store effective authentication lifetimes and explicitly unenforced development retention candidates; no secrets or account identifiers |
+| POST | `/security/reports` | public | No-store anonymous operator inbox intake; strict 20–4,000-character EN/FA category/message, origin/CSRF, persisted five-origin/100-global requests per configured login window, atomic content-free audit, 202 receipt; no public inbox reads or reply channel |
+
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | POST | `/auth/register` | public | Username, password, repeat, CAPTCHA, five security questions; rate-limited; generic errors |
 | POST | `/auth/login` | public | Username + password; self-hosted CAPTCHA when the risk policy requires it; returns the access token and sets the rotating refresh cookie |
 | POST | `/auth/refresh` | public (refresh cookie) | CSRF-protected; consumes the presented refresh token, rotates it, returns a new access token; a reused token revokes the family ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android), API-38) |
-| POST | `/auth/logout` | auth | Revokes the current session; CSRF-protected |
-| POST | `/auth/password/forgot` | public | Generic response, issues recovery challenge when eligible |
-| POST | `/auth/password/recover/questions` | public | Returns the challenge's question IDs (never answers) bound to the flow |
-| POST | `/auth/password/recover/verify` | public | Verifies answers; issues a single-use reset grant on success |
-| POST | `/auth/password/recover/reset` | public | Consumes the grant; revokes sessions; notifies the user |
-| POST | `/auth/password/change` | auth | Current + new password; revokes other sessions |
-| GET | `/auth/setup/status` | auth | Which first-login steps remain (`password_setup_required`, `security_setup_required`) |
-| POST | `/auth/setup/password` | auth | First-login password set (admin-created accounts) |
-| POST | `/auth/setup/security-questions` | auth | First-login security question registration |
+| POST | `/auth/logout` | public (refresh cookie) | Revokes that cookie family; origin/CSRF-protected, idempotent, works without an unexpired bearer |
+| POST | `/auth/password/forgot` | public | Implemented: generic accepted response and HttpOnly flow cookie for real/fake flows; origin/CSRF and account/origin budgets |
+| POST | `/auth/password/recover/questions` | public | Implemented: three persisted question IDs/message keys; requires flow cookie and origin/CSRF |
+| POST | `/auth/password/recover/verify` | public | Implemented: all three answers required; persistent attempt limit; HttpOnly single-use grant cookie, never a body/URL token |
+| POST | `/auth/password/recover/reset` | public | Implemented: flow/grant cookies plus origin/CSRF; atomic password reset, unlock, family revocation, audit and persisted notice; clears proof/refresh cookies |
+| POST | `/auth/security-questions/change` | auth | Implemented: current-password confirmation, five distinct active question IDs and normalized/hashed replacement answers; persisted account/origin limits; owner/current-binding and credential recheck after hashing; atomically cancels recovery, revokes all sessions, audits and stores a minimal notice; clears proof cookies |
+| POST | `/auth/password/change` | auth | Current + new password; persisted account/origin quotas before hashing; revokes all sessions and recovery flows, persists a security notice |
+| POST | `/auth/setup/start` | public (temporary credential) | Implemented: dedicated first sign-in; origin/CSRF and persisted budgets; consumes temporary credential once, sets restricted HttpOnly setup proof; never creates an ordinary session |
+| GET | `/auth/setup/status` | restricted setup cookie | Implemented: remaining setup flags; proof expiry/fingerprint/state checked against persisted state |
+| POST | `/auth/setup/password` | restricted setup cookie | Implemented: origin/CSRF, new/repeat password policy, old-credential rejection, post-hash state/fingerprint recheck; no normal session |
+| POST | `/auth/setup/security-questions` | restricted setup cookie | Implemented: password step first, five distinct active questions with hashed answers, atomic flag clearing/proof consumption/audit; requires subsequent normal sign-in |
 | GET | `/auth/sessions` | auth | Current sessions with minimal device metadata |
 | DELETE | `/auth/sessions/:id` | auth | Revoke one session |
 | DELETE | `/auth/sessions` | auth | Revoke all other sessions |
@@ -30,21 +45,22 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
-| GET | `/users/me` | auth | Own profile and effective preferences |
+| GET | `/users/me` | auth | Own profile, effective preferences, role keys and current administrative permission keys (UX metadata only) |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
-| GET | `/users/me/preferences` | auth | Theme, locale, notification channels, SOS suggestion opt-in |
-| PUT | `/users/me/preferences` | auth | Validated against schema; audited when a privacy-relevant value changes |
-| GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
-| POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
-| GET | `/admin/users/:id` | admin | Administrative view; never includes credentials or answers |
-| POST | `/admin/users/:id/lock` `/unlock` | admin | Explicit transitions, each audited with reason |
-| POST | `/admin/users/:id/ban` `/unban` | admin | Requires reason; audited |
-| POST | `/admin/users/:id/deactivate` `/reactivate` | admin | Requires reason; audited |
-| GET | `/admin/roles` | admin | Roles with their permissions; seeded `admin` and `user` plus any custom role ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) |
-| POST | `/admin/roles` | admin | Create a custom role and its permission set as data; audited |
-| PATCH | `/admin/roles/:id` | admin | Change a role's permissions or name; audited; the last active administrator protection (`ADM-07`) is enforced server-side |
-| PATCH | `/admin/users/:id/roles` | admin | Assign or revoke role assignments; audited; high-impact re-authentication; refused if it would remove the last active administrator |
-| GET | `/admin/audit-events` | admin | Filtered, read-only, cursor paginated |
+| GET | `/users/me/preferences` | auth | Implemented: locale only; theme, notification channels and SOS suggestion opt-in remain planned |
+| PUT | `/users/me/preferences` | auth | Implemented: strict locale-only replacement for the bearer owner, with a current binding recheck under lock; future privacy-relevant fields require audit |
+| GET | `/admin/users` | `users.read` | Implemented: audited credential-free list, 50-item UUIDv7 cursor pages; strict filters: normalized literal username substring, account status, initial-setup required (`true`/`false`) and role UUID; filters combine with the cursor |
+| POST | `/admin/users` | auth + `users.create` permission | Implemented: current-password confirmation and post-hash permission/binding recheck; supplied temporary password or generated display-once credential; only default user role; both setup flags set; unused credential expires after 24 hours |
+| GET | `/admin/users/:id` | `users.read` | Implemented: audited state/setup/role-ID projection; never credentials, answers or tokens |
+| POST | `/admin/users/:id/setup-credential` | `users.state` | Implemented: current password and reason; only active, administrator-created accounts still awaiting initial setup; display-once CSPRNG credential expires after 24 hours; restarts both steps and atomically revokes existing sessions/recovery/setup proofs; never resets a completed account or activates an inactive account |
+| POST | `/admin/users/:id/lock` `/unlock` | `users.state` | Implemented: current password and reason; bounded configured lock duration; state/audit actor and previous/next state; proof/session revocation; last-administrator guard |
+| POST | `/admin/users/:id/ban` `/unban` | `users.state` | Implemented: reason/current password, distinct legal transitions, atomic audit and revocation; last-administrator guard |
+| POST | `/admin/users/:id/deactivate` `/reactivate` | `users.state` | Implemented: reason/current password, atomic audit and revocation; preserves records and setup flags; last-administrator guard; no deletion route |
+| GET | `/admin/roles` | `roles.read` | Implemented: audited 50-item cursor pages and central permission vocabulary; seeded and custom roles |
+| POST | `/admin/roles` | `roles.manage` | Implemented: strict key/message-key/permission allowlist, current password, previous/new audit details, last-administrator guard |
+| PATCH | `/admin/roles/:id` | `roles.manage` | Implemented: replace permission set and message-key metadata; stable role key is immutable; current password, previous/new audit and last-administrator guard |
+| PATCH | `/admin/users/:id/roles` | `users.roles` | Implemented: strict replacement of at most 20 unique existing role IDs; current password, previous/new audit and last-administrator guard; existing sessions resolve changes immediately |
+| GET | `/admin/audit-events` | `audit.read` | Implemented: audited read-only 50-item descending UUIDv7 cursor pages; strict actor UUID, action, target UUID/type and half-open UTC `from`/`to` filters; filters combine with the cursor |
 
 ## 2a. Assistance categories (Phase 5, served by the Core API)
 
@@ -121,15 +137,15 @@ Live location updates reach a granted viewer over the authenticated event stream
 | POST | `/sos/tasks/:id/transition` | auth | Validated state machine; append-only event |
 | GET | `/sos/tasks/mine` | auth | Active and historical tasks |
 
-## 6. Notifications and streams (Phase 5, streams Phase 4+)
+## 6. Notifications and streams (core security slice Phase 2; general notifications Phase 5, location streams Phase 4+)
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
 | GET | `/notifications` | auth | Paginated, with read state |
 | POST | `/notifications/:id/read` | auth | Idempotent |
 | POST | `/notifications/read-all` | auth | Idempotent |
-| POST | `/streams/ticket` | auth | Short-lived, single-use ticket for establishing an SSE connection |
-| GET | `/streams/events` | auth (ticket) | Server-Sent Events; per-user filtering, replay by last event ID |
+| POST | `/streams/ticket` | auth | Implemented Phase 2 core-security scope only: bearer/origin/CSRF, persisted quotas, empty body, hashed one-shot ticket bound to user/session and at most 15-second/access expiry |
+| GET | `/streams/events` | auth (ticket) | Implemented Phase 2 core-security notices only: strict ticket/cursor, owner-filtered bounded replay, one terminal own-credential-revocation notice, lease/access expiry and state rechecks; general streams remain planned |
 
 ## 7. Plugin lifecycle (Phase 7)
 
@@ -160,3 +176,5 @@ Live location updates reach a granted viewer over the authenticated event stream
 - Every endpoint added in a later phase is appended here with its access level, the phase that delivers it, and the requirement identifiers it implements.
 - An endpoint that exists in code but not in this inventory is a defect.
 - Contract tests must cover at least one positive and one negative (authorization or validation) case per authenticated endpoint, and every listed error code must be reachable.
+
+Challenge grants are sent only as `Authorization: Bearer <grant>` on the relevant public entry request, not in URLs or storage. Existing access bearers belong on authenticated routes, not in the challenge slot. Disabled CAPTCHA ignores the public entry Authorization header; enabled malformed proof headers are rejected. Shared strict schemas and a handwritten typed browser adapter exist; this is not generated-contract acceptance.

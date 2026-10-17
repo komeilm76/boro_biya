@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { assertCatalogueParity, catalogueEntries } from './catalogue.js';
 import en from '../../src/i18n/messages/en.json';
 import fa from '../../src/i18n/messages/fa.json';
 import {
@@ -53,4 +54,41 @@ describe('layout direction (UI-22)', () => {
     applyDocumentDirection('en');
     expect(document.documentElement.getAttribute('dir')).toBe('ltr');
   });
+});
+
+describe('complete catalogue values and interpolation contracts', () => {
+  it('keeps every shipped value nonempty and every interpolation name aligned', () => {
+    expect(() => assertCatalogueParity(en, fa)).not.toThrow();
+  });
+  it.each([
+    { reference: { hello: 'Hello' }, translated: {} },
+    { reference: { hello: 'Hello' }, translated: { hello: '' } },
+    { reference: { hello: 'Hello' }, translated: { hello: 1 } },
+    { reference: { hello: 'Hello {name}' }, translated: { hello: 'سلام {other}' } },
+    { reference: { hello: 'Hello {name}' }, translated: { hello: 'سلام' } },
+  ])('fails closed for incomplete translations %j', ({ reference, translated }) => {
+    expect(() => assertCatalogueParity(reference, translated)).toThrow();
+  });
+  it.each(['en', 'fa'] as const)(
+    'renders every catalogue entry in %s without missing-key fallback or parser warnings',
+    (locale) => {
+      const warnings = vi.spyOn(console, 'warn');
+      const diagnostics = vi.spyOn(console, 'error');
+      const errors: unknown[] = [];
+      const i18n = createAppI18n(locale);
+      const messages = catalogueEntries(locale === 'en' ? en : fa);
+      for (const [key, message] of Object.entries(messages)) {
+        const params = Object.fromEntries(
+          [...message.matchAll(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g)].map((match) => [match[1]!, 7]),
+        );
+        const rendered = i18n.global.t(key, params);
+        if (!rendered.trim() || rendered === key) errors.push(key);
+      }
+      expect(errors).toEqual([]);
+      expect(warnings).not.toHaveBeenCalled();
+      expect(diagnostics).not.toHaveBeenCalled();
+      warnings.mockRestore();
+      diagnostics.mockRestore();
+    },
+  );
 });

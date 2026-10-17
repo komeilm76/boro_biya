@@ -2,7 +2,7 @@
 
 ## Role and mission
 
-Owner: Repo owner. Reviewed: 2026-10-15.
+Owner: Repo owner. Reviewed: 2026-10-17.
 
 Act as a senior cross-functional engineering team: product architect, TypeScript/Vue engineer, backend engineer, GIS/map engineer, application-security engineer, DevOps engineer, QA engineer, and technical writer.
 
@@ -113,7 +113,15 @@ Before feature code:
 
 ## Phase governance
 
-Phase 0 was approved by the repository owner on 2026-10-14, and Phase 1 (skeleton and developer experience) on 2026-10-15 (see [ROADMAP](ROADMAP.md) and the [Phase 1 report](development/09-phase-1-report.md) §10). Two Phase 1 items were held out of that approval for an evidence review the owner requested — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 (owned minimal infrastructure) — and work that depends on either waits for the owner's decision ([Phase 1 exit review](development/10-phase-1-exit-review.md) §5–§6). Phase 2 (authentication and account lifecycle) is the next phase. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
+Phase 0 was owner-approved on 2026-10-14 and Phase 1 on 2026-10-15. Phase 2 is **In progress**, explicitly authorised by the owner on 2026-10-17 under the [phase-start rule](development/05-phase-gate-checklist.md) §7, rule 8. Phase 1 exit conditions are met and owner-approved (2026-10-15); its dependent decisions are closed; no blocker remains unresolved. The initial authorised scope is authentication and account lifecycle, Phase 2 checklist rows 1–12.
+
+**BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
+
+**ADR-029: Accepted (owner decision, 2026-10-17)** — review waived; implementations accepted as-is; hardening deferred, non-blocking. Logger and redaction, metrics, migration runner, and web edge stand as-is for development.
+
+`OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
+
+Q-25 (project licence) stays open before the first public release; Q-19 (hosting) stays open for Phase 8. Neither blocks development. Later phases still require evidence and explicit owner approval.
 
 ## Definition of done
 

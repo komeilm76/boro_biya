@@ -35,3 +35,12 @@ export function applyDocumentDirection(locale: string): void {
   document.documentElement.setAttribute('dir', directionForLocale(locale));
   document.documentElement.setAttribute('lang', locale);
 }
+
+/** Explicit saved choice only; never browser/header/geo detection (ADR-018). */
+export function savedLocale(): SupportedLocale {
+  try {
+    return localStorage.getItem('boro-locale') === 'fa' ? 'fa' : 'en';
+  } catch {
+    return 'en';
+  }
+}
