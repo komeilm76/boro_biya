@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import LocalizedTime from './LocalizedTime.vue';
 import { onUnmounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
-const { locale } = useI18n();
 const username = ref('');
 const currentPassword = ref('');
 const temporaryPassword = ref('');
@@ -25,12 +24,7 @@ watch([() => session.accessToken, () => session.authVersion, () => session.permi
   flush: 'sync',
 });
 onUnmounted(clear);
-function date(value: string) {
-  return new Intl.DateTimeFormat(locale.value === 'fa' ? 'fa-IR-u-ca-persian' : 'en-GB', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
+
 async function submit() {
   if (busy.value) return;
   const ticket = generation;
@@ -93,10 +87,10 @@ async function submit() {
         <label for="created-setup-credential">{{ $t('adminCreate.credential') }}</label>
         <output id="created-setup-credential">{{ created.setupCredential }}</output>
       </template>
-      <p>
-        {{ $t('adminCreate.expires') }} <time :datetime="created.expiresAt">{{ date(created.expiresAt) }}</time>
-      </p>
-      <button type="button" @click="created = null">{{ $t('adminCreate.forget') }}</button>
+      <p>{{ $t('adminCreate.expires') }} <LocalizedTime :value="created.expiresAt" /></p>
+      <button data-action="forget-credential" type="button" @click="created = null">
+        {{ $t('adminCreate.forget') }}
+      </button>
     </aside>
   </section>
 </template>

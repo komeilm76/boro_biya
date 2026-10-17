@@ -181,5 +181,11 @@
     "failed": "The check could not finish or has expired. Try again. Unsupported devices cannot bypass the check; contact an administrator for assistance.",
     "start": "Check security challenge",
     "cancel": "Cancel computation"
+  },
+  "time": {
+    "precision": "Displayed with one-second precision.",
+    "inspect": "Inspect UTC instant",
+    "utc": "Underlying UTC instant:",
+    "unavailable": "Time unavailable"
   }
 }

@@ -42,13 +42,27 @@ function response(body: unknown, status = 200) {
     headers: { 'content-type': 'application/json' },
   });
 }
-function mountPage(component: Parameters<typeof mount>[0], language: 'en' | 'fa' = 'en', recoveryEnabled = true) {
+function mountPage(
+  component: Parameters<typeof mount>[0],
+  language: 'en' | 'fa' = 'en',
+  recoveryEnabled = true,
+  signedIn = false,
+) {
   if (component === SignIn || component === Register)
     vi.spyOn(authClient, 'recoveryPolicy').mockResolvedValue({ recoveryEnabled, passwordMinLength: 12 });
   const router = createAppRouter(createMemoryHistory());
+  const pinia = createPinia();
+  if (signedIn)
+    useSessionStore(pinia).replaceSession({
+      isAuthenticated: true,
+      roles: ['user'],
+      accessToken: 'signed',
+      userId,
+      csrf: 'csrf',
+    });
   const wrapper = mount(component, {
     global: {
-      plugins: [createPinia(), router, createAppI18n(language)],
+      plugins: [pinia, router, createAppI18n(language)],
       stubs: { 'v-btn': { template: '<button><slot /></button>' } },
     },
   });
@@ -182,12 +196,11 @@ describe('bilingual authentication, settings and public privacy UI', () => {
         },
       ]),
     );
-    const { wrapper, session } = mountPage(UserArea, 'fa');
-    session.$patch({ accessToken: 'signed', csrf: 'csrf', isAuthenticated: true });
+    const { wrapper, session } = mountPage(UserArea, 'fa', true, true);
     await flushPromises();
     expect(wrapper.find('time').text()).not.toContain('2026-01-01T');
     fetcher.mockResolvedValueOnce(response({}, 204)).mockResolvedValueOnce(response([]));
-    await wrapper.find('li button').trigger('click');
+    await wrapper.find('li [data-action="revoke-session"]').trigger('click');
     await flushPromises();
     expect(wrapper.findAll('li')).toHaveLength(0);
     fetcher.mockResolvedValueOnce(response({}, 204)).mockResolvedValueOnce(response([]));
@@ -204,8 +217,7 @@ describe('bilingual authentication, settings and public privacy UI', () => {
   });
   it('submits a password change, clears credentials and requires a new sign-in', async () => {
     fetcher.mockResolvedValueOnce(response([]));
-    const { wrapper, session, router } = mountPage(UserArea);
-    session.$patch({ accessToken: 'signed', isAuthenticated: true });
+    const { wrapper, session, router } = mountPage(UserArea, 'en', true, true);
     await flushPromises();
     await wrapper.get('#current-password').setValue('old secret');
     await wrapper.get('#new-password').setValue('new secret 123!');

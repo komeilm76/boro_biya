@@ -186,8 +186,16 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
     expect((await app.inject({ url: '/api/v1/users/me', headers })).statusCode).toBe(200);
     const list = await app.inject({ url: '/api/v1/auth/sessions', headers });
     expect(list.body).toContain('2026-01-01T00:00:00.000Z');
-    expect((await app.inject({ url: '/api/v1/auth/sessions/family', method: 'DELETE', headers })).statusCode).toBe(204);
-    expect(auth.sessions.revoke).toHaveBeenCalledWith('user', 'family', 'session');
+    expect(
+      (
+        await app.inject({
+          url: '/api/v1/auth/sessions/family',
+          method: 'DELETE',
+          headers: { ...headers, 'x-request-id': 'session-revoke-unit' },
+        })
+      ).statusCode,
+    ).toBe(204);
+    expect(auth.sessions.revoke).toHaveBeenCalledWith('user', 'family', 'session', 'session-revoke-unit');
     auth.sessions.revoke.mockResolvedValueOnce(false);
     expect((await app.inject({ url: '/api/v1/auth/sessions/other', method: 'DELETE', headers })).statusCode).toBe(404);
     expect((await app.inject({ url: '/api/v1/auth/sessions', method: 'DELETE', headers })).statusCode).toBe(204);

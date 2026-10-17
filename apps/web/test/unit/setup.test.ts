@@ -84,7 +84,7 @@ describe('first-login and account-creation browser flows', () => {
       expect(wrapper.get('output').text()).toBe('one-time-secret');
       expect((wrapper.get('#admin-current-password').element as HTMLInputElement).value).toBe('');
       expect(fetcher.mock.calls[0]?.[1]?.body).not.toContain('temporaryPassword');
-      await wrapper.get('button[type="button"]').trigger('click');
+      await wrapper.get('[data-action="forget-credential"]').trigger('click');
       expect(wrapper.find('output').exists()).toBe(false);
       expect(localStorage.length).toBe(0);
     },

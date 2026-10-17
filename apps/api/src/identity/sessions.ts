@@ -167,7 +167,12 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
     },
 
     /** Ownership is part of the update, not an unchecked caller-supplied family ID. */
-    async revoke(userId: string, familyId: string, currentSessionId?: string): Promise<boolean> {
+    async revoke(
+      userId: string,
+      familyId: string,
+      currentSessionId?: string,
+      requestId = 'session-revoke',
+    ): Promise<boolean> {
       if (
         !UUID_V7.test(userId) ||
         !UUID_V7.test(familyId) ||
@@ -183,7 +188,13 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
            WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL RETURNING id`,
           [familyId, userId],
         );
-        return result.rowCount === 1;
+        if (result.rowCount !== 1) return false;
+        await client.query(
+          `INSERT INTO core.audit_events(actor_id,actor_type,action,target_type,target_id,request_id)
+           VALUES ($1,'user','session_revoked','session_family',$2,$3)`,
+          [userId, familyId, requestId],
+        );
+        return true;
       });
     },
 

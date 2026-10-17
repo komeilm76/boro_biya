@@ -139,6 +139,7 @@ describe('session boundary and failure paths (SEC-08, SEC-10)', () => {
     expect(await active.sessions.revoke(userId, familyId, sessionId)).toBe(true);
     expect(active.query.mock.calls[2]?.[1]).toEqual([sessionId, userId]);
     expect(active.query.mock.calls[3]?.[1]).toEqual([familyId, userId]);
+    expect(active.query.mock.calls[4]?.[1]).toEqual([userId, familyId, 'session-revoke']);
   });
   it('binds owner identity on revoke and locks before revoking all', async () => {
     const f = fixture([begin, {}, { rowCount: 1 }]);
@@ -148,4 +149,12 @@ describe('session boundary and failure paths (SEC-08, SEC-10)', () => {
     await f.sessions.revokeAll(userId);
     expect(f.query.mock.calls.at(-2)?.[1]).toEqual([userId]);
   });
+});
+
+it('rolls individual revocation back if its correlated audit fails', async () => {
+  const f = fixture([begin, {}, { rowCount: 1 }]);
+  f.query.mockRejectedValueOnce(new Error('audit unavailable'));
+  await expect(f.sessions.revoke(userId, familyId, undefined, 'real-request')).rejects.toThrow('audit unavailable');
+  expect(f.query.mock.calls[3]?.[1]).toEqual([userId, familyId, 'real-request']);
+  expect(f.query.mock.calls.at(-1)?.[0]).toBe('ROLLBACK');
 });

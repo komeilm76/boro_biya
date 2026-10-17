@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import LocalizedTime from './LocalizedTime.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import {
   administrativePermissionKeys,
@@ -13,7 +13,6 @@ import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
 const router = useRouter();
-const { locale } = useI18n();
 const users = ref<Awaited<ReturnType<typeof authClient.adminUsers>>>({ items: [], nextCursor: null });
 const roles = ref<Awaited<ReturnType<typeof authClient.adminRoles>>>({ items: [], permissions: [], nextCursor: null });
 const audits = ref<Awaited<ReturnType<typeof authClient.adminAudit>>>({ items: [], nextCursor: null });
@@ -92,12 +91,7 @@ const actions = ['lock', 'unlock', 'ban', 'unban', 'deactivate', 'reactivate'];
 function allowed(permission: string) {
   return session.permissions?.includes(permission) === true;
 }
-function date(value: string) {
-  return new Intl.DateTimeFormat(locale.value === 'fa' ? 'fa-IR-u-ca-persian' : 'en-GB', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
+
 async function readUsers(cursor?: string) {
   const snapshot = owner(),
     generation = epoch,
@@ -272,8 +266,7 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
     <ul>
       <li v-for="user in users.items" :key="user.id">
         {{ user.username }} {{ $t(`adminManage.states.${user.status}`) }}
-        <time :datetime="user.stateChangedAt">{{ date(user.stateChangedAt) }}</time
-        ><span v-if="user.reason"> {{ user.reason }}</span>
+        <LocalizedTime :value="user.stateChangedAt" /><span v-if="user.reason"> {{ user.reason }}</span>
       </li>
     </ul>
     <button v-if="users.nextCursor" type="button" :disabled="busy" data-action="next-users" @click="nextUsers">
@@ -353,7 +346,7 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
       <p>{{ credential.username }}</p>
       <code>{{ credential.setupCredential }}</code>
       <button type="button" @click="credential = null">{{ $t('adminCreate.forget') }}</button>
-      <time :datetime="credential.expiresAt">{{ date(credential.expiresAt) }}</time>
+      <LocalizedTime :value="credential.expiresAt" />
     </output>
     <fieldset :disabled="busy || !allowed('audit.read')" class="grid gap-3" @keydown.enter.prevent="searchAudit">
       <legend>{{ $t('adminSearch.audit') }}</legend>
@@ -377,8 +370,9 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
     </button>
     <ul>
       <li v-for="event in audits.items" :key="event.id">
-        {{ event.action }} <time :datetime="event.createdAt">{{ date(event.createdAt) }}</time
-        ><span v-if="event.targetId"> {{ event.targetId }}</span>
+        {{ event.action }} <LocalizedTime :value="event.createdAt" /><span v-if="event.targetId">
+          {{ event.targetId }}</span
+        >
       </li>
     </ul>
     <button v-if="audits.nextCursor" type="button" data-action="next-audit" @click="audit(true)">

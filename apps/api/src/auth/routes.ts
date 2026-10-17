@@ -426,7 +426,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.delete<{ Params: { id: string } }>('/api/v1/auth/sessions/:id', async (request, reply) => {
     const identity = await auth.authenticate(request.headers.authorization);
-    if (!(await auth.sessions.revoke(identity.userId, request.params.id, identity.sessionId)))
+    if (!(await auth.sessions.revoke(identity.userId, request.params.id, identity.sessionId, request.correlationId)))
       throw new AuthFailure(404);
     return reply.code(204).send();
   });
