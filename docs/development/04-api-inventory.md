@@ -8,7 +8,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 ## 1. Authentication and account lifecycle (Phase 2)
 
-Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. First-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; other administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
 
 | Method | Path | Access | Implemented supporting contract |
 | --- | --- | --- | --- |
@@ -29,9 +29,10 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/password/recover/reset` | public | Implemented: flow/grant cookies plus origin/CSRF; atomic password reset, unlock, family revocation, audit and persisted notice; clears proof/refresh cookies |
 | POST | `/auth/security-questions/change` | auth | Implemented: current-password confirmation, five distinct active question IDs and normalized/hashed replacement answers; persisted account/origin limits; owner/current-binding and credential recheck after hashing; atomically cancels recovery, revokes all sessions, audits and stores a minimal notice; clears proof cookies |
 | POST | `/auth/password/change` | auth | Current + new password; revokes all sessions and recovery flows, persists a security notice |
-| GET | `/auth/setup/status` | auth | Which first-login steps remain (`password_setup_required`, `security_setup_required`) |
-| POST | `/auth/setup/password` | auth | First-login password set (admin-created accounts) |
-| POST | `/auth/setup/security-questions` | auth | First-login security question registration |
+| POST | `/auth/setup/start` | public (temporary credential) | Implemented: dedicated first sign-in; origin/CSRF and persisted budgets; consumes temporary credential once, sets restricted HttpOnly setup proof; never creates an ordinary session |
+| GET | `/auth/setup/status` | restricted setup cookie | Implemented: remaining setup flags; proof expiry/fingerprint/state checked against persisted state |
+| POST | `/auth/setup/password` | restricted setup cookie | Implemented: origin/CSRF, new/repeat password policy, old-credential rejection, post-hash state/fingerprint recheck; no normal session |
+| POST | `/auth/setup/security-questions` | restricted setup cookie | Implemented: password step first, five distinct active questions with hashed answers, atomic flag clearing/proof consumption/audit; requires subsequent normal sign-in |
 | GET | `/auth/sessions` | auth | Current sessions with minimal device metadata |
 | DELETE | `/auth/sessions/:id` | auth | Revoke one session |
 | DELETE | `/auth/sessions` | auth | Revoke all other sessions |
@@ -45,7 +46,7 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | GET | `/users/me/preferences` | auth | Implemented: locale only; theme, notification channels and SOS suggestion opt-in remain planned |
 | PUT | `/users/me/preferences` | auth | Implemented: strict locale-only replacement for the bearer owner, with a current binding recheck under lock; future privacy-relevant fields require audit |
 | GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
-| POST | `/admin/users` | admin | Create account with temporary credential or one-time setup code |
+| POST | `/admin/users` | auth + `users.create` permission | Implemented: current-password confirmation and post-hash permission/binding recheck; supplied temporary password or generated display-once credential; only default user role; both setup flags set; unused credential expires after 24 hours |
 | GET | `/admin/users/:id` | admin | Administrative view; never includes credentials or answers |
 | POST | `/admin/users/:id/lock` `/unlock` | admin | Explicit transitions, each audited with reason |
 | POST | `/admin/users/:id/ban` `/unban` | admin | Requires reason; audited |

@@ -41,7 +41,7 @@ export const useSessionStore = defineStore('session', {
         preferredLocale: account.preferredLocale,
         securityNotices: account.securityNotices,
         csrf: csrfToken,
-        roles: [],
+        roles: account.roles,
       });
     },
     async restore(): Promise<void> {
@@ -56,7 +56,7 @@ export const useSessionStore = defineStore('session', {
           preferredLocale: account.preferredLocale,
           securityNotices: account.securityNotices,
           csrf: csrfToken,
-          roles: [],
+          roles: account.roles,
         });
       } catch {
         this.clearSession();

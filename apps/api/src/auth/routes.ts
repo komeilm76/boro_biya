@@ -9,6 +9,8 @@ import {
   recoveryAnswersSchema,
   recoveryResetSchema,
   securityAnswersChangeSchema,
+  adminCreateAccountSchema,
+  setupSecuritySchema,
 } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
 
@@ -26,12 +28,13 @@ function cookies(request: FastifyRequest): Map<string, string> {
 }
 
 /** HTTP adapter: signed bearer access, HttpOnly refresh, strict-origin double-submit CSRF.
- * Credentials never appear in response bodies, except the short-lived bearer access token.
+ * Response credentials are limited to access tokens and display-once administrator setup credentials.
  */
 export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   const refreshName = auth.config.secureCookies ? '__Host-boro_refresh' : 'boro_refresh';
   const flowName = auth.config.secureCookies ? '__Host-boro_recovery' : 'boro_recovery';
   const grantName = auth.config.secureCookies ? '__Host-boro_reset' : 'boro_reset';
+  const setupName = auth.config.secureCookies ? '__Host-boro_setup' : 'boro_setup';
   const suffix = `; Path=/; SameSite=Strict${auth.config.secureCookies ? '; Secure' : ''}`;
   function csrf(request: FastifyRequest) {
     if (request.headers.origin !== auth.config.origin) throw new AuthFailure(403);
@@ -55,7 +58,11 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       reply.header('retry-after', error.retryAfterSeconds);
   });
   app.addHook('onRequest', async (request, reply) => {
-    if (request.url.startsWith('/api/v1/auth') || request.url.startsWith('/api/v1/users/me')) {
+    if (
+      request.url.startsWith('/api/v1/auth') ||
+      request.url.startsWith('/api/v1/users/me') ||
+      request.url.startsWith('/api/v1/admin')
+    ) {
       reply.header('cache-control', 'no-store');
       // No cross-origin credential requests even before parsing the body.
       if (request.headers.origin !== undefined && request.headers.origin !== auth.config.origin)
@@ -69,6 +76,56 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.get('/api/v1/auth/security-questions', async () => auth.catalogue());
   app.get('/api/v1/auth/policy', () => ({ recoveryEnabled: auth.config.recoveryEnabled, passwordMinLength: 12 }));
+  app.post('/api/v1/admin/users', { bodyLimit: 8192 }, async (request, reply) => {
+    const identity = await auth.authenticate(request.headers.authorization);
+    const parsed = adminCreateAccountSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    const result = await auth.setup.create(
+      identity.userId,
+      identity.sessionId,
+      parsed.data.currentPassword,
+      {
+        username: parsed.data.username,
+        ...(parsed.data.temporaryPassword === undefined ? {} : { temporaryPassword: parsed.data.temporaryPassword }),
+      },
+      request.ip,
+      request.correlationId,
+    );
+    return reply.code(201).send(result);
+  });
+  app.post('/api/v1/auth/setup/start', { bodyLimit: 8192 }, async (request, reply) => {
+    csrf(request);
+    const parsed = loginSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    const proof = await auth.setup.begin(parsed.data.username, parsed.data.password, request.ip, request.correlationId);
+    reply.header(
+      'set-cookie',
+      `${setupName}=${proof.token}; HttpOnly; Expires=${proof.expiresAt.toUTCString()}${suffix}`,
+    );
+    return { accepted: true };
+  });
+  app.get('/api/v1/auth/setup/status', async (request) => auth.setup.status(cookies(request).get(setupName)));
+  app.post('/api/v1/auth/setup/password', { bodyLimit: 8192 }, async (request) => {
+    csrf(request);
+    const parsed = recoveryResetSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    await auth.setup.password(
+      cookies(request).get(setupName),
+      parsed.data.password,
+      parsed.data.repeatPassword,
+      request.ip,
+      request.correlationId,
+    );
+    return { accepted: true };
+  });
+  app.post('/api/v1/auth/setup/security-questions', { bodyLimit: 32768 }, async (request, reply) => {
+    csrf(request);
+    const parsed = setupSecuritySchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    await auth.setup.security(cookies(request).get(setupName), parsed.data.answers, request.ip, request.correlationId);
+    reply.header('set-cookie', `${setupName}=; HttpOnly; Max-Age=0${suffix}`);
+    return { accepted: true };
+  });
   app.post('/api/v1/auth/register', { bodyLimit: 16_384 }, async (request, reply) => {
     csrf(request);
     const parsed = registrationSchema.safeParse(request.body);
@@ -187,6 +244,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       ...identity.account,
       preferredLocale: (await auth.preferences(identity.userId)).locale,
       securityNotices: await auth.securityNotices(identity.userId),
+      roles: await auth.roles(identity.userId),
     };
   });
   app.get('/api/v1/users/me/preferences', async (request) => {

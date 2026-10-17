@@ -98,5 +98,24 @@
     "title": "Change security questions",
     "notice": "Confirm your current password and choose five distinct questions. This replaces every answer, cancels recovery attempts and signs out all sessions.",
     "submit": "Replace questions and sign out"
+  },
+  "setup": {
+    "title": "First sign-in with a temporary credential",
+    "notice": "Use the temporary credential from your administrator. It expires after 24 hours and works once. Complete password and question setup within ten minutes; if interrupted beyond that limit, ask your administrator for help. Normal features remain unavailable until both steps are complete.",
+    "password": "Set your own password",
+    "questions": "Register five security questions",
+    "complete": "Complete setup",
+    "done": "Setup complete. Sign in with your new password.",
+    "resume": "Resume setup"
+  },
+  "adminCreate": {
+    "title": "Create an account",
+    "notice": "Confirm your current password. Leave the temporary password blank to generate a one-time credential. Accounts receive only the user role and must complete first-login setup.",
+    "temporary": "Temporary password (optional)",
+    "submit": "Create account",
+    "created": "Account created. Deliver the credential privately; it cannot be retrieved later. Use the first sign-in page.",
+    "forget": "Hide credential",
+    "expires": "Credential expiry",
+    "credential": "One-time setup credential"
   }
 }

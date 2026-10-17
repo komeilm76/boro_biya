@@ -12,6 +12,7 @@ import { createAccessTokens } from './tokens.js';
 
 import { AuthFailure } from './failure.js';
 import { createSecurityAnswerService } from './security-answers.js';
+import { createSetupService } from './setup.js';
 import { createRecoveryService } from './recovery.js';
 export { AuthFailure } from './failure.js';
 
@@ -110,6 +111,7 @@ export async function createAuthService(
 
   return {
     config,
+    setup: createSetupService(db, config, hasher, dummyHash, reserve),
     changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),
     recovery: createRecoveryService(db, config, hasher, dummyHash, reserve),
     sessions,
@@ -234,6 +236,13 @@ export async function createAuthService(
       if (grant === null) throw new AuthFailure();
       await audit('session_refreshed', requestId, grant.userId);
       return { ...grant, accessToken: await tokens.sign(grant.userId, grant.sessionId) };
+    },
+    async roles(userId: string) {
+      const result = await db.pool.query<{ key: string }>(
+        'SELECT r.key FROM core.roles r JOIN core.user_roles ur ON ur.role_id = r.id WHERE ur.user_id = $1 ORDER BY r.key',
+        [userId],
+      );
+      return result.rows.map((row) => row.key);
     },
     async securityNotices(userId: string) {
       const result = await db.pool.query<{

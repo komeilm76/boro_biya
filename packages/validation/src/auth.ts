@@ -30,6 +30,7 @@ export const accountResponseSchema = z.strictObject({
     )
     .max(10)
     .default([]),
+  roles: z.array(z.string()).default([]),
   preferredLocale: z.enum(['en', 'fa']).default('en'),
 });
 export const accessResponseSchema = z.strictObject({
@@ -76,3 +77,20 @@ export const securityAnswersChangeSchema = z.strictObject({
   currentPassword: z.string().max(1024),
   answers: z.array(securityAnswerSchema).length(5),
 });
+
+export const adminCreateAccountSchema = z.strictObject({
+  username: z.string().min(1).max(256),
+  currentPassword: z.string().max(1024),
+  temporaryPassword: z.string().max(1024).optional(),
+});
+export const createdAccountSchema = z.strictObject({
+  id: z.uuidv7(),
+  username: z.string(),
+  expiresAt: utcInstantSchema,
+  setupCredential: z.string().optional(),
+});
+export const setupStatusSchema = z.strictObject({
+  passwordSetupRequired: z.boolean(),
+  securitySetupRequired: z.boolean(),
+});
+export const setupSecuritySchema = z.strictObject({ answers: z.array(securityAnswerSchema).length(5) });

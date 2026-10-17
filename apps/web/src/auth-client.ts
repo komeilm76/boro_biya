@@ -1,5 +1,7 @@
 import {
   accessResponseSchema,
+  createdAccountSchema,
+  setupStatusSchema,
   recoveryPolicySchema,
   recoveryQuestionsSchema,
   preferencesSchema,
@@ -77,6 +79,23 @@ export const authClient = {
       token,
       body: { currentPassword, answers },
     }),
+  createAccount: (username: string, currentPassword: string, temporaryPassword: string | undefined, token: string) =>
+    authRequest('/api/v1/admin/users', createdAccountSchema, {
+      method: 'POST',
+      token,
+      body: { username, currentPassword, ...(temporaryPassword ? { temporaryPassword } : {}) },
+    }),
+  setupStart: (username: string, password: string, csrf: string) =>
+    authRequest('/api/v1/auth/setup/start', acceptedResponse, { method: 'POST', csrf, body: { username, password } }),
+  setupStatus: () => authRequest('/api/v1/auth/setup/status', setupStatusSchema),
+  setupPassword: (password: string, repeatPassword: string, csrf: string) =>
+    authRequest('/api/v1/auth/setup/password', acceptedResponse, {
+      method: 'POST',
+      csrf,
+      body: { password, repeatPassword },
+    }),
+  setupSecurity: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
+    authRequest('/api/v1/auth/setup/security-questions', acceptedResponse, { method: 'POST', csrf, body: { answers } }),
   recoveryPolicy: () => authRequest('/api/v1/auth/policy', recoveryPolicySchema),
   forgot: (username: string, csrf: string) =>
     authRequest('/api/v1/auth/password/forgot', acceptedResponse, { method: 'POST', csrf, body: { username } }),

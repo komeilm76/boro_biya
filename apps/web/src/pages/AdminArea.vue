@@ -1,6 +1,5 @@
 <script setup lang="ts">
-// The admin namespace screen (UI-04), behind the UX-only role guard. Server-side role checks
-// (ADM-01 … ADM-07) arrive with Phase 2; the guard here only keeps navigation honest.
+import AdminCreateAccount from '../components/AdminCreateAccount.vue';
 </script>
 
 <template>
@@ -8,6 +7,7 @@
     <h1 id="admin-area-title" class="text-2xl font-semibold mb-4">
       {{ $t('adminArea.title') }}
     </h1>
+    <AdminCreateAccount />
     <p>
       {{ $t('adminArea.placeholder') }}
     </p>

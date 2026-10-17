@@ -33,6 +33,12 @@ export const ROUTE_NAMES = {
 
 export const routes: RouteRecordRaw[] = [
   {
+    path: '/_auth/setup',
+    name: 'auth-setup',
+    component: () => import('../pages/AuthSetup.vue'),
+    meta: { namespace: 'auth' },
+  },
+  {
     path: '/_auth/recover',
     name: 'auth-recover',
     component: () => import('../pages/AuthRecover.vue'),

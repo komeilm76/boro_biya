@@ -115,6 +115,7 @@ onMounted(load);
       />
       <v-btn type="submit" :disabled="busy">{{ $t('auth.changePassword') }}</v-btn>
     </form>
+    <RouterLink v-if="session.isAdmin" to="/_admin">{{ $t('adminArea.title') }}</RouterLink>
     <SecurityAnswersForm />
     <p v-if="failed" role="alert">{{ $t('auth.loadFailed') }}</p>
     <v-btn data-action="load" @click="load">{{ $t('auth.refreshSessions') }}</v-btn>

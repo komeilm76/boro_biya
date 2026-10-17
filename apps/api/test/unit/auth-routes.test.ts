@@ -28,6 +28,7 @@ function fixture(secure = true) {
     login: vi.fn().mockResolvedValue(grant),
     refresh: vi.fn().mockResolvedValue(grant),
     authenticate: vi.fn().mockResolvedValue({ userId: 'user', sessionId: 'session', account: { id: 'user' } }),
+    roles: vi.fn().mockResolvedValue([]),
     securityNotices: vi.fn().mockResolvedValue([]),
     preferences: vi.fn().mockResolvedValue({ locale: 'en' }),
     savePreferences: vi.fn().mockResolvedValue({ locale: 'fa' }),
