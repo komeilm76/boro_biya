@@ -10,7 +10,7 @@ import {
   adminUsersQuerySchema,
   loginSchema,
 } from '../../../packages/validation/src/auth.ts';
-import { utcInstantSchema } from '../../../packages/validation/src/time.ts';
+import { utcInstantSchema, utcDateSchema } from '../../../packages/validation/src/time.ts';
 import { findExecutableValidation, projectSchema } from '../schema.mjs';
 
 // Resolve the tools' existing Zod peer; do not depend on hoisting or add another version.
@@ -18,7 +18,6 @@ const require = createRequire(realpathSync(new URL('../../../node_modules/zopia/
 const { z } = require('zod');
 
 const cases = [
-  ['UTC calendar refinement', utcInstantSchema, 'custom'],
   ['query canonicalisation', adminUsersQuerySchema, 'pipe'],
   ['cross-field timestamp ordering', adminAuditQuerySchema, 'custom'],
   ['unique role IDs', adminRoleAssignmentSchema, 'custom'],
@@ -42,6 +41,12 @@ const id = '01900000-0000-7000-8000-000000000001';
 assert.equal(adminRoleAssignmentSchema.safeParse({ currentPassword: 'example', roleIds: [id, id] }).success, false);
 assert.equal(projected.properties.roleIds.uniqueItems, undefined);
 assert.deepEqual(warnings, []);
+
+// Calendar semantics are now represented natively rather than hidden in a refinement.
+assert.deepEqual(findExecutableValidation(utcInstantSchema), []);
+assert.deepEqual(findExecutableValidation(utcDateSchema), []);
+assert.doesNotThrow(() => projectSchema(utcInstantSchema));
+assert.doesNotThrow(() => projectSchema(utcDateSchema));
 
 // Lossless structural schemas still work; refusing refinements must not mask all projections.
 assert.deepEqual(findExecutableValidation(loginSchema), []);
@@ -85,4 +90,4 @@ const shared = z.strictObject({ first: custom, second: custom });
 assert.equal(findExecutableValidation(shared).filter((finding) => finding.kind === 'custom').length, 1);
 assert.equal(invoked, false);
 assert.deepEqual(findExecutableValidation(null), []);
-console.log('executable-validation fidelity: 5 real auth regressions and structural boundaries passed');
+console.log('executable-validation fidelity: 4 real auth regressions and portable calendar boundaries passed');

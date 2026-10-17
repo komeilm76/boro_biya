@@ -446,6 +446,10 @@ describe('recovery policy warnings and security-answer settings', () => {
     'submits five new answers in %s and clears secrets on success/failure',
     async (language) => {
       const { wrapper, session, router } = mountPage(SecurityAnswersForm, language);
+      expect(wrapper.get('fieldset').classes()).toContain('min-w-0');
+      for (const select of wrapper.findAll('select')) {
+        expect(select.classes()).toEqual(expect.arrayContaining(['w-full', 'min-w-0', 'max-w-full']));
+      }
       session.$patch({ isAuthenticated: true, accessToken: 'signed' });
       await wrapper.get('#answers-current-password').setValue('current password');
       for (const field of wrapper.findAll('input[autocomplete="off"]')) await field.setValue('new answer');

@@ -83,7 +83,7 @@ async function submit() {
       @working="challengeBusy = $event"
     />
     <form v-if="stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
-      <fieldset :disabled="busy || challengeBusy" class="grid gap-3">
+      <fieldset :disabled="busy || challengeBusy" class="grid min-w-0 gap-3">
         <template v-if="stage === 'start'">
           <label for="setup-username">{{ $t('auth.username') }}</label>
           <input id="setup-username" v-model="username" autocomplete="username" required maxlength="64" />
@@ -124,9 +124,14 @@ async function submit() {
         </template>
         <template v-else-if="stage === 'questions'">
           <legend>{{ $t('setup.questions') }}</legend>
-          <div v-for="(_, index) in questions" :key="index" class="grid gap-2">
+          <div v-for="(_, index) in questions" :key="index" class="grid min-w-0 gap-2">
             <label :for="`setup-question-${index}`">{{ $t('auth.securityQuestion', { number: index + 1 }) }}</label>
-            <select :id="`setup-question-${index}`" v-model.number="questions[index]" required>
+            <select
+              :id="`setup-question-${index}`"
+              v-model.number="questions[index]"
+              class="w-full min-w-0 max-w-full"
+              required
+            >
               <option v-for="(key, option) in keys" :key="key" :value="option + 1">{{ $t(`questions.${key}`) }}</option>
             </select>
             <label :for="`setup-answer-${index}`">{{ $t('auth.answer') }}</label>

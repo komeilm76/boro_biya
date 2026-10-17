@@ -45,7 +45,7 @@ async function submit() {
   <form class="my-6" :aria-busy="busy" @submit.prevent="submit">
     <h2>{{ $t('securityAnswers.title') }}</h2>
     <p>{{ $t('securityAnswers.notice') }}</p>
-    <fieldset :disabled="busy" class="grid gap-3">
+    <fieldset :disabled="busy" class="grid min-w-0 gap-3">
       <label for="answers-current-password">{{ $t('auth.currentPassword') }}</label>
       <input
         id="answers-current-password"
@@ -54,10 +54,16 @@ async function submit() {
         autocomplete="current-password"
         required
         maxlength="128"
+        class="w-full min-w-0 max-w-full"
       />
-      <div v-for="(_, index) in questions" :key="index" class="grid gap-2">
+      <div v-for="(_, index) in questions" :key="index" class="grid min-w-0 gap-2">
         <label :for="`changed-question-${index}`">{{ $t('auth.securityQuestion', { number: index + 1 }) }}</label>
-        <select :id="`changed-question-${index}`" v-model.number="questions[index]" required>
+        <select
+          :id="`changed-question-${index}`"
+          v-model.number="questions[index]"
+          class="w-full min-w-0 max-w-full"
+          required
+        >
           <option v-for="(key, option) in keys" :key="key" :value="option + 1">{{ $t(`questions.${key}`) }}</option>
         </select>
         <label :for="`changed-answer-${index}`">{{ $t('auth.answer', { number: index + 1 }) }}</label>
@@ -68,6 +74,7 @@ async function submit() {
           autocomplete="off"
           required
           maxlength="256"
+          class="w-full min-w-0 max-w-full"
         />
       </div>
       <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>

@@ -102,10 +102,10 @@ async function register() {
         autocomplete="new-password"
         class="block border p-2 mb-4 w-full"
       />
-      <fieldset v-for="(_, index) in questions" :key="index" class="my-4">
+      <fieldset v-for="(_, index) in questions" :key="index" class="my-4 min-w-0">
         <legend>{{ $t('auth.securityQuestion', { number: index + 1 }) }}</legend>
         <label :for="`question-${index}`">{{ $t('auth.chooseQuestion') }}</label>
-        <select :id="`question-${index}`" v-model="questions[index]" class="block border p-2 w-full">
+        <select :id="`question-${index}`" v-model="questions[index]" class="block w-full min-w-0 max-w-full border p-2">
           <option v-for="(key, i) in keys" :key="key" :value="i + 1">{{ $t(`questions.${key}`) }}</option>
         </select>
         <label :for="`answer-${index}`">{{ $t('auth.answer') }}</label
@@ -115,7 +115,7 @@ async function register() {
           required
           maxlength="256"
           autocomplete="off"
-          class="block border p-2 w-full"
+          class="block w-full min-w-0 max-w-full border p-2"
         />
       </fieldset>
       <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
