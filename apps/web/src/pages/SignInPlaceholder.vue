@@ -58,6 +58,7 @@ async function signIn() {
       </p>
       <v-btn type="submit" :disabled="busy">{{ $t('signIn.title') }}</v-btn>
     </form>
+    <RouterLink to="/_auth/recover" class="block mt-4">{{ $t('recovery.title') }}</RouterLink>
     <RouterLink to="/_auth/register" class="block mt-4">{{ $t('auth.register') }}</RouterLink>
   </section>
 </template>

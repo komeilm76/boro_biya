@@ -8,13 +8,13 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 ## 1. Authentication and account lifecycle (Phase 2)
 
-Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Recovery, first-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. First-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
 
 | Method | Path | Access | Implemented supporting contract |
 | --- | --- | --- | --- |
 | GET | `/auth/csrf` | public | Random double-submit CSRF token/cookie; mutation requests require the exact configured origin |
 | GET | `/auth/security-questions` | public | Active server-owned question IDs and message keys only; never answers |
-| GET | `/auth/policy` | public | Recovery switch and minimum password length; not a claim that recovery endpoints exist |
+| GET | `/auth/policy` | public | Recovery switch and minimum password length; enabled CAPTCHA still fails closed |
 
 
 | Method | Path | Access | Notes |
@@ -23,11 +23,11 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/login` | public | Username + password; self-hosted CAPTCHA when the risk policy requires it; returns the access token and sets the rotating refresh cookie |
 | POST | `/auth/refresh` | public (refresh cookie) | CSRF-protected; consumes the presented refresh token, rotates it, returns a new access token; a reused token revokes the family ([ADR-021](../DECISIONS.md#adr-021--bearer-access-tokens-with-rotating-refresh-tokens-for-web-and-android), API-38) |
 | POST | `/auth/logout` | public (refresh cookie) | Revokes that cookie family; origin/CSRF-protected, idempotent, works without an unexpired bearer |
-| POST | `/auth/password/forgot` | public | Generic response, issues recovery challenge when eligible |
-| POST | `/auth/password/recover/questions` | public | Returns the challenge's question IDs (never answers) bound to the flow |
-| POST | `/auth/password/recover/verify` | public | Verifies answers; issues a single-use reset grant on success |
-| POST | `/auth/password/recover/reset` | public | Consumes the grant; revokes sessions; notifies the user |
-| POST | `/auth/password/change` | auth | Current + new password; revokes other sessions |
+| POST | `/auth/password/forgot` | public | Implemented: generic accepted response and HttpOnly flow cookie for real/fake flows; origin/CSRF and account/origin budgets |
+| POST | `/auth/password/recover/questions` | public | Implemented: three persisted question IDs/message keys; requires flow cookie and origin/CSRF |
+| POST | `/auth/password/recover/verify` | public | Implemented: all three answers required; persistent attempt limit; HttpOnly single-use grant cookie, never a body/URL token |
+| POST | `/auth/password/recover/reset` | public | Implemented: flow/grant cookies plus origin/CSRF; atomic password reset, unlock, family revocation, audit and persisted notice; clears proof/refresh cookies |
+| POST | `/auth/password/change` | auth | Current + new password; revokes all sessions and recovery flows, persists a security notice |
 | GET | `/auth/setup/status` | auth | Which first-login steps remain (`password_setup_required`, `security_setup_required`) |
 | POST | `/auth/setup/password` | auth | First-login password set (admin-created accounts) |
 | POST | `/auth/setup/security-questions` | auth | First-login security question registration |

@@ -32,6 +32,9 @@ const config: AuthConfig = {
   lockoutSeconds: 900,
   delayMaxSeconds: 30,
   recoveryEnabled: true,
+  recoveryAttempts: 10,
+  recoveryChallengeTtlSeconds: 300,
+  recoveryGrantTtlSeconds: 300,
   captchaEnabled: false,
 };
 const password = 'Sailing!violet782';

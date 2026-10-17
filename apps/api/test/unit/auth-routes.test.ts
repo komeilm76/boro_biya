@@ -17,11 +17,18 @@ const grant = {
 function fixture(secure = true) {
   const auth = {
     config: { origin: 'https://example.test', secureCookies: secure, accessTtlSeconds: 900, recoveryEnabled: true },
+    recovery: {
+      forgot: vi.fn().mockResolvedValue({ token: 'F'.repeat(43), expiresAt: new Date('2030-01-01') }),
+      questions: vi.fn().mockResolvedValue([1, 2, 3].map((id) => ({ id, textKey: `securityQuestions.q${id}` }))),
+      verify: vi.fn().mockResolvedValue({ token: 'G'.repeat(43), expiresAt: new Date('2030-01-01') }),
+      reset: vi.fn().mockResolvedValue(undefined),
+    },
     catalogue: vi.fn().mockResolvedValue([{ id: 1, textKey: 'key' }]),
     register: vi.fn().mockResolvedValue({}),
     login: vi.fn().mockResolvedValue(grant),
     refresh: vi.fn().mockResolvedValue(grant),
     authenticate: vi.fn().mockResolvedValue({ userId: 'user', sessionId: 'session', account: { id: 'user' } }),
+    securityNotices: vi.fn().mockResolvedValue([]),
     preferences: vi.fn().mockResolvedValue({ locale: 'en' }),
     savePreferences: vi.fn().mockResolvedValue({ locale: 'fa' }),
     changePassword: vi.fn().mockResolvedValue(undefined),
@@ -186,5 +193,57 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
     expect(String(logout.headers['set-cookie'])).toContain('Max-Age=0');
     auth.authenticate.mockRejectedValueOnce(new AuthFailure());
     expect((await app.inject({ url: '/api/v1/users/me', headers })).statusCode).toBe(401);
+  });
+});
+
+describe('recovery HTTP proof boundaries', () => {
+  it.each([true, false])('keeps flow and grant proofs in HTTP-only cookies (secure=%s)', async (secure) => {
+    const { app, headers, auth } = fixture(secure);
+    const prefix = secure ? '__Host-' : '';
+    const send = (path: string, payload?: Record<string, unknown>) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/v1/auth/password/${path}`,
+        headers,
+        ...(payload === undefined ? {} : { payload }),
+      });
+    const forgot = await send('forgot', { username: 'alice' });
+    expect(forgot.statusCode).toBe(200);
+    expect(forgot.json()).toEqual({ accepted: true });
+    expect(forgot.headers['set-cookie']).toEqual(
+      expect.arrayContaining([expect.stringContaining(`${prefix}boro_recovery=${'F'.repeat(43)}; HttpOnly`)]),
+    );
+    const verify = await send('recover/verify', {
+      answers: [1, 2, 3].map((questionId) => ({ questionId, answer: 'answer' })),
+    });
+    expect(verify.statusCode).toBe(200);
+    expect(String(verify.headers['set-cookie'])).toContain(`${prefix}boro_reset=${'G'.repeat(43)}; HttpOnly`);
+    expect(String(verify.headers['set-cookie'])).toContain('SameSite=Strict');
+    expect(String(verify.headers['set-cookie']).includes('; Secure')).toBe(secure);
+    expect(verify.json()).toEqual({ accepted: true });
+    expect((await send('recover/questions')).statusCode).toBe(200);
+    const reset = await send('recover/reset', { password: 'Sailing!violet782', repeatPassword: 'Sailing!violet782' });
+    expect(reset.statusCode).toBe(200);
+    expect(reset.headers['set-cookie']).toHaveLength(3);
+    expect(auth.recovery.reset).toHaveBeenCalled();
+  });
+  it('rejects every recovery mutation without CSRF and rejects unknown input fields', async () => {
+    const { app, headers, auth } = fixture();
+    for (const path of ['forgot', 'recover/questions', 'recover/verify', 'recover/reset']) {
+      const result = await app.inject({ method: 'POST', url: `/api/v1/auth/password/${path}`, payload: {} });
+      expect(result.statusCode).toBe(403);
+    }
+    for (const [path, payload] of [
+      ['forgot', { username: 'alice', grant: 'injected' }],
+      ['recover/verify', { answers: [] }],
+      ['recover/reset', { password: 'x', repeatPassword: 'x', grant: 'injected' }],
+    ] as const) {
+      expect(
+        (await app.inject({ method: 'POST', url: `/api/v1/auth/password/${path}`, headers, payload })).statusCode,
+      ).toBe(400);
+    }
+    expect(auth.recovery.forgot).not.toHaveBeenCalled();
+    expect(auth.recovery.verify).not.toHaveBeenCalled();
+    expect(auth.recovery.reset).not.toHaveBeenCalled();
   });
 });

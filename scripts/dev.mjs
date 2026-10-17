@@ -159,6 +159,9 @@ for (const backend of BACKENDS) {
             'LOGIN_WINDOW_SECONDS',
             'LOCKOUT_SECONDS',
             'LOGIN_DELAY_MAX_SECONDS',
+            'RECOVERY_MAX_ATTEMPTS',
+            'RECOVERY_CHALLENGE_TTL_SECONDS',
+            'RECOVERY_GRANT_TTL_SECONDS',
             'SECURITY_QUESTIONS_ENABLED',
             'CAPTCHA_ENABLED',
           ]

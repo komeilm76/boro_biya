@@ -33,6 +33,12 @@ export const ROUTE_NAMES = {
 
 export const routes: RouteRecordRaw[] = [
   {
+    path: '/_auth/recover',
+    name: 'auth-recover',
+    component: () => import('../pages/AuthRecover.vue'),
+    meta: { namespace: 'auth', reachableWhenAuthenticated: true },
+  },
+  {
     path: '/_public/privacy',
     name: 'privacy',
     component: () => import('../pages/PrivacyNotice.vue'),

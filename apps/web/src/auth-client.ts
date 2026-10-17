@@ -1,5 +1,7 @@
 import {
   accessResponseSchema,
+  recoveryPolicySchema,
+  recoveryQuestionsSchema,
   preferencesSchema,
   accountResponseSchema,
   csrfResponseSchema,
@@ -65,6 +67,19 @@ export const emptyResponse = {
   },
 };
 export const authClient = {
+  recoveryPolicy: () => authRequest('/api/v1/auth/policy', recoveryPolicySchema),
+  forgot: (username: string, csrf: string) =>
+    authRequest('/api/v1/auth/password/forgot', acceptedResponse, { method: 'POST', csrf, body: { username } }),
+  recoveryQuestions: (csrf: string) =>
+    authRequest('/api/v1/auth/password/recover/questions', recoveryQuestionsSchema, { method: 'POST', csrf }),
+  verifyRecovery: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
+    authRequest('/api/v1/auth/password/recover/verify', acceptedResponse, { method: 'POST', csrf, body: { answers } }),
+  resetPassword: (password: string, repeatPassword: string, csrf: string) =>
+    authRequest('/api/v1/auth/password/recover/reset', acceptedResponse, {
+      method: 'POST',
+      csrf,
+      body: { password, repeatPassword },
+    }),
   csrf: () => authRequest('/api/v1/auth/csrf', csrfResponseSchema),
   login: (username: string, password: string, csrf: string) =>
     authRequest('/api/v1/auth/login', accessResponseSchema, { method: 'POST', csrf, body: { username, password } }),

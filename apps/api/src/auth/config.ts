@@ -14,6 +14,9 @@ export interface AuthConfig {
   lockoutSeconds: number;
   delayMaxSeconds: number;
   recoveryEnabled: boolean;
+  recoveryAttempts: number;
+  recoveryChallengeTtlSeconds: number;
+  recoveryGrantTtlSeconds: number;
   captchaEnabled: boolean;
 }
 export function readAuthConfig(env: Readonly<Record<string, string | undefined>> = process.env): AuthConfig {
@@ -55,6 +58,9 @@ export function readAuthConfig(env: Readonly<Record<string, string | undefined>>
     lockoutSeconds: number('LOCKOUT_SECONDS', 900, 3_600),
     delayMaxSeconds: number('LOGIN_DELAY_MAX_SECONDS', 30, 30),
     recoveryEnabled: recovery === 'true',
+    recoveryAttempts: number('RECOVERY_MAX_ATTEMPTS', 10, 30),
+    recoveryChallengeTtlSeconds: number('RECOVERY_CHALLENGE_TTL_SECONDS', 300, 900),
+    recoveryGrantTtlSeconds: number('RECOVERY_GRANT_TTL_SECONDS', 300, 900),
     captchaEnabled: captcha === 'true',
   };
 }

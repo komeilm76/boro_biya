@@ -9,6 +9,7 @@ export interface SessionState {
   username?: string;
   csrf?: string;
   preferredLocale?: 'en' | 'fa';
+  securityNotices?: Array<{ event: 'password_reset' | 'password_changed'; createdAt: string }>;
 }
 
 export const useSessionStore = defineStore('session', {
@@ -19,6 +20,7 @@ export const useSessionStore = defineStore('session', {
     username: '',
     csrf: '',
     preferredLocale: 'en',
+    securityNotices: [],
   }),
   getters: {
     isAdmin: (state): boolean => state.roles.includes('admin'),
@@ -34,6 +36,7 @@ export const useSessionStore = defineStore('session', {
         accessToken: grant.accessToken,
         username: account.username,
         preferredLocale: account.preferredLocale,
+        securityNotices: account.securityNotices,
         csrf: csrfToken,
         roles: [],
       });
@@ -48,6 +51,7 @@ export const useSessionStore = defineStore('session', {
           accessToken: grant.accessToken,
           username: account.username,
           preferredLocale: account.preferredLocale,
+          securityNotices: account.securityNotices,
           csrf: csrfToken,
           roles: [],
         });

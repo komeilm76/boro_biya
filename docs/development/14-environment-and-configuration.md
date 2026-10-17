@@ -207,3 +207,8 @@ Compose internal communication uses DNS service names and container ports (`api:
 - The ten `*_CPU_LIMIT` and `*_MEMORY_LIMIT` Compose substitutions are listed in §4. Compose defaults are the values in `docker-compose.yml`; they are not in `.env.example`.
 
 No map/provider, authentication, location-sharing, upload, push, retention-job, or plugin behaviour can be enabled by setting the template-only values in §5; those variables have no Phase 1 consumer.
+
+
+### Recovery configuration checkpoint
+
+`RECOVERY_MAX_ATTEMPTS` defaults to 10 (maximum 30). `RECOVERY_CHALLENGE_TTL_SECONDS` and `RECOVERY_GRANT_TTL_SECONDS` each default to 300 seconds and are bounded to 900 seconds. Values must be positive integers. Attempts and expiry are persisted, not process-local. `SECURITY_QUESTIONS_ENABLED=false` disables every recovery step before any database state is created. `CAPTCHA_ENABLED=true` currently fails closed with 503; the self-hosted challenge is still outstanding. Proof cookies are HttpOnly, SameSite=Strict and Secure with `__Host-` names on HTTPS; HTTP names are development-only. Expired rows are not automatically deleted. See the API inventory and classification record for delivery/retention limits.

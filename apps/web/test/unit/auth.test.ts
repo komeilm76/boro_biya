@@ -6,6 +6,7 @@ import { createAppI18n, savedLocale } from '../../src/i18n/index.js';
 import { createAppRouter } from '../../src/router/index.js';
 import { authClient, authRequest, AuthRequestError, acceptedResponse, emptyResponse } from '../../src/auth-client.js';
 import { useSessionStore } from '../../src/stores/session.js';
+import Recover from '../../src/pages/AuthRecover.vue';
 import SignIn from '../../src/pages/SignInPlaceholder.vue';
 import Register from '../../src/pages/AuthRegister.vue';
 import UserArea from '../../src/pages/UserArea.vue';
@@ -283,5 +284,109 @@ describe('bilingual authentication, settings and public privacy UI', () => {
         '/security/advisories/new',
       );
     }
+  });
+});
+
+describe('recovery browser workflow', () => {
+  it.each(['en', 'fa'] as const)(
+    'renders security notices and localized dates in %s, clearing them on sign-out',
+    async (language) => {
+      fetcher.mockResolvedValueOnce(response([]));
+      const { wrapper, session } = mountPage(UserArea, language);
+      session.$patch({ securityNotices: [{ event: 'password_reset', createdAt: '2026-10-17T12:00:00.000Z' }] });
+      await flushPromises();
+      expect(wrapper.get('aside[role="status"]').text()).not.toContain('securityNotices.');
+      expect(wrapper.get('time').attributes('datetime')).toBe('2026-10-17T12:00:00.000Z');
+      session.clearSession();
+      await flushPromises();
+      expect(wrapper.find('aside').exists()).toBe(false);
+    },
+  );
+  it.each(['en', 'fa'] as const)(
+    'completes the three-stage cookie-bound flow in %s without storing proofs',
+    async (language) => {
+      fetcher.mockImplementation(async (input) => {
+        await Promise.resolve();
+        const path = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (path.endsWith('/policy')) return response({ recoveryEnabled: true, passwordMinLength: 12 });
+        if (path.endsWith('/csrf')) return response({ csrfToken: 'C'.repeat(43) });
+        if (path.endsWith('/questions'))
+          return response(
+            [1, 2, 3].map((id) => ({
+              id,
+              textKey: `questions.${['firstBook', 'childhoodGame', 'favoriteTeacher'][id - 1]}`,
+            })),
+          );
+        return response({ accepted: true });
+      });
+      const { wrapper, session } = mountPage(Recover, language);
+      await flushPromises();
+      await wrapper.get('#recovery-username').setValue('alice');
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(wrapper.findAll('input[type="password"]')).toHaveLength(3);
+      for (const field of wrapper.findAll('input')) await field.setValue('answer');
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(wrapper.find('#recovery-password').exists()).toBe(true);
+      await wrapper.get('#recovery-password').setValue('Sailing!violet782');
+      await wrapper.get('#recovery-repeat').setValue('Sailing!violet782');
+      session.$patch({ isAuthenticated: true, accessToken: 'old' });
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(wrapper.find('form').exists()).toBe(false);
+      expect(session.isAuthenticated).toBe(false);
+      expect(localStorage.length).toBe(0);
+      const calls = fetcher.mock.calls.filter(([url]) =>
+        (typeof url === 'string' ? url : url instanceof URL ? url.href : url.url).includes('/password/'),
+      );
+      expect(calls).toHaveLength(4);
+      for (const [, options] of calls) {
+        expect(options?.credentials).toBe('same-origin');
+        expect(options?.method).toBe('POST');
+      }
+    },
+  );
+  it('fails closed on disabled or unavailable policy', async () => {
+    fetcher.mockResolvedValueOnce(response({ recoveryEnabled: false, passwordMinLength: 12 }));
+    const { wrapper } = mountPage(Recover);
+    await flushPromises();
+    expect(wrapper.find('form').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Self-service recovery is unavailable');
+    fetcher.mockRejectedValueOnce(new Error('offline'));
+    const second = mountPage(Recover);
+    await flushPromises();
+    expect(second.wrapper.find('[role="alert"]').exists()).toBe(true);
+    expect(second.wrapper.find('form').exists()).toBe(false);
+  });
+  it('shows a generic failure and allows a clean restart without retaining answers', async () => {
+    fetcher.mockImplementation(async (input) => {
+      await Promise.resolve();
+      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/policy'))
+        return response({ recoveryEnabled: true, passwordMinLength: 12 });
+      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/csrf'))
+        return response({ csrfToken: 'C'.repeat(43) });
+      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/questions'))
+        return response(
+          [1, 2, 3].map((id) => ({
+            id,
+            textKey: `questions.${['firstBook', 'childhoodGame', 'favoriteTeacher'][id - 1]}`,
+          })),
+        );
+      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/verify'))
+        return response({}, 401);
+      return response({ accepted: true });
+    });
+    const { wrapper } = mountPage(Recover);
+    await flushPromises();
+    await wrapper.get('#recovery-username').setValue('alice');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[role="alert"]').text()).toContain('Recovery could not be completed');
+    await wrapper.get('button[type="button"]').trigger('click');
+    expect(wrapper.find('#recovery-username').exists()).toBe(true);
+    expect(wrapper.findAll('input[type="password"]')).toHaveLength(0);
   });
 });

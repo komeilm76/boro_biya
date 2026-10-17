@@ -144,7 +144,7 @@ Local validation of the account-locale/race checkpoint (Node 24.22.0 / Bun 1.4.3
 
 ## 3. Features that are not implemented
 
-Phase 2 still lacks administrator creation and forced first-login setup; recovery challenges/answers/reset grants and their switch-on/off UI flows; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
+Phase 2 still lacks administrator creation and forced first-login setup; full recovery policy-warning and realtime notification acceptance; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
 
 The route shell and future names are not product features. The current checkout also has no:
 
@@ -198,3 +198,15 @@ The Phase 1 exit report records the earlier Phase 1 CI run and local gate eviden
 - the Ubuntu and Windows workflow jobs for their supported platform evidence.
 
 A check not executed is **not run**, not passed. A source/configuration assertion is not a live deployment or Docker runtime test. See [commands and testing](15-commands-and-testing.md) and the [development workflow](12-development-workflow.md) for the PR evidence standard.
+
+
+## 8. Phase 2 persisted recovery checkpoint (2026-10-17)
+
+Migration `0006_recovery` and `auth/recovery.ts` add persisted real/fake flows, three unique CSPRNG-selected questions, account/origin budgets, committed attempt reservations, short-lived hashed cookie proofs and single-use reset grants. All three native answer checks run without per-answer feedback. The grant is bound to the issuing flow and current password/answer fingerprint; reset rechecks state after slow hashing. Locked accounts may recover; banned, deactivated and setup-required accounts may not. Reset atomically consumes all account flows, revokes all session families, unlocks, clears account login budgets and stores an audit event/security notice. Password change invalidates recovery and stores its own notice.
+
+The EN/FA `/_auth/recover` page uses relative same-origin requests, origin/CSRF-protected mutations, labelled password fields, generic errors and memory-only answer/password state. No proof appears in JavaScript, a URL or browser storage. The next authorized profile load displays persisted security notices. This is not realtime notification delivery; acknowledgement/dismissal and remaining-session alerts are outstanding. Disabled recovery and enabled CAPTCHA reject before recovery state is created. The recovery page warns and hides the form when policy is unavailable/disabled; login/registration retain their general weak-recovery warning, not a complete switch-specific warning acceptance claim.
+
+Evidence sources: `apps/api/test/integration/recovery.test.ts` (14 real PostgreSQL/native-hash cases), `apps/api/test/unit/recovery.test.ts`, recovery HTTP cookie/CSRF tests in `auth-routes.test.ts`, and EN/FA workflow/disabled/error tests in the web `auth.test.ts`. Full gate and head CI results must be read from the PR evidence for this exact revision; earlier checkpoint counts do not validate this change. Phase 2 remains in progress and PR #12 remains draft/unmerged.
+
+
+Recovery validation checkpoint: 297 unit tests across 33 files and 71 integration tests across ten files passed locally on Node 24.22.0/Bun 1.4.3 with disposable PostgreSQL 18.4. Unit coverage is 94.55% statements, 88.84% branches, 93.20% functions and 95.84% lines; thresholds and exclusions are unchanged. The full fifteen-gate rerun and remote head checks are recorded separately in PR #12; these local counts alone are not a claim of green remote CI, realtime notification delivery, complete recovery acceptance or Phase 2 completion.

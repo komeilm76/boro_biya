@@ -62,7 +62,7 @@ Owner: Engineering. Reviewed: 2026-10-17.
 | --- | --- | --- | --- |
 | [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-16 |
 | [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-17 |
-| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-15 |
+| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-17 |
 | [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-14 |
 
 ### User documentation

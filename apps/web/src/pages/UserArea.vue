@@ -75,6 +75,9 @@ onMounted(load);
 <template>
   <section class="mx-auto max-w-prose px-6 py-16" aria-labelledby="user-area-title">
     <h1 id="user-area-title" class="text-2xl font-semibold mb-4">{{ $t('userArea.title') }}</h1>
+    <aside v-for="(notice, index) in session.securityNotices" :key="index" role="status" class="my-4">
+      {{ $t(`securityNotices.${notice.event}`) }} <time :datetime="notice.createdAt">{{ date(notice.createdAt) }}</time>
+    </aside>
     <h2>{{ $t('auth.sessions') }}</h2>
     <form class="my-6" @submit.prevent="changePassword">
       <h3>{{ $t('auth.changePassword') }}</h3>

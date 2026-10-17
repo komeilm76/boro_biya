@@ -10,14 +10,9 @@ import type { AuthConfig } from './config.js';
 import { createPasswordHasher, normalizeAnswer, validPassword, type PasswordHasher } from './passwords.js';
 import { createAccessTokens } from './tokens.js';
 
-export class AuthFailure extends Error {
-  constructor(
-    readonly statusCode: number = 401,
-    readonly retryAfterSeconds?: number,
-  ) {
-    super('The request could not be accepted.');
-  }
-}
+import { AuthFailure } from './failure.js';
+import { createRecoveryService } from './recovery.js';
+export { AuthFailure } from './failure.js';
 
 export interface Registration {
   username: string;
@@ -114,6 +109,7 @@ export async function createAuthService(
 
   return {
     config,
+    recovery: createRecoveryService(db, config, hasher, dummyHash, reserve),
     sessions,
     tokens,
     async catalogue() {
@@ -237,6 +233,14 @@ export async function createAuthService(
       await audit('session_refreshed', requestId, grant.userId);
       return { ...grant, accessToken: await tokens.sign(grant.userId, grant.sessionId) };
     },
+    async securityNotices(userId: string) {
+      const result = await db.pool.query<{ event_type: 'password_reset' | 'password_changed'; created_at: Date }>(
+        `SELECT event_type, created_at FROM core.notifications WHERE recipient_id = $1
+         AND read_at IS NULL AND expires_at > clock_timestamp() ORDER BY created_at DESC, id DESC LIMIT 10`,
+        [userId],
+      );
+      return result.rows.map((row) => ({ event: row.event_type, createdAt: row.created_at.toISOString() }));
+    },
     async preferences(userId: string) {
       const result = await db.pool.query<{ locale: 'en' | 'fa' }>(
         "SELECT COALESCE((SELECT locale FROM core.user_preferences WHERE user_id = $1), 'en') AS locale",
@@ -298,6 +302,13 @@ export async function createAuthService(
           VALUES ($1, 'user', 'password_changed', 'user', $1, $2)`,
           [userId, requestId],
         );
+        await client.query(
+          "UPDATE core.password_reset_challenges SET phase = 'consumed', grant_hash = NULL, grant_expires_at = NULL WHERE user_id = $1",
+          [userId],
+        );
+        await client.query("INSERT INTO core.notifications(recipient_id, event_type) VALUES ($1, 'password_changed')", [
+          userId,
+        ]);
       });
     },
     /** Cookie proof plus the route's origin/CSRF check permits logout even after access expiry. */

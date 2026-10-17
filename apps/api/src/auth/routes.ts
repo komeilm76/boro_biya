@@ -1,6 +1,14 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { loginSchema, registrationSchema, passwordChangeSchema, preferencesSchema } from '@boro-biya/validation';
+import {
+  loginSchema,
+  registrationSchema,
+  passwordChangeSchema,
+  preferencesSchema,
+  recoveryStartSchema,
+  recoveryAnswersSchema,
+  recoveryResetSchema,
+} from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
 
 function cookies(request: FastifyRequest): Map<string, string> {
@@ -21,6 +29,8 @@ function cookies(request: FastifyRequest): Map<string, string> {
  */
 export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   const refreshName = auth.config.secureCookies ? '__Host-boro_refresh' : 'boro_refresh';
+  const flowName = auth.config.secureCookies ? '__Host-boro_recovery' : 'boro_recovery';
+  const grantName = auth.config.secureCookies ? '__Host-boro_reset' : 'boro_reset';
   const suffix = `; Path=/; SameSite=Strict${auth.config.secureCookies ? '; Secure' : ''}`;
   function csrf(request: FastifyRequest) {
     if (request.headers.origin !== auth.config.origin) throw new AuthFailure(403);
@@ -87,6 +97,56 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     reply.header('set-cookie', `${refreshName}=; HttpOnly; Max-Age=0${suffix}`);
     return reply.code(204).send();
   });
+  app.post('/api/v1/auth/password/forgot', { bodyLimit: 2048 }, async (request, reply) => {
+    csrf(request);
+    const parsed = recoveryStartSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    const flow = await auth.recovery.forgot(parsed.data.username, request.ip, request.correlationId);
+    reply.header('set-cookie', [
+      `${flowName}=${flow.token}; HttpOnly; Expires=${flow.expiresAt.toUTCString()}${suffix}`,
+      `${grantName}=; HttpOnly; Max-Age=0${suffix}`,
+    ]);
+    return { accepted: true };
+  });
+  app.post('/api/v1/auth/password/recover/questions', { bodyLimit: 256 }, async (request) => {
+    csrf(request);
+    return auth.recovery.questions(cookies(request).get(flowName), request.ip, request.correlationId);
+  });
+  app.post('/api/v1/auth/password/recover/verify', { bodyLimit: 16384 }, async (request, reply) => {
+    csrf(request);
+    const parsed = recoveryAnswersSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    const grant = await auth.recovery.verify(
+      cookies(request).get(flowName),
+      parsed.data.answers,
+      request.ip,
+      request.correlationId,
+    );
+    reply.header(
+      'set-cookie',
+      `${grantName}=${grant.token}; HttpOnly; Expires=${grant.expiresAt.toUTCString()}${suffix}`,
+    );
+    return { accepted: true };
+  });
+  app.post('/api/v1/auth/password/recover/reset', { bodyLimit: 8192 }, async (request, reply) => {
+    csrf(request);
+    const parsed = recoveryResetSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    const stored = cookies(request);
+    await auth.recovery.reset(
+      stored.get(flowName),
+      stored.get(grantName),
+      parsed.data.password,
+      parsed.data.repeatPassword,
+      request.ip,
+      request.correlationId,
+    );
+    reply.header(
+      'set-cookie',
+      [flowName, grantName, refreshName].map((name) => `${name}=; HttpOnly; Max-Age=0${suffix}`),
+    );
+    return { accepted: true };
+  });
   app.post('/api/v1/auth/password/change', { bodyLimit: 8192 }, async (request, reply) => {
     const identity = await auth.authenticate(request.headers.authorization);
     const parsed = passwordChangeSchema.safeParse(request.body);
@@ -104,7 +164,11 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.get('/api/v1/users/me', async (request) => {
     const identity = await auth.authenticate(request.headers.authorization);
-    return { ...identity.account, preferredLocale: (await auth.preferences(identity.userId)).locale };
+    return {
+      ...identity.account,
+      preferredLocale: (await auth.preferences(identity.userId)).locale,
+      securityNotices: await auth.securityNotices(identity.userId),
+    };
   });
   app.get('/api/v1/users/me/preferences', async (request) => {
     const identity = await auth.authenticate(request.headers.authorization);
