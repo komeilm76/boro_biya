@@ -20,7 +20,6 @@ const { z } = require('zod');
 const cases = [
   ['query canonicalisation', adminUsersQuerySchema, 'pipe'],
   ['cross-field timestamp ordering', adminAuditQuerySchema, 'custom'],
-  ['unique role IDs', adminRoleAssignmentSchema, 'custom'],
   ['trimmed, control-free administrative reason', adminStateSchema, 'overwrite'],
 ];
 for (const [name, schema, kind] of cases) {
@@ -33,12 +32,21 @@ for (const [name, schema, kind] of cases) {
 
 // Reproduce the silent-loss bug without relying on a hypothetical schema or a warning.
 const warnings = [];
-const projected = zodToJsonSchema(adminRoleAssignmentSchema, {
+const legacyRoleAssignment = z.strictObject({
+  currentPassword: z.string().max(1024),
+  roleIds: z
+    .array(z.uuidv7())
+    .max(20)
+    .refine((ids) => new Set(ids).size === ids.length),
+});
+const projected = zodToJsonSchema(legacyRoleAssignment, {
   io: 'input',
   onWarning: (warning) => warnings.push(warning),
 });
 const id = '01900000-0000-7000-8000-000000000001';
-assert.equal(adminRoleAssignmentSchema.safeParse({ currentPassword: 'example', roleIds: [id, id] }).success, false);
+assert.equal(legacyRoleAssignment.safeParse({ currentPassword: 'example', roleIds: [id, id] }).success, false);
+assert.deepEqual(findExecutableValidation(adminRoleAssignmentSchema), []);
+assert.equal(projectSchema(adminRoleAssignmentSchema).properties.roleIds.uniqueItems, true);
 assert.equal(projected.properties.roleIds.uniqueItems, undefined);
 assert.deepEqual(warnings, []);
 
@@ -90,4 +98,6 @@ const shared = z.strictObject({ first: custom, second: custom });
 assert.equal(findExecutableValidation(shared).filter((finding) => finding.kind === 'custom').length, 1);
 assert.equal(invoked, false);
 assert.deepEqual(findExecutableValidation(null), []);
-console.log('executable-validation fidelity: 4 real auth regressions and portable calendar boundaries passed');
+console.log(
+  'executable-validation fidelity: 3 real auth regressions and portable calendar/uniqueness boundaries passed',
+);

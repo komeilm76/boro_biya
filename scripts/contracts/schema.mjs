@@ -1,6 +1,7 @@
 // API-08 / API-30: fail closed before a Zod projection can hide executable validation.
 // Tooling only: this module is never imported by a browser or the production API.
 import { zodToJsonSchema } from 'zopia';
+import { uniqueStringItemsCheck } from '../../packages/validation/src/unique-strings.ts';
 
 const pointer = (part) => String(part).replaceAll('~', '~0').replaceAll('/', '~1');
 
@@ -21,7 +22,22 @@ export function findExecutableValidation(schema) {
       if (['custom', 'overwrite', 'transform', 'pipe', 'lazy'].includes(kind)) {
         findings.push({ at, kind });
       }
-      visit(definition, at);
+      // This exact string-array check has a faithful JSON Schema keyword. Metadata alone
+      // never authorises a refinement: require check identity, array/string shape and only
+      // the matching declaration. Any additional executable check still fails closed.
+      const metadata = typeof value.meta === 'function' ? value.meta() : undefined;
+      const portableUniqueStrings =
+        definition.type === 'array' &&
+        definition.element?._zod?.def.type === 'string' &&
+        metadata?.uniqueItems === true &&
+        Object.keys(metadata).length === 1;
+      for (const [key, child] of Object.entries(definition)) {
+        if (key === 'checks' && portableUniqueStrings && Array.isArray(child)) {
+          child.forEach((check, index) => {
+            if (check !== uniqueStringItemsCheck) visit(check, `${at}/checks/${index}`);
+          });
+        } else visit(child, `${at}/${pointer(key)}`);
+      }
       return;
     }
     for (const [key, child] of Object.entries(value)) visit(child, `${at}/${pointer(key)}`);

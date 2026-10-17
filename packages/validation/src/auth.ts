@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
+import { uniqueStringItemsCheck } from './unique-strings.js';
 
 export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
 
@@ -112,14 +113,18 @@ export const setupStatusSchema = z.strictObject({
 });
 export const setupSecuritySchema = z.strictObject({ answers: z.array(securityAnswerSchema).length(5) });
 
+// A generic JSON Schema uuid format loses the version restriction; use the same
+// built-in UUIDv7 regex explicitly so both runtime and projection retain it.
 const uniqueIds = z
-  .array(z.uuidv7())
+  .array(z.string().regex(z.regexes.uuid7))
   .max(20)
-  .refine((ids) => new Set(ids).size === ids.length);
+  .check(uniqueStringItemsCheck)
+  .meta({ uniqueItems: true });
 const permissionKeys = z
   .array(z.string().regex(/^[a-z]+\.[a-z]+$/))
   .max(50)
-  .refine((keys) => new Set(keys).size === keys.length);
+  .check(uniqueStringItemsCheck)
+  .meta({ uniqueItems: true });
 export const adminStateSchema = z.strictObject({
   currentPassword: z.string().max(1024),
   reason: z

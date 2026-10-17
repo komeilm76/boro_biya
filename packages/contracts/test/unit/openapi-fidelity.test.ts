@@ -13,7 +13,7 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
     });
     expect(result.error).toBeUndefined();
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
-    expect(result.stdout).toContain('4 real auth regressions and portable calendar boundaries passed');
+    expect(result.stdout).toContain('3 real auth regressions and portable calendar/uniqueness boundaries passed');
   });
 
   it('verifies manifest fidelity and detects discriminator drift independently of validator success', () => {
@@ -35,5 +35,15 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
     expect(result.error).toBeUndefined();
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
     expect(result.stdout).toContain('runtime/JSON Schema equivalence and exact manifest round trip passed');
+  });
+  it('preserves role/permission uniqueness and UUIDv7 validation through the native manifest', () => {
+    const result = spawnSync('bun', ['scripts/contracts/fixtures/portable-uniqueness.mjs'], {
+      cwd: root,
+      encoding: 'utf8',
+      timeout: 30_000,
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain('original/JSON Schema/generated validation and exact manifest round trip passed');
   });
 });
