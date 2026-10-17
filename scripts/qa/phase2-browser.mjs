@@ -13,6 +13,7 @@ import { makeServerConfigFixture } from '../../packages/test-utils/dist/index.js
 import { createLogger, createMetricsRegistry } from '../../packages/server-runtime/dist/index.js';
 import { buildApp } from '../../apps/api/dist/app.js';
 import { createAuthService } from '../../apps/api/dist/auth/service.js';
+import { runChallengeBrowserEdges } from './challenge-browser.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 if (!process.env.PHASE2_BROWSER_TOOLS || !process.env.PHASE2_BROWSER_EXECUTABLE) {
@@ -36,6 +37,7 @@ const report = {
   results: [],
   disabledRecoveryLocales: [],
   returnNavigationRejections: [],
+  challengeEdgeCases: [],
   passed: false,
 };
 let pg, database, db, app, web, browser;
@@ -339,6 +341,16 @@ try {
     console.log(`${locale}: enabled computational challenge passed`);
     await context.close();
   }
+  step = 'challenge cancellation/failure/expiry/manual-retry matrix';
+  report.challengeEdgeCases = await runChallengeBrowserEdges({ browser, origin, password: replacement });
+  assert.equal(report.challengeEdgeCases.length, 4);
+  assert(report.challengeEdgeCases.every((result) => result.passed));
+  for (const result of report.challengeEdgeCases) {
+    report.results.find(
+      (primary) => primary.locale === result.locale && primary.viewport === result.viewport,
+    ).enabledChallenge = 'pass (real Worker and server verification; edge cases recorded separately)';
+  }
+  console.log('EN/FA desktop/mobile-emulation challenge cancellation/failure/natural-expiry/manual-retry passed');
   authConfig.recoveryEnabled = false;
   for (const locale of ['en', 'fa']) {
     step = `${locale}: disabled recovery warning`;
