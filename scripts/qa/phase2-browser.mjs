@@ -14,6 +14,7 @@ import { createLogger, createMetricsRegistry } from '../../packages/server-runti
 import { buildApp } from '../../apps/api/dist/app.js';
 import { createAuthService } from '../../apps/api/dist/auth/service.js';
 import { runChallengeBrowserEdges } from './challenge-browser.mjs';
+import { runRecoveryBrowserEdges } from './recovery-browser.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 if (!process.env.PHASE2_BROWSER_TOOLS || !process.env.PHASE2_BROWSER_EXECUTABLE) {
@@ -189,29 +190,33 @@ try {
       await page.waitForFunction(
         () => globalThis.document.querySelectorAll('section[aria-label] > p[role="status"]').length === 0,
       );
-      const recoveryContext = await browser.newContext({ timezoneId: 'Asia/Tehran' });
-      try {
-        const recovery = await recoveryContext.newPage();
-        recovery.setDefaultTimeout(15_000);
-        await recovery.goto(`${origin}/_auth/recover`);
-        await language(recovery);
-        await recovery.locator('#recovery-username').fill(`browser_${locale}_${mobile ? 'mobile' : 'desktop'}`);
-        await recovery.locator('form button[type="submit"]').first().click();
-        await recovery.locator('input[id^="recovery-answer-"]').first().waitFor();
-        for (const answer of await recovery.locator('input[id^="recovery-answer-"]').all()) {
-          const id = await answer.getAttribute('id');
-          await answer.fill(`invented answer ${id.split('-').at(-1)}`);
-        }
-        await recovery.locator('form button[type="submit"]').first().click();
-        await recovery.locator('#recovery-password').fill(replacement);
-        await recovery.locator('#recovery-repeat').fill(replacement);
-        await recovery.locator('form button[type="submit"]').first().click();
-        await recovery.waitForFunction(() => !globalThis.document.querySelector('form'));
-        await page.locator('section[aria-label] aside[role="status"]').first().waitFor();
-        assert.equal(await page.locator('section[aria-label] aside[role="status"]').count(), 1);
-      } finally {
-        await recoveryContext.close();
-      }
+      const recoveryEdges = await runRecoveryBrowserEdges({
+        browser,
+        origin,
+        locale,
+        mobile,
+        username: `browser_${locale}_${mobile ? 'mobile' : 'desktop'}`,
+        password: replacement,
+        ownerPage: page,
+        onStep: (stage) => {
+          step = `${label}: recovery ${stage}`;
+        },
+      });
+      step = `${label}: recovery database side effects`;
+      const resets = await db.query(
+        `SELECT count(*)::int AS count FROM core.audit_events
+         WHERE action = 'password_reset' AND actor_id =
+         (SELECT id FROM core.users WHERE username_normalized = $1)`,
+        [`browser_${locale}_${mobile ? 'mobile' : 'desktop'}`],
+      );
+      assert.equal(resets.rows[0].count, 1);
+      const notices = await db.query(
+        `SELECT count(*)::int AS count FROM core.notifications
+         WHERE event_type = 'password_reset' AND recipient_id =
+         (SELECT id FROM core.users WHERE username_normalized = $1)`,
+        [`browser_${locale}_${mobile ? 'mobile' : 'desktop'}`],
+      );
+      assert.equal(notices.rows[0].count, 1);
       step = `${label}: sign-out and privacy/report journey`;
       step = `${label}: activate logout`;
       await page.locator('[data-action="logout"]').click();
@@ -273,6 +278,7 @@ try {
         sessionRevocation: 'pass',
         utcDisclosure: 'pass',
         recovery: 'pass',
+        recoveryEdges,
         liveNotice: 'pass',
         privacy: 'pass',
         anonymousReport: 'pass',

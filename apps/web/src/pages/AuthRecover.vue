@@ -67,6 +67,7 @@ async function submit() {
     failed.value = true;
   } finally {
     challenge.value = '';
+    answers.value = answers.value.map(() => '');
     password.value = '';
     repeatPassword.value = '';
     busy.value = false;

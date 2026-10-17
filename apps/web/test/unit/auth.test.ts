@@ -438,7 +438,12 @@ describe('recovery browser workflow', () => {
     expect(second.wrapper.find('[role="alert"]').exists()).toBe(true);
     expect(second.wrapper.find('form').exists()).toBe(false);
   });
-  it('shows a generic failure and allows a clean restart without retaining answers', async () => {
+  it.each([
+    ['en', 'rejected'],
+    ['fa', 'rejected'],
+    ['en', 'network'],
+    ['fa', 'network'],
+  ] as const)('clears recovery answers after %s %s failure and permits a clean restart', async (language, failure) => {
     fetcher.mockImplementation(async (input) => {
       await Promise.resolve();
       if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/policy'))
@@ -452,18 +457,24 @@ describe('recovery browser workflow', () => {
             textKey: `questions.${['firstBook', 'childhoodGame', 'favoriteTeacher'][id - 1]}`,
           })),
         );
-      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/verify'))
+      if ((typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).endsWith('/verify')) {
+        if (failure === 'network') throw new Error('invented offline failure');
         return response({}, 401);
+      }
       return response({ accepted: true });
     });
-    const { wrapper } = mountPage(Recover);
+    const { wrapper } = mountPage(Recover, language);
     await flushPromises();
     await wrapper.get('#recovery-username').setValue('alice');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
+    for (const field of wrapper.findAll('input[type="password"]')) await field.setValue('invented wrong answer');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
-    expect(wrapper.get('[role="alert"]').text()).toContain('Recovery could not be completed');
+    expect(wrapper.get('[role="alert"]').text()).toBe(createAppI18n(language).global.t('recovery.failed'));
+    expect(wrapper.findAll('input[type="password"]')).toHaveLength(3);
+    for (const field of wrapper.findAll('input[type="password"]'))
+      expect((field.element as HTMLInputElement).value).toBe('');
     await wrapper.get('button[type="button"]').trigger('click');
     expect(wrapper.find('#recovery-username').exists()).toBe(true);
     expect(wrapper.findAll('input[type="password"]')).toHaveLength(0);
