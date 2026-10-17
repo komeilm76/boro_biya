@@ -3,7 +3,7 @@ import AuthChallenge from '../components/AuthChallenge.vue';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
-import { authClient, authRequest, acceptedResponse } from '../auth-client.js';
+import { authClient } from '../auth-client.js';
 const { locale } = useI18n();
 const username = ref('');
 const password = ref('');
@@ -32,18 +32,17 @@ async function register() {
   failed.value = false;
   try {
     const { csrfToken } = await authClient.csrf();
-    await authRequest('/api/v1/auth/register', acceptedResponse, {
-      method: 'POST',
-      csrf: csrfToken,
-      challenge: challenge.value || undefined,
-      body: {
+    await authClient.register(
+      {
         username: username.value,
         locale: locale.value,
         password: password.value,
         repeatPassword: repeatPassword.value,
         answers: questions.value.map((questionId, i) => ({ questionId, answer: answers.value[i] ?? '' })),
       },
-    });
+      csrfToken,
+      challenge.value || undefined,
+    );
     accepted.value = true;
   } catch {
     failed.value = true;

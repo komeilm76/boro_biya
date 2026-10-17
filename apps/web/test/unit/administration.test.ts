@@ -10,8 +10,8 @@ import { administrativePermissionKeys } from '@boro-biya/validation';
 const fetcher = vi.fn<typeof fetch>();
 const userId = '01902c60-0000-7000-8000-000000000001';
 const roleId = '01902c60-0000-7000-8000-000000000002';
-function response(value: unknown) {
-  return new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } });
+function response(value: unknown, status = 200) {
+  return new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } });
 }
 const user = {
   id: userId,
@@ -30,7 +30,10 @@ beforeEach(() => {
     const path = typeof input === 'string' ? input : '';
     if (options?.method === 'PATCH' || options?.method === 'POST')
       return Promise.resolve(
-        response(path.includes('/roles') && !path.includes('/users/') ? { id: roleId } : { accepted: true }),
+        response(
+          path.includes('/roles') && !path.includes('/users/') ? { id: roleId } : { accepted: true },
+          path === '/api/v1/admin/roles' && options.method === 'POST' ? 201 : 200,
+        ),
       );
     if (path.includes('audit-events')) return Promise.resolve(response({ items: [], nextCursor: null }));
     if (path.includes('/roles'))
@@ -92,9 +95,12 @@ describe('bilingual administrative lifecycle controls', () => {
       const mutation = fetcher.mock.calls.find(
         ([path, options]) => typeof path === 'string' && path.endsWith('/ban') && options?.method === 'POST',
       );
-      expect(mutation?.[1]?.body).toBe(
-        JSON.stringify({ reason: 'reviewed reason', currentPassword: 'private password' }),
-      );
+      const rawBody = mutation?.[1]?.body;
+      if (typeof rawBody !== 'string') throw new Error('expected JSON body');
+      expect(JSON.parse(rawBody)).toEqual({
+        reason: 'reviewed reason',
+        currentPassword: 'private password',
+      });
       expect((wrapper.get('#management-password').element as HTMLInputElement).value).toBe('');
       expect(wrapper.find('[role="status"]').exists()).toBe(true);
       expect(localStorage.length).toBe(0);

@@ -21,8 +21,8 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
-function response(value: unknown) {
-  return new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } });
+function response(value: unknown, status = 200) {
+  return new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json' } });
 }
 function page(component: Parameters<typeof mount>[0], locale: 'en' | 'fa') {
   return mount(component, {
@@ -68,12 +68,15 @@ describe('first-login and account-creation browser flows', () => {
     'displays a generated credential once in %s and clears input secrets',
     async (locale) => {
       fetcher.mockResolvedValueOnce(
-        response({
-          id,
-          username: 'created_user',
-          expiresAt: '2026-10-18T12:00:00.000Z',
-          setupCredential: 'one-time-secret',
-        }),
+        response(
+          {
+            id,
+            username: 'created_user',
+            expiresAt: '2026-10-18T12:00:00.000Z',
+            setupCredential: 'one-time-secret',
+          },
+          201,
+        ),
       );
       const wrapper = page(AdminCreate, locale);
       useSessionStore().$patch({ accessToken: 'signed', isAuthenticated: true });
@@ -104,14 +107,19 @@ describe('first-login and account-creation browser flows', () => {
   });
   it('does not show stale generated credentials after another failed creation', async () => {
     fetcher.mockResolvedValueOnce(
-      response({
-        id,
-        username: 'created_user',
-        expiresAt: '2026-10-18T12:00:00.000Z',
-        setupCredential: 'one-time-secret',
-      }),
+      response(
+        {
+          id,
+          username: 'created_user',
+          expiresAt: '2026-10-18T12:00:00.000Z',
+          setupCredential: 'one-time-secret',
+        },
+        201,
+      ),
     );
     const wrapper = page(AdminCreate, 'en');
+    await wrapper.get('#created-username').setValue('created_user');
+    await wrapper.get('#admin-current-password').setValue('current password');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(wrapper.find('output').exists()).toBe(true);

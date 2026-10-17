@@ -1,3 +1,4 @@
+import { createGeneratedAuthClient, type AuthTransport } from '../../../../packages/api-client/src/index.js';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import type { FastifyInstance, InjectOptions } from 'fastify';
@@ -282,5 +283,55 @@ describe('real registration/login/session HTTP workflow (AUTH-01 … AUTH-12, SE
     expect(text).not.toContain('$argon2id$');
     expect(text).not.toContain(access);
     expect(text).not.toContain(cookie.split('=')[1]);
+  });
+  it('executes the generated client through native auth/session handlers without a projected-schema substitute', async () => {
+    const jar = new Map<string, string>();
+    const transport: AuthTransport = async <T>(
+      path: string,
+      schema: { parse(value: unknown): T },
+      options: Parameters<AuthTransport>[2],
+    ): Promise<T> => {
+      const response = await app.inject({
+        method: options.method,
+        url: path,
+        headers: {
+          origin: config.origin,
+          cookie: [...jar].map(([key, value]) => `${key}=${value}`).join('; '),
+          ...(options.csrf === undefined ? {} : { 'x-csrf-token': options.csrf }),
+          ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
+        },
+        ...(options.body === undefined ? {} : { payload: options.body as Record<string, unknown> }),
+      });
+      const cookies = response.headers['set-cookie'];
+      for (const cookie of typeof cookies === 'string' ? [cookies] : (cookies ?? [])) {
+        const pair = cookie.split(';')[0] ?? '';
+        const at = pair.indexOf('=');
+        jar.set(pair.slice(0, at), pair.slice(at + 1));
+      }
+      if (response.statusCode !== options.successStatus) throw new Error(`generated HTTP ${response.statusCode}`);
+      return schema.parse(response.statusCode === 204 ? null : response.json());
+    };
+    const generated = createGeneratedAuthClient(transport);
+    const { csrfToken } = await generated.csrf({});
+    await generated.register({
+      csrf: csrfToken,
+      body: { username: 'generated_client', password, repeatPassword: password, answers },
+    });
+    const signed = await generated.login({ csrf: csrfToken, body: { username: 'generated_client', password } });
+    const me = await generated.me({ token: signed.accessToken });
+    expect(me.username).toBe('generated_client');
+    expect(await generated.sessions({ token: signed.accessToken })).toHaveLength(1);
+    expect(await generated.savePreferences({ token: signed.accessToken, body: { locale: 'fa' } })).toEqual({
+      locale: 'fa',
+    });
+    expect((await generated.securityStreamTicket({ token: signed.accessToken, csrf: csrfToken })).ticket).toHaveLength(
+      43,
+    );
+    await expect(generated.adminUsers({ token: signed.accessToken })).rejects.toThrow('generated HTTP 403');
+    const rotated = await generated.refresh({ csrf: csrfToken });
+    await expect(generated.me({ token: signed.accessToken })).rejects.toThrow('generated HTTP 401');
+    expect((await generated.me({ token: rotated.accessToken })).preferredLocale).toBe('fa');
+    expect(await generated.logout({ csrf: csrfToken })).toBeNull();
+    await expect(generated.me({ token: rotated.accessToken })).rejects.toThrow('generated HTTP 401');
   });
 });

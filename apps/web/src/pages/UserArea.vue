@@ -3,7 +3,7 @@ import LocalizedTime from '../components/LocalizedTime.vue';
 import SecurityAnswersForm from '../components/SecurityAnswersForm.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { authClient, authRequest, emptyResponse, acceptedResponse } from '../auth-client.js';
+import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
 const router = useRouter();
@@ -35,11 +35,10 @@ async function changePassword() {
   busy.value = true;
   failed.value = false;
   try {
-    await authRequest('/api/v1/auth/password/change', acceptedResponse, {
-      method: 'POST',
-      token: session.accessToken ?? '',
-      body: { currentPassword: currentPassword.value, password: password.value, repeatPassword: repeatPassword.value },
-    });
+    await authClient.changePassword(
+      { currentPassword: currentPassword.value, password: password.value, repeatPassword: repeatPassword.value },
+      session.accessToken ?? '',
+    );
     if (ticket !== generation) return;
     session.clearSession();
     await router.push('/_auth/login');
@@ -72,10 +71,7 @@ async function revoke(id?: string) {
   busy.value = true;
   failed.value = false;
   try {
-    await authRequest(`/api/v1/auth/sessions${id === undefined ? '' : `/${encodeURIComponent(id)}`}`, emptyResponse, {
-      method: 'DELETE',
-      token: session.accessToken ?? '',
-    });
+    await authClient.revokeSessions(id, session.accessToken ?? '');
     if (ticket === generation) await load();
   } catch {
     if (ticket === generation) failed.value = true;

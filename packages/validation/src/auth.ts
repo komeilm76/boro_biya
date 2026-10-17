@@ -290,3 +290,15 @@ export const securityNoticeEventSchema = z.strictObject({
   event: z.enum(['password_reset', 'password_changed', 'security_answers_changed']),
   createdAt: utcInstantSchema,
 });
+
+/** HTTP contract primitives shared by the endpoint registry and generated bindings. */
+export const absentBodySchema = z.undefined();
+export const emptyParametersSchema = z.strictObject({});
+export const acceptedResponseSchema = z.strictObject({ accepted: z.literal(true) });
+export const noContentResponseSchema = z.null();
+export const questionCatalogueSchema = z
+  .array(z.strictObject({ id: z.number().int().min(1).max(8), textKey: z.string() }))
+  .max(8);
+export const adminUserResponseSchema = adminUsersResponseSchema.shape.items.element.extend({
+  roleIds: z.array(z.uuidv7()),
+});

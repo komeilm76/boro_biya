@@ -107,6 +107,17 @@ describe('browser authentication transport and memory-only state', () => {
     expect(() => acceptedResponse.parse(null)).toThrow();
     expect(() => emptyResponse.parse({})).toThrow();
   });
+  it('requires exact generated success status and validates the successful response body', async () => {
+    fetcher.mockResolvedValueOnce(response({ accepted: true }, 200));
+    await expect(authClient.createAccount('Alice', 'example', undefined, 'signed')).rejects.toThrow(
+      'auth_response_contract_mismatch',
+    );
+    fetcher.mockResolvedValueOnce(response({ accepted: true }, 201));
+    await expect(authClient.createAccount('Alice', 'example', undefined, 'signed')).rejects.toThrow();
+    expect(() => authClient.adminState('invalid', 'constructor', 'reason', 'example', 'signed')).toThrow(
+      'invalid administrative action',
+    );
+  });
   it('keeps access in declared reactive Pinia state, restores with refresh and clears after failure/logout', async () => {
     const store = useSessionStore();
     loginResponses();
@@ -151,7 +162,7 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     const { wrapper } = mountPage(Register);
     fetcher
       .mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }))
-      .mockResolvedValueOnce(response({ accepted: true }));
+      .mockResolvedValueOnce(response({ accepted: true }, 201));
     await wrapper.get('#register-user').setValue('Alice');
     await wrapper.get('#register-password').setValue('password');
     await wrapper.get('#register-repeat').setValue('password');

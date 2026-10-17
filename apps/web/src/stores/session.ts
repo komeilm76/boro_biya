@@ -1,6 +1,6 @@
 import { administrativePermissionKeys } from '@boro-biya/validation';
 import { defineStore } from 'pinia';
-import { authClient, authRequest, emptyResponse } from '../auth-client.js';
+import { authClient } from '../auth-client.js';
 
 // Serialize cookie-changing operations per store: a late logout response must not erase a
 // newer sign-in cookie. The queue and generation are memory-only, never browser storage.
@@ -137,7 +137,7 @@ export const useSessionStore = defineStore('session', {
       this.clearSession();
       return serialized(this, async () => {
         const { csrfToken } = await authClient.csrf();
-        await authRequest('/api/v1/auth/logout', emptyResponse, { method: 'POST', token, csrf: csrfToken });
+        await authClient.logout(token, csrfToken);
       });
     },
     /**

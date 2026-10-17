@@ -1,28 +1,11 @@
+import { createGeneratedAuthClient } from '@boro-biya/api-client';
 import {
   type AdminUsersQuery,
   type AdminAuditQuery,
-  adminUsersQuerySchema,
-  adminAuditQuerySchema,
-  challengeResponseSchema,
-  privacyPolicySchema,
-  securityReportSchema,
-  securityStreamTicketSchema,
-  challengeGrantSchema,
   type ChallengePurpose,
-  accessResponseSchema,
-  adminUsersResponseSchema,
-  adminRolesResponseSchema,
-  adminAuditResponseSchema,
-  adminRoleSavedSchema,
-  createdAccountSchema,
-  reissuedSetupCredentialSchema,
-  setupStatusSchema,
-  recoveryPolicySchema,
-  recoveryQuestionsSchema,
-  preferencesSchema,
-  accountResponseSchema,
-  csrfResponseSchema,
-  sessionListResponseSchema,
+  securityReportSchema,
+  registrationSchema,
+  passwordChangeSchema,
 } from '@boro-biya/validation';
 
 /** Only bounded public retry metadata is carried; never server prose or credential fields. */
@@ -42,6 +25,7 @@ export async function authRequest<T>(
   schema: { parse(value: unknown): T },
   options: {
     method?: string;
+    successStatus?: number;
     body?: unknown;
     token?: string;
     csrf?: string;
@@ -69,6 +53,8 @@ export async function authRequest<T>(
       response.status === 429 && seconds >= 1 && seconds <= 3600 ? seconds : undefined,
     );
   }
+  if (options.successStatus !== undefined && response.status !== options.successStatus)
+    throw new Error('auth_response_contract_mismatch');
   return schema.parse(response.status === 204 ? null : await response.json());
 }
 export const acceptedResponse = {
@@ -84,141 +70,94 @@ export const emptyResponse = {
     return null;
   },
 };
-function searchQuery(query: Record<string, string | undefined>): string {
-  const encoded = new URLSearchParams(
-    Object.entries(query).filter((entry): entry is [string, string] => entry[1] !== undefined),
-  ).toString();
-  return encoded ? `?${encoded}` : '';
-}
+// Generated endpoint/schema bindings share the existing same-origin, no-replay transport.
+const operations = createGeneratedAuthClient(authRequest);
+const accepted = (result: Promise<unknown>): Promise<true> => result.then(() => true);
+const stateOperations = {
+  lock: operations.adminLock,
+  unlock: operations.adminUnlock,
+  ban: operations.adminBan,
+  unban: operations.adminUnban,
+  deactivate: operations.adminDeactivate,
+  reactivate: operations.adminReactivate,
+} as const;
 export const authClient = {
-  securityStreamTicket: (token: string, csrf: string) =>
-    authRequest('/api/v1/streams/ticket', securityStreamTicketSchema, { method: 'POST', token, csrf }),
+  securityStreamTicket: (token: string, csrf: string) => operations.securityStreamTicket({ token, csrf }),
   reportSecurity: (input: unknown, csrf: string) =>
-    authRequest('/api/v1/security/reports', acceptedResponse, {
-      method: 'POST',
-      csrf,
-      body: securityReportSchema.parse(input),
-    }),
-  privacyPolicy: () => authRequest('/api/v1/privacy/policy', privacyPolicySchema),
-  challenge: (purpose: ChallengePurpose, csrf: string) =>
-    authRequest('/api/v1/auth/challenge', challengeResponseSchema, { method: 'POST', csrf, body: { purpose } }),
+    accepted(operations.reportSecurity({ csrf, body: securityReportSchema.parse(input) })),
+  privacyPolicy: () => operations.privacyPolicy({}),
+  challenge: (purpose: ChallengePurpose, csrf: string) => operations.challenge({ csrf, body: { purpose } }),
   verifyChallenge: (purpose: ChallengePurpose, token: string, counter: number, csrf: string) =>
-    authRequest('/api/v1/auth/challenge/verify', challengeGrantSchema, {
-      method: 'POST',
-      csrf,
-      body: { purpose, token, counter },
-    }),
+    operations.verifyChallenge({ csrf, body: { purpose, token, counter } }),
   changeSecurityAnswers: (
     currentPassword: string,
     answers: Array<{ questionId: number; answer: string }>,
     token: string,
-  ) =>
-    authRequest('/api/v1/auth/security-questions/change', acceptedResponse, {
-      method: 'POST',
-      token,
-      body: { currentPassword, answers },
-    }),
-  adminUsers: (token: string, query: AdminUsersQuery = {}) =>
-    authRequest(`/api/v1/admin/users${searchQuery(adminUsersQuerySchema.parse(query))}`, adminUsersResponseSchema, {
-      token,
-    }),
+  ) => accepted(operations.changeSecurityAnswers({ token, body: { currentPassword, answers } })),
+  adminUsers: (token: string, query: AdminUsersQuery = {}) => operations.adminUsers({ token, query }),
   adminRoles: (token: string, cursor?: string) =>
-    authRequest(
-      `/api/v1/admin/roles${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
-      adminRolesResponseSchema,
-      { token },
-    ),
-  adminAudit: (token: string, query: AdminAuditQuery = {}) =>
-    authRequest(
-      `/api/v1/admin/audit-events${searchQuery(adminAuditQuerySchema.parse(query))}`,
-      adminAuditResponseSchema,
-      { token },
-    ),
-  adminState: (id: string, action: string, reason: string, currentPassword: string, token: string) =>
-    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/${encodeURIComponent(action)}`, acceptedResponse, {
-      method: 'POST',
-      token,
-      body: { reason, currentPassword },
-    }),
+    operations.adminRoles({ token, query: cursor === undefined ? {} : { cursor } }),
+  adminAudit: (token: string, query: AdminAuditQuery = {}) => operations.adminAudit({ token, query }),
+  adminState: (id: string, action: string, reason: string, currentPassword: string, token: string) => {
+    if (!Object.hasOwn(stateOperations, action)) throw new Error('invalid administrative action');
+    return accepted(
+      stateOperations[action as keyof typeof stateOperations]({
+        token,
+        params: { id },
+        body: { reason, currentPassword },
+      }),
+    );
+  },
   reissueSetupCredential: (id: string, reason: string, currentPassword: string, token: string) =>
-    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/setup-credential`, reissuedSetupCredentialSchema, {
-      method: 'POST',
-      token,
-      body: { reason, currentPassword },
-    }),
+    operations.reissueSetupCredential({ token, params: { id }, body: { reason, currentPassword } }),
   adminAssignRoles: (id: string, roleIds: string[], currentPassword: string, token: string) =>
-    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/roles`, acceptedResponse, {
-      method: 'PATCH',
-      token,
-      body: { roleIds, currentPassword },
-    }),
+    accepted(operations.adminAssignRoles({ token, params: { id }, body: { roleIds, currentPassword } })),
   adminSaveRole: (
     id: string | undefined,
     input: { key: string; nameKey: string; permissions: string[] },
     currentPassword: string,
     token: string,
   ) =>
-    authRequest(`/api/v1/admin/roles${id ? `/${encodeURIComponent(id)}` : ''}`, adminRoleSavedSchema, {
-      method: id ? 'PATCH' : 'POST',
-      token,
-      body: {
-        ...(id ? {} : { key: input.key }),
-        nameKey: input.nameKey,
-        permissions: input.permissions,
-        currentPassword,
-      },
-    }),
+    id
+      ? operations.adminUpdateRole({
+          token,
+          params: { id },
+          body: { nameKey: input.nameKey, permissions: input.permissions, currentPassword },
+        })
+      : operations.adminCreateRole({ token, body: { ...input, currentPassword } }),
   createAccount: (username: string, currentPassword: string, temporaryPassword: string | undefined, token: string) =>
-    authRequest('/api/v1/admin/users', createdAccountSchema, {
-      method: 'POST',
+    operations.createAccount({
       token,
       body: { username, currentPassword, ...(temporaryPassword ? { temporaryPassword } : {}) },
     }),
   setupStart: (username: string, password: string, csrf: string, challenge?: string) =>
-    authRequest('/api/v1/auth/setup/start', acceptedResponse, {
-      method: 'POST',
-      csrf,
-      challenge,
-      body: { username, password },
-    }),
-  setupStatus: () => authRequest('/api/v1/auth/setup/status', setupStatusSchema),
+    accepted(operations.setupStart({ csrf, challenge, body: { username, password } })),
+  setupStatus: () => operations.setupStatus({}),
   setupPassword: (password: string, repeatPassword: string, csrf: string) =>
-    authRequest('/api/v1/auth/setup/password', acceptedResponse, {
-      method: 'POST',
-      csrf,
-      body: { password, repeatPassword },
-    }),
+    accepted(operations.setupPassword({ csrf, body: { password, repeatPassword } })),
   setupSecurity: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
-    authRequest('/api/v1/auth/setup/security-questions', acceptedResponse, { method: 'POST', csrf, body: { answers } }),
-  recoveryPolicy: () => authRequest('/api/v1/auth/policy', recoveryPolicySchema),
+    accepted(operations.setupSecurity({ csrf, body: { answers } })),
+  recoveryPolicy: () => operations.policy({}),
   forgot: (username: string, csrf: string, challenge?: string) =>
-    authRequest('/api/v1/auth/password/forgot', acceptedResponse, {
-      method: 'POST',
-      csrf,
-      challenge,
-      body: { username },
-    }),
-  recoveryQuestions: (csrf: string) =>
-    authRequest('/api/v1/auth/password/recover/questions', recoveryQuestionsSchema, { method: 'POST', csrf }),
+    accepted(operations.forgot({ csrf, challenge, body: { username } })),
+  recoveryQuestions: (csrf: string) => operations.recoveryQuestions({ csrf }),
   verifyRecovery: (answers: Array<{ questionId: number; answer: string }>, csrf: string) =>
-    authRequest('/api/v1/auth/password/recover/verify', acceptedResponse, { method: 'POST', csrf, body: { answers } }),
+    accepted(operations.verifyRecovery({ csrf, body: { answers } })),
   resetPassword: (password: string, repeatPassword: string, csrf: string) =>
-    authRequest('/api/v1/auth/password/recover/reset', acceptedResponse, {
-      method: 'POST',
-      csrf,
-      body: { password, repeatPassword },
-    }),
-  csrf: () => authRequest('/api/v1/auth/csrf', csrfResponseSchema),
+    accepted(operations.resetPassword({ csrf, body: { password, repeatPassword } })),
+  csrf: () => operations.csrf({}),
   login: (username: string, password: string, csrf: string, challenge?: string) =>
-    authRequest('/api/v1/auth/login', accessResponseSchema, {
-      method: 'POST',
-      csrf,
-      challenge,
-      body: { username, password },
-    }),
-  refresh: (csrf: string) => authRequest('/api/v1/auth/refresh', accessResponseSchema, { method: 'POST', csrf }),
-  me: (token: string) => authRequest('/api/v1/users/me', accountResponseSchema, { token }),
-  savePreferences: (token: string, locale: 'en' | 'fa') =>
-    authRequest('/api/v1/users/me/preferences', preferencesSchema, { method: 'PUT', token, body: { locale } }),
-  sessions: (token: string) => authRequest('/api/v1/auth/sessions', sessionListResponseSchema, { token }),
+    operations.login({ csrf, challenge, body: { username, password } }),
+  refresh: (csrf: string) => operations.refresh({ csrf }),
+  me: (token: string) => operations.me({ token }),
+  savePreferences: (token: string, locale: 'en' | 'fa') => operations.savePreferences({ token, body: { locale } }),
+  sessions: (token: string) => operations.sessions({ token }),
+  register: (body: unknown, csrf: string, challenge?: string) =>
+    accepted(operations.register({ csrf, challenge, body: registrationSchema.parse(body) })),
+  logout: (token: string | undefined, csrf: string) =>
+    operations.logout({ csrf, ...(token === undefined ? {} : { token }) }),
+  changePassword: (body: unknown, token: string) =>
+    accepted(operations.changePassword({ token, body: passwordChangeSchema.parse(body) })),
+  revokeSessions: (id: string | undefined, token: string) =>
+    id === undefined ? operations.revokeOtherSessions({ token }) : operations.revokeSession({ token, params: { id } }),
 };
