@@ -5,8 +5,10 @@ import { authClient, authRequest, emptyResponse } from '../auth-client.js';
 export interface SessionState {
   isAuthenticated: boolean;
   roles: string[];
+  permissions?: string[];
   accessToken?: string;
   username?: string;
+  userId?: string;
   csrf?: string;
   preferredLocale?: 'en' | 'fa';
   securityNotices?: Array<{
@@ -19,14 +21,16 @@ export const useSessionStore = defineStore('session', {
   state: (): SessionState => ({
     isAuthenticated: false,
     roles: [],
+    permissions: [],
     accessToken: '',
     username: '',
+    userId: '',
     csrf: '',
     preferredLocale: 'en',
     securityNotices: [],
   }),
   getters: {
-    isAdmin: (state): boolean => state.roles.includes('admin'),
+    isAdmin: (state): boolean => state.roles.includes('admin') || (state.permissions?.length ?? 0) > 0,
   },
   actions: {
     async login(username: string, password: string): Promise<void> {
@@ -38,10 +42,12 @@ export const useSessionStore = defineStore('session', {
         isAuthenticated: true,
         accessToken: grant.accessToken,
         username: account.username,
+        userId: account.id,
         preferredLocale: account.preferredLocale,
         securityNotices: account.securityNotices,
         csrf: csrfToken,
         roles: account.roles,
+        permissions: account.permissions,
       });
     },
     async restore(): Promise<void> {
@@ -53,10 +59,12 @@ export const useSessionStore = defineStore('session', {
           isAuthenticated: true,
           accessToken: grant.accessToken,
           username: account.username,
+          userId: account.id,
           preferredLocale: account.preferredLocale,
           securityNotices: account.securityNotices,
           csrf: csrfToken,
           roles: account.roles,
+          permissions: account.permissions,
         });
       } catch {
         this.clearSession();

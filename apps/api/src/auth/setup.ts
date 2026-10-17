@@ -5,6 +5,7 @@ import { AuthFailure } from './failure.js';
 import { normalizeAnswer, validPassword, type PasswordHasher } from './passwords.js';
 import { normalizeUsername } from '../identity/account.js';
 import { identityTransaction } from '../identity/transaction.js';
+import { hasPermission } from './policy.js';
 import { lockCurrentBinding } from '../identity/binding.js';
 
 type Client = Pick<Db['pool'], 'query'>;
@@ -42,12 +43,7 @@ export function createSetupService(
   }
   async function admin(client: Client, actorId: string, sessionId: string) {
     if (!(await lockCurrentBinding(client, actorId, sessionId))) throw new AuthFailure();
-    const permission = await client.query(
-      `SELECT 1 FROM core.user_roles ur JOIN core.role_permissions rp ON rp.role_id = ur.role_id
-      JOIN core.permissions p ON p.id = rp.permission_id WHERE ur.user_id = $1 AND p.key = 'users.create' LIMIT 1`,
-      [actorId],
-    );
-    if (permission.rowCount !== 1) throw new AuthFailure(403);
+    if (!(await hasPermission(client, actorId, 'users.create'))) throw new AuthFailure(403);
     return user(client, actorId);
   }
   async function flow<T>(

@@ -140,3 +140,8 @@ Before a release, the following must be evidenced (gate identifiers in [QUALITY_
 - **[SEC-71]** A documented threat-model review with high-risk findings resolved or formally accepted.
 
 No release ships with an unresolved critical vulnerability. High-severity exceptions require written risk acceptance with owner, mitigation, and expiry date.
+
+
+### Phase 2 administrative enforcement checkpoint (2026-10-17)
+
+App-owned `auth/policy.ts` centralizes administrative permission resolution, including account creation. Read routes check current binding and effective permissions on every request; writes additionally require the current password every time and recheck it after native work. The bounded account/origin budgets remain persisted. Administrative state/role writes serialize before sorted user locking, preventing competing demotions or permission edits from bypassing the last-full-administrator check. Full administrators are counted by effective permission union, not the seeded role name. A rejected change rolls back its state/session/proof effects and commits a denied audit event instead. Allowed role changes affect existing sessions immediately without requiring a new login. Administrative lock, ban and deactivation all revoke session families and recovery/setup proofs; reactivation does not revive old credentials or proofs. No account deletion or automatic inactivity deactivation is exposed. These application changes do not alter the accepted logging/redaction, metrics, migration-runner or web-edge implementations.

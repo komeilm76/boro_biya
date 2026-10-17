@@ -8,7 +8,7 @@ Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are 
 
 ## 1. Authentication and account lifecycle (Phase 2)
 
-Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; other administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. `GET/PUT /users/me/preferences` now implements the locale-only Phase 2 slice; unknown fields are rejected, and theme/notification/SOS fields remain planned. `GET /users/me` includes the saved account language. Password change revokes every family, including the current one, and asks the user to sign in again. Cookie-bound recovery now persists challenge/attempt/grant state and atomically revokes sessions on reset; its EN/FA browser screen is `/_auth/recover`. Reset/password-change notices are shown on the next authorized profile load, not delivered in realtime. Administrator creation and ordered first-login setup now exist with restricted cookie proofs; user/state/role/audit administration now exists with effective database permissions, current-password confirmation for writes, audit records and a last-full-administrator guard; generated OpenAPI client, setup-credential reissuance, additional search filters and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
 
 | Method | Path | Access | Implemented supporting contract |
 | --- | --- | --- | --- |
@@ -41,21 +41,21 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |
-| GET | `/users/me` | auth | Own profile and effective preferences |
+| GET | `/users/me` | auth | Own profile, effective preferences, role keys and current administrative permission keys (UX metadata only) |
 | PATCH | `/users/me` | auth | Explicit field allowlist; no mass assignment |
 | GET | `/users/me/preferences` | auth | Implemented: locale only; theme, notification channels and SOS suggestion opt-in remain planned |
 | PUT | `/users/me/preferences` | auth | Implemented: strict locale-only replacement for the bearer owner, with a current binding recheck under lock; future privacy-relevant fields require audit |
-| GET | `/admin/users` | admin | Cursor pagination, filter allowlist |
+| GET | `/admin/users` | `users.read` | Implemented: audited credential-free list, 50-item UUIDv7 cursor pages; cursor is the only accepted query field; search/status filters remain planned |
 | POST | `/admin/users` | auth + `users.create` permission | Implemented: current-password confirmation and post-hash permission/binding recheck; supplied temporary password or generated display-once credential; only default user role; both setup flags set; unused credential expires after 24 hours |
-| GET | `/admin/users/:id` | admin | Administrative view; never includes credentials or answers |
-| POST | `/admin/users/:id/lock` `/unlock` | admin | Explicit transitions, each audited with reason |
-| POST | `/admin/users/:id/ban` `/unban` | admin | Requires reason; audited |
-| POST | `/admin/users/:id/deactivate` `/reactivate` | admin | Requires reason; audited |
-| GET | `/admin/roles` | admin | Roles with their permissions; seeded `admin` and `user` plus any custom role ([ADR-024](../DECISIONS.md#adr-024--database-driven-roles-and-permissions-with-two-roles-seeded)) |
-| POST | `/admin/roles` | admin | Create a custom role and its permission set as data; audited |
-| PATCH | `/admin/roles/:id` | admin | Change a role's permissions or name; audited; the last active administrator protection (`ADM-07`) is enforced server-side |
-| PATCH | `/admin/users/:id/roles` | admin | Assign or revoke role assignments; audited; high-impact re-authentication; refused if it would remove the last active administrator |
-| GET | `/admin/audit-events` | admin | Filtered, read-only, cursor paginated |
+| GET | `/admin/users/:id` | `users.read` | Implemented: audited state/setup/role-ID projection; never credentials, answers or tokens |
+| POST | `/admin/users/:id/lock` `/unlock` | `users.state` | Implemented: current password and reason; bounded configured lock duration; state/audit actor and previous/next state; proof/session revocation; last-administrator guard |
+| POST | `/admin/users/:id/ban` `/unban` | `users.state` | Implemented: reason/current password, distinct legal transitions, atomic audit and revocation; last-administrator guard |
+| POST | `/admin/users/:id/deactivate` `/reactivate` | `users.state` | Implemented: reason/current password, atomic audit and revocation; preserves records and setup flags; last-administrator guard; no deletion route |
+| GET | `/admin/roles` | `roles.read` | Implemented: audited 50-item cursor pages and central permission vocabulary; seeded and custom roles |
+| POST | `/admin/roles` | `roles.manage` | Implemented: strict key/message-key/permission allowlist, current password, previous/new audit details, last-administrator guard |
+| PATCH | `/admin/roles/:id` | `roles.manage` | Implemented: replace permission set and message-key metadata; stable role key is immutable; current password, previous/new audit and last-administrator guard |
+| PATCH | `/admin/users/:id/roles` | `users.roles` | Implemented: strict replacement of at most 20 unique existing role IDs; current password, previous/new audit and last-administrator guard; existing sessions resolve changes immediately |
+| GET | `/admin/audit-events` | `audit.read` | Implemented: audited read-only 50-item descending UUIDv7 cursor pages; cursor-only allowlist; additional filters remain planned |
 
 ## 2a. Assistance categories (Phase 5, served by the Core API)
 

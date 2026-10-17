@@ -19,7 +19,7 @@
   },
   "adminArea": {
     "title": "Administration",
-    "placeholder": "Administration tools arrive in a later milestone."
+    "placeholder": "Setup credential reissuance and additional search filters are not available yet."
   },
   "notFound": {
     "title": "Page not found",
@@ -117,5 +117,42 @@
     "forget": "Hide credential",
     "expires": "Credential expiry",
     "credential": "One-time setup credential"
+  },
+  "adminManage": {
+    "title": "Account lifecycle and permissions",
+    "notice": "Every change requires your current password. Do not put credentials or private information in reasons. Removing the last full administrator is refused.",
+    "accepted": "Change saved.",
+    "refresh": "Refresh administrative lists",
+    "next": "Next page",
+    "user": "Account to manage",
+    "state": "Change account state",
+    "action": "Transition",
+    "reason": "Reason (required)",
+    "apply": "Apply change",
+    "assign": "Replace account roles",
+    "replaceWarning": "This replaces all role assignments. Select the complete new set; an empty set removes every role.",
+    "roles": "New role set",
+    "editRole": "Manage role permissions",
+    "role": "Role to edit",
+    "newRole": "Create a role",
+    "key": "Stable role key",
+    "nameKey": "Role message key (roles.example)",
+    "permissions": "Complete permission set",
+    "save": "Save role",
+    "audit": "Read audit events",
+    "states": {
+      "active": "Active",
+      "locked": "Temporarily locked",
+      "banned": "Banned",
+      "deactivated": "Deactivated"
+    },
+    "actions": {
+      "lock": "Lock temporarily",
+      "unlock": "Unlock",
+      "ban": "Ban",
+      "unban": "Unban",
+      "deactivate": "Deactivate without deleting",
+      "reactivate": "Reactivate"
+    }
   }
 }

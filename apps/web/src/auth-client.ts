@@ -1,5 +1,9 @@
 import {
   accessResponseSchema,
+  adminUsersResponseSchema,
+  adminRolesResponseSchema,
+  adminAuditResponseSchema,
+  adminRoleSavedSchema,
   createdAccountSchema,
   setupStatusSchema,
   recoveryPolicySchema,
@@ -78,6 +82,52 @@ export const authClient = {
       method: 'POST',
       token,
       body: { currentPassword, answers },
+    }),
+  adminUsers: (token: string, cursor?: string) =>
+    authRequest(
+      `/api/v1/admin/users${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+      adminUsersResponseSchema,
+      { token },
+    ),
+  adminRoles: (token: string, cursor?: string) =>
+    authRequest(
+      `/api/v1/admin/roles${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+      adminRolesResponseSchema,
+      { token },
+    ),
+  adminAudit: (token: string, cursor?: string) =>
+    authRequest(
+      `/api/v1/admin/audit-events${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+      adminAuditResponseSchema,
+      { token },
+    ),
+  adminState: (id: string, action: string, reason: string, currentPassword: string, token: string) =>
+    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/${encodeURIComponent(action)}`, acceptedResponse, {
+      method: 'POST',
+      token,
+      body: { reason, currentPassword },
+    }),
+  adminAssignRoles: (id: string, roleIds: string[], currentPassword: string, token: string) =>
+    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/roles`, acceptedResponse, {
+      method: 'PATCH',
+      token,
+      body: { roleIds, currentPassword },
+    }),
+  adminSaveRole: (
+    id: string | undefined,
+    input: { key: string; nameKey: string; permissions: string[] },
+    currentPassword: string,
+    token: string,
+  ) =>
+    authRequest(`/api/v1/admin/roles${id ? `/${encodeURIComponent(id)}` : ''}`, adminRoleSavedSchema, {
+      method: id ? 'PATCH' : 'POST',
+      token,
+      body: {
+        ...(id ? {} : { key: input.key }),
+        nameKey: input.nameKey,
+        permissions: input.permissions,
+        currentPassword,
+      },
     }),
   createAccount: (username: string, currentPassword: string, temporaryPassword: string | undefined, token: string) =>
     authRequest('/api/v1/admin/users', createdAccountSchema, {

@@ -12,6 +12,8 @@ import { createAccessTokens } from './tokens.js';
 
 import { AuthFailure } from './failure.js';
 import { createSecurityAnswerService } from './security-answers.js';
+import { administrativePermissions } from './policy.js';
+import { createAdministration } from './administration.js';
 import { createSetupService } from './setup.js';
 import { createRecoveryService } from './recovery.js';
 export { AuthFailure } from './failure.js';
@@ -111,6 +113,7 @@ export async function createAuthService(
 
   return {
     config,
+    administration: createAdministration(db, config, hasher, dummyHash, reserve),
     setup: createSetupService(db, config, hasher, dummyHash, reserve),
     changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),
     recovery: createRecoveryService(db, config, hasher, dummyHash, reserve),
@@ -236,6 +239,13 @@ export async function createAuthService(
       if (grant === null) throw new AuthFailure();
       await audit('session_refreshed', requestId, grant.userId);
       return { ...grant, accessToken: await tokens.sign(grant.userId, grant.sessionId) };
+    },
+    async permissions(userId: string) {
+      const result = await db.pool.query<{ key: string }>(
+        `SELECT DISTINCT p.key FROM core.user_roles ur JOIN core.role_permissions rp ON rp.role_id = ur.role_id JOIN core.permissions p ON p.id = rp.permission_id WHERE ur.user_id = $1 AND p.key = ANY($2::text[]) ORDER BY p.key`,
+        [userId, administrativePermissions],
+      );
+      return result.rows.map((row) => row.key);
     },
     async roles(userId: string) {
       const result = await db.pool.query<{ key: string }>(

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminManagement from '../components/AdminManagement.vue';
 import AdminCreateAccount from '../components/AdminCreateAccount.vue';
 </script>
 
@@ -8,6 +9,7 @@ import AdminCreateAccount from '../components/AdminCreateAccount.vue';
       {{ $t('adminArea.title') }}
     </h1>
     <AdminCreateAccount />
+    <AdminManagement />
     <p>
       {{ $t('adminArea.placeholder') }}
     </p>

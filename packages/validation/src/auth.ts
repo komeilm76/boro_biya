@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
 
+export const administrativePermissionKeys = [
+  'users.create',
+  'users.read',
+  'users.state',
+  'users.roles',
+  'roles.read',
+  'roles.manage',
+  'audit.read',
+] as const;
+
 export const securityAnswerSchema = z.strictObject({
   questionId: z.number().int().min(1).max(8),
   answer: z.string().min(1).max(1024),
@@ -31,6 +41,7 @@ export const accountResponseSchema = z.strictObject({
     .max(10)
     .default([]),
   roles: z.array(z.string()).default([]),
+  permissions: z.array(z.enum(administrativePermissionKeys)).default([]),
   preferredLocale: z.enum(['en', 'fa']).default('en'),
 });
 export const accessResponseSchema = z.strictObject({
@@ -94,3 +105,69 @@ export const setupStatusSchema = z.strictObject({
   securitySetupRequired: z.boolean(),
 });
 export const setupSecuritySchema = z.strictObject({ answers: z.array(securityAnswerSchema).length(5) });
+
+const uniqueIds = z
+  .array(z.uuidv7())
+  .max(20)
+  .refine((ids) => new Set(ids).size === ids.length);
+const permissionKeys = z
+  .array(z.string().regex(/^[a-z]+\.[a-z]+$/))
+  .max(50)
+  .refine((keys) => new Set(keys).size === keys.length);
+export const adminStateSchema = z.strictObject({
+  currentPassword: z.string().max(1024),
+  reason: z
+    .string()
+    .trim()
+    .min(1)
+    .max(500)
+    .refine((value) => !/\p{Cc}/u.test(value)),
+});
+export const adminRoleAssignmentSchema = z.strictObject({ currentPassword: z.string().max(1024), roleIds: uniqueIds });
+export const adminRoleCreateSchema = z.strictObject({
+  currentPassword: z.string().max(1024),
+  key: z.string().regex(/^[a-z][a-z0-9_]{2,63}$/),
+  nameKey: z.string().regex(/^roles\.[a-z][a-z0-9_.]{0,80}$/),
+  permissions: permissionKeys,
+});
+export const adminRoleUpdateSchema = adminRoleCreateSchema.omit({ key: true });
+export const adminCursorSchema = z.strictObject({ cursor: z.uuidv7().optional() });
+export const adminIdSchema = z.strictObject({ id: z.uuidv7() });
+
+const adminUserViewSchema = z.strictObject({
+  id: z.uuidv7(),
+  username: z.string(),
+  status: z.enum(['active', 'locked', 'banned', 'deactivated']),
+  passwordSetupRequired: z.boolean(),
+  securitySetupRequired: z.boolean(),
+  reason: z.string().nullable(),
+  stateChangedAt: utcInstantSchema,
+});
+export const adminUsersResponseSchema = z.strictObject({
+  items: z.array(adminUserViewSchema).max(50),
+  nextCursor: z.uuidv7().nullable(),
+});
+export const adminRolesResponseSchema = z.strictObject({
+  items: z
+    .array(z.strictObject({ id: z.uuidv7(), key: z.string(), nameKey: z.string(), permissions: z.array(z.string()) }))
+    .max(50),
+  permissions: z.array(z.string()),
+  nextCursor: z.uuidv7().nullable(),
+});
+export const adminAuditResponseSchema = z.strictObject({
+  items: z
+    .array(
+      z.strictObject({
+        id: z.uuidv7(),
+        actorId: z.uuidv7().nullable(),
+        action: z.string(),
+        targetType: z.string(),
+        targetId: z.uuidv7().nullable(),
+        createdAt: utcInstantSchema,
+        details: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .max(50),
+  nextCursor: z.uuidv7().nullable(),
+});
+export const adminRoleSavedSchema = z.strictObject({ id: z.uuidv7() });

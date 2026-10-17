@@ -119,7 +119,13 @@ describe('admin-created accounts and restricted first sign-in', () => {
     expect(created.setupCredential).toHaveLength(45);
     expect(await auth.roles(created.id)).toEqual(['user']);
     await expect(auth.login(created.username, created.setupCredential, 'origin', 'normal')).rejects.toBeDefined();
-    expect((await app.inject(`/api/v1/admin/users/${created.id}`)).statusCode).toBe(404);
+    const view = await app.inject({
+      url: `/api/v1/admin/users/${created.id}`,
+      headers: { authorization: `Bearer ${actorToken}` },
+    });
+    expect(view.statusCode).toBe(200);
+    expect(view.json()).not.toHaveProperty('setupCredential');
+    expect(view.body).not.toContain('password_hash');
     const begin = await request('start', undefined, { username: created.username, password: created.setupCredential });
     expect(begin.statusCode).toBe(200);
     expect(begin.json()).toEqual({ accepted: true });

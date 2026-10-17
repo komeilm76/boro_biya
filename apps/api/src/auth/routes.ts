@@ -11,6 +11,12 @@ import {
   securityAnswersChangeSchema,
   adminCreateAccountSchema,
   setupSecuritySchema,
+  adminStateSchema,
+  adminRoleAssignmentSchema,
+  adminRoleCreateSchema,
+  adminRoleUpdateSchema,
+  adminCursorSchema,
+  adminIdSchema,
 } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
 
@@ -76,6 +82,91 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.get('/api/v1/auth/security-questions', async () => auth.catalogue());
   app.get('/api/v1/auth/policy', () => ({ recoveryEnabled: auth.config.recoveryEnabled, passwordMinLength: 12 }));
+  app.get('/api/v1/admin/users', async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const parsed = adminCursorSchema.safeParse(request.query);
+    if (!parsed.success) throw new AuthFailure(400);
+    return auth.administration.users(actor, request.correlationId, parsed.data.cursor);
+  });
+  app.get('/api/v1/admin/users/:id', async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const id = adminIdSchema.safeParse(request.params);
+    if (!id.success) throw new AuthFailure(400);
+    return auth.administration.user(actor, id.data.id, request.correlationId);
+  });
+  app.get('/api/v1/admin/roles', async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const parsed = adminCursorSchema.safeParse(request.query);
+    if (!parsed.success) throw new AuthFailure(400);
+    return auth.administration.roles(actor, request.correlationId, parsed.data.cursor);
+  });
+  app.get('/api/v1/admin/audit-events', async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const parsed = adminCursorSchema.safeParse(request.query);
+    if (!parsed.success) throw new AuthFailure(400);
+    return auth.administration.auditEvents(actor, request.correlationId, parsed.data.cursor);
+  });
+  for (const action of ['lock', 'unlock', 'ban', 'unban', 'deactivate', 'reactivate'] as const)
+    app.post(`/api/v1/admin/users/:id/${action}`, { bodyLimit: 8192 }, async (request) => {
+      const actor = await auth.authenticate(request.headers.authorization);
+      const id = adminIdSchema.safeParse(request.params);
+      const body = adminStateSchema.safeParse(request.body);
+      if (!id.success || !body.success) throw new AuthFailure(400);
+      return auth.administration.state(
+        actor,
+        id.data.id,
+        action,
+        body.data.reason,
+        body.data.currentPassword,
+        request.ip,
+        request.correlationId,
+      );
+    });
+  app.patch('/api/v1/admin/users/:id/roles', { bodyLimit: 8192 }, async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const id = adminIdSchema.safeParse(request.params);
+    const body = adminRoleAssignmentSchema.safeParse(request.body);
+    if (!id.success || !body.success) throw new AuthFailure(400);
+    return auth.administration.assignRoles(
+      actor,
+      id.data.id,
+      body.data.roleIds,
+      body.data.currentPassword,
+      request.ip,
+      request.correlationId,
+    );
+  });
+  app.post('/api/v1/admin/roles', { bodyLimit: 8192 }, async (request, reply) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const body = adminRoleCreateSchema.safeParse(request.body);
+    if (!body.success) throw new AuthFailure(400);
+    return reply
+      .code(201)
+      .send(
+        await auth.administration.saveRole(
+          actor,
+          undefined,
+          body.data,
+          body.data.currentPassword,
+          request.ip,
+          request.correlationId,
+        ),
+      );
+  });
+  app.patch('/api/v1/admin/roles/:id', { bodyLimit: 8192 }, async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const id = adminIdSchema.safeParse(request.params);
+    const body = adminRoleUpdateSchema.safeParse(request.body);
+    if (!id.success || !body.success) throw new AuthFailure(400);
+    return auth.administration.saveRole(
+      actor,
+      id.data.id,
+      body.data,
+      body.data.currentPassword,
+      request.ip,
+      request.correlationId,
+    );
+  });
   app.post('/api/v1/admin/users', { bodyLimit: 8192 }, async (request, reply) => {
     const identity = await auth.authenticate(request.headers.authorization);
     const parsed = adminCreateAccountSchema.safeParse(request.body);
@@ -245,6 +336,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       preferredLocale: (await auth.preferences(identity.userId)).locale,
       securityNotices: await auth.securityNotices(identity.userId),
       roles: await auth.roles(identity.userId),
+      permissions: await auth.permissions(identity.userId),
     };
   });
   app.get('/api/v1/users/me/preferences', async (request) => {
