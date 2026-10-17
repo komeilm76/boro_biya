@@ -288,3 +288,6 @@ export async function startTestDatabaseServer(options: StartOptions = {}): Promi
     },
   };
 }
+
+// Node-only process fixtures for database-backed built-artefact tests.
+export { allocateServiceTestPorts, startTestService, type RunningTestService } from './service-process.js';

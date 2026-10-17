@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import {
   createMetricsRegistry,
 } from '@boro-biya/server-runtime';
 import { makeCapturedLog } from '@boro-biya/test-utils';
-import { createDatabaseFor, type TestDatabaseHandle } from '@boro-biya/test-utils/pg';
+import { createDatabaseFor, startTestService, type TestDatabaseHandle } from '@boro-biya/test-utils/pg';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const MAIN = join(ROOT, 'apps/api/dist/main.js');
@@ -44,85 +44,25 @@ afterAll(async () => {
   await database.drop();
 });
 
-interface RunningService {
-  child: ChildProcess;
-  baseUrl: string;
-  logs: string[];
-  stop(): Promise<number | null>;
-}
-
-function startService(port: number, metricsPort: number, envOverrides: Record<string, string> = {}): RunningService {
-  const logs: string[] = [];
-  const child = spawn(process.execPath, [MAIN], {
-    cwd: ROOT,
-    env: {
-      ...process.env,
-      NODE_ENV: 'test',
-      SERVICE_NAME: 'api',
-      API_HOST: '127.0.0.1',
-      API_PORT: String(port),
-      METRICS_HOST: '127.0.0.1',
-      METRICS_PORT: String(metricsPort),
-      LOG_LEVEL: 'info',
-      DATABASE_URL: coreUrl,
-      WEB_ORIGIN: 'http://localhost:5173',
-      SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
-      GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: '5',
-      BUILD_COMMIT: 'integration-test',
-      ...envOverrides,
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  child.stdout?.setEncoding('utf8');
-  child.stderr?.setEncoding('utf8');
-  child.stdout?.on('data', (chunk: string) => logs.push(chunk));
-  child.stderr?.on('data', (chunk: string) => logs.push(chunk));
-  return {
-    child,
-    baseUrl: `http://127.0.0.1:${port}`,
-    logs,
-    async stop() {
-      if (child.exitCode !== null) return child.exitCode;
-      child.kill('SIGTERM');
-      return new Promise<number | null>((resolveExit) => {
-        const timer = setTimeout(() => {
-          child.kill('SIGKILL');
-          resolveExit(null);
-        }, 15_000);
-        child.on('exit', (code) => {
-          clearTimeout(timer);
-          resolveExit(code);
-        });
-      });
-    },
-  };
-}
-
-async function waitHealthy(baseUrl: string, timeoutMs = 30_000): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(`${baseUrl}/healthz`, { signal: AbortSignal.timeout(1_000) });
-      if (response.ok) return true;
-    } catch {
-      // not up yet
-    }
-    await new Promise((wait) => setTimeout(wait, 200));
-  }
-  return false;
-}
-
 describe('the built artefact against real PostgreSQL 18 (QA-06, QA-11, QA-123 mechanics)', () => {
   it('reports readiness green with the database reachable, then shuts down gracefully (OPS-62)', async () => {
-    const service = startService(39_611, 39_961);
+    const service = await startTestService({
+      main: MAIN,
+      cwd: ROOT,
+      service: 'api',
+      env: {
+        DATABASE_URL: coreUrl,
+        WEB_ORIGIN: 'http://localhost:5173',
+        SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
+        GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: '5',
+      },
+    });
     try {
-      expect(await waitHealthy(service.baseUrl), `service never became healthy:\n${service.logs.join('')}`).toBe(true);
-
       const ready = await fetch(`${service.baseUrl}/readyz`, { signal: AbortSignal.timeout(5_000) });
       expect(ready.status).toBe(200);
       expect(await ready.json()).toMatchObject({ status: 'ready', checks: { database: true } });
 
-      const metrics = await fetch('http://127.0.0.1:39961/metrics', { signal: AbortSignal.timeout(5_000) });
+      const metrics = await fetch(service.metricsUrl, { signal: AbortSignal.timeout(5_000) });
       expect(metrics.status).toBe(200);
       expect(await metrics.text()).toContain('process_resident_memory_bytes');
 
