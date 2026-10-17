@@ -132,10 +132,10 @@ describe('identity persistence against PostgreSQL 18 (AUTH-09, AUTH-27, ADM-06, 
     expect(await repository.findById('00000000-0000-7000-8000-000000000000')).toBeNull();
   });
 
-  it('reverses and reapplies only the new migration without changing the existing runner', async () => {
-    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 1 })).toEqual([2]);
+  it('reverses and reapplies the Phase 2 migrations without changing the existing runner', async () => {
+    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 2 })).toEqual([3, 2]);
     expect((await db.query("SELECT to_regclass('core.users') AS relation")).rows).toEqual([{ relation: null }]);
-    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([2]);
+    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([2, 3]);
     expect((await runtime.query('SELECT key FROM core.roles ORDER BY key')).rows).toEqual([
       { key: 'admin' },
       { key: 'user' },

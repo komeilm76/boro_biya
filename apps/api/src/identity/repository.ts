@@ -1,4 +1,5 @@
 import type { Db } from '@boro-biya/db';
+import { identityTransaction } from './transaction.js';
 import { normalizeUsername, type Account, type AccountStatus } from './account.js';
 
 interface AccountRow {
@@ -39,9 +40,7 @@ export function createIdentityRepository(db: Pick<Db, 'pool'>) {
       // Reject accidental plaintext before acquiring a connection; the database also checks
       // the algorithm marker. This guard is not cryptographic validation of an encoded hash.
       if (!input.passwordHash.startsWith('$argon2id$')) throw new Error('expected encoded Argon2id hash');
-      const client = await db.pool.connect();
-      try {
-        await client.query('BEGIN');
+      return identityTransaction(db, async (client) => {
         const result = await client.query<AccountRow>(
           `INSERT INTO core.users
             (username_normalized, username_display, username_normalization_version, password_hash,
@@ -65,14 +64,8 @@ export function createIdentityRepository(db: Pick<Db, 'pool'>) {
           [row.id, 'user'],
         );
         if (assigned.rowCount !== 1) throw new Error('default role unavailable');
-        await client.query('COMMIT');
         return project(row);
-      } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-      } finally {
-        client.release();
-      }
+      });
     },
     async findById(id: string): Promise<Account | null> {
       // Malformed identifiers fail without a database error containing caller material.

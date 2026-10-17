@@ -72,6 +72,30 @@ describe('identity repository transaction and projection boundary', () => {
     expect(f.release).toHaveBeenCalledOnce();
   });
 
+  it('preserves the original error and destroys the client when rollback also fails', async () => {
+    const f = fixture();
+    const original = new Error('original constraint failure');
+    f.query
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce(original)
+      .mockRejectedValueOnce(new Error('connection lost'));
+    await expect(f.repository.create(input)).rejects.toBe(original);
+    expect(f.release).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('rolls back a failed commit and releases a recovered client', async () => {
+    const f = fixture();
+    f.query
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ rows: [row] })
+      .mockResolvedValueOnce({ rowCount: 1 })
+      .mockRejectedValueOnce(new Error('commit failed'))
+      .mockResolvedValueOnce({});
+    await expect(f.repository.create(input)).rejects.toThrow('commit failed');
+    expect(f.query.mock.calls.at(-1)?.[0]).toBe('ROLLBACK');
+    expect(f.release).toHaveBeenCalledExactlyOnceWith();
+  });
+
   it('rejects invalid input before opening a transaction', async () => {
     const f = fixture();
     await expect(f.repository.create({ ...input, username: 'a' })).rejects.toThrow('invalid username');

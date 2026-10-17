@@ -36,7 +36,7 @@ Phase 2 is **In progress**, explicitly owner-authorised on 2026-10-17 for authen
 | Containers/CI | Development/CI Compose services; CI builds/smoke-tests images and checks private backend networking; tag-only release packaging mechanics | `docker-compose.yml`, `docker/`, `.github/workflows/ci.yml` |
 | Android | Capacitor configuration and TypeScript configuration only; the build orchestrator explicitly skips native packaging | `apps/android/`, `scripts/build.mjs` |
 
-The Phase 1 migrations bootstrap schemas/roles and migration-ledger structures. Phase 2 adds the `0002_identity` up/down migration for users, roles, permissions, role assignments and role-permission grants; session, map, relation, location, upload and SOS tables are not implemented. The Relation and SOS processes are not called by a Phase 1 business workflow.
+The Phase 1 migrations bootstrap schemas/roles and migration-ledger structures. Phase 2 adds the `0002_identity` up/down migration for users, roles, permissions, role assignments and role-permission grants; Phase 2 also adds `0003_sessions` for refresh-token generations and session families; map, relation, location, upload and SOS tables are not implemented. The Relation and SOS processes are not called by a Phase 1 business workflow.
 
 ### Phase 2 identity foundation — partial row 1 evidence
 
@@ -60,6 +60,30 @@ Local evidence on Node 24.22.0 and Bun 1.4.3:
 | `bun run coverage` | Passed: 183 tests in 25 files; statements 92.08%, branches 83.33%, functions 90.53%, lines 93.73%; both identity modules 100% |
 
 The initial integration invocation preceded the build and failed the existing built-artefact preconditions; the new seven identity tests passed in that invocation. Building and rerunning the complete integration command passed all 17 tests. No test or gate was weakened. Row 1 remains In progress; no complete acceptance criterion is claimed for endpoints or user-facing flows. Next: hashing/security-answer persistence and session lifecycle, then API and bilingual Vue wiring with negative-case tests.
+
+### Phase 2 bug review and session persistence — partial row 1 evidence
+
+A pre-merge review found a transaction-cleanup defect in the identity repository: if `ROLLBACK` failed, its error replaced the original failure and the client was released normally despite an unknown transaction state. `identity/transaction.ts` now preserves the original error and discards the client on rollback failure. Both this path and commit-failure recovery have regression tests. This is app-owned identity code; the accepted database framework remains unchanged.
+
+Completed internal session-persistence tasks (`ADR-021`, `SEC-08`, `SEC-10`, `PRIV-21`):
+
+- Reversible `0003_sessions` migration: one family per login/device session, an absolute family expiry, historical single-use refresh generations, unique token hashes, and runtime deletion denied for replay evidence. New migrations are added; applied identity/bootstrap files remain unchanged.
+- The repository issues random 256-bit opaque refresh secrets, stores only SHA-256 hashes, consumes each generation atomically and preserves consumed generations for reuse detection. Rotation keeps the original expiry; replay commits whole-family revocation rather than rolling it back along with a failed refresh.
+- User-row locking serializes issue, rotation and revocation. Expiry is checked using database time after lock acquisition. The user/session access-binding check denies inactive/setup-pending accounts and consumed generations; this is not bearer-token verification. Old access bindings must be replaced when refresh rotates the session ID.
+- Session listing returns safe metadata only. Single-family revocation checks ownership in SQL; revoke-all affects only the named user. Credential/state changes must later revoke families in the same mutation transaction; standalone revoke-all is not a substitute for that atomic workflow.
+- Adversarial PostgreSQL tests prove concurrent rotation produces one successor and then revokes it on replay; replay does not revoke independent families; cross-user revocation is denied; failed successor insertion rolls back consumption; expiry after a lock wait is rejected; and revocation racing with refresh leaves no usable successor.
+
+Checkpoint commands (Node 24.22.0 / Bun 1.4.3):
+
+| Command | Result |
+| --- | --- |
+| `bun run typecheck` | Passed every project after the transaction/session implementation |
+| `bun run lint` | Passed |
+| `node node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts apps/api/test/integration/identity.test.ts apps/api/test/integration/sessions.test.ts` | Passed 20 tests, including 13 session tests, on disposable PostgreSQL 18.4 |
+| `bun run gate` | Passed all 15 active gates after the bug fix/session changes; full integration run passed 30 tests across six files; no gate configuration changed |
+| `bun run coverage` | Passed 204 tests in 26 files; statements 92.89%, branches 84.90%, functions 91.30%, lines 94.30%; session and transaction modules 100% |
+
+These tasks complete the internal refresh-session store, not checklist row 1 or Phase 2. No registration/login/logout/session HTTP endpoint, signed access token, secure-cookie/CSRF adapter, production password-hashing adapter, security-answer flow or Vue security setting is claimed implemented. No merge is requested: PR #12 stays draft for owner review and until Phase 2 acceptance evidence is complete.
 
 ## 3. Features that are not implemented
 
