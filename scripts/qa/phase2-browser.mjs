@@ -15,6 +15,8 @@ import { buildApp } from '../../apps/api/dist/app.js';
 import { createAuthService } from '../../apps/api/dist/auth/service.js';
 import { runChallengeBrowserEdges } from './challenge-browser.mjs';
 import { runRecoveryBrowserEdges } from './recovery-browser.mjs';
+import { runReportBrowserEdges } from './report-browser.mjs';
+import { runTimeBrowserEdges, seedTimeFixtures } from './time-browser.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 if (!process.env.PHASE2_BROWSER_TOOLS || !process.env.PHASE2_BROWSER_EXECUTABLE) {
@@ -39,6 +41,8 @@ const report = {
   disabledRecoveryLocales: [],
   returnNavigationRejections: [],
   challengeEdgeCases: [],
+  reportingEdgeCases: [],
+  timestampEdgeCases: [],
   passed: false,
 };
 let pg, database, db, app, web, browser;
@@ -118,11 +122,12 @@ try {
   for (const locale of ['en', 'fa'])
     for (const mobile of [false, true]) {
       const label = `${locale}/${mobile ? 'mobile-emulation' : 'desktop'}`;
+      const timeZone = locale === 'en' ? 'Europe/Berlin' : 'Asia/Tehran';
       const context = await browser.newContext({
         viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
         isMobile: mobile,
         hasTouch: mobile,
-        timezoneId: 'Asia/Tehran',
+        timezoneId: timeZone,
       });
       const page = await context.newPage();
       page.setDefaultTimeout(15_000);
@@ -165,12 +170,13 @@ try {
       await page.locator('form button[type="submit"]').click();
       await page.waitForFunction(() => !globalThis.document.querySelector('#register-user'));
       assert.equal(await page.locator('input[type="password"]').count(), 0);
+      await seedTimeFixtures(db, `browser_${locale}_${mobile ? 'mobile' : 'desktop'}`);
       step = `${label}: login/settings/time disclosure`;
       await login(page, password);
       const instant = await page.locator('time').first().getAttribute('datetime');
       const year = new Intl.DateTimeFormat(
         locale === 'fa' ? 'fa-IR-u-ca-persian-nu-arabext' : 'en-GB-u-ca-gregory-nu-latn',
-        { year: 'numeric', timeZone: 'Asia/Tehran' },
+        { year: 'numeric', timeZone },
       ).format(new Date(instant));
       assert((await page.locator('time').first().innerText()).includes(year));
       const disclosure = page.locator('time').first().locator('..').locator('button');
@@ -185,6 +191,19 @@ try {
         true,
       );
       assert((await page.locator('body').ariaSnapshot()).length > 50);
+      const timestampEdges = await runTimeBrowserEdges({
+        page,
+        originalLocale: locale,
+        zone: timeZone,
+        onStep: (stage) => {
+          step = `${label}: ${stage}`;
+        },
+      });
+      report.timestampEdgeCases.push({
+        locale,
+        viewport: mobile ? '390x844 (emulated)' : '1280x900',
+        results: timestampEdges,
+      });
       step = `${label}: recovery and live owner notification`;
       // Wait for actual SSE admission before resetting from an independent cookie context.
       await page.waitForFunction(
@@ -309,6 +328,21 @@ try {
         await context.close();
       }
     }
+  report.reportingEdgeCases = await runReportBrowserEdges({
+    browser,
+    origin,
+    onStep: (stage) => {
+      step = stage;
+    },
+  });
+  assert.equal(report.reportingEdgeCases.length, 4);
+  step = 'reporting outage/quota database side effects';
+  for (const sql of [
+    'SELECT count(*)::int AS count FROM core.security_reports',
+    "SELECT count(*)::int AS count FROM core.audit_events WHERE action = 'security_report_received'",
+  ])
+    assert.equal((await db.query(sql)).rows[0].count, 5);
+  console.log('EN/FA desktop/mobile-emulation reporting outage/lost-receipt/quota checks passed');
   // The same disposable configuration now exercises the enabled branch at default work/risk
   // settings. This is a rehearsal setting, never a change to application defaults or CI budgets.
   authConfig.captchaEnabled = true;
