@@ -32,7 +32,7 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | Plugin container runaway or compromise | untrusted package exhausting resources or escaping its sandbox | 7 | not yet |
 | Backup job failure | backup did not run or did not complete | 8 | not yet |
 | Lost host and redeploy from scratch | hosting environment lost; rebuild from repository and backups | 8 | not yet |
-| Account compromise report | a user reports a suspected compromise or a vulnerability | 2 | not yet |
+| Account compromise report | a user reports a suspected compromise or a vulnerability | 2 | [Runbook and automated disposable rehearsal](runbooks/account-compromise-report.md), 2026-10-17 |
 | Incident-response procedure | any security incident: severity, contacts, evidence, notification | 9 | not yet |
 
 The incident-response procedure required by [SECURITY](../SECURITY.md) §9 is one of these entries; it is exercised against a rehearsal incident before the Phase 9 gate. From Phase 8 onward, at least one runbook is executed against a disposable environment per phase, and the date and result are recorded in the phase report. A runbook that has never been exercised is not evidence that the procedure works, and no phase report may describe it as one.
@@ -134,7 +134,7 @@ Enabling automated retention enforcement is a deployment action that follows an 
 
 ## Support and reporting route
 
-The route a user or a researcher follows to report a suspected account compromise, abuse, or a vulnerability — including what is reachable without signing in — is a requirement in its own right ([SECURITY](../SECURITY.md) §9) and is exercised as the "Account compromise report" runbook above. Repository-level vulnerability reporting uses GitHub Private Vulnerability Reporting under the policy and response commitments in [`.github/SECURITY.md`](../../.github/SECURITY.md); the in-product unauthenticated reporting route and the "Account compromise report" runbook remain Phase 2 work. Support and incident contacts are updated as part of every release ([release plan](../development/06-release-plan.md) §6).
+The route a user or a researcher follows to report a suspected account compromise, abuse, or a vulnerability — including what is reachable without signing in — is a requirement in its own right ([SECURITY](../SECURITY.md) §9) and is exercised as the "Account compromise report" runbook above. Repository-level vulnerability reporting uses GitHub Private Vulnerability Reporting under the policy and response commitments in [`.github/SECURITY.md`](../../.github/SECURITY.md); the in-product `/_public/report` form now stores anonymous reports in the private deployment inbox, with protected operator CLI retrieval and the [Account compromise report runbook](runbooks/account-compromise-report.md). No scheduler, reporter reply/tracking channel or production response target is installed. Support and incident contacts are updated as part of every release ([release plan](../development/06-release-plan.md) §6).
 
 ## Current state
 

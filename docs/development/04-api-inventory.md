@@ -17,6 +17,8 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/challenge` | public | Origin/CSRF-protected, quota-bound issuance for login/register/recovery/setup; returns required:false below the risk threshold, otherwise nonce/bits/expiry |
 | POST | `/auth/challenge/verify` | public | Origin/CSRF-protected, bounded work counter; returns a short-lived single-use grant; no-store |
 | GET | `/auth/policy` | public | Recovery/CAPTCHA switches and minimum password length |
+| GET | `/privacy/policy` | public | No-store effective authentication lifetimes and explicitly unenforced development retention candidates; no secrets or account identifiers |
+| POST | `/security/reports` | public | No-store anonymous operator inbox intake; strict 20–4,000-character EN/FA category/message, origin/CSRF, persisted five-origin/100-global requests per configured login window, atomic content-free audit, 202 receipt; no public inbox reads or reply channel |
 
 
 | Method | Path | Access | Notes |
@@ -30,7 +32,7 @@ Implementation checkpoint (2026-10-17): registration, login, refresh, logout, pa
 | POST | `/auth/password/recover/verify` | public | Implemented: all three answers required; persistent attempt limit; HttpOnly single-use grant cookie, never a body/URL token |
 | POST | `/auth/password/recover/reset` | public | Implemented: flow/grant cookies plus origin/CSRF; atomic password reset, unlock, family revocation, audit and persisted notice; clears proof/refresh cookies |
 | POST | `/auth/security-questions/change` | auth | Implemented: current-password confirmation, five distinct active question IDs and normalized/hashed replacement answers; persisted account/origin limits; owner/current-binding and credential recheck after hashing; atomically cancels recovery, revokes all sessions, audits and stores a minimal notice; clears proof cookies |
-| POST | `/auth/password/change` | auth | Current + new password; revokes all sessions and recovery flows, persists a security notice |
+| POST | `/auth/password/change` | auth | Current + new password; persisted account/origin quotas before hashing; revokes all sessions and recovery flows, persists a security notice |
 | POST | `/auth/setup/start` | public (temporary credential) | Implemented: dedicated first sign-in; origin/CSRF and persisted budgets; consumes temporary credential once, sets restricted HttpOnly setup proof; never creates an ordinary session |
 | GET | `/auth/setup/status` | restricted setup cookie | Implemented: remaining setup flags; proof expiry/fingerprint/state checked against persisted state |
 | POST | `/auth/setup/password` | restricted setup cookie | Implemented: origin/CSRF, new/repeat password policy, old-credential rejection, post-hash state/fingerprint recheck; no normal session |

@@ -2,6 +2,7 @@ import { challengeCleanupEnabled, CHALLENGE_CLEANUP_GRACE_SECONDS } from '../pri
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
+  securityReportSchema,
   challengeIssueSchema,
   challengeVerifySchema,
   loginSchema,
@@ -82,6 +83,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       request.url.startsWith('/api/v1/auth') ||
       request.url.startsWith('/api/v1/users/me') ||
       request.url.startsWith('/api/v1/privacy/') ||
+      request.url.startsWith('/api/v1/security/') ||
       request.url.startsWith('/api/v1/admin')
     ) {
       reply.header('cache-control', 'no-store');
@@ -101,6 +103,14 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
     passwordMinLength: 12,
     captchaEnabled: auth.config.captchaEnabled,
   }));
+  app.post('/api/v1/security/reports', { bodyLimit: 20_480 }, async (request, reply) => {
+    csrf(request);
+    const parsed = securityReportSchema.safeParse(request.body);
+    if (!parsed.success) throw new AuthFailure(400);
+    await auth.reports.submit(parsed.data, request.ip, request.correlationId);
+    reply.code(202);
+    return { accepted: true };
+  });
   app.get('/api/v1/privacy/policy', () => ({
     status: 'development_unapproved',
     automaticAccountDeletion: false,
@@ -411,6 +421,7 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
       parsed.data.password,
       parsed.data.repeatPassword,
       request.correlationId,
+      request.ip,
     );
     reply.header('set-cookie', `${refreshName}=; HttpOnly; Max-Age=0${suffix}`);
     return { accepted: true };

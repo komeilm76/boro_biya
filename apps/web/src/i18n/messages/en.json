@@ -84,9 +84,21 @@
   },
   "report": {
     "title": "Report a security concern",
-    "body": "For suspected account compromise, revoke other sessions if you can still sign in. Use the private repository reporting channel for vulnerabilities or compromise reports; no application sign-in is required to reach this page.",
+    "body": "Report suspected account compromise, abuse or a vulnerability to this deployment’s operator inbox without an account. If you can still sign in, revoke other sessions as well. Reports do not reset passwords or prove account ownership.",
     "privateLink": "Open private security reporting on GitHub",
-    "warning": "The external reporting service may require its own account. Do not post passwords, answers, tokens or private locations in a public issue."
+    "warning": "Use synthetic examples and the minimum detail needed. Never submit passwords, security answers, tokens, private locations or other people’s personal data. Do not publish vulnerability details in a public issue.",
+    "expectation": "Reports are stored privately for manual operator review. No email or phone contact is collected, and there is no reply or tracking channel. No response time, account recovery or emergency assistance is guaranteed. Repository vulnerabilities can alternatively use GitHub private reporting, which requires a GitHub account.",
+    "category": "Concern type",
+    "compromise": "Suspected account compromise",
+    "abuse": "Abuse",
+    "vulnerability": "Security vulnerability",
+    "message": "Description (20–4,000 characters)",
+    "submit": "Send report privately",
+    "sending": "Sending report",
+    "accepted": "Your report was stored in the operator inbox. This does not confirm a compromise or any action. If submission was uncertain, avoid repeatedly sending the same report.",
+    "invalid": "Choose a concern type and enter 20–4,000 characters without unsupported control characters.",
+    "limited": "Too many reports. Please wait before trying again; do not send repeated copies.",
+    "failed": "Receipt could not be confirmed. The report may already have been stored; avoid repeated copies. Try later if necessary."
   },
   "recovery": {
     "title": "Recover password",

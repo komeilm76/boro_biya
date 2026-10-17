@@ -185,6 +185,26 @@ describe('auth orchestration and failure boundaries', () => {
     mocks.find.mockResolvedValueOnce(null);
     await expect(service.authenticate(`Bearer ${token}`)).rejects.toMatchObject({ statusCode: 401 });
   });
+  it('denies exhausted password-change budgets before checking or hashing credentials', async () => {
+    const f = fixture();
+    const service = await f.service();
+    f.limit(config.maxAccountAttempts);
+    await expect(
+      service.changePassword('user', 'session', 'wrong', 'Another!violet42', 'Another!violet42', 'quota'),
+    ).rejects.toMatchObject({ statusCode: 429 });
+    expect(f.hasher.verify).not.toHaveBeenCalled();
+    expect(f.hasher.hash).toHaveBeenCalledTimes(1);
+  });
+  it('denies an exhausted HTTP origin budget before current-password work', async () => {
+    const f = fixture();
+    const service = await f.service();
+    f.limit(config.maxOriginAttempts);
+    await expect(
+      service.changePassword('user', 'session', 'wrong', 'Another!violet42', 'Another!violet42', 'quota', 'network'),
+    ).rejects.toMatchObject({ statusCode: 429 });
+    expect(f.hasher.verify).not.toHaveBeenCalled();
+    expect(f.hasher.hash).toHaveBeenCalledTimes(1);
+  });
   it('changes only a freshly verified current password and revokes all families atomically', async () => {
     const f = fixture();
     const service = await f.service();

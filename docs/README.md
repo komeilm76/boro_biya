@@ -60,7 +60,7 @@ Owner: Engineering. Reviewed: 2026-10-17.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-16 |
+| [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-17 |
 | [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-17 |
 | [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-17 |
 | [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-14 |
@@ -69,13 +69,14 @@ Owner: Engineering. Reviewed: 2026-10-17.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-14 |
+| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-17 |
 
 ### Operations
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-17 |
+| [operations/runbooks/account-compromise-report.md](operations/runbooks/account-compromise-report.md) | Anonymous operator inbox, protected retrieval, triage and development rehearsal for compromise, abuse and vulnerability reports | Security | 2026-10-17 |
 | [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-16 |
 
 ### Evidence

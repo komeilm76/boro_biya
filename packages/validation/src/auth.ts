@@ -253,3 +253,22 @@ export const privacyPolicySchema = z.strictObject({
   captchaEnabled: z.boolean(),
   captchaTtlSeconds: z.number().int().positive().max(300).nullable(),
 });
+
+/** Anonymous intake: no account lookup, secrets, attachments or reply contact fields. */
+export const securityReportSchema = z.strictObject({
+  category: z.enum(['account_compromise', 'abuse', 'vulnerability']),
+  message: z
+    .string()
+    .trim()
+    .min(20)
+    .max(4000)
+    // PostgreSQL char_length counts code points, not UTF-16 code units.
+    .refine((value) => Array.from(value).length >= 20)
+    .refine((value) =>
+      Array.from(value).every((character) => {
+        const code = character.codePointAt(0)!;
+        return code !== 127 && (code >= 32 || [9, 10, 13].includes(code));
+      }),
+    ),
+  locale: z.enum(['en', 'fa']),
+});

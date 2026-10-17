@@ -180,6 +180,7 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
     });
     expect(response.statusCode).toBe(200);
     expect(String(response.headers['set-cookie'])).toContain('Max-Age=0');
+    expect(auth.changePassword.mock.calls[0]?.at(-1)).toBe('127.0.0.1');
   });
   it('lists safe sessions, revokes only through the current identity, and clears logout cookie', async () => {
     const { app, auth, headers } = fixture();

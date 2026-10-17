@@ -5,6 +5,7 @@ import {
   adminAuditQuerySchema,
   challengeResponseSchema,
   privacyPolicySchema,
+  securityReportSchema,
   challengeGrantSchema,
   type ChallengePurpose,
   accessResponseSchema,
@@ -89,6 +90,12 @@ function searchQuery(query: Record<string, string | undefined>): string {
   return encoded ? `?${encoded}` : '';
 }
 export const authClient = {
+  reportSecurity: (input: unknown, csrf: string) =>
+    authRequest('/api/v1/security/reports', acceptedResponse, {
+      method: 'POST',
+      csrf,
+      body: securityReportSchema.parse(input),
+    }),
   privacyPolicy: () => authRequest('/api/v1/privacy/policy', privacyPolicySchema),
   challenge: (purpose: ChallengePurpose, csrf: string) =>
     authRequest('/api/v1/auth/challenge', challengeResponseSchema, { method: 'POST', csrf, body: { purpose } }),

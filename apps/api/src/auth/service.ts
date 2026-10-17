@@ -1,3 +1,4 @@
+import { createReportingService } from '../security/reports.js';
 import { createChallengeService } from './challenge.js';
 import { createHash, createHmac } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
@@ -117,6 +118,7 @@ export async function createAuthService(
   return {
     config,
     challenge,
+    reports: createReportingService(db, reserve),
     administration: createAdministration(db, config, hasher, dummyHash, reserve),
     setup: createSetupService(db, config, hasher, dummyHash, reserve),
     changeSecurityAnswers: createSecurityAnswerService(db, config, hasher, dummyHash, reserve),
@@ -296,7 +298,10 @@ export async function createAuthService(
       password: string,
       repeatPassword: string,
       requestId: string,
+      origin?: string,
     ) {
+      if (origin !== undefined) await reserve('password-change-origin', origin, config.maxOriginAttempts, requestId);
+      await reserve('password-change-account', userId, config.maxAccountAttempts, requestId);
       const lookup = await db.pool.query<{ password_hash: string; username_normalized: string }>(
         'SELECT password_hash, username_normalized FROM core.users WHERE id = $1',
         [userId],
