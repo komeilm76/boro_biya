@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
@@ -11,6 +11,20 @@ const temporaryPassword = ref('');
 const created = ref<Awaited<ReturnType<typeof authClient.createAccount>> | null>(null);
 const busy = ref(false);
 const failed = ref(false);
+let generation = 0;
+function clear() {
+  generation++;
+  username.value = '';
+  currentPassword.value = '';
+  temporaryPassword.value = '';
+  created.value = null;
+  busy.value = false;
+  failed.value = false;
+}
+watch([() => session.accessToken, () => session.authVersion, () => session.permissions?.join('|')], clear, {
+  flush: 'sync',
+});
+onUnmounted(clear);
 function date(value: string) {
   return new Intl.DateTimeFormat(locale.value === 'fa' ? 'fa-IR-u-ca-persian' : 'en-GB', {
     dateStyle: 'medium',
@@ -19,22 +33,27 @@ function date(value: string) {
 }
 async function submit() {
   if (busy.value) return;
+  const ticket = generation;
+  const token = session.accessToken ?? '';
   busy.value = true;
   failed.value = false;
   created.value = null;
   try {
-    created.value = await authClient.createAccount(
+    const result = await authClient.createAccount(
       username.value,
       currentPassword.value,
       temporaryPassword.value || undefined,
-      session.accessToken ?? '',
+      token,
     );
+    if (ticket === generation) created.value = result;
   } catch {
-    failed.value = true;
+    if (ticket === generation) failed.value = true;
   } finally {
-    currentPassword.value = '';
-    temporaryPassword.value = '';
-    busy.value = false;
+    if (ticket === generation) {
+      currentPassword.value = '';
+      temporaryPassword.value = '';
+      busy.value = false;
+    }
   }
 }
 </script>

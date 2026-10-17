@@ -122,6 +122,20 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
         request.correlationId,
       );
     });
+  app.post('/api/v1/admin/users/:id/setup-credential', { bodyLimit: 8192 }, async (request) => {
+    const actor = await auth.authenticate(request.headers.authorization);
+    const id = adminIdSchema.safeParse(request.params);
+    const body = adminStateSchema.safeParse(request.body);
+    if (!id.success || !body.success) throw new AuthFailure(400);
+    return auth.administration.reissueSetupCredential(
+      actor,
+      id.data.id,
+      body.data.reason,
+      body.data.currentPassword,
+      request.ip,
+      request.correlationId,
+    );
+  });
   app.patch('/api/v1/admin/users/:id/roles', { bodyLimit: 8192 }, async (request) => {
     const actor = await auth.authenticate(request.headers.authorization);
     const id = adminIdSchema.safeParse(request.params);

@@ -104,7 +104,7 @@ describe('browser authentication transport and memory-only state', () => {
     loginResponses();
     await store.restore();
     expect(store.username).toBe('Alice');
-    fetcher.mockResolvedValueOnce(response({}, 204));
+    fetcher.mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) })).mockResolvedValueOnce(response({}, 204));
     await store.logout();
     expect(store.accessToken).toBe('');
     expect(store.isAuthenticated).toBe(false);
@@ -197,7 +197,7 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     await wrapper.get('[data-action="load"]').trigger('click');
     await flushPromises();
     expect(wrapper.find('[role="alert"]').exists()).toBe(true);
-    fetcher.mockResolvedValueOnce(response({}, 204));
+    fetcher.mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) })).mockResolvedValueOnce(response({}, 204));
     await wrapper.get('[data-action="logout"]').trigger('click');
     await flushPromises();
     expect(session.isAuthenticated).toBe(false);
@@ -448,4 +448,128 @@ describe('recovery policy warnings and security-answer settings', () => {
       expect(localStorage.length).toBe(0);
     },
   );
+});
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+describe('identity-bound browser authentication races', () => {
+  it.each(['success', 'failure'] as const)(
+    'ignores a late restore %s after a new identity replaces the session',
+    async (outcome) => {
+      const store = useSessionStore();
+      const pending = deferred<Response>();
+      fetcher
+        .mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }))
+        .mockResolvedValueOnce(response({ accessToken: 'old', expiresIn: 900 }))
+        .mockReturnValueOnce(pending.promise);
+      const restoring = store.restore();
+      await flushPromises();
+      store.replaceSession({
+        isAuthenticated: true,
+        roles: ['custom'],
+        permissions: ['users.read'],
+        accessToken: 'new',
+        username: 'new identity',
+      });
+      if (outcome === 'success') pending.resolve(response(account));
+      else pending.reject(new Error('offline'));
+      await restoring;
+      expect(store.username).toBe('new identity');
+      expect(store.accessToken).toBe('new');
+      expect(store.isAdmin).toBe(true);
+    },
+  );
+  it('does not resurrect a pending sign-in after logout, and serializes cookie cleanup', async () => {
+    const store = useSessionStore(),
+      pending = deferred<Response>();
+    fetcher
+      .mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }))
+      .mockResolvedValueOnce(response({ accessToken: 'old', expiresIn: 900 }))
+      .mockReturnValueOnce(pending.promise);
+    const signingIn = store.login('Alice', 'secret').catch((error: unknown) => error);
+    await flushPromises();
+    fetcher.mockResolvedValueOnce(response({ csrfToken: 'B'.repeat(43) })).mockResolvedValueOnce(response({}, 204));
+    const signingOut = store.logout();
+    await flushPromises();
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(store.isAuthenticated).toBe(false);
+    pending.resolve(response(account));
+    expect(await signingIn).toBeInstanceOf(Error);
+    await signingOut;
+    expect(store.isAuthenticated).toBe(false);
+    expect(store.accessToken).toBe('');
+    expect(fetcher.mock.calls[4]?.[0]).toBe('/api/v1/auth/logout');
+  });
+  it('does not let a late logout erase a newer sign-in or run its cookie mutation out of order', async () => {
+    const store = useSessionStore(),
+      pending = deferred<Response>();
+    store.replaceSession({ isAuthenticated: true, roles: [], accessToken: 'old' });
+    fetcher.mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) })).mockReturnValueOnce(pending.promise);
+    const signingOut = store.logout();
+    await flushPromises();
+    loginResponses();
+    const signingIn = store.login('Alice', 'secret');
+    await flushPromises();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    pending.resolve(response({}, 204));
+    await signingOut;
+    await signingIn;
+    expect(store.isAuthenticated).toBe(true);
+    expect(store.username).toBe('Alice');
+    expect(fetcher).toHaveBeenCalledTimes(5);
+  });
+  it('cancels sign-in before credential submission when its pending CSRF response becomes stale', async () => {
+    const store = useSessionStore(),
+      pending = deferred<Response>();
+    fetcher.mockReturnValueOnce(pending.promise);
+    const signingIn = store.login('Alice', 'secret').catch((error: unknown) => error);
+    await flushPromises();
+    store.clearSession();
+    pending.resolve(response({ csrfToken: 'A'.repeat(43) }));
+    expect(await signingIn).toBeInstanceOf(Error);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('replaces all prior identity fields and copies effective permissions instead of retaining credentials', () => {
+    const store = useSessionStore();
+    store.replaceSession({
+      isAuthenticated: true,
+      roles: ['admin'],
+      accessToken: 'old',
+      username: 'old',
+      csrf: 'old',
+      userId,
+      permissions: ['users.read'],
+      preferredLocale: 'fa',
+      securityNotices: [{ event: 'password_reset', createdAt: '2026-10-17T00:00:00Z' }],
+    });
+    const version = store.authVersion!;
+    store.replaceSession({ isAuthenticated: true, roles: ['admin'] });
+    expect(store.accessToken).toBe('');
+    expect(store.csrf).toBe('');
+    expect(store.username).toBe('');
+    expect(store.userId).toBe('');
+    expect(store.securityNotices).toEqual([]);
+    expect(store.preferredLocale).toBe('en');
+    expect(store.isAdmin).toBe(false);
+    expect(store.authVersion).toBeGreaterThan(version);
+  });
+});
+
+it('does not apply a pending locale change across identity replacement even if a token fixture is reused', async () => {
+  const store = useSessionStore(),
+    pending = deferred<Response>();
+  store.replaceSession({ isAuthenticated: true, roles: [], accessToken: 'same', preferredLocale: 'en' });
+  fetcher.mockReturnValueOnce(pending.promise);
+  const saving = store.saveLocale('fa');
+  store.replaceSession({ isAuthenticated: true, roles: [], accessToken: 'same', preferredLocale: 'en' });
+  pending.resolve(response({ locale: 'fa' }));
+  expect(await saving).toBe(false);
+  expect(store.preferredLocale).toBe('en');
 });

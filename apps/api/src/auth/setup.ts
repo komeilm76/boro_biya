@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import type { AuthConfig } from './config.js';
 import { AuthFailure } from './failure.js';
-import { normalizeAnswer, validPassword, type PasswordHasher } from './passwords.js';
+import { generateSetupCredential, normalizeAnswer, validPassword, type PasswordHasher } from './passwords.js';
 import { normalizeUsername } from '../identity/account.js';
 import { identityTransaction } from '../identity/transaction.js';
 import { hasPermission } from './policy.js';
@@ -99,10 +99,7 @@ export function createSetupService(
         throw new AuthFailure(400);
       }
       const generated = input.temporaryPassword === undefined;
-      let credential = input.temporaryPassword ?? `${randomBytes(32).toString('base64url')}!9`;
-      // Resample generated material if it accidentally contains the chosen username.
-      while (generated && !validPassword(credential, username.normalized))
-        credential = `${randomBytes(32).toString('base64url')}!9`;
+      const credential = input.temporaryPassword ?? generateSetupCredential(username.normalized);
       if (!validPassword(credential, username.normalized)) throw new AuthFailure(400);
       const encoded = await hasher.hash(credential);
       try {

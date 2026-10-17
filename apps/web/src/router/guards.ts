@@ -21,7 +21,7 @@ export function installRouteGuards(router: Router): void {
       };
     }
 
-    // The admin namespace is additionally gated on the admin role for UX; the server remains
+    // The admin namespace is additionally gated on current administrative permissions for UX; the server remains
     // the only authority (ADM-02 arrives with authentication in Phase 2).
     if (to.meta.requiresAdminRole === true && !session.isAdmin) {
       return { path: CLIENT_ROUTE_NAMESPACES.user };

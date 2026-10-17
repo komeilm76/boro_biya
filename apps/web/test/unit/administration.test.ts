@@ -155,3 +155,90 @@ it('clears the current local session when an allowed self-state transition revok
   expect(session.isAuthenticated).toBe(false);
   expect(session.permissions).toEqual([]);
 });
+
+it.each(['en', 'fa'] as const)(
+  'displays a reissued credential once in %s and clears it on identity change',
+  async (locale) => {
+    const { wrapper, session } = await page(locale);
+    await wrapper.get('#managed-user').setValue(userId);
+    await wrapper.get('#reissue-reason').setValue('lost setup proof');
+    await wrapper.get('#management-password').setValue('private password');
+    fetcher.mockResolvedValueOnce(
+      response({
+        id: userId,
+        username: 'target',
+        expiresAt: '2026-10-18T12:00:00Z',
+        setupCredential: 'display-once-secret',
+      }),
+    );
+    await wrapper.findAll('form')[3]!.trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('output').text()).toContain('display-once-secret');
+    expect((wrapper.get('#management-password').element as HTMLInputElement).value).toBe('');
+    expect(localStorage.length).toBe(0);
+    session.clearSession();
+    await flushPromises();
+    expect(wrapper.find('output').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('target');
+  },
+);
+it.each(['read', 'mutation', 'profile'] as const)(
+  'discards a stale administrative %s response from another identity',
+  async (phase) => {
+    const { wrapper, session } = await page('en');
+    let resolve!: (value: Response) => void;
+    const pending = new Promise<Response>((yes) => {
+      resolve = yes;
+    });
+    if (phase === 'read') {
+      fetcher.mockReturnValueOnce(pending);
+      await wrapper.findAll('button')[0]!.trigger('click');
+    } else {
+      await wrapper.get('#managed-user').setValue(userId);
+      await wrapper.get('#managed-reason').setValue('review');
+      if (phase === 'profile') fetcher.mockResolvedValueOnce(response({ accepted: true }));
+      fetcher.mockReturnValueOnce(pending);
+      await wrapper.findAll('form')[0]!.trigger('submit');
+      await flushPromises();
+    }
+    session.replaceSession({
+      isAuthenticated: true,
+      roles: [],
+      permissions: [],
+      accessToken: 'new',
+      username: 'new identity',
+      userId,
+    });
+    resolve(
+      response(
+        phase === 'read'
+          ? { items: [user], nextCursor: null }
+          : phase === 'mutation'
+            ? { accepted: true }
+            : {
+                id: userId,
+                username: 'operator',
+                status: 'active',
+                passwordSetupRequired: false,
+                securitySetupRequired: false,
+                roles: ['admin'],
+                permissions: [...administrativePermissionKeys],
+              },
+      ),
+    );
+    await flushPromises();
+    expect(session.username).toBe('new identity');
+    expect(session.accessToken).toBe('new');
+    expect(session.permissions).toEqual([]);
+    expect(wrapper.text()).not.toContain('target');
+    expect(wrapper.find('[role="status"]').exists()).toBe(false);
+  },
+);
+it('clears role and audit data immediately when permissions are removed', async () => {
+  const { wrapper, session } = await page('en');
+  expect(wrapper.text()).toContain('custom');
+  session.$patch({ permissions: [] });
+  await flushPromises();
+  expect(wrapper.text()).not.toContain('custom');
+  expect(wrapper.text()).not.toContain('target');
+});

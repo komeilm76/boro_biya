@@ -13,6 +13,8 @@ function fixture() {
     password: 'encoded',
     validRoles: true,
     roleExists: true,
+    pending: true,
+    issued: true,
   };
   const query = vi.fn(
     async (sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; rowCount: number }> => {
@@ -23,9 +25,22 @@ function fixture() {
       if (sql.startsWith('SELECT u.id FROM')) return { rows: [], rowCount: state.fullAdmin ? 1 : 0 };
       if (sql.startsWith('SELECT account_status'))
         return {
-          rows: state.found ? [{ account_status: state.status, username_normalized: 'target' }] : [],
+          rows: state.found
+            ? [
+                {
+                  account_status: state.status,
+                  username_normalized: 'target',
+                  username_display: 'Target',
+                  password_setup_required: false,
+                  security_setup_required: state.pending,
+                  setup_credential_expires_at: state.issued ? new Date() : null,
+                },
+              ]
+            : [],
           rowCount: state.found ? 1 : 0,
         };
+      if (sql.startsWith('UPDATE core.users SET password_hash'))
+        return { rows: [{ setup_credential_expires_at: new Date('2026-10-18T12:00:00Z') }], rowCount: 1 };
       if (sql.startsWith('SELECT id FROM core.users WHERE')) return { rows: [], rowCount: state.found ? 1 : 0 };
       if (sql.startsWith('SELECT id FROM core.roles WHERE'))
         return { rows: [], rowCount: state.validRoles ? (params[0] as unknown[]).length : 0 };
@@ -190,3 +205,56 @@ it.each(['password', 'revoked', 'permission'])(
     expect(f.query.mock.calls.some(([sql]) => sql.startsWith('UPDATE core.users SET'))).toBe(false);
   },
 );
+
+describe('pending setup credential reissuance orchestration', () => {
+  it('reserves before hashing, writes only the native hash, revokes proofs and audits no secrets', async () => {
+    const f = fixture();
+    const result = await f.service.reissueSetupCredential(
+      actor,
+      'target',
+      'lost proof',
+      'password',
+      'origin',
+      'reissue',
+    );
+    expect(result.setupCredential).toMatch(/^[A-Za-z0-9_-]{43}!9$/);
+    expect(f.hasher.hash).toHaveBeenCalledWith(result.setupCredential);
+    expect(
+      f.query.mock.calls.some(
+        ([sql]) =>
+          sql.startsWith('SELECT account_status, username_normalized, username_display') && sql.endsWith('FOR UPDATE'),
+      ),
+    ).toBe(true);
+    expect(f.reserve).toHaveBeenCalledWith('admin-mutation-account', 'actor', expect.any(Number), 'reissue');
+    const update = f.query.mock.calls.find(([sql]) => sql.startsWith('UPDATE core.users SET password_hash'));
+    expect(update?.[1]).toEqual(['target', 'new']);
+    const audit = f.query.mock.calls.find(([sql]) => sql.startsWith('INSERT INTO core.audit_events'));
+    expect(JSON.stringify(audit)).toContain('lost proof');
+    expect(JSON.stringify(audit)).not.toContain(result.setupCredential);
+    expect(f.query.mock.calls.filter(([sql]) => sql.startsWith('UPDATE core.auth_buckets'))).toHaveLength(2);
+  });
+  it.each(['missing', 'completed', 'unissued', 'inactive'] as const)(
+    'rejects an ineligible %s target before replacement hashing',
+    async (mode) => {
+      const f = fixture();
+      if (mode === 'missing') f.state.found = false;
+      else if (mode === 'completed') f.state.pending = false;
+      else if (mode === 'unissued') f.state.issued = false;
+      else f.state.status = 'banned';
+      await expect(
+        f.service.reissueSetupCredential(actor, 'target', 'reason', 'password', 'origin', 'reissue'),
+      ).rejects.toMatchObject({ statusCode: mode === 'missing' ? 404 : 409 });
+      expect(f.hasher.hash).not.toHaveBeenCalled();
+      expect(f.query).toHaveBeenCalledWith('ROLLBACK');
+    },
+  );
+  it('denies a limited mutation before password verification or target hashing', async () => {
+    const f = fixture();
+    f.reserve.mockRejectedValueOnce(Object.assign(new Error('quota'), { statusCode: 429 }));
+    await expect(
+      f.service.reissueSetupCredential(actor, 'target', 'reason', 'password', 'origin', 'limited'),
+    ).rejects.toMatchObject({ statusCode: 429 });
+    expect(f.hasher.verify).not.toHaveBeenCalled();
+    expect(f.hasher.hash).not.toHaveBeenCalled();
+  });
+});

@@ -47,18 +47,18 @@ describe('UX-only route guards (UI-05, UI-06)', () => {
 
   it('sends signed-in admins to the admin area instead', async () => {
     const session = useSessionStore();
-    session.replaceSession({ isAuthenticated: true, roles: ['admin'] });
+    session.replaceSession({ isAuthenticated: true, roles: ['admin'], permissions: ['users.read'] });
     await router.push('/_auth/login');
     expect(router.currentRoute.value.path).toBe('/_admin');
   });
 
-  it('gates the admin namespace on the admin role for UX only', async () => {
+  it('gates the admin namespace on current effective permissions for UX only', async () => {
     const session = useSessionStore();
     session.replaceSession({ isAuthenticated: true, roles: [] });
     await router.push('/_admin');
     expect(router.currentRoute.value.path).toBe('/_user');
 
-    session.replaceSession({ isAuthenticated: true, roles: ['admin'] });
+    session.replaceSession({ isAuthenticated: true, roles: ['admin'], permissions: ['users.read'] });
     await router.push('/_admin');
     expect(router.currentRoute.value.path).toBe('/_admin');
   });
@@ -80,4 +80,14 @@ describe('UX-only route guards (UI-05, UI-06)', () => {
     await router.push('/_user');
     expect(router.currentRoute.value.path).toBe('/_auth/login');
   });
+});
+
+it('denies admin-role names without effective permissions but admits a custom administrative role', async () => {
+  const session = useSessionStore();
+  session.replaceSession({ isAuthenticated: true, roles: ['admin'], permissions: [] });
+  await router.push('/_admin');
+  expect(router.currentRoute.value.path).toBe('/_user');
+  session.replaceSession({ isAuthenticated: true, roles: ['custom'], permissions: ['users.read'] });
+  await router.push('/_admin');
+  expect(router.currentRoute.value.path).toBe('/_admin');
 });

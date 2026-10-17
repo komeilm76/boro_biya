@@ -19,7 +19,7 @@
   },
   "adminArea": {
     "title": "Administration",
-    "placeholder": "Setup credential reissuance and additional search filters are not available yet."
+    "placeholder": "Additional administrative search filters are not yet implemented."
   },
   "notFound": {
     "title": "Page not found",
@@ -153,6 +153,8 @@
       "unban": "Unban",
       "deactivate": "Deactivate without deleting",
       "reactivate": "Reactivate"
-    }
+    },
+    "reissue": "Reissue setup credential",
+    "reissueWarning": "Only active accounts awaiting initial setup are eligible. This invalidates prior setup proofs and restarts both setup steps; it cannot reset a completed account."
   }
 }

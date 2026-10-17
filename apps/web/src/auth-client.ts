@@ -5,6 +5,7 @@ import {
   adminAuditResponseSchema,
   adminRoleSavedSchema,
   createdAccountSchema,
+  reissuedSetupCredentialSchema,
   setupStatusSchema,
   recoveryPolicySchema,
   recoveryQuestionsSchema,
@@ -103,6 +104,12 @@ export const authClient = {
     ),
   adminState: (id: string, action: string, reason: string, currentPassword: string, token: string) =>
     authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/${encodeURIComponent(action)}`, acceptedResponse, {
+      method: 'POST',
+      token,
+      body: { reason, currentPassword },
+    }),
+  reissueSetupCredential: (id: string, reason: string, currentPassword: string, token: string) =>
+    authRequest(`/api/v1/admin/users/${encodeURIComponent(id)}/setup-credential`, reissuedSetupCredentialSchema, {
       method: 'POST',
       token,
       body: { reason, currentPassword },

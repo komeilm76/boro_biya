@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import argon2 from 'argon2';
 
 /** SEC-04/SEC-05: maintained Node binding behind an app-owned adapter; no call site hashes. */
@@ -81,4 +82,11 @@ export function normalizeAnswer(value: string): string {
   if (result.length === 0 || [...result].length > 256 || /\p{Cc}/u.test(result))
     throw new Error('invalid security answer');
   return result;
+}
+
+/** Display-once, 256-bit setup credential, sampled against the same password policy. */
+export function generateSetupCredential(username: string): string {
+  let credential = `${randomBytes(32).toString('base64url')}!9`;
+  while (!validPassword(credential, username)) credential = `${randomBytes(32).toString('base64url')}!9`;
+  return credential;
 }

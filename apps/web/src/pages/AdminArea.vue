@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useSessionStore } from '../stores/session.js';
 import AdminManagement from '../components/AdminManagement.vue';
 import AdminCreateAccount from '../components/AdminCreateAccount.vue';
+const session = useSessionStore();
 </script>
 
 <template>
@@ -8,7 +10,7 @@ import AdminCreateAccount from '../components/AdminCreateAccount.vue';
     <h1 id="admin-area-title" class="text-2xl font-semibold mb-4">
       {{ $t('adminArea.title') }}
     </h1>
-    <AdminCreateAccount />
+    <AdminCreateAccount v-if="session.permissions?.includes('users.create')" />
     <AdminManagement />
     <p>
       {{ $t('adminArea.placeholder') }}

@@ -134,6 +134,7 @@ it('loads current role keys for the UX guard and clears them when the profile ch
     passwordSetupRequired: false,
     securitySetupRequired: false,
     roles: ['admin'],
+    permissions: ['users.read'],
   };
   fetcher
     .mockResolvedValueOnce(response({ csrfToken: 'C'.repeat(43) }))
@@ -144,7 +145,33 @@ it('loads current role keys for the UX guard and clears them when the profile ch
   fetcher
     .mockResolvedValueOnce(response({ csrfToken: 'C'.repeat(43) }))
     .mockResolvedValueOnce(response({ accessToken: 'signed', expiresIn: 900 }))
-    .mockResolvedValueOnce(response({ ...account, roles: ['user'] }));
+    .mockResolvedValueOnce(response({ ...account, roles: ['user'], permissions: [] }));
   await store.restore();
   expect(store.isAdmin).toBe(false);
+});
+
+it('does not display a newly created account credential to a later identity', async () => {
+  let resolve!: (value: Response) => void;
+  fetcher.mockReturnValueOnce(
+    new Promise<Response>((yes) => {
+      resolve = yes;
+    }),
+  );
+  const wrapper = page(AdminCreate, 'en');
+  const store = useSessionStore();
+  store.$patch({ isAuthenticated: true, accessToken: 'old' });
+  await wrapper.get('form').trigger('submit');
+  await flushPromises();
+  store.replaceSession({ isAuthenticated: true, roles: [], accessToken: 'new' });
+  resolve(
+    response({
+      id,
+      username: 'previous-target',
+      expiresAt: '2026-10-18T00:00:00Z',
+      setupCredential: 'previous-secret',
+    }),
+  );
+  await flushPromises();
+  expect(wrapper.find('output').exists()).toBe(false);
+  expect(wrapper.text()).not.toContain('previous-secret');
 });

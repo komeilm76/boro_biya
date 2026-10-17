@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import { identityTransaction } from '../identity/transaction.js';
 import { lockCurrentBinding } from '../identity/binding.js';
-import type { PasswordHasher } from './passwords.js';
+import { generateSetupCredential, type PasswordHasher } from './passwords.js';
 import type { AuthConfig } from './config.js';
 import { AuthFailure } from './failure.js';
 import {
@@ -279,6 +279,69 @@ export function createAdministration(
             source: 'administrator',
           });
           return { accepted: true };
+        },
+        { password, origin },
+      );
+    },
+    reissueSetupCredential(
+      actor: AdminActor,
+      targetId: string,
+      reason: string,
+      password: string,
+      origin: string,
+      requestId: string,
+    ) {
+      return authorized(
+        actor,
+        'users.state',
+        requestId,
+        async (client) => {
+          const found = await client.query<{
+            username_normalized: string;
+            username_display: string;
+            account_status: string;
+            password_setup_required: boolean;
+            security_setup_required: boolean;
+            setup_credential_expires_at: Date | null;
+          }>(
+            // Also lock explicitly: a concurrent creation can commit after the all-user scan snapshot.
+            'SELECT account_status, username_normalized, username_display, password_setup_required, security_setup_required, setup_credential_expires_at FROM core.users WHERE id = $1 FOR UPDATE',
+            [targetId],
+          );
+          const target = found.rows[0];
+          if (!target) throw new AuthFailure(404);
+          // Initial setup only: never an administrator reset of a completed/self-registered account.
+          if (
+            target.account_status !== 'active' ||
+            !target.security_setup_required ||
+            target.setup_credential_expires_at === null
+          )
+            throw new AuthFailure(409);
+          const credential = generateSetupCredential(target.username_normalized);
+          const encoded = await hasher.hash(credential);
+          const updated = await client.query<{ setup_credential_expires_at: Date }>(
+            "UPDATE core.users SET password_hash = $2, password_setup_required = true, security_setup_required = true, setup_credential_consumed_at = NULL, setup_credential_expires_at = clock_timestamp() + interval '24 hours', updated_at = clock_timestamp() WHERE id = $1 RETURNING setup_credential_expires_at",
+            [targetId, encoded],
+          );
+          await revoke(client, targetId, 'setup_credential_reissued');
+          for (const [scope, value] of [
+            ['setup-start-account', target.username_normalized],
+            ['setup-step-account', targetId],
+          ]) {
+            const key = createHmac('sha256', config.secret).update(`${scope}:${value}`).digest('hex');
+            await client.query('UPDATE core.auth_buckets SET attempted_at = $2 WHERE key_hash = $1', [key, []]);
+          }
+          const expiresAt = updated.rows[0]!.setup_credential_expires_at.toISOString();
+          await audit(client, actor, 'setup_credential_reissued', 'user', targetId, requestId, {
+            reason,
+            source: 'administrator',
+            previous: {
+              passwordSetupRequired: target.password_setup_required,
+              securitySetupRequired: target.security_setup_required,
+            },
+            next: { passwordSetupRequired: true, securitySetupRequired: true, expiresAt },
+          });
+          return { id: targetId, username: target.username_display, expiresAt, setupCredential: credential };
         },
         { password, origin },
       );

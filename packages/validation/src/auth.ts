@@ -100,6 +100,9 @@ export const createdAccountSchema = z.strictObject({
   expiresAt: utcInstantSchema,
   setupCredential: z.string().optional(),
 });
+export const reissuedSetupCredentialSchema = createdAccountSchema.extend({
+  setupCredential: z.string().min(1).max(128),
+});
 export const setupStatusSchema = z.strictObject({
   passwordSetupRequired: z.boolean(),
   securitySetupRequired: z.boolean(),
