@@ -160,6 +160,7 @@ describe('bilingual authentication, settings and public privacy UI', () => {
   });
   it.each(['en', 'fa'] as const)('returns to the preserved private destination after login in %s', async (language) => {
     const { wrapper, router } = mountPage(SignIn, language);
+    await router.push('/_public');
     await router.push({ path: '/_auth/login', query: { redirect: '/_user?tab=sessions#security' } });
     loginResponses();
     await wrapper.get('#username').setValue('Alice');
@@ -167,6 +168,8 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(router.currentRoute.value.fullPath).toBe('/_user?tab=sessions#security');
+    router.back();
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/_public'));
     wrapper.unmount();
   });
   it.each([false, true])('uses effective administrative permission for default navigation: %s', async (allowed) => {
