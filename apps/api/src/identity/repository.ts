@@ -26,6 +26,8 @@ export interface CreateIdentity {
   passwordHash: string;
   passwordSetupRequired: boolean;
   securitySetupRequired: boolean;
+  securityAnswers?: Array<{ questionId: number; hash: string }>;
+  auditRequestId?: string;
 }
 
 /** Internal persistence seam, not a registration endpoint. The caller must validate password
@@ -40,6 +42,16 @@ export function createIdentityRepository(db: Pick<Db, 'pool'>) {
       // Reject accidental plaintext before acquiring a connection; the database also checks
       // the algorithm marker. This guard is not cryptographic validation of an encoded hash.
       if (!input.passwordHash.startsWith('$argon2id$')) throw new Error('expected encoded Argon2id hash');
+      if (
+        input.securityAnswers !== undefined &&
+        (input.securityAnswers.length !== 5 ||
+          new Set(input.securityAnswers.map((answer) => answer.questionId)).size !== 5 ||
+          input.securityAnswers.some(
+            (answer) => !Number.isInteger(answer.questionId) || !answer.hash.startsWith('$argon2id$'),
+          ))
+      ) {
+        throw new Error('five distinct hashed security answers required');
+      }
       return identityTransaction(db, async (client) => {
         const result = await client.query<AccountRow>(
           `INSERT INTO core.users
@@ -64,6 +76,23 @@ export function createIdentityRepository(db: Pick<Db, 'pool'>) {
           [row.id, 'user'],
         );
         if (assigned.rowCount !== 1) throw new Error('default role unavailable');
+        if (input.securityAnswers !== undefined) {
+          for (const answer of input.securityAnswers) {
+            const inserted = await client.query(
+              `INSERT INTO core.user_security_answers(user_id, question_id, answer_hash, normalization_version)
+               SELECT $1, id, $3, 1 FROM core.security_questions WHERE id = $2 AND active`,
+              [row.id, answer.questionId, answer.hash],
+            );
+            if (inserted.rowCount !== 1) throw new Error('security question unavailable');
+          }
+        }
+        if (input.auditRequestId !== undefined) {
+          await client.query(
+            `INSERT INTO core.audit_events(actor_id, actor_type, action, target_type, target_id, request_id)
+             VALUES ($1, 'user', 'account_registered', 'user', $1, $2)`,
+            [row.id, input.auditRequestId],
+          );
+        }
         return project(row);
       });
     },

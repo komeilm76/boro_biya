@@ -51,6 +51,7 @@ function grant(value: SessionGrant | null): SessionGrant {
 describe('session persistence and adversarial lifecycle (ADR-021, SEC-08, SEC-10, PRIV-21)', () => {
   it('stores only hashes, projects safe session metadata and rotates once without extending expiry', async () => {
     const account = await user();
+    expect(await sessions.issue(account.id, '$argon2id$stale-password-snapshot')).toBeNull();
     const first = grant(await sessions.issue(account.id));
     expect(first.refreshToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
     const stored = await db.query('SELECT refresh_token_hash FROM core.sessions WHERE id = $1', [first.sessionId]);
@@ -223,9 +224,9 @@ describe('session persistence and adversarial lifecycle (ADR-021, SEC-08, SEC-10
   it('reverses and reapplies the session migration without destroying identities', async () => {
     const account = await user();
     const migrationsDir = resolve('apps/api/migrations');
-    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 1 })).toEqual([3]);
+    expect(await migrateDown(db.pool, { schema: 'core', migrationsDir, steps: 2 })).toEqual([4, 3]);
     expect(await identities.findById(account.id)).not.toBeNull();
-    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([3]);
+    expect((await migrateUp(db.pool, { schema: 'core', migrationsDir })).applied).toEqual([3, 4]);
     expect(await sessions.issue(account.id)).not.toBeNull();
   });
 });

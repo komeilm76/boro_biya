@@ -1,12 +1,21 @@
 # API Inventory
 
-Planned endpoints, grouped by area, with the access level and the phase that delivers them. This is a planning inventory: nothing here exists yet. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
+Planned endpoints, grouped by area, with the access level and the phase that delivers them. This inventory includes implemented and planned endpoints; the implementation checkpoint below is authoritative for availability. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are not part of this inventory and are documented in [ARCHITECTURE](../ARCHITECTURE.md) §8.
 
 ## 1. Authentication and account lifecycle (Phase 2)
+
+Implementation checkpoint (2026-10-17): registration, login, refresh, logout, password change, session list/revoke/revoke-others and `GET /users/me` exist with HTTP/PostgreSQL tests. Password change revokes every family, including the current one, and asks the user to sign in again. Recovery, first-login setup, administrative endpoints, generated OpenAPI client and enabled CAPTCHA remain unimplemented; the remaining rows are plans, not availability claims. Enabled CAPTCHA currently fails closed with 503 rather than skipping the challenge.
+
+| Method | Path | Access | Implemented supporting contract |
+| --- | --- | --- | --- |
+| GET | `/auth/csrf` | public | Random double-submit CSRF token/cookie; mutation requests require the exact configured origin |
+| GET | `/auth/security-questions` | public | Active server-owned question IDs and message keys only; never answers |
+| GET | `/auth/policy` | public | Recovery switch and minimum password length; not a claim that recovery endpoints exist |
+
 
 | Method | Path | Access | Notes |
 | --- | --- | --- | --- |

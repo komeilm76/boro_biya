@@ -145,6 +145,7 @@ async function smokeBackend(name, mainPath, ports) {
   };
   if (name === 'api') {
     env.WEB_ORIGIN = 'http://localhost:5173';
+    env.SESSION_SECRET = 'disposable-runtime-smoke-only-signing-material';
   }
   const child = spawn(process.execPath, [mainPath], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let stderrTail = '';

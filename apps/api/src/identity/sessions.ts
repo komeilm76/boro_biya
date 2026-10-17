@@ -7,6 +7,7 @@ const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
 
 export interface SessionGrant {
+  userId: string;
   sessionId: string;
   familyId: string;
   /** Returned once; delivery/storage security belongs to the API cookie adapter (SEC-08). */
@@ -38,13 +39,14 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
   }
 
   return {
-    async issue(userId: string): Promise<SessionGrant | null> {
+    async issue(userId: string, expectedPasswordHash?: string): Promise<SessionGrant | null> {
       if (!UUID_V7.test(userId)) return null;
       return identityTransaction(db, async (client) => {
         const account = await client.query(
           `SELECT id FROM core.users WHERE id = $1 AND account_status = 'active'
-           AND NOT password_setup_required AND NOT security_setup_required FOR UPDATE`,
-          [userId],
+           AND NOT password_setup_required AND NOT security_setup_required
+           AND ($2::text IS NULL OR password_hash = $2) FOR UPDATE`,
+          [userId, expectedPasswordHash ?? null],
         );
         if (account.rowCount !== 1) return null;
         const family = await client.query<FamilyRow>(
@@ -62,7 +64,7 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
         );
         const session = result.rows[0];
         if (session === undefined) throw new Error('session insert returned no row');
-        return { sessionId: session.id, familyId: row.id, refreshToken, expiresAt: row.expires_at };
+        return { userId, sessionId: session.id, familyId: row.id, refreshToken, expiresAt: row.expires_at };
       });
     },
 
@@ -116,6 +118,7 @@ export function createSessionRepository(db: Pick<Db, 'pool'>, ttlSeconds = 30 * 
         const row = next.rows[0];
         if (row === undefined) throw new Error('session rotation returned no row');
         return {
+          userId: user.user_id,
           sessionId: row.id,
           familyId: session.family_id,
           refreshToken: nextToken,

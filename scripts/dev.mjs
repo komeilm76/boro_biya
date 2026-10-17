@@ -149,6 +149,21 @@ for (const backend of BACKENDS) {
         METRICS_PORT: backend.metricsPort,
         DATABASE_URL: backend.databaseUrl,
         WEB_ORIGIN: envValue('WEB_ORIGIN', 'http://localhost:5173'),
+        ...Object.fromEntries(
+          [
+            'SESSION_SECRET',
+            'ACCESS_TOKEN_TTL_SECONDS',
+            'REFRESH_TOKEN_TTL_DAYS',
+            'LOGIN_MAX_ATTEMPTS_PER_ACCOUNT',
+            'LOGIN_MAX_ATTEMPTS_PER_ORIGIN',
+            'LOGIN_WINDOW_SECONDS',
+            'LOCKOUT_SECONDS',
+            'SECURITY_QUESTIONS_ENABLED',
+            'CAPTCHA_ENABLED',
+          ]
+            .filter((name) => envValue(name) !== '')
+            .map((name) => [name, envValue(name)]),
+        ),
         CORS_ALLOWED_ORIGINS: envValue('CORS_ALLOWED_ORIGINS', 'http://localhost:5173'),
         BUILD_COMMIT: envValue('BUILD_COMMIT', 'dev'),
       },

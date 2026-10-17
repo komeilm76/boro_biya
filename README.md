@@ -1,10 +1,10 @@
 # Boro_biya
 
-An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation and the initial Phase 2 identity entity/migration/repository: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
+An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation and the initial Phase 2 identity entity/migration/repository: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Development registration, sign-in, password change and session settings are implemented; Phase 2 is not complete. Maps, navigation, SOS workflows, installable-PWA behaviour and a native Android application are not implemented.
 
 Owner: Repo owner. Reviewed: 2026-10-17.
 
-**Current status: Phase 2 — authentication and account lifecycle — In progress (owner-authorised 2026-10-17).** Phase 1 is complete and owner-approved (2026-10-15). No authentication or business feature is claimed implemented by this status change. See [ROADMAP](docs/ROADMAP.md) and the [Phase 1 report](docs/development/09-phase-1-report.md).
+**Current status: Phase 2 — authentication and account lifecycle — In progress (owner-authorised 2026-10-17).** Phase 1 is complete and owner-approved (2026-10-15). The authentication implementation and its remaining acceptance work are recorded in [implementation status](docs/development/17-implementation-status.md). See [ROADMAP](docs/ROADMAP.md) and the [Phase 1 report](docs/development/09-phase-1-report.md).
 
 **BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
 

@@ -83,11 +83,38 @@ Checkpoint commands (Node 24.22.0 / Bun 1.4.3):
 | `bun run gate` | Passed all 15 active gates after the bug fix/session changes; full integration run passed 30 tests across six files; no gate configuration changed |
 | `bun run coverage` | Passed 204 tests in 26 files; statements 92.89%, branches 84.90%, functions 91.30%, lines 94.30%; session and transaction modules 100% |
 
-These tasks complete the internal refresh-session store, not checklist row 1 or Phase 2. No registration/login/logout/session HTTP endpoint, signed access token, secure-cookie/CSRF adapter, production password-hashing adapter, security-answer flow or Vue security setting is claimed implemented. No merge is requested: PR #12 stays draft for owner review and until Phase 2 acceptance evidence is complete.
+This historical checkpoint completed the internal refresh-session store, not checklist row 1 or Phase 2. The following HTTP/Vue checkpoint supersedes its earlier internal-only boundary. No merge is requested: PR #12 stays draft for owner review and until Phase 2 acceptance evidence is complete.
+
+### Phase 2 authentication HTTP and Vue checkpoint
+
+Implemented and tested in the development build:
+
+- Maintained Node Argon2id adapter (`argon2` 0.45.1), starting parameters 65536 KiB / two passes / one lane, encoded with each hash. At most two native hash/verify operations execute at once; additional work receives 503 instead of creating an unbounded memory queue. Password policy has 12–128 code points, a local initial common-password blocklist and username rejection; the blocklist is not an exhaustive compromised-password corpus. Answer normalization is versioned, NFKC/trim/whitespace-collapse and case-sensitive.
+- JOSE (`jose` 6.2.12) HS256 access tokens pin algorithm, issuer, audience, type and age. Every protected request additionally verifies current database state and session binding; the browser keeps access only in declared reactive memory state. A password-snapshot condition in session issuance rejects a password changed after verification but before issuance.
+- Strict shared schemas; registration atomically stores the account, default role, exactly five distinct answer hashes and registration audit event. The static question catalogue is read-only to the runtime database role. No contact identifier is collected.
+- Login, refresh, logout, own profile, session list, individual/other-session revocation and password-change HTTP paths are wired into the real API process. HTTPS origins receive an HttpOnly/Secure/SameSite Strict refresh cookie with `__Host-` prefix; explicitly local HTTP development uses a non-prefixed cookie. Origin checks plus a 256-bit double-submit CSRF token protect cookie operations and sign-in/registration. Bearer operations require a valid signed/current binding, not a client ID or role.
+- Database-backed keyed rolling account/origin attempt budgets, fixed self-expiring lockout and authentication audit events exist. The counters contain HMAC keys rather than raw usernames/addresses. Progressive delays, adaptive CAPTCHA and the full abuse-policy proof are still outstanding; enabled CAPTCHA rejects securely rather than silently bypassing a challenge.
+- Password change verifies the current password, rechecks its hash under the user lock, updates the hash and revokes all families in one transaction with an audit event. The UI warns that a new sign-in is required. Logout and revoke-others also write audit events.
+- Vue sign-up/sign-in and security settings use same-origin requests and validated responses; secrets are cleared after submission. An explicit English/Persian switch is reachable before sign-in, persists a device choice and updates document language/direction. Session dates use localized calendars, not raw UTC strings. Privacy/reporting pages are public, bilingual and linked from registration/security settings; the private reporting link is external and may require its own account.
+
+Bug fixes proven by tests: native hashing admission is bounded; malformed/non-ASCII or duplicate CSRF cookies produce 403 rather than a timing-safe-comparison exception; token fields are declared in initial Pinia state instead of being added non-reactively; a login starts with cleared previous identity state; password changes invalidate all previous signed/refresh grants atomically; and cookie-authenticated, CSRF-protected logout does not require an unexpired access token, so an expired token cannot leave a usable refresh cookie behind.
+
+Evidence sources: `apps/api/test/integration/auth.test.ts` (11 real Argon2id/JOSE/HTTP/PostgreSQL cases), `apps/api/test/unit/auth-{adapters,routes,service}.test.ts`, `apps/web/test/unit/auth.test.ts`, existing session/race tests and catalogue-parity tests. Checkpoints below remain partial until every acceptance criterion is proved; tests passing is not Phase 2 completion.
+
+Latest local validation of this authentication checkpoint (Node 24.22.0 / Bun 1.4.3, 2026-10-17):
+
+| Command | Result |
+| --- | --- |
+| `bun run gate` | All 15 unchanged active gates passed, including strict types, lint, production build, runtime smoke and baseline load profile |
+| `bun run test:integration` (inside the full gate, after build) | 41 tests / seven files passed on disposable PostgreSQL 18.4; 11 real authentication cases and 13 session cases |
+| `bun run coverage` | 255 tests / 30 files passed; statements 93.99%, branches 87.22%, functions 92.49%, lines 95.29%; existing thresholds unchanged |
+| `git diff --check` | Passed |
+
+A formatter failure in the first full run was corrected. The logout-expiry regression was discovered and fixed during review, then the complete suite above was rerun on the fixed code. These are local results, not a claim of CI success on a future head. The baseline load profile covers health/runtime behaviour, not the still-required login-route load profile.
 
 ## 3. Features that are not implemented
 
-The identity entity and persistence foundation are implemented; no end-to-end authentication or account-lifecycle workflow is implemented. In particular, the `/auth/login` page is a placeholder; route guards and the session store are client-side UX scaffolding, not server-side identity or authorization. There are no registration, login, password, session, role, account-recovery, audit-event, lockout, ban, or admin authorization APIs.
+Phase 2 still lacks administrator creation and forced first-login setup; recovery challenges/answers/reset grants and their switch-on/off UI flows; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; progressive delay policy; OpenAPI validation/generated-client activation; triggered security alert rules; persisted account locale; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
 
 The route shell and future names are not product features. The current checkout also has no:
 
@@ -98,13 +125,13 @@ The route shell and future names are not product features. The current checkout 
 - plugin installation/runtime, CAPTCHA implementation, or automated retention/deletion job;
 - installable PWA manifest/service worker, offline mode, or completed native Android application/build.
 
-The existence of commented future settings in `.env.example`, route metadata, workspace names, requirement IDs, or architecture diagrams does not enable any of these capabilities. See the [environment reference](14-environment-and-configuration.md#5-template-only-settings-for-later-phases) for all 64 template-only environment keys and their status.
+The existence of commented future settings in `.env.example`, route metadata, workspace names, requirement IDs, or architecture diagrams does not enable any of these capabilities. See the [environment reference](14-environment-and-configuration.md#5-template-only-settings-for-later-phases) for template-only keys and the newly active authentication settings.
 
 ## 4. User documentation and public availability
 
 No public build has been released. The existing [`docs/user/README.md`](../user/README.md) is an explicitly advance-planned guide: it states that its future features are not available and that pages are only published after the feature exists in a released build. The current implementation does not justify a user manual, so this work adds developer onboarding only and does not add end-user feature instructions.
 
-The public landing, login, user-area, and admin-area route components are placeholders. Do not use the local development shell as a released product, or describe its placeholders as working account features.
+The public landing, registration/login and security/session settings now have development functionality; the administrator area is still a placeholder. Do not describe this checkout as a released or complete safety product.
 
 ## 5. Closed owner decisions and authorised scope
 

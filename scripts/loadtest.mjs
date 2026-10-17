@@ -98,6 +98,7 @@ const api = spawn(process.execPath, [join(ROOT, 'apps/api/dist/main.js')], {
     LOG_LEVEL: 'info',
     DATABASE_URL: coreUrl,
     WEB_ORIGIN: 'http://localhost:5173',
+    SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
     GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: '5',
     BUILD_COMMIT: 'loadtest',
   },

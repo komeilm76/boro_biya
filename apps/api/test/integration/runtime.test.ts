@@ -66,6 +66,7 @@ function startService(port: number, metricsPort: number, envOverrides: Record<st
       LOG_LEVEL: 'info',
       DATABASE_URL: coreUrl,
       WEB_ORIGIN: 'http://localhost:5173',
+      SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
       GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: '5',
       BUILD_COMMIT: 'integration-test',
       ...envOverrides,
@@ -163,6 +164,7 @@ describe('the built artefact against real PostgreSQL 18 (QA-06, QA-11, QA-123 me
         NODE_ENV: '<development|test|production>',
         DATABASE_URL: 'postgres://x:y@127.0.0.1:1/z',
         WEB_ORIGIN: 'http://localhost:5173',
+        SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });

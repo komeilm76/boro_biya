@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createVuetify } from 'vuetify';
@@ -13,6 +13,13 @@ import SignInPlaceholder from '../../src/pages/SignInPlaceholder.vue';
 import UserArea from '../../src/pages/UserArea.vue';
 import { createAppRouter } from '../../src/router/index.js';
 import { createAppI18n } from '../../src/i18n/index.js';
+
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network not part of page rendering test')));
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function makeVuetify() {
   return createVuetify({ components: { VApp, VBtn, VMain }, directives });
@@ -33,12 +40,12 @@ describe('namespace placeholder pages render catalogue text (GOV-63)', () => {
     expect(wrapper.html()).toContain('href="/_auth/login"');
   });
 
-  it('renders the sign-in placeholder honestly (no authentication exists yet)', () => {
+  it('renders the working sign-in form with labelled password entry and recovery warning', () => {
     const wrapper = mountPage(SignInPlaceholder);
     expect(wrapper.text()).toContain('Sign in');
-    expect(wrapper.text()).toContain('Authentication is not part of this build');
-    expect(wrapper.html()).not.toContain('<form');
-    expect(wrapper.html()).not.toContain('type="password"');
+    expect(wrapper.text()).toContain('Security questions are a weak recovery method');
+    expect(wrapper.find('form').exists()).toBe(true);
+    expect(wrapper.find('input[type="password"]').attributes('autocomplete')).toBe('current-password');
   });
 
   it('renders the user and admin placeholders', () => {
