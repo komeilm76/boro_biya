@@ -12,6 +12,7 @@ export interface AuthConfig {
   maxOriginAttempts: number;
   windowSeconds: number;
   lockoutSeconds: number;
+  delayMaxSeconds: number;
   recoveryEnabled: boolean;
   captchaEnabled: boolean;
 }
@@ -52,6 +53,7 @@ export function readAuthConfig(env: Readonly<Record<string, string | undefined>>
     maxOriginAttempts: number('LOGIN_MAX_ATTEMPTS_PER_ORIGIN', 30, 300),
     windowSeconds: number('LOGIN_WINDOW_SECONDS', 900, 3_600),
     lockoutSeconds: number('LOCKOUT_SECONDS', 900, 3_600),
+    delayMaxSeconds: number('LOGIN_DELAY_MAX_SECONDS', 30, 30),
     recoveryEnabled: recovery === 'true',
     captchaEnabled: captcha === 'true',
   };

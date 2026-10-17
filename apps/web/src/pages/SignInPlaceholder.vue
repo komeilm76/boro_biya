@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { AuthRequestError } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
 const router = useRouter();
@@ -8,15 +9,18 @@ const username = ref('');
 const password = ref('');
 const busy = ref(false);
 const failed = ref(false);
+const retryAfter = ref(0);
 async function signIn() {
   if (busy.value) return;
   busy.value = true;
   failed.value = false;
+  retryAfter.value = 0;
   try {
     await session.login(username.value, password.value);
     await router.push('/_user');
-  } catch {
+  } catch (error) {
     failed.value = true;
+    if (error instanceof AuthRequestError) retryAfter.value = error.retryAfterSeconds ?? 0;
   } finally {
     password.value = '';
     busy.value = false;
@@ -49,7 +53,9 @@ async function signIn() {
         maxlength="128"
         class="block border p-2 mb-4 w-full"
       />
-      <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
+      <p v-if="failed" role="alert">
+        {{ retryAfter ? $t('auth.retryAfter', { seconds: retryAfter }) : $t('auth.rejected') }}
+      </p>
       <v-btn type="submit" :disabled="busy">{{ $t('signIn.title') }}</v-btn>
     </form>
     <RouterLink to="/_auth/register" class="block mt-4">{{ $t('auth.register') }}</RouterLink>

@@ -5,6 +5,15 @@ import {
   sessionListResponseSchema,
 } from '@boro-biya/validation';
 
+/** Only bounded public retry metadata is carried; never server prose or credential fields. */
+export class AuthRequestError extends Error {
+  constructor(
+    readonly status: number,
+    readonly retryAfterSeconds?: number,
+  ) {
+    super('auth_request_rejected');
+  }
+}
 /** Same-origin only. Access lives in memory; refresh remains HttpOnly. No automatic replay of
  * mutations after a refresh failure, and no token material is written to browser storage.
  */
@@ -31,7 +40,14 @@ export async function authRequest<T>(
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
     signal: AbortSignal.timeout(15000),
   });
-  if (!response.ok) throw new Error('auth_request_rejected');
+  if (!response.ok) {
+    const header = response.headers.get('retry-after');
+    const seconds = header !== null && /^[0-9]{1,4}$/.test(header) ? Number(header) : 0;
+    throw new AuthRequestError(
+      response.status,
+      response.status === 429 && seconds >= 1 && seconds <= 3600 ? seconds : undefined,
+    );
+  }
   return schema.parse(response.status === 204 ? null : await response.json());
 }
 export const acceptedResponse = {

@@ -20,6 +20,7 @@ const config: AuthConfig = {
   maxOriginAttempts: 30,
   windowSeconds: 900,
   lockoutSeconds: 900,
+  delayMaxSeconds: 30,
   recoveryEnabled: true,
   captchaEnabled: false,
 };
@@ -51,6 +52,8 @@ function fixture(overrides: Partial<AuthConfig> = {}) {
     await Promise.resolve();
     if (sql.includes('SELECT user_id, family_id'))
       return { rows: found ? [{ user_id: 'user', family_id: 'family' }] : [], rowCount: found ? 1 : 0 };
+    if (sql.includes('extract(epoch FROM')) return { rows: [], rowCount: 0 };
+    if (sql.includes('AS failures')) return { rows: [{ failures: failed }], rowCount: 1 };
     if (sql.includes('cardinality')) return { rows: [{ count: limit }], rowCount: 1 };
     if (sql.includes('SELECT password_hash'))
       return {

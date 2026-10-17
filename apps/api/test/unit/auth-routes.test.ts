@@ -127,6 +127,19 @@ describe('HTTP authentication/CSRF cookie boundaries', () => {
       ).statusCode,
     ).toBe(401);
   });
+  it('publishes bounded Retry-After without exposing account state or internal prose', async () => {
+    const { app, auth, headers } = fixture();
+    auth.login.mockRejectedValueOnce(new AuthFailure(429, 8));
+    const response = await app.inject({
+      url: '/api/v1/auth/login',
+      method: 'POST',
+      headers,
+      payload: { username: 'alice', password: 'wrong' },
+    });
+    expect(response.statusCode).toBe(429);
+    expect(response.headers['retry-after']).toBe('8');
+    expect(response.body).not.toContain('alice');
+  });
   it('validates bearer password-change input and clears the refresh cookie only after success', async () => {
     const { app, auth, headers } = fixture();
     expect(

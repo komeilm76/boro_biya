@@ -76,7 +76,7 @@ onMounted(load);
   <section class="mx-auto max-w-prose px-6 py-16" aria-labelledby="user-area-title">
     <h1 id="user-area-title" class="text-2xl font-semibold mb-4">{{ $t('userArea.title') }}</h1>
     <h2>{{ $t('auth.sessions') }}</h2>
-    <form @submit.prevent="changePassword" class="my-6">
+    <form class="my-6" @submit.prevent="changePassword">
       <h3>{{ $t('auth.changePassword') }}</h3>
       <p>{{ $t('auth.passwordChangeNotice') }}</p>
       <label for="current-password">{{ $t('auth.currentPassword') }}</label

@@ -30,6 +30,7 @@ const config: AuthConfig = {
   maxOriginAttempts: 100,
   windowSeconds: 900,
   lockoutSeconds: 900,
+  delayMaxSeconds: 30,
   recoveryEnabled: true,
   captchaEnabled: false,
 };
@@ -66,9 +67,16 @@ afterAll(async () => {
   await database?.drop();
 });
 
-function request(path: string, method: 'POST' | 'GET' | 'DELETE' = 'GET', payload?: unknown, bearer = access) {
+function request(
+  path: string,
+  method: 'POST' | 'GET' | 'DELETE' = 'GET',
+  payload?: unknown,
+  bearer = access,
+  remoteAddress = '127.0.0.1',
+) {
   const options: InjectOptions = {
     method,
+    remoteAddress,
     url: `/api/v1${path}`,
     headers: {
       origin: config.origin,
@@ -222,10 +230,11 @@ describe('real registration/login/session HTTP workflow (AUTH-01 … AUTH-12, SE
   });
   it('enforces per-account persisted rolling limits and bounded lockout without automatic bans', async () => {
     for (let i = 0; i < 10; i++)
-      await request('/auth/login', 'POST', { username: 'throttle-target', password: 'wrong' });
-    expect((await request('/auth/login', 'POST', { username: 'throttle-target', password: 'wrong' })).statusCode).toBe(
-      429,
-    );
+      await request('/auth/login', 'POST', { username: 'throttle-target', password: 'wrong' }, '', '192.0.2.100');
+    expect(
+      (await request('/auth/login', 'POST', { username: 'throttle-target', password: 'wrong' }, '', '192.0.2.100'))
+        .statusCode,
+    ).toBe(429);
     const rows = await db.query('SELECT attempted_at, key_hash FROM core.auth_buckets');
     expect(JSON.stringify(rows.rows)).not.toContain('throttle-target');
   });

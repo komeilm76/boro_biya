@@ -93,7 +93,7 @@ Implemented and tested in the development build:
 - JOSE (`jose` 6.2.12) HS256 access tokens pin algorithm, issuer, audience, type and age. Every protected request additionally verifies current database state and session binding; the browser keeps access only in declared reactive memory state. A password-snapshot condition in session issuance rejects a password changed after verification but before issuance.
 - Strict shared schemas; registration atomically stores the account, default role, exactly five distinct answer hashes and registration audit event. The static question catalogue is read-only to the runtime database role. No contact identifier is collected.
 - Login, refresh, logout, own profile, session list, individual/other-session revocation and password-change HTTP paths are wired into the real API process. HTTPS origins receive an HttpOnly/Secure/SameSite Strict refresh cookie with `__Host-` prefix; explicitly local HTTP development uses a non-prefixed cookie. Origin checks plus a 256-bit double-submit CSRF token protect cookie operations and sign-in/registration. Bearer operations require a valid signed/current binding, not a client ID or role.
-- Database-backed keyed rolling account/origin attempt budgets, fixed self-expiring lockout and authentication audit events exist. The counters contain HMAC keys rather than raw usernames/addresses. Progressive delays, adaptive CAPTCHA and the full abuse-policy proof are still outstanding; enabled CAPTCHA rejects securely rather than silently bypassing a challenge.
+- Database-backed keyed rolling account/origin attempt budgets, fixed self-expiring lockout and authentication audit events exist. The counters contain HMAC keys rather than raw usernames/addresses. Persisted progressive delays now exist as described below; adaptive CAPTCHA and the full abuse-policy proof are still outstanding; enabled CAPTCHA rejects securely rather than silently bypassing a challenge.
 - Password change verifies the current password, rechecks its hash under the user lock, updates the hash and revokes all families in one transaction with an audit event. The UI warns that a new sign-in is required. Logout and revoke-others also write audit events.
 - Vue sign-up/sign-in and security settings use same-origin requests and validated responses; secrets are cleared after submission. An explicit English/Persian switch is reachable before sign-in, persists a device choice and updates document language/direction. Session dates use localized calendars, not raw UTC strings. Privacy/reporting pages are public, bilingual and linked from registration/security settings; the private reporting link is external and may require its own account.
 
@@ -101,7 +101,7 @@ Bug fixes proven by tests: native hashing admission is bounded; malformed/non-AS
 
 Evidence sources: `apps/api/test/integration/auth.test.ts` (11 real Argon2id/JOSE/HTTP/PostgreSQL cases), `apps/api/test/unit/auth-{adapters,routes,service}.test.ts`, `apps/web/test/unit/auth.test.ts`, existing session/race tests and catalogue-parity tests. Checkpoints below remain partial until every acceptance criterion is proved; tests passing is not Phase 2 completion.
 
-Latest local validation of this authentication checkpoint (Node 24.22.0 / Bun 1.4.3, 2026-10-17):
+Earlier local validation of the authentication HTTP checkpoint (Node 24.22.0 / Bun 1.4.3, 2026-10-17):
 
 | Command | Result |
 | --- | --- |
@@ -112,9 +112,25 @@ Latest local validation of this authentication checkpoint (Node 24.22.0 / Bun 1.
 
 A formatter failure in the first full run was corrected. The logout-expiry regression was discovered and fixed during review, then the complete suite above was rerun on the fixed code. These are local results, not a claim of CI success on a future head. The baseline load profile covers health/runtime behaviour, not the still-required login-route load profile.
 
+### Phase 2 progressive backoff and localization-check continuation
+
+`apps/api/src/auth/backoff.ts` enforces server-side progressive retry windows from database time: after two account failures the delay grows 1/2/4/8/16/30 seconds; after five origin failures the same sequence applies independently. `LOGIN_DELAY_MAX_SECONDS` bounds the delay (1–30, default 30) and is passed through both host development and Compose. Backoff returns 429 with bounded `Retry-After` instead of retaining open requests in a timer queue. The client never automatically replays credentials, clears the password and shows a catalogued EN/FA retry notice. Account existence does not select a different backoff policy.
+
+Failures use separately scoped HMAC keys and rolling timestamp histories, not the all-attempt admission counters. Denied retries spend the existing admission budget but do not append failures, restart a delay, extend an existing lockout or change another account. Success clears that account's failure history, not shared-origin history. Existing and missing account failures are both recorded; no source address or credential is added to audit metadata.
+
+Fixed a fixed-window counting defect: the lockout threshold now derives from the true rolling failure history rather than `failed_login_window_started_at`. User lock, failure history, first lock transition, family revocation and `account_locked` audit commit together. A lock already in force is not extended by later failures; automatic expiry writes `lockout_expired` state metadata and its `account_unlocked` audit in the same transaction. No automatic ban or inactivity deactivation is added.
+
+The existing ESLint gate now rejects template prose, static accessible labels, literal text interpolation and literal bound accessible labels. Regression tests exercise the actual repository ESLint configuration and prove translated equivalents pass; catalogue parity, default-language and pre-sign-in switch tests remain active. This does not claim arbitrary script-string taint analysis or complete row 9: persisted account locale and the recovery surface still remain.
+
+Evidence: `apps/api/test/integration/auth-backoff.test.ts` covers persisted/restarted backoff, independent account/origin decisions, a smaller configured cap, expiry, account-only success reset, rolling threshold correctness, session invalidation, non-extension, lock/unlock audit events, rollback on audit failure, concurrent recording and the 300-timestamp bound. Unit tests cover progression/rounding/clock-backwards capping and the HTTP header. Browser component tests prove localized feedback and no credential replay. `packages/test-utils/test/unit/localization-lint.test.ts` proves the strengthened existing lint gate rejects user-visible literals.
+
+The counter's stale timestamps are ignored and pruned on subsequent failures; inactive hashed bucket rows are not automatically deleted. The complete retention policy and enabled CAPTCHA remain unfinished; neither is claimed by this checkpoint. PR #12 remains draft and unmerged.
+
+Local validation for this continuation (Node 24.22.0 / Bun 1.4.3, 2026-10-17): all 15 active gates passed, including the strengthened lint gate, strict types, production builds, runtime smoke and unchanged baseline load profile. Unit/coverage passed 268 tests in 32 files (statements 94.06%, branches 87.25%, functions 92.78%, lines 95.29%; thresholds unchanged). Full integration after build passed 50 tests in eight files, including nine new backoff cases. Documentation/traceability and `git diff --check` passed. New-head CI must be verified independently; these local results do not prove Phase 2 completion.
+
 ## 3. Features that are not implemented
 
-Phase 2 still lacks administrator creation and forced first-login setup; recovery challenges/answers/reset grants and their switch-on/off UI flows; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; progressive delay policy; OpenAPI validation/generated-client activation; triggered security alert rules; persisted account locale; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
+Phase 2 still lacks administrator creation and forced first-login setup; recovery challenges/answers/reset grants and their switch-on/off UI flows; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; persisted account locale; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
 
 The route shell and future names are not product features. The current checkout also has no:
 

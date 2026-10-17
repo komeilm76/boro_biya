@@ -158,6 +158,7 @@ for (const backend of BACKENDS) {
             'LOGIN_MAX_ATTEMPTS_PER_ORIGIN',
             'LOGIN_WINDOW_SECONDS',
             'LOCKOUT_SECONDS',
+            'LOGIN_DELAY_MAX_SECONDS',
             'SECURITY_QUESTIONS_ENABLED',
             'CAPTCHA_ENABLED',
           ]

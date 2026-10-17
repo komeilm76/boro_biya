@@ -4,12 +4,16 @@ import { normalizeUsername } from '../identity/account.js';
 import { createIdentityRepository } from '../identity/repository.js';
 import { createSessionRepository } from '../identity/sessions.js';
 import { identityTransaction } from '../identity/transaction.js';
+import { createLoginBackoff } from './backoff.js';
 import type { AuthConfig } from './config.js';
 import { createPasswordHasher, normalizeAnswer, validPassword, type PasswordHasher } from './passwords.js';
 import { createAccessTokens } from './tokens.js';
 
 export class AuthFailure extends Error {
-  constructor(readonly statusCode: number = 401) {
+  constructor(
+    readonly statusCode: number = 401,
+    readonly retryAfterSeconds?: number,
+  ) {
     super('The request could not be accepted.');
   }
 }
@@ -32,6 +36,7 @@ export async function createAuthService(
   const dummyHash = await hasher.hash('missing-account timing fixture 84!');
   const key = (scope: string, value: string) =>
     createHmac('sha256', config.secret).update(`${scope}:${value}`).digest('hex');
+  const backoff = createLoginBackoff(db, config, key);
   async function audit(action: string, requestId: string, userId?: string) {
     await db.pool.query(
       `INSERT INTO core.audit_events(actor_id, actor_type, action, target_type, target_id, request_id)
@@ -59,8 +64,50 @@ export async function createAuthService(
     });
     if (!allowed) {
       await audit('rate_limit_denied', requestId);
-      throw new AuthFailure(429);
+      throw new AuthFailure(429, config.windowSeconds);
     }
+  }
+
+  async function failLogin(
+    accountId: string | undefined,
+    accountKey: string,
+    origin: string,
+    requestId: string,
+  ): Promise<never> {
+    await identityTransaction(db, async (client) => {
+      if (accountId !== undefined)
+        await client.query('SELECT id FROM core.users WHERE id = $1 FOR UPDATE', [accountId]);
+      const failures = await backoff.record(client, accountKey, origin);
+      if (accountId === undefined) return;
+      await client.query(
+        `UPDATE core.users SET failed_login_count = $2,
+         failed_login_window_started_at = CASE WHEN $2 = 1 THEN clock_timestamp() ELSE failed_login_window_started_at END
+         WHERE id = $1`,
+        [accountId, failures],
+      );
+      if (failures >= config.maxAccountAttempts) {
+        const locked = await client.query(
+          `UPDATE core.users SET account_status = 'locked', locked_until = clock_timestamp() + $2 * interval '1 second',
+           state_changed_at = clock_timestamp(), state_reason = 'failed_authentication'
+           WHERE id = $1 AND account_status = 'active' RETURNING id`,
+          [accountId, config.lockoutSeconds],
+        );
+        if (locked.rowCount === 1) {
+          await client.query(
+            `UPDATE core.session_families SET revoked_at = clock_timestamp(), revocation_reason = 'account_locked'
+             WHERE user_id = $1 AND revoked_at IS NULL`,
+            [accountId],
+          );
+          await client.query(
+            `INSERT INTO core.audit_events(actor_id, actor_type, action, target_type, target_id, request_id)
+             VALUES (NULL, 'system', 'account_locked', 'user', $1, $2)`,
+            [accountId, requestId],
+          );
+        }
+      }
+    });
+    await audit('login_failed', requestId);
+    throw new AuthFailure();
   }
 
   return {
@@ -128,53 +175,38 @@ export async function createAuthService(
       } catch {
         /* same generic credential response */
       }
-      await reserve('login-account', username || key('invalid', usernameInput), config.maxAccountAttempts, requestId);
+      const accountKey = username || key('invalid', usernameInput);
+      await reserve('login-account', accountKey, config.maxAccountAttempts, requestId);
+      const retryAfter = await backoff.check(accountKey, origin);
+      if (retryAfter > 0) {
+        await audit('login_backoff_denied', requestId);
+        throw new AuthFailure(429, retryAfter);
+      }
       const lookup = await db.pool.query<{ id: string; password_hash: string }>(
         'SELECT id, password_hash FROM core.users WHERE username_normalized = $1',
         [username],
       );
       const account = lookup.rows[0];
       const correct = await hasher.verify(account?.password_hash ?? dummyHash, password);
-      if (!correct || account === undefined) {
-        if (account !== undefined) {
-          await identityTransaction(db, async (client) => {
-            const result = await client.query<{ failed_login_count: number }>(
-              `UPDATE core.users SET failed_login_count = CASE WHEN failed_login_window_started_at IS NULL OR
-                failed_login_window_started_at <= clock_timestamp() - $2 * interval '1 second' THEN 1 ELSE failed_login_count + 1 END,
-                failed_login_window_started_at = CASE WHEN failed_login_window_started_at IS NULL OR
-                failed_login_window_started_at <= clock_timestamp() - $2 * interval '1 second' THEN clock_timestamp() ELSE failed_login_window_started_at END
-                WHERE id = $1 RETURNING failed_login_count`,
-              [account.id, config.windowSeconds],
-            );
-            if ((result.rows[0]?.failed_login_count ?? 0) >= config.maxAccountAttempts) {
-              await client.query(
-                `UPDATE core.users SET account_status = 'locked', locked_until = clock_timestamp() + $2 * interval '1 second',
-                 state_changed_at = clock_timestamp(), state_reason = 'failed_authentication'
-                 WHERE id = $1 AND account_status = 'active'`,
-                [account.id, config.lockoutSeconds],
-              );
-              await client.query(
-                `UPDATE core.session_families SET revoked_at = clock_timestamp(), revocation_reason = 'account_locked'
-                 WHERE user_id = $1 AND revoked_at IS NULL`,
-                [account.id],
-              );
-            }
-          });
-        }
-        await audit('login_failed', requestId);
-        throw new AuthFailure();
-      }
-      await db.pool.query(
-        `UPDATE core.users SET account_status = 'active', locked_until = NULL, failed_login_count = 0
-         WHERE id = $1 AND account_status = 'locked' AND locked_until <= clock_timestamp()`,
-        [account.id],
-      );
+      if (!correct || account === undefined) return failLogin(account?.id, accountKey, origin, requestId);
+      await identityTransaction(db, async (client) => {
+        const unlocked = await client.query(
+          `UPDATE core.users SET account_status = 'active', locked_until = NULL, failed_login_count = 0,
+           state_changed_at = clock_timestamp(), state_reason = 'lockout_expired'
+           WHERE id = $1 AND password_hash = $2 AND account_status = 'locked' AND locked_until <= clock_timestamp()
+           RETURNING id`,
+          [account.id, account.password_hash],
+        );
+        if (unlocked.rowCount === 1)
+          await client.query(
+            `INSERT INTO core.audit_events(actor_id, actor_type, action, target_type, target_id, request_id)
+           VALUES (NULL, 'system', 'account_unlocked', 'user', $1, $2)`,
+            [account.id, requestId],
+          );
+      });
       // Recheck the password snapshot while locking the account in the issuing transaction.
       const grant = await sessions.issue(account.id, account.password_hash);
-      if (grant === null) {
-        await audit('login_failed', requestId);
-        throw new AuthFailure();
-      }
+      if (grant === null) return failLogin(account.id, accountKey, origin, requestId);
       await db.pool.query(
         'UPDATE core.users SET failed_login_count = 0, last_login_at = clock_timestamp() WHERE id = $1',
         [account.id],
@@ -183,6 +215,7 @@ export async function createAuthService(
         key('login-account', username),
         [],
       ]);
+      await backoff.clearAccount(accountKey);
       await audit('login_succeeded', requestId, account.id);
       return { ...grant, accessToken: await tokens.sign(account.id, grant.sessionId) };
     },

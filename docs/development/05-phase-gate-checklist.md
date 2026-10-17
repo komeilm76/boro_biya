@@ -69,7 +69,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `
 
 | # | Criterion | Evidence that will prove it | Status |
 | --- | --- | --- | --- |
-| 1 | Registration, login, logout, and session management implemented and session-revocable by the owner | Integration tests; `AUTH-01 … AUTH-14`, `UI-10`, `PRIV-21`; identity entity/migration/repository tests recorded in [implementation status](17-implementation-status.md#phase-2-identity-foundation--partial-row-1-evidence); internal session rotation/revocation store tested in the same evidence record; registration/login/refresh/logout/password change, signed access/cookie/CSRF and bilingual UI tested; enabled CAPTCHA, full policy and contract activation still outstanding | In progress |
+| 1 | Registration, login, logout, and session management implemented and session-revocable by the owner | Integration tests; `AUTH-01 … AUTH-14`, `UI-10`, `PRIV-21`; identity entity/migration/repository tests recorded in [implementation status](17-implementation-status.md#phase-2-identity-foundation--partial-row-1-evidence); internal session rotation/revocation store tested in the same evidence record; registration/login/refresh/logout/password change, signed access/cookie/CSRF and bilingual UI tested; persisted progressive backoff and rolling lockout proofs added; enabled CAPTCHA, remaining policy and contract activation still outstanding | In progress |
 | 2 | Admin-created accounts with forced first-login setup (password, then security questions) | Account-state matrix test; `AUTH-25 … AUTH-29`, `DATA-10` | Not started |
 | 3 | Security-question recovery end to end, short-lived and single-use, with attempt limits | Security tests; `AUTH-30 … AUTH-38`, `DATA-09` | Not started |
 | 4 | Lockout, ban, deactivation, and reactivation with distinct reasons and audit events | Abuse-control tests; `SEC-14 … SEC-19` | In progress |
@@ -85,7 +85,7 @@ Status values are `Not started`, `In progress`, `Met`, `Not met`, `Withdrawn`, `
 | 14 | Deferred; excluded from authorised scope, non-gating | `SEC-75`; owner decision 2026-10-17; retained for traceability only; no implementation authorised unless named in a later owner message | Deferred |
 
 
-Partial acceptance evidence for rows 4, 7, 8, 9 and 11: [implementation status](17-implementation-status.md#phase-2-authentication-http-and-vue-checkpoint). Audit storage and rolling budgets exist, but alerts/full abuse policy remain; session privacy controls exist, but their complete privacy proof remains; device locale switching exists, but account persistence and hard-coded-string lint activation remain; public privacy/report pages and localized session dates exist, but configured policy/retention and reporting-runbook proofs remain. No partial row is marked Met.
+Partial acceptance evidence for rows 4, 7, 8, 9 and 11: [implementation status](17-implementation-status.md#phase-2-authentication-http-and-vue-checkpoint). Audit storage and rolling budgets exist, but alerts/full abuse policy remain; session privacy controls exist, but their complete privacy proof remains; device locale switching exists, but account persistence remains; template prose/label/literal lint is now active with rejection tests; public privacy/report pages and localized session dates exist, but configured policy/retention and reporting-runbook proofs remain. No partial row is marked Met.
 
 ### Phase 3 — Map foundation and user settings
 

@@ -2,7 +2,7 @@
 
 This document explains how gates are organized, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 ## 1. Gate model
 
@@ -109,3 +109,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 ## 7. Reporting
 
 Phase reports and pull requests state, per gate: the command, the exit status, and — when a gate was skipped — the reason and the recorded exception. "Tests pass" without a command and an exit status is not evidence.
+
+### Phase 2 localization gate activation
+
+The existing `bun run lint` command now enables Vue template prose/accessible-label checks and restricted literal interpolation; no separate bypass or weaker configuration is used. `packages/test-utils/test/unit/localization-lint.test.ts` exercises the repository configuration against rejected literal text, placeholders, accessible labels and interpolation, with a translated positive control. Catalogue-key parity still runs in the web unit project. This is the current localization check surface, not a claim of script-string taint analysis or completed account-locale persistence.

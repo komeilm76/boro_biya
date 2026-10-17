@@ -39,6 +39,10 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   function setRefresh(reply: FastifyReply, secret: string, expires: Date) {
     reply.header('set-cookie', `${refreshName}=${secret}; HttpOnly; Expires=${expires.toUTCString()}${suffix}`);
   }
+  app.addHook('onError', async (_request, reply, error) => {
+    if (error instanceof AuthFailure && error.retryAfterSeconds !== undefined)
+      reply.header('retry-after', error.retryAfterSeconds);
+  });
   app.addHook('onRequest', async (request, reply) => {
     if (request.url.startsWith('/api/v1/auth') || request.url.startsWith('/api/v1/users/me')) {
       reply.header('cache-control', 'no-store');

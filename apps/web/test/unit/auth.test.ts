@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory } from 'vue-router';
 import { createAppI18n, savedLocale } from '../../src/i18n/index.js';
 import { createAppRouter } from '../../src/router/index.js';
-import { authClient, authRequest, acceptedResponse, emptyResponse } from '../../src/auth-client.js';
+import { authClient, authRequest, AuthRequestError, acceptedResponse, emptyResponse } from '../../src/auth-client.js';
 import { useSessionStore } from '../../src/stores/session.js';
 import SignIn from '../../src/pages/SignInPlaceholder.vue';
 import Register from '../../src/pages/AuthRegister.vue';
@@ -56,6 +56,22 @@ function loginResponses() {
 }
 
 describe('browser authentication transport and memory-only state', () => {
+  it('exposes only bounded retry metadata for rate denials, never server prose', async () => {
+    for (const [status, header, expected] of [
+      [429, '30', 30],
+      [429, '9999', undefined],
+      [429, 'not-a-number', undefined],
+      [401, '30', undefined],
+    ] as const) {
+      fetcher.mockResolvedValueOnce(
+        new Response('private server detail', { status, headers: { 'retry-after': header } }),
+      );
+      const error: unknown = await authClient.me('signed').catch((reason: unknown) => reason);
+      expect(error).toBeInstanceOf(AuthRequestError);
+      expect(error).toMatchObject({ status, retryAfterSeconds: expected });
+      expect(error instanceof Error && error.message).toBe('auth_request_rejected');
+    }
+  });
   it('validates responses, uses same-origin credentials and never permits an arbitrary endpoint', async () => {
     fetcher.mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }));
     expect((await authClient.csrf()).csrfToken).toHaveLength(43);
@@ -132,6 +148,21 @@ describe('bilingual authentication, settings and public privacy UI', () => {
     await failed.wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(failed.wrapper.find('[role="alert"]').exists()).toBe(true);
+  });
+  it('shows a localized login retry notice without replaying credentials and clears the password', async () => {
+    const { wrapper, session } = mountPage(SignIn, 'fa');
+    fetcher
+      .mockResolvedValueOnce(response({ csrfToken: 'A'.repeat(43) }))
+      .mockResolvedValueOnce(new Response(null, { status: 429, headers: { 'retry-after': '30' } }));
+    await wrapper.get('#username').setValue('alice');
+    await wrapper.get('#password').setValue('secret');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.get('[role="alert"]').text()).toContain('30');
+    expect(wrapper.get('[role="alert"]').text()).toContain('ثانیه');
+    expect((wrapper.get('#password').element as HTMLInputElement).value).toBe('');
+    expect(session.isAuthenticated).toBe(false);
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
   it('lists sessions with localized dates and exercises revoke/refresh/logout safely', async () => {
     fetcher.mockResolvedValueOnce(

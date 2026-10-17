@@ -39,6 +39,8 @@ describe('authentication configuration and resource bounds', () => {
     { LOGIN_MAX_ATTEMPTS_PER_ACCOUNT: '-1' },
     { SECURITY_QUESTIONS_ENABLED: 'yes' },
     { CAPTCHA_ENABLED: 'yes' },
+    { LOGIN_DELAY_MAX_SECONDS: '31' },
+    { LOGIN_DELAY_MAX_SECONDS: '0' },
   ])('fails invalid settings without including values: %j', (patch) => {
     expect(() => readAuthConfig({ ...env, ...patch })).toThrow();
   });

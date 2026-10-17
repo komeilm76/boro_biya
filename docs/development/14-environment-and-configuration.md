@@ -102,10 +102,11 @@ The tables below preserve the Phase 1 template-only classification. The followin
 | `LOGIN_MAX_ATTEMPTS_PER_ORIGIN` | 30, integer 1–300 | Persisted keyed origin budget; refresh budget capped at 300 |
 | `LOGIN_WINDOW_SECONDS` | 900, integer 1–3600 | Rolling attempt-window persistence |
 | `LOCKOUT_SECONDS` | 900, integer 1–3600 | Self-expiring locked-account check |
+| `LOGIN_DELAY_MAX_SECONDS` | 30, integer 1–30; enforced server-side via 429/Retry-After, not an open-request timer | Persisted account/origin backoff and smaller-cap tests |
 | `SECURITY_QUESTIONS_ENABLED` | true, strict boolean; policy warning state only until recovery is implemented | Policy response/config tests; recovery endpoints remain unavailable |
 | `CAPTCHA_ENABLED` | false, strict boolean; true currently fails login/registration closed with 503 | No CAPTCHA bypass claim; implementation still outstanding |
 
-`WEB_ORIGIN` also controls strict mutation-origin checks and refresh-cookie security: remote production origins require HTTPS; loopback HTTP is explicitly a local development exception. Argon2 template tuning, progressive delay, automated bans, general request limits and remaining recovery/CAPTCHA tuning are not yet consumers; the adapter currently uses the SEC-05 starting parameters with bounded native concurrency. All other rows below remain template-only; none establishes a feature merely by appearing in `.env.example`.
+`WEB_ORIGIN` also controls strict mutation-origin checks and refresh-cookie security: remote production origins require HTTPS; loopback HTTP is explicitly a local development exception. Argon2 template tuning, automated bans, general request limits and remaining recovery/CAPTCHA tuning are not yet consumers; the adapter currently uses the SEC-05 starting parameters with bounded native concurrency. All other rows below remain template-only; none establishes a feature merely by appearing in `.env.example`.
 
 ### Database extensions and account/security configuration
 
