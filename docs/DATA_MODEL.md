@@ -116,3 +116,7 @@ Privileged writes use an app-owned transaction advisory lock followed by sorted 
 ### Initial-setup credential reissuance checkpoint (2026-10-17)
 
 Reissuance reuses `users.password_hash`, the two setup flags, `setup_credential_expires_at` and `setup_credential_consumed_at`; no schema or permission-vocabulary change is needed. Only active, pending initial-setup records with a non-null initial expiry are eligible. A new password hash and 24-hour expiry replace previous material, consumption resets, and both ordered steps become required again. Existing session/recovery/setup rows are retained and invalidated within the same transaction as the reasoned audit event. Completed-account recovery and account state/roles are not changed. Reissuance clears only the pending user's setup attempt buckets, never origin or administrator mutation budgets. Concurrent issuance leaves only the last committed credential usable; an audit error restores the previous credential and proofs.
+
+### Administrative search checkpoint (2026-10-17)
+
+Search reuses existing normalized username/state/setup fields, user-role assignment and audit actor/action/target/time columns; no schema or permission changes are needed. Queries combine filters with the existing UUID cursor order and return at most 50 records. Username search uses a literal substring predicate, not a SQL wildcard expression. Audit time ranges are half-open UTC instants. Read audits retain the actor/request and only the filter field names. Substring-search throughput and index optimization are not claimed.

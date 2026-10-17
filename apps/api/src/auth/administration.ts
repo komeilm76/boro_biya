@@ -1,3 +1,4 @@
+import type { AdminUsersQuery, AdminAuditQuery } from '@boro-biya/validation';
 import { createHmac } from 'node:crypto';
 import type { Db } from '@boro-biya/db';
 import { identityTransaction } from '../identity/transaction.js';
@@ -128,9 +129,11 @@ export function createAdministration(
     );
   }
   return {
-    users(actor: AdminActor, requestId: string, cursor?: string) {
+    users(actor: AdminActor, requestId: string, query: AdminUsersQuery = {}) {
       return authorized(actor, 'users.read', requestId, async (client) => {
-        await audit(client, actor, 'admin_users_viewed', 'user', null, requestId);
+        await audit(client, actor, 'admin_users_viewed', 'user', null, requestId, {
+          filters: Object.keys(query).filter((key) => key !== 'cursor'),
+        });
         const rows = await client.query<{
           id: string;
           username_display: string;
@@ -140,8 +143,19 @@ export function createAdministration(
           state_reason: string | null;
           state_changed_at: Date;
         }>(
-          `SELECT id, username_display, account_status, password_setup_required, security_setup_required, state_reason, state_changed_at FROM core.users WHERE ($1::uuid IS NULL OR id > $1) ORDER BY id LIMIT 51`,
-          [cursor ?? null],
+          `SELECT id, username_display, account_status, password_setup_required, security_setup_required, state_reason, state_changed_at FROM core.users u WHERE ($1::uuid IS NULL OR id > $1)
+          AND ($2::text IS NULL OR strpos(username_normalized,$2) > 0)
+          AND ($3::text IS NULL OR account_status = $3)
+          AND ($4::boolean IS NULL OR (password_setup_required OR security_setup_required) = $4)
+          AND ($5::uuid IS NULL OR EXISTS (SELECT 1 FROM core.user_roles ur WHERE ur.user_id = u.id AND ur.role_id = $5))
+          ORDER BY id LIMIT 51`,
+          [
+            query.cursor ?? null,
+            query.username ?? null,
+            query.status ?? null,
+            query.setupRequired === undefined ? null : query.setupRequired === 'true',
+            query.roleId ?? null,
+          ],
         );
         return {
           items: rows.rows.slice(0, 50).map((row) => ({
@@ -209,9 +223,11 @@ export function createAdministration(
         };
       });
     },
-    auditEvents(actor: AdminActor, requestId: string, cursor?: string) {
+    auditEvents(actor: AdminActor, requestId: string, query: AdminAuditQuery = {}) {
       return authorized(actor, 'audit.read', requestId, async (client) => {
-        await audit(client, actor, 'admin_audit_viewed', 'audit', null, requestId);
+        await audit(client, actor, 'admin_audit_viewed', 'audit', null, requestId, {
+          filters: Object.keys(query).filter((key) => key !== 'cursor'),
+        });
         const rows = await client.query<{
           id: string;
           actor_id: string | null;
@@ -221,8 +237,20 @@ export function createAdministration(
           created_at: Date;
           details: Record<string, unknown>;
         }>(
-          'SELECT id, actor_id, action, target_type, target_id, created_at, details FROM core.audit_events WHERE ($1::uuid IS NULL OR id < $1) ORDER BY id DESC LIMIT 51',
-          [cursor ?? null],
+          `SELECT id, actor_id, action, target_type, target_id, created_at, details FROM core.audit_events WHERE ($1::uuid IS NULL OR id < $1)
+          AND ($2::uuid IS NULL OR actor_id = $2) AND ($3::text IS NULL OR action = $3)
+          AND ($4::uuid IS NULL OR target_id = $4) AND ($5::text IS NULL OR target_type = $5)
+          AND ($6::timestamptz IS NULL OR created_at >= $6) AND ($7::timestamptz IS NULL OR created_at < $7)
+          ORDER BY id DESC LIMIT 51`,
+          [
+            query.cursor ?? null,
+            query.actorId ?? null,
+            query.action ?? null,
+            query.targetId ?? null,
+            query.targetType ?? null,
+            query.from ?? null,
+            query.to ?? null,
+          ],
         );
         return {
           items: rows.rows.slice(0, 50).map((row) => ({

@@ -19,7 +19,7 @@
   },
   "adminArea": {
     "title": "Administration",
-    "placeholder": "Additional administrative search filters are not yet implemented."
+    "placeholder": "Administrative actions use current database permissions."
   },
   "notFound": {
     "title": "Page not found",
@@ -156,5 +156,20 @@
     },
     "reissue": "Reissue setup credential",
     "reissueWarning": "Only active accounts awaiting initial setup are eligible. This invalidates prior setup proofs and restarts both setup steps; it cannot reset a completed account."
+  },
+  "adminSearch": {
+    "users": "User filters",
+    "all": "All",
+    "setup": "Initial setup",
+    "pending": "Pending",
+    "complete": "Complete",
+    "apply": "Apply filters",
+    "audit": "Audit filters",
+    "actor": "Actor ID",
+    "target": "Target ID",
+    "targetType": "Target type",
+    "utc": "Enter UTC instants such as 2026-10-17T12:00:00Z. The start is inclusive; the end is exclusive.",
+    "from": "From (UTC, inclusive)",
+    "to": "To (UTC, exclusive)"
   }
 }

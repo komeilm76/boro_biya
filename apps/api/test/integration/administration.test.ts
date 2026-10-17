@@ -403,3 +403,197 @@ it('uses disjoint cursor pages for users, roles and audit events', async () => {
     expect(next.items.some((item) => seen.has(item.id))).toBe(false);
   }
 });
+
+describe('strict administrative search filters', () => {
+  it('combines normalized literal username, status, setup and effective role membership filters', async () => {
+    await root.query(
+      "UPDATE core.users SET account_status = 'banned',state_reason = 'fixture',password_setup_required = true WHERE id = $1",
+      [ids[2]],
+    );
+    const list = async (query: string) =>
+      (await send(`users?${query}`)).json<{ items: Array<{ id: string }> }>().items.map((item) => item.id);
+    expect(
+      await list(
+        new URLSearchParams({
+          username: '  ＴＡＲＧＥＴ  ',
+          status: 'banned',
+          setupRequired: 'true',
+          roleId: userRole,
+        }).toString(),
+      ),
+    ).toEqual([ids[2]]);
+    expect(await list(`setupRequired=false&roleId=${userRole}`)).toEqual(ids.slice(0, 2));
+    expect(await list(`roleId=${adminRole}`)).toEqual(ids.slice(0, 2));
+    expect(await list(`status=banned&roleId=${adminRole}`)).toEqual([]);
+    expect(await list('username=%25')).toEqual([]);
+    expect(await list('username=' + encodeURIComponent("' OR TRUE --"))).toEqual([]);
+    expect(await list('username=first_admin')).toEqual([ids[0]]);
+    // An underscore is literal, not a single-character SQL wildcard.
+    expect(await list('username=firstXadmin')).toEqual([]);
+    const event = (
+      await db.pool.query<{ details: { filters: string[] } }>(
+        "SELECT details FROM core.audit_events WHERE action = 'admin_users_viewed' ORDER BY id LIMIT 1",
+      )
+    ).rows[0]!;
+    expect(event.details.filters.sort()).toEqual(['roleId', 'setupRequired', 'status', 'username']);
+    expect(JSON.stringify(event)).not.toContain('TARGET');
+  });
+  it('filters audit actor/action/target/type and a half-open UTC time range', async () => {
+    await root.query(
+      "INSERT INTO core.audit_events(actor_id,actor_type,action,target_type,target_id,request_id,created_at) VALUES ($1,'user','filter_case','user',$3,'fixture','2026-10-17T12:00:00Z'),($2,'user','filter_case','user',$3,'fixture','2026-10-17T12:01:00Z'),($1,'user','filter_other','role',$4,'fixture','2026-10-17T12:02:00Z')",
+      [ids[0], ids[1], ids[2], adminRole],
+    );
+    const query = new URLSearchParams({
+      actorId: ids[0]!,
+      action: 'filter_case',
+      targetId: ids[2]!,
+      targetType: 'user',
+      from: '2026-10-17T12:00:00Z',
+      to: '2026-10-17T12:01:00Z',
+    });
+    const result = await send(`audit-events?${query.toString()}`);
+    expect(result.statusCode).toBe(200);
+    const rows = result.json<{ items: Array<{ action: string; createdAt: string }> }>().items;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ action: 'filter_case', createdAt: '2026-10-17T12:00:00.000Z' });
+    query.set('from', '2026-10-17T12:01:00Z');
+    query.set('to', '2026-10-17T12:03:00Z');
+    expect((await send(`audit-events?${query.toString()}`)).json<{ items: unknown[] }>().items).toEqual([]);
+  });
+  it('retains bounded, disjoint cursor pages inside user and audit result sets', async () => {
+    await root.query(
+      "INSERT INTO core.users(username_normalized,username_display,password_hash,password_setup_required,security_setup_required) SELECT 'filter_page_' || n,'filter_page_' || n,(SELECT password_hash FROM core.users WHERE id = $1),false,false FROM generate_series(1,55) n",
+      [ids[2]],
+    );
+    await root.query(
+      "INSERT INTO core.audit_events(actor_type,action,target_type,request_id) SELECT 'system','filter_page','audit','fixture' FROM generate_series(1,55)",
+    );
+    for (const path of ['users?username=filter_page_', 'audit-events?action=filter_page']) {
+      const first = (await send(path)).json<{ items: Array<{ id: string }>; nextCursor: string }>();
+      const second = (await send(`${path}&cursor=${first.nextCursor}`)).json<{
+        items: Array<{ id: string }>;
+        nextCursor: string | null;
+      }>();
+      expect(first.items).toHaveLength(50);
+      expect(second.items).toHaveLength(5);
+      expect(second.nextCursor).toBeNull();
+      expect(new Set([...first.items, ...second.items].map((item) => item.id)).size).toBe(55);
+    }
+  });
+  it.each([
+    'users?username=',
+    'users?username=' + 'x'.repeat(65),
+    'users?status=deleted',
+    'users?setupRequired=1',
+    'users?roleId=invalid',
+    'users?username=first&username=second',
+    'users?unexpected=value',
+    'audit-events?action=bad%20action',
+    'audit-events?actorId=invalid',
+    'audit-events?targetId=invalid',
+    'audit-events?from=2026-02-30T00:00:00Z',
+    'audit-events?from=2026-10-17T12:00:00%2B01:00',
+    'audit-events?from=2026-10-17T12:00:00Z&to=2026-10-17T11:00:00Z',
+    'audit-events?to=2026-10-17T12:00:00Z&from=2026-10-17T12:00:00Z',
+    'audit-events?unknown=value',
+  ])('rejects invalid search input: %s', async (path) => {
+    expect((await send(path)).statusCode).toBe(400);
+  });
+});
+
+describe('complete current bearer-route account-state matrix', () => {
+  it.each(['active', 'locked', 'banned', 'deactivated', 'password', 'security', 'both', 'revoked', 'expired'] as const)(
+    'enforces %s across every current bearer route and the refresh/logout exception',
+    async (state) => {
+      const cookieGrant = await auth.login('first_admin', password, 'matrix', 'cookie');
+      if (state === 'revoked')
+        await root.query(
+          "UPDATE core.session_families SET revoked_at = clock_timestamp(),revocation_reason = 'fixture' WHERE user_id = $1 AND revoked_at IS NULL",
+          [ids[0]],
+        );
+      else if (state === 'expired')
+        await root.query(
+          "UPDATE core.sessions SET issued_at = clock_timestamp() - interval '2 days',expires_at = clock_timestamp() - interval '1 second' WHERE user_id = $1",
+          [ids[0]],
+        );
+      else
+        await root.query(
+          "UPDATE core.users SET account_status = $2,state_reason = 'fixture',locked_until = CASE WHEN $2 = 'locked' THEN clock_timestamp() + interval '1 hour' ELSE NULL END,password_setup_required = $3,security_setup_required = $4 WHERE id = $1",
+          [
+            ids[0],
+            ['password', 'security', 'both'].includes(state) ? 'active' : state,
+            state === 'password' || state === 'both',
+            state === 'security' || state === 'both',
+          ],
+        );
+      const csrf = (await app.inject('/api/v1/auth/csrf')).json<{ csrfToken: string }>().csrfToken;
+      const cookieHeaders = {
+        origin: config.origin,
+        cookie: `boro_csrf=${csrf}; __Host-boro_refresh=${cookieGrant.refreshToken}`,
+        'x-csrf-token': csrf,
+      };
+      expect(
+        (await app.inject({ method: 'POST', url: '/api/v1/auth/refresh', headers: cookieHeaders })).statusCode,
+        `${state}: refresh`,
+      ).toBe(state === 'active' ? 200 : 401);
+      expect(
+        (await app.inject({ method: 'POST', url: '/api/v1/auth/logout', headers: cookieHeaders })).statusCode,
+        `${state}: logout`,
+      ).toBe(204);
+      for (const path of ['policy', 'security-questions'])
+        expect((await app.inject(`/api/v1/auth/${path}`)).statusCode, `${state}: public ${path}`).toBe(200);
+      // Writes use invalid bodies only in the active row to prove admission without mutating
+      // credentials/roles. Positive mutation semantics have dedicated native regression tests.
+      const routes = [
+        ['GET', '/users/me', 200],
+        ['GET', '/users/me/preferences', 200],
+        ['PUT', '/users/me/preferences', 200],
+        ['GET', '/auth/sessions', 200],
+        ['DELETE', '/auth/sessions', 204],
+        ['DELETE', `/auth/sessions/${grants[1]!.familyId}`, 404],
+        ['POST', '/auth/password/change', 400],
+        ['POST', '/auth/security-questions/change', 400],
+        ['GET', '/admin/users', 200],
+        ['GET', `/admin/users/${ids[2]}`, 200],
+        ['GET', '/admin/roles', 200],
+        ['GET', '/admin/audit-events', 200],
+        ...(['lock', 'unlock', 'ban', 'unban', 'deactivate', 'reactivate'] as const).map(
+          (action) => ['POST', `/admin/users/${ids[2]}/${action}`, 400] as const,
+        ),
+        ['POST', `/admin/users/${ids[2]}/setup-credential`, 400],
+        ['PATCH', `/admin/users/${ids[2]}/roles`, 400],
+        ['POST', '/admin/roles', 400],
+        ['PATCH', `/admin/roles/${adminRole}`, 400],
+        ['POST', '/admin/users', 400],
+        ['DELETE', `/auth/sessions/${grants[0]!.familyId}`, 204],
+      ] as const;
+      for (const [method, path, activeStatus] of routes) {
+        const result = await app.inject({
+          method,
+          url: `/api/v1${path}`,
+          headers: { authorization: `Bearer ${grants[0]!.accessToken}`, origin: config.origin },
+          ...(['POST', 'PUT', 'PATCH'].includes(method) ? { payload: method === 'PUT' ? { locale: 'en' } : {} } : {}),
+        });
+        expect(result.statusCode, `${state}: ${method} ${path}`).toBe(state === 'active' ? activeStatus : 401);
+      }
+    },
+  );
+});
+
+it('denies an ordinary active session across every concrete administrative endpoint', async () => {
+  const routes = [
+    ['GET', 'users', undefined],
+    ['GET', `users/${ids[2]}`, undefined],
+    ['GET', 'roles', undefined],
+    ['GET', 'audit-events', undefined],
+    ...['lock', 'unlock', 'ban', 'unban', 'deactivate', 'reactivate', 'setup-credential'].map(
+      (action) => ['POST', `users/${ids[2]}/${action}`, { currentPassword: password, reason: 'fixture' }] as const,
+    ),
+    ['PATCH', `users/${ids[2]}/roles`, { currentPassword: password, roleIds: [userRole] }],
+    ['POST', 'roles', { currentPassword: password, key: 'forbidden', nameKey: 'roles.forbidden', permissions: [] }],
+    ['PATCH', `roles/${adminRole}`, { currentPassword: password, nameKey: 'roles.forbidden', permissions: [] }],
+    ['POST', 'users', { currentPassword: password, username: 'forbidden' }],
+  ] as const;
+  for (const [method, path, payload] of routes)
+    expect((await send(path, payload, method, 2)).statusCode, `${method} ${path}`).toBe(403);
+});

@@ -2,7 +2,13 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { administrativePermissionKeys } from '@boro-biya/validation';
+import {
+  administrativePermissionKeys,
+  adminUsersQuerySchema,
+  adminAuditQuerySchema,
+  type AdminUsersQuery,
+  type AdminAuditQuery,
+} from '@boro-biya/validation';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 const session = useSessionStore();
@@ -24,6 +30,18 @@ const busy = ref(false);
 const failed = ref(false);
 const accepted = ref(false);
 const credential = ref<Awaited<ReturnType<typeof authClient.reissueSetupCredential>> | null>(null);
+const searchUsername = ref('');
+const searchStatus = ref('');
+const searchSetup = ref('');
+const searchRole = ref('');
+const auditActor = ref('');
+const auditAction = ref('');
+const auditTarget = ref('');
+const auditType = ref('');
+const auditFrom = ref('');
+const auditTo = ref('');
+const userQuery = ref<AdminUsersQuery>({});
+const auditQuery = ref<AdminAuditQuery>({});
 let epoch = 0;
 let mutation = 0;
 let usersRead = 0;
@@ -36,6 +54,18 @@ const current = (snapshot: ReturnType<typeof owner>) =>
   snapshot.version === session.authVersion &&
   session.isAuthenticated;
 function clearData() {
+  searchUsername.value = '';
+  searchStatus.value = '';
+  searchSetup.value = '';
+  searchRole.value = '';
+  auditActor.value = '';
+  auditAction.value = '';
+  auditTarget.value = '';
+  auditType.value = '';
+  auditFrom.value = '';
+  auditTo.value = '';
+  userQuery.value = {};
+  auditQuery.value = {};
   epoch++;
   mutation++;
   users.value = { items: [], nextCursor: null };
@@ -73,7 +103,7 @@ async function readUsers(cursor?: string) {
     generation = epoch,
     ticket = ++usersRead;
   try {
-    const result = await authClient.adminUsers(snapshot.token, cursor);
+    const result = await authClient.adminUsers(snapshot.token, { ...userQuery.value, cursor });
     if (current(snapshot) && generation === epoch && ticket === usersRead && allowed('users.read'))
       users.value = result;
   } catch {
@@ -109,14 +139,52 @@ async function audit(next = false) {
     generation = epoch,
     ticket = ++auditRead;
   try {
-    const result = await authClient.adminAudit(
-      snapshot.token,
-      next ? (audits.value.nextCursor ?? undefined) : undefined,
-    );
+    const result = await authClient.adminAudit(snapshot.token, {
+      ...auditQuery.value,
+      cursor: next ? (audits.value.nextCursor ?? undefined) : undefined,
+    });
     if (current(snapshot) && generation === epoch && ticket === auditRead) audits.value = result;
   } catch {
     if (current(snapshot) && generation === epoch && ticket === auditRead) failed.value = true;
   }
+}
+async function searchUsers() {
+  if (!allowed('users.read')) return;
+  const parsed = adminUsersQuerySchema.safeParse({
+    username: searchUsername.value || undefined,
+    status: searchStatus.value || undefined,
+    setupRequired: searchSetup.value || undefined,
+    roleId: searchRole.value || undefined,
+  });
+  usersRead++;
+  users.value = { items: [], nextCursor: null };
+  failed.value = false;
+  if (!parsed.success) {
+    failed.value = true;
+    return;
+  }
+  userQuery.value = parsed.data;
+  await readUsers();
+}
+async function searchAudit() {
+  if (!allowed('audit.read')) return;
+  const parsed = adminAuditQuerySchema.safeParse({
+    actorId: auditActor.value || undefined,
+    action: auditAction.value || undefined,
+    targetId: auditTarget.value || undefined,
+    targetType: auditType.value || undefined,
+    from: auditFrom.value || undefined,
+    to: auditTo.value || undefined,
+  });
+  auditRead++;
+  audits.value = { items: [], nextCursor: null };
+  failed.value = false;
+  if (!parsed.success) {
+    failed.value = true;
+    return;
+  }
+  auditQuery.value = parsed.data;
+  await audit();
 }
 function edit() {
   const role = roles.value.items.find((item) => item.id === editingRole.value);
@@ -177,6 +245,30 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
     <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
     <p v-if="accepted" role="status">{{ $t('adminManage.accepted') }}</p>
     <button type="button" :disabled="busy" @click="load">{{ $t('adminManage.refresh') }}</button>
+    <fieldset :disabled="busy || !allowed('users.read')" class="grid gap-3" @keydown.enter.prevent="searchUsers">
+      <legend>{{ $t('adminSearch.users') }}</legend>
+      <label for="search-username">{{ $t('auth.username') }}</label
+      ><input id="search-username" v-model="searchUsername" maxlength="256" />
+      <label for="search-status">{{ $t('adminManage.state') }}</label>
+      <select id="search-status" v-model="searchStatus">
+        <option value="">{{ $t('adminSearch.all') }}</option>
+        <option v-for="state in ['active', 'locked', 'banned', 'deactivated']" :key="state" :value="state">
+          {{ $t(`adminManage.states.${state}`) }}
+        </option>
+      </select>
+      <label for="search-setup">{{ $t('adminSearch.setup') }}</label>
+      <select id="search-setup" v-model="searchSetup">
+        <option value="">{{ $t('adminSearch.all') }}</option>
+        <option value="true">{{ $t('adminSearch.pending') }}</option>
+        <option value="false">{{ $t('adminSearch.complete') }}</option>
+      </select>
+      <label for="search-role">{{ $t('adminManage.role') }}</label
+      ><select id="search-role" v-model="searchRole">
+        <option value="">{{ $t('adminSearch.all') }}</option>
+        <option v-for="role in roles.items" :key="role.id" :value="role.id">{{ role.key }}</option>
+      </select>
+      <button type="button" data-action="search-users" @click="searchUsers">{{ $t('adminSearch.apply') }}</button>
+    </fieldset>
     <ul>
       <li v-for="user in users.items" :key="user.id">
         {{ user.username }} {{ $t(`adminManage.states.${user.status}`) }}
@@ -184,7 +276,7 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
         ><span v-if="user.reason"> {{ user.reason }}</span>
       </li>
     </ul>
-    <button v-if="users.nextCursor" type="button" :disabled="busy" @click="nextUsers">
+    <button v-if="users.nextCursor" type="button" :disabled="busy" data-action="next-users" @click="nextUsers">
       {{ $t('adminManage.next') }}
     </button>
     <button v-if="roles.nextCursor" type="button" :disabled="busy" @click="nextRoles">
@@ -263,6 +355,23 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
       <button type="button" @click="credential = null">{{ $t('adminCreate.forget') }}</button>
       <time :datetime="credential.expiresAt">{{ date(credential.expiresAt) }}</time>
     </output>
+    <fieldset :disabled="busy || !allowed('audit.read')" class="grid gap-3" @keydown.enter.prevent="searchAudit">
+      <legend>{{ $t('adminSearch.audit') }}</legend>
+      <label for="search-actor">{{ $t('adminSearch.actor') }}</label
+      ><input id="search-actor" v-model="auditActor" maxlength="36" />
+      <label for="search-audit-action">{{ $t('adminManage.action') }}</label
+      ><input id="search-audit-action" v-model="auditAction" maxlength="80" />
+      <label for="search-target">{{ $t('adminSearch.target') }}</label
+      ><input id="search-target" v-model="auditTarget" maxlength="36" />
+      <label for="search-target-type">{{ $t('adminSearch.targetType') }}</label
+      ><input id="search-target-type" v-model="auditType" maxlength="80" />
+      <p>{{ $t('adminSearch.utc') }}</p>
+      <label for="search-from">{{ $t('adminSearch.from') }}</label
+      ><input id="search-from" v-model="auditFrom" maxlength="30" />
+      <label for="search-to">{{ $t('adminSearch.to') }}</label
+      ><input id="search-to" v-model="auditTo" maxlength="30" />
+      <button type="button" data-action="search-audit" @click="searchAudit">{{ $t('adminSearch.apply') }}</button>
+    </fieldset>
     <button type="button" :disabled="busy || !allowed('audit.read')" @click="audit(false)">
       {{ $t('adminManage.audit') }}
     </button>
@@ -272,6 +381,8 @@ async function change(kind: 'state' | 'assign' | 'role' | 'reissue') {
         ><span v-if="event.targetId"> {{ event.targetId }}</span>
       </li>
     </ul>
-    <button v-if="audits.nextCursor" type="button" @click="audit(true)">{{ $t('adminManage.next') }}</button>
+    <button v-if="audits.nextCursor" type="button" data-action="next-audit" @click="audit(true)">
+      {{ $t('adminManage.next') }}
+    </button>
   </section>
 </template>

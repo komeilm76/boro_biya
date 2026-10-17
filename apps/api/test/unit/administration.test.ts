@@ -258,3 +258,36 @@ describe('pending setup credential reissuance orchestration', () => {
     expect(f.hasher.hash).not.toHaveBeenCalled();
   });
 });
+
+it('binds administrative search values as SQL parameters and never interpolates user input', async () => {
+  const f = fixture();
+  const username = "' OR TRUE --";
+  await f.service.users(actor, 'search', {
+    username,
+    status: 'active',
+    setupRequired: 'false',
+    roleId: 'role',
+    cursor: 'cursor',
+  });
+  const userQuery = f.query.mock.calls.find(([sql]) => sql.includes('strpos(username_normalized'))!;
+  expect(userQuery[0]).not.toContain(username);
+  expect(userQuery[1]).toEqual(['cursor', username, 'active', false, 'role']);
+  await f.service.auditEvents(actor, 'audit', {
+    actorId: 'actor',
+    action: 'action',
+    targetId: 'target',
+    targetType: 'user',
+    from: '2026-10-17T00:00:00Z',
+    to: '2026-10-18T00:00:00Z',
+  });
+  const auditQuery = f.query.mock.calls.find(([sql]) => sql.includes('created_at >= $6'))!;
+  expect(auditQuery[1]).toEqual([
+    null,
+    'actor',
+    'action',
+    'target',
+    'user',
+    '2026-10-17T00:00:00Z',
+    '2026-10-18T00:00:00Z',
+  ]);
+});

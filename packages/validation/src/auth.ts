@@ -135,6 +135,40 @@ export const adminRoleCreateSchema = z.strictObject({
 });
 export const adminRoleUpdateSchema = adminRoleCreateSchema.omit({ key: true });
 export const adminCursorSchema = z.strictObject({ cursor: z.uuidv7().optional() });
+/** Strict, bounded administrative search; usernames are literal substrings, not SQL patterns. */
+export const adminUsersQuerySchema = adminCursorSchema.extend({
+  username: z
+    .string()
+    .trim()
+    .max(256)
+    .transform((value) => value.normalize('NFKC').toLowerCase())
+    .pipe(
+      z
+        .string()
+        .min(1)
+        .refine((value) => [...value].length <= 64 && !/[\p{Cc}\p{Cf}]/u.test(value)),
+    )
+    .optional(),
+  status: z.enum(['active', 'locked', 'banned', 'deactivated']).optional(),
+  setupRequired: z.enum(['true', 'false']).optional(),
+  roleId: z.uuidv7().optional(),
+});
+const auditKey = z.string().regex(/^[a-z][a-z0-9_]{0,79}$/);
+const instantKey = (value: string) => value.slice(0, 19) + '.' + value.slice(19, -1).replace('.', '').padEnd(9, '0');
+export const adminAuditQuerySchema = adminCursorSchema
+  .extend({
+    actorId: z.uuidv7().optional(),
+    action: auditKey.optional(),
+    targetId: z.uuidv7().optional(),
+    targetType: auditKey.optional(),
+    from: utcInstantSchema.optional(),
+    to: utcInstantSchema.optional(),
+  })
+  .refine((value) => !value.from || !value.to || instantKey(value.from) < instantKey(value.to), {
+    message: 'from must precede to',
+  });
+export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
+export type AdminAuditQuery = z.infer<typeof adminAuditQuerySchema>;
 export const adminIdSchema = z.strictObject({ id: z.uuidv7() });
 
 const adminUserViewSchema = z.strictObject({

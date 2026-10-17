@@ -1,4 +1,8 @@
 import {
+  type AdminUsersQuery,
+  type AdminAuditQuery,
+  adminUsersQuerySchema,
+  adminAuditQuerySchema,
   accessResponseSchema,
   adminUsersResponseSchema,
   adminRolesResponseSchema,
@@ -73,6 +77,12 @@ export const emptyResponse = {
     return null;
   },
 };
+function searchQuery(query: Record<string, string | undefined>): string {
+  const encoded = new URLSearchParams(
+    Object.entries(query).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  ).toString();
+  return encoded ? `?${encoded}` : '';
+}
 export const authClient = {
   changeSecurityAnswers: (
     currentPassword: string,
@@ -84,21 +94,19 @@ export const authClient = {
       token,
       body: { currentPassword, answers },
     }),
-  adminUsers: (token: string, cursor?: string) =>
-    authRequest(
-      `/api/v1/admin/users${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
-      adminUsersResponseSchema,
-      { token },
-    ),
+  adminUsers: (token: string, query: AdminUsersQuery = {}) =>
+    authRequest(`/api/v1/admin/users${searchQuery(adminUsersQuerySchema.parse(query))}`, adminUsersResponseSchema, {
+      token,
+    }),
   adminRoles: (token: string, cursor?: string) =>
     authRequest(
       `/api/v1/admin/roles${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
       adminRolesResponseSchema,
       { token },
     ),
-  adminAudit: (token: string, cursor?: string) =>
+  adminAudit: (token: string, query: AdminAuditQuery = {}) =>
     authRequest(
-      `/api/v1/admin/audit-events${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
+      `/api/v1/admin/audit-events${searchQuery(adminAuditQuerySchema.parse(query))}`,
       adminAuditResponseSchema,
       { token },
     ),

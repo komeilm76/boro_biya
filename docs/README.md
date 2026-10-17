@@ -82,7 +82,7 @@ Owner: Engineering. Reviewed: 2026-10-17.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [performance/README.md](performance/README.md) | Performance budget and measurement policy, plus reported results | Engineering | 2026-10-14 |
+| [performance/README.md](performance/README.md) | Performance budget and measurement policy, plus reported results | Engineering | 2026-10-17 |
 
 ## Normative language
 

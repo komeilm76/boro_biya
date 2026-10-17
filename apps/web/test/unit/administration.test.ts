@@ -137,7 +137,7 @@ describe('bilingual administrative lifecycle controls', () => {
     session.$patch({ roles: ['custom'], permissions: ['users.read'] });
     await flushPromises();
     expect(session.isAdmin).toBe(true);
-    expect(wrapper.get('fieldset').attributes('disabled')).toBeDefined();
+    expect(wrapper.findAll('form')[0]!.get('fieldset').attributes('disabled')).toBeDefined();
     session.$patch({ permissions: [] });
     expect(session.isAdmin).toBe(false);
   });
@@ -241,4 +241,96 @@ it('clears role and audit data immediately when permissions are removed', async 
   await flushPromises();
   expect(wrapper.text()).not.toContain('custom');
   expect(wrapper.text()).not.toContain('target');
+});
+
+it.each(['en', 'fa'] as const)(
+  'applies user/audit filters in %s and clears them on identity change',
+  async (locale) => {
+    const { wrapper, session } = await page(locale);
+    await wrapper.get('#search-username').setValue('ＴＡＲＧＥＴ');
+    await wrapper.get('#search-status').setValue('active');
+    await wrapper.get('#search-setup').setValue('false');
+    await wrapper.get('#search-role').setValue(roleId);
+    await wrapper.get('[data-action="search-users"]').trigger('click');
+    await flushPromises();
+    const call = fetcher.mock.calls.findLast(([path]) => typeof path === 'string' && path.includes('/admin/users?'))!;
+    const query = new URL(call[0] as string, 'https://example.test').searchParams;
+    expect(query.get('username')).toBe('target');
+    expect(query.get('status')).toBe('active');
+    expect(query.get('setupRequired')).toBe('false');
+    expect(query.get('roleId')).toBe(roleId);
+    expect(query.has('cursor')).toBe(false);
+    await wrapper.get('#search-actor').setValue(userId);
+    await wrapper.get('#search-audit-action').setValue('account_ban');
+    await wrapper.get('#search-from').setValue('2026-10-17T00:00:00Z');
+    await wrapper.get('#search-to').setValue('2026-10-18T00:00:00Z');
+    await wrapper.get('[data-action="search-audit"]').trigger('click');
+    await flushPromises();
+    expect(
+      fetcher.mock.calls.some(
+        ([path]) =>
+          typeof path === 'string' && path.includes('action=account_ban') && path.includes(`actorId=${userId}`),
+      ),
+    ).toBe(true);
+    expect(localStorage.length).toBe(0);
+    session.clearSession();
+    await flushPromises();
+    expect((wrapper.get('#search-username').element as HTMLInputElement).value).toBe('');
+    expect((wrapper.get('#search-actor').element as HTMLInputElement).value).toBe('');
+  },
+);
+it('rejects invalid audit filters without sending a request', async () => {
+  const { wrapper } = await page('en');
+  const calls = fetcher.mock.calls.length;
+  await wrapper.get('#search-from').setValue('2026-02-30T00:00:00Z');
+  await wrapper.get('[data-action="search-audit"]').trigger('click');
+  await flushPromises();
+  expect(fetcher).toHaveBeenCalledTimes(calls);
+  expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+});
+it('discards a pending result when a newer filter is applied', async () => {
+  const { wrapper } = await page('en');
+  let resolve!: (value: Response) => void;
+  fetcher.mockReturnValueOnce(
+    new Promise<Response>((yes) => {
+      resolve = yes;
+    }),
+  );
+  await wrapper.get('#search-username').setValue('old');
+  await wrapper.get('[data-action="search-users"]').trigger('click');
+  fetcher.mockResolvedValueOnce(response({ items: [], nextCursor: null }));
+  await wrapper.get('#search-username').setValue('new');
+  await wrapper.get('[data-action="search-users"]').trigger('click');
+  await flushPromises();
+  resolve(response({ items: [user], nextCursor: null }));
+  await flushPromises();
+  expect(wrapper.text()).not.toContain('target');
+});
+
+it('keeps applied filters rather than unsubmitted drafts when advancing user/audit pages', async () => {
+  const { wrapper } = await page('en');
+  fetcher.mockResolvedValueOnce(response({ items: [user], nextCursor: userId }));
+  await wrapper.get('#search-username').setValue('target');
+  await wrapper.get('[data-action="search-users"]').trigger('click');
+  await flushPromises();
+  await wrapper.get('#search-username').setValue('unsubmitted');
+  fetcher.mockResolvedValueOnce(response({ items: [], nextCursor: null }));
+  await wrapper.get('[data-action="next-users"]').trigger('click');
+  await flushPromises();
+  const users = fetcher.mock.calls.findLast(([path]) => typeof path === 'string' && path.includes('/admin/users?'))!;
+  expect(new URL(users[0] as string, 'https://example.test').searchParams.get('username')).toBe('target');
+  expect(new URL(users[0] as string, 'https://example.test').searchParams.get('cursor')).toBe(userId);
+  fetcher.mockResolvedValueOnce(response({ items: [], nextCursor: userId }));
+  await wrapper.get('#search-audit-action').setValue('account_ban');
+  await wrapper.get('[data-action="search-audit"]').trigger('click');
+  await flushPromises();
+  await wrapper.get('#search-audit-action').setValue('unsubmitted');
+  fetcher.mockResolvedValueOnce(response({ items: [], nextCursor: null }));
+  await wrapper.get('[data-action="next-audit"]').trigger('click');
+  await flushPromises();
+  const audits = fetcher.mock.calls.findLast(
+    ([path]) => typeof path === 'string' && path.includes('/admin/audit-events?'),
+  )!;
+  expect(new URL(audits[0] as string, 'https://example.test').searchParams.get('action')).toBe('account_ban');
+  expect(new URL(audits[0] as string, 'https://example.test').searchParams.get('cursor')).toBe(userId);
 });

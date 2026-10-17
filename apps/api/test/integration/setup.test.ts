@@ -240,13 +240,18 @@ describe('admin-created accounts and restricted first sign-in', () => {
   it.each(['locked', 'banned', 'deactivated'])('blocks %s users between setup steps', async (state) => {
     const created = await create();
     const proof = await auth.setup.begin(created.username, created.setupCredential!, 'origin', 'begin');
+    await auth.setup.password(proof.token, freshPassword, freshPassword, 'origin', 'password');
     await adminDb.query(
       "UPDATE core.users SET account_status = $2, state_reason = 'test', locked_until = CASE WHEN $2 = 'locked' THEN clock_timestamp() + interval '1 hour' ELSE NULL END WHERE id = $1",
       [created.id, state],
     );
     await expect(
       auth.setup.password(proof.token, freshPassword, freshPassword, 'origin', 'denied'),
-    ).rejects.toBeDefined();
+    ).rejects.toMatchObject({ statusCode: 401 });
+    await expect(auth.setup.status(proof.token)).rejects.toMatchObject({ statusCode: 401 });
+    await expect(auth.setup.security(proof.token, answers, 'origin', 'denied')).rejects.toMatchObject({
+      statusCode: 401,
+    });
   });
   it('rejects missing CSRF, forged body ownership and non-admin callers', async () => {
     for (const path of ['start', 'password', 'security-questions'])

@@ -16,6 +16,8 @@ import {
   adminRoleCreateSchema,
   adminRoleUpdateSchema,
   adminCursorSchema,
+  adminUsersQuerySchema,
+  adminAuditQuerySchema,
   adminIdSchema,
 } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from './service.js';
@@ -84,9 +86,9 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   app.get('/api/v1/auth/policy', () => ({ recoveryEnabled: auth.config.recoveryEnabled, passwordMinLength: 12 }));
   app.get('/api/v1/admin/users', async (request) => {
     const actor = await auth.authenticate(request.headers.authorization);
-    const parsed = adminCursorSchema.safeParse(request.query);
+    const parsed = adminUsersQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new AuthFailure(400);
-    return auth.administration.users(actor, request.correlationId, parsed.data.cursor);
+    return auth.administration.users(actor, request.correlationId, parsed.data);
   });
   app.get('/api/v1/admin/users/:id', async (request) => {
     const actor = await auth.authenticate(request.headers.authorization);
@@ -102,9 +104,9 @@ export function applyAuthRoutes(app: FastifyInstance, auth: AuthService): void {
   });
   app.get('/api/v1/admin/audit-events', async (request) => {
     const actor = await auth.authenticate(request.headers.authorization);
-    const parsed = adminCursorSchema.safeParse(request.query);
+    const parsed = adminAuditQuerySchema.safeParse(request.query);
     if (!parsed.success) throw new AuthFailure(400);
-    return auth.administration.auditEvents(actor, request.correlationId, parsed.data.cursor);
+    return auth.administration.auditEvents(actor, request.correlationId, parsed.data);
   });
   for (const action of ['lock', 'unlock', 'ban', 'unban', 'deactivate', 'reactivate'] as const)
     app.post(`/api/v1/admin/users/:id/${action}`, { bodyLimit: 8192 }, async (request) => {
