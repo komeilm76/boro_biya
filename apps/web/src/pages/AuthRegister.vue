@@ -12,6 +12,7 @@ const questions = ref([1, 2, 3, 4, 5]);
 const answers = ref(['', '', '', '', '']);
 const captchaEnabled = ref(false);
 const challenge = ref('');
+const challengeBusy = ref(false);
 const busy = ref(false);
 const failed = ref(false);
 const accepted = ref(false);
@@ -26,7 +27,7 @@ const keys = [
   'childhoodDream',
 ];
 async function register() {
-  if (busy.value) return;
+  if (busy.value || challengeBusy.value) return;
   busy.value = true;
   failed.value = false;
   try {
@@ -64,7 +65,14 @@ async function register() {
     <p v-if="accepted" role="status">
       {{ $t('auth.registered') }} <RouterLink to="/_auth/login">{{ $t('signIn.title') }}</RouterLink>
     </p>
-    <AuthChallenge v-if="!accepted" v-model="challenge" :enabled="captchaEnabled" :disabled="busy" purpose="register" />
+    <AuthChallenge
+      v-if="!accepted"
+      v-model="challenge"
+      @working="challengeBusy = $event"
+      :enabled="captchaEnabled"
+      :disabled="busy"
+      purpose="register"
+    />
     <form v-if="!accepted" @submit.prevent="register">
       <label for="register-user">{{ $t('auth.username') }}</label
       ><input
@@ -112,7 +120,7 @@ async function register() {
         />
       </fieldset>
       <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
-      <v-btn type="submit" :disabled="busy">{{ $t('auth.register') }}</v-btn>
+      <v-btn type="submit" :disabled="busy || challengeBusy">{{ $t('auth.register') }}</v-btn>
     </form>
   </section>
 </template>

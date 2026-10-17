@@ -11,11 +11,12 @@ const username = ref('');
 const password = ref('');
 const captchaEnabled = ref(false);
 const challenge = ref('');
+const challengeBusy = ref(false);
 const busy = ref(false);
 const failed = ref(false);
 const retryAfter = ref(0);
 async function signIn() {
-  if (busy.value) return;
+  if (busy.value || challengeBusy.value) return;
   busy.value = true;
   failed.value = false;
   retryAfter.value = 0;
@@ -36,7 +37,13 @@ async function signIn() {
   <section class="mx-auto max-w-prose px-6 py-16" aria-labelledby="sign-in-title">
     <h1 id="sign-in-title" class="text-2xl font-semibold mb-4">{{ $t('signIn.title') }}</h1>
     <RecoveryWarning @policy="captchaEnabled = $event" />
-    <AuthChallenge v-if="true" v-model="challenge" :enabled="captchaEnabled" :disabled="busy" purpose="login" />
+    <AuthChallenge
+      v-model="challenge"
+      @working="challengeBusy = $event"
+      :enabled="captchaEnabled"
+      :disabled="busy"
+      purpose="login"
+    />
     <form @submit.prevent="signIn">
       <label for="username">{{ $t('auth.username') }}</label>
       <input
@@ -62,7 +69,7 @@ async function signIn() {
       <p v-if="failed" role="alert">
         {{ retryAfter ? $t('auth.retryAfter', { seconds: retryAfter }) : $t('auth.rejected') }}
       </p>
-      <v-btn type="submit" :disabled="busy">{{ $t('signIn.title') }}</v-btn>
+      <v-btn type="submit" :disabled="busy || challengeBusy">{{ $t('signIn.title') }}</v-btn>
     </form>
     <RouterLink to="/_auth/setup" class="block mt-4">{{ $t('setup.title') }}</RouterLink>
     <RouterLink to="/_auth/recover" class="block mt-4">{{ $t('recovery.title') }}</RouterLink>

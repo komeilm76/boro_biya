@@ -11,7 +11,7 @@ export async function solveChallenge(
 ) {
   if (!/^[A-Za-z0-9_-]{43}$/.test(token) || !Number.isInteger(bits) || bits < 12 || bits > 20)
     throw new Error('invalid challenge');
-  const now = options.now ?? Date.now,
+  const now = options.now ?? (() => performance.now()),
     deadline = now() + 45000,
     encoder = new TextEncoder();
   const digest =
@@ -19,6 +19,7 @@ export async function solveChallenge(
   for (let counter = 0; counter <= 0xffffffff; counter++) {
     if (options.signal.aborted || now() >= deadline) throw new Error('challenge stopped');
     const hashed = new Uint8Array(await digest(encoder.encode(`${token}:${counter}`)));
+    if (options.signal.aborted || now() >= deadline) throw new Error('challenge stopped');
     if (workMatches(hashed, bits)) return counter;
   }
   throw new Error('challenge exhausted');

@@ -2,6 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import Challenge from '../../src/components/AuthChallenge.vue';
 import { createAppI18n } from '../../src/i18n/index.js';
+import { createPinia } from 'pinia';
+import { createMemoryHistory } from 'vue-router';
+import { createAppRouter } from '../../src/router/index.js';
+import SignIn from '../../src/pages/SignInPlaceholder.vue';
+import Register from '../../src/pages/AuthRegister.vue';
+import Recover from '../../src/pages/AuthRecover.vue';
+import Setup from '../../src/pages/AuthSetup.vue';
 import { authClient } from '../../src/auth-client.js';
 import { solveChallenge, workMatches } from '../../src/challenge-work.js';
 const token = 'N'.repeat(43),
@@ -146,6 +153,43 @@ describe('accessible explicit computational challenge control', () => {
     expect(FakeWorker.instances).toHaveLength(2);
     wrapper.unmount();
   });
+  it('cancels pending work when purpose changes instead of verifying a nonce for a different flow', async () => {
+    const wrapper = page();
+    const worker = await start(wrapper);
+    await wrapper.setProps({ purpose: 'register' });
+    worker.onmessage?.({ data: { counter: 1 } });
+    await flushPromises();
+    expect(worker.terminate).toHaveBeenCalled();
+    expect(authClient.verifyChallenge).not.toHaveBeenCalled();
+    expect(wrapper.emitted('working')?.at(-1)).toEqual([false]);
+    wrapper.unmount();
+  });
+  it('terminates an unresponsive worker after 45 seconds and does not verify its late result', async () => {
+    vi.useFakeTimers();
+    const wrapper = page();
+    const worker = await start(wrapper);
+    await vi.advanceTimersByTimeAsync(45000);
+    expect(worker.terminate).toHaveBeenCalled();
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    worker.onmessage?.({ data: { counter: 1 } });
+    await flushPromises();
+    expect(authClient.verifyChallenge).not.toHaveBeenCalled();
+    expect(wrapper.emitted('working')?.at(-1)).toEqual([false]);
+    wrapper.unmount();
+  });
+  it('does not display an already-expired grant as ready', async () => {
+    vi.mocked(authClient.verifyChallenge).mockResolvedValue({
+      grant,
+      expiresAt: new Date(Date.now() - 1000).toISOString(),
+    });
+    const wrapper = page();
+    const worker = await start(wrapper);
+    worker.onmessage?.({ data: { counter: 1 } });
+    await flushPromises();
+    expect(wrapper.emitted('update:modelValue')?.flat() ?? []).not.toContain(grant);
+    expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+    wrapper.unmount();
+  });
   it('clears an expired proof after at most sixty seconds', async () => {
     vi.useFakeTimers();
     const wrapper = page();
@@ -188,6 +232,18 @@ describe('bounded worker solver protocol', () => {
     expect(workMatches(new Uint8Array(32), 11)).toBe(false);
     expect(workMatches(new Uint8Array(32), 21)).toBe(false);
   });
+  it.each(['aborted', 'deadline'] as const)('rejects a matching digest that resolves after %s', async (reason) => {
+    const controller = new AbortController();
+    let time = 0;
+    const digest = () => {
+      if (reason === 'aborted') controller.abort();
+      else time = 45000;
+      return Promise.resolve(new Uint8Array(32).buffer);
+    };
+    await expect(solveChallenge(token, 12, { signal: controller.signal, now: () => time, digest })).rejects.toThrow(
+      'stopped',
+    );
+  });
   it('fails closed before work on invalid tokens, bits, cancellation and the 45-second budget', async () => {
     for (const [nonce, bits] of [
       ['bad', 12],
@@ -204,4 +260,38 @@ describe('bounded worker solver protocol', () => {
       solveChallenge(token, 12, { signal: new AbortController().signal, now: () => now++ * 45000 }),
     ).rejects.toThrow('stopped');
   });
+});
+
+describe('credential/challenge mutual exclusion', () => {
+  it.each([SignIn, Register, Recover, Setup])(
+    'does not rotate CSRF or submit credentials while work is pending',
+    async (component) => {
+      vi.spyOn(authClient, 'recoveryPolicy').mockResolvedValue({
+        recoveryEnabled: true,
+        passwordMinLength: 12,
+        captchaEnabled: true,
+      });
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no credential transport expected')));
+      const wrapper = mount(component, {
+        global: {
+          plugins: [createPinia(), createAppRouter(createMemoryHistory()), createAppI18n()],
+          stubs: { 'v-btn': { template: '<button><slot /></button>' } },
+        },
+      });
+      await flushPromises();
+      const challenge = wrapper.findComponent(Challenge);
+      await challenge.get('button').trigger('click');
+      await flushPromises();
+      expect(authClient.csrf).toHaveBeenCalledTimes(1);
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(authClient.csrf).toHaveBeenCalledTimes(1);
+      await challenge.findAll('button')[1]!.trigger('click');
+      await flushPromises();
+      await wrapper.get('form').trigger('submit');
+      await flushPromises();
+      expect(authClient.csrf).toHaveBeenCalledTimes(2);
+      wrapper.unmount();
+    },
+  );
 });

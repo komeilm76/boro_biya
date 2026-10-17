@@ -12,6 +12,7 @@ const answers = ref(['', '', '', '', '']);
 const failed = ref(false);
 const captchaEnabled = ref(false);
 const challenge = ref('');
+const challengeBusy = ref(false);
 const busy = ref(false);
 const keys = [
   'firstBook',
@@ -24,7 +25,7 @@ const keys = [
   'childhoodDream',
 ];
 async function resume() {
-  if (busy.value) return;
+  if (busy.value || challengeBusy.value) return;
   busy.value = true;
   failed.value = false;
   try {
@@ -37,7 +38,7 @@ async function resume() {
   }
 }
 async function submit() {
-  if (busy.value) return;
+  if (busy.value || challengeBusy.value) return;
   busy.value = true;
   failed.value = false;
   try {
@@ -76,12 +77,13 @@ async function submit() {
     <AuthChallenge
       v-if="stage === 'start'"
       v-model="challenge"
+      @working="challengeBusy = $event"
       :enabled="captchaEnabled"
       :disabled="busy"
       purpose="setup"
     />
     <form v-if="stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
-      <fieldset :disabled="busy" class="grid gap-3">
+      <fieldset :disabled="busy || challengeBusy" class="grid gap-3">
         <template v-if="stage === 'start'">
           <label for="setup-username">{{ $t('auth.username') }}</label>
           <input id="setup-username" v-model="username" autocomplete="username" required maxlength="64" />
