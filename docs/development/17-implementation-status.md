@@ -4,7 +4,7 @@ Owner: Engineering. Reviewed: 2026-10-18.
 
 This page separates what is implemented in the current checkout from what the roadmap schedules for later. Status labels below reproduce [`docs/ROADMAP.md`](../ROADMAP.md); this manual does not change, infer, or grant permission to change a phase status.
 
-Latest contract/implementation checkpoint: [§41](#41-sse-resume-contract-and-http-implementation-conformance-2026-10-18). Automated accessibility evidence remains in §40; full publication in §39. Earlier numbered checkpoints remain historical and scoped to their recorded revisions.
+Current Phase 2 closeout ledger: [§42](#42-phase-2-closeout-ledger-and-focused-owner-assistance-2026-10-18). Executable SSE conformance remains in §41, automated accessibility evidence in §40 and full publication in §39. Earlier numbered checkpoints remain historical and scoped to their recorded revisions.
 
 ## 1. Phase status — roadmap source of truth
 
@@ -146,7 +146,7 @@ Local validation of the account-locale/race checkpoint (Node 24.22.0 / Bun 1.4.3
 
 ## 3. Features that are not implemented
 
-Phase 2 now has administrator creation and forced first-login setup (checkpoint §10); it still lacks full administrative lifecycle/permission management; realtime recovery notification acceptance; full administrative lifecycle/permission APIs and last-administrator protection; enabled CAPTCHA; OpenAPI validation/generated-client activation; triggered security alert rules; the full retention/deployment policy proof; and a login-route load profile. These remain scheduled work, not new owner questions and not evidence that Phase 2 is complete. PR #12 remains draft and unmerged for owner review.
+Phase 2 authentication/account-lifecycle implementation now includes administrator creation and ordered first-login setup, administrative lifecycle and database-driven permissions with last-administrator protection, enabled computational challenge, recovery and realtime security notices, full OpenAPI/native publication and an active generated client, triggered security alerts, the temporary retention-policy proof and the login-route load profile. Their implementation and scoped verification are recorded in the later checkpoints. These capabilities are no longer missing coding tasks. Remaining Phase 2 exit evidence and owner review are listed in §42; implementation is not blanket device/assistive acceptance, production readiness or phase completion. PR #12 remains draft and unmerged.
 
 The route shell and future names are not product features. The current checkout also has no:
 
@@ -154,7 +154,7 @@ The route shell and future names are not product features. The current checkout 
 - follower/relationship APIs, blocking, live sharing, location history, or location permissions;
 - SOS alert/task/dispatch/category business API, notifications, or emergency-service integration;
 - upload or object-storage service, push notifications, or provider integrations;
-- plugin installation/runtime, CAPTCHA implementation, or automated retention/deletion job;
+- plugin installation/runtime or a general automated retention/deletion job;
 - installable PWA manifest/service worker, offline mode, or completed native Android application/build.
 
 The existence of commented future settings in `.env.example`, route metadata, workspace names, requirement IDs, or architecture diagrams does not enable any of these capabilities. See the [environment reference](14-environment-and-configuration.md#5-template-only-settings-for-later-phases) for template-only keys and the newly active authentication settings.
@@ -163,7 +163,7 @@ The existence of commented future settings in `.env.example`, route metadata, wo
 
 No public build has been released. The existing [`docs/user/README.md`](../user/README.md) is an explicitly advance-planned guide: it states that its future features are not available and that pages are only published after the feature exists in a released build. The current implementation does not justify a user manual, so this work adds developer onboarding only and does not add end-user feature instructions.
 
-The public landing, registration/login and security/session settings now have development functionality; the administrator area is still a placeholder. Do not describe this checkout as a released or complete safety product.
+The public landing, registration/login, recovery, security/session settings, privacy/reporting and permission-gated administrator area have development functionality. Developer acceptance procedures live in this implementation record; no public release or complete safety product is claimed.
 
 ## 5. Closed owner decisions and authorised scope
 
@@ -370,6 +370,8 @@ The remaining authorised Phase 2 checklist rows are 1, 3, 6 and 11, all In progr
 The calendar projection defect is now repaired by expressing shared UTC validation with native ISO/calendar checks and the unchanged wire restrictions, not by removing calendar validation or accepting a lossy projection. Regression tests compare the prior acceptance across all four-digit leap years and boundary fixtures, the actual JSON Schema acceptance and generated Zod acceptance. Maintained OpenAPI validation, `zopia validate` and exact manifest round-trip diff are required by the positive fixture. The [portable UTC record](../API_AND_OPENAPI.md#10-portable-utc-calendar-validation-2026-10-17) states the exact evidence boundary and the still-unresolved projection cases. No dependencies, checks, thresholds or policy exceptions change.
 
 ### Remaining browser/device acceptance execution sheet
+
+This is the historical starting sheet from checkpoint 23. Later owner observations (§§34/37) and automated audits (§40) supersede its initial absence of scoped evidence; the current remaining-only ledger is §42. Completed observations are retained, not requested again.
 
 **Full manual/device/assistive execution status: Not run.** Selected real headless-browser journeys have passed as recorded in §24; that narrower evidence does not complete this sheet. Component and native API results remain separate. Use a disposable development installation and invented accounts/answers; follow [development setup](01-development-environment.md) and [commands](15-commands-and-testing.md), without changing production configuration. Record the tested Git SHA, date, actual browser/version, OS/device, viewport/zoom, screen reader/version, locale and timezone for each execution. Use the project's supported browser/device targets, including desktop keyboard and mobile assistive interaction, and repeat the journeys in English and Persian. An unsupported or unavailable target is recorded as untested, not passed.
 
@@ -689,3 +691,34 @@ An independent retained old query/handler oracle compares acceptance and success
 These changes do not prove compatibility with a released document: no genuine released baseline exists, and the conservative checker remains unchanged. No actual assistive-reader/native-browser-zoom/physical-device acceptance is inferred. Android and Persian Narrator remain owner-deferred, not passed. Eight rows remain Met; rows 1/3/6/11 remain In progress under unchanged completion criteria. PR #12 remains draft/open/unmerged; final owner exit review and Phase 2 completion still precede merging or subsequent-phase implementation. No dependency/lockfile, CI/check/threshold, accepted-infrastructure or excluded-scope change.
 
 Pre-commit verification passed all 14 executed local gate selections, with 718 unit tests / 67 files and 255 native integration tests / 19 files. Coverage passed at 91.21% statements / 86.58% branches / 89.23% functions / 93.06% lines, with unchanged floors. The complete native-tree fixture passed 4,260 canonical/native/profile-aware acceptance/output comparisons plus combined SSE-adapter positives/negatives; the actual-development-document compatibility fixture rejected nine semantic/security/removal mutations. The existing licence gate was not selected locally under the recorded deferral; no check/CI configuration changed. Clean committed-head browser and exact-head CI results are recorded separately on PR #12 after execution, not inferred here.
+
+
+## 42. Phase 2 closeout ledger and focused owner assistance (2026-10-18)
+
+The owner has now directed work specifically towards completing Phase 2 and offered help. This is a closeout plan, not exit approval or permission to waive acceptance. The code/evidence reference is `280c86279d44aad454bb4a633709dca8a9ac4fe2`: 718 unit tests, 255 native integration tests, 4,260 contract comparisons, clean-head Chromium with 56 automated audits and six applicable exact-head CI checks passed as recorded on [PR #12](https://github.com/komeilm76/boro_biya/pull/12#issuecomment-6246412613). This historical code-head evidence does not claim execution on a future change.
+
+### Preserve completed evidence and scope
+
+Owner-reported registration, sign-in/sign-out, recovery/reset/new-password use, one old-password rejection and another session's revocation remain accepted observations within their recorded Windows checkout/environment. Earlier English Narrator sign-in labels/controls, initial keyboard reachability, Persian visible translation and sign-in zoom observations also remain recorded. None is requested again as a fresh complete functional journey. New checks below target only missing assistive/visual observations; they may use a functional journey as the vehicle for that missing observation without discarding the earlier functional result.
+
+Android and Persian Narrator remain owner-deferred, not passed. No physical-device setup or Persian Narrator troubleshooting is requested. The formal supported-browser declaration/unsupported-browser path (`UI-26`) and forced-colours verification (`UI-27`) remain Phase 3 work under ROADMAP; they must not be silently imported as new Phase 2 exit gates. Phase 2's existing usable/authentication/accessibility acceptance still needs scoped results for the environment actually tested. A result on one desktop is not a claim about every browser or device.
+
+### Remaining-only ledger
+
+| Ref | Remaining observation or decision | Existing evidence retained | Who can close it / status |
+| --- | --- | --- | --- |
+| P2-A | English assistive use beyond the already-observed sign-in: registration/question labels, recovery labels/generic rejection, challenge start/progress/cancel/retry feedback, security notices without duplicate announcements, session controls, privacy/report status and labelled exact-UTC disclosure | Automated labels/references and Tab traversal, challenge/recovery/reporting/stream failures and native API proofs; owner sign-in listening and functional journeys | Owner or appointed reader user on an available desktop; not run for the complete remaining set |
+| P2-B | Native browser zoom beyond the already-observed sign-in, for English and Persian registration/recovery/settings/privacy/reporting and opened UTC disclosure; text, controls, visible keyboard focus and error/status feedback remain usable without clipping or overlap | 200% root-font user-style reflow and 390-pixel emulation; earlier owner sign-in zoom observation | Owner or appointed tester with actual browser chrome; not replaced by CSS/pinch/device-scale emulation |
+| P2-C | Record the actual environment and per-journey Pass/Fail/Not run results, without assuming unavailable targets passed | Existing Windows observations and Linux Chromium/CI remain scoped to their recorded versions and revisions | Agent records results; owner identifies the available environment once; no future-phase browser matrix is invented |
+| P2-D | Explicit first-contract disposition for `API-27`: no previously released application contract exists to compare | Maintained/native validators, exact round trip, deterministic client/tree, conservative checker, real-development-document negatives and independent old-runtime oracles pass | Owner applicability decision pending; no baseline is fabricated and no checker/threshold is relaxed |
+| P2-E | Final security/negative-case and cross-row exit review, evidence reconciliation, owner Phase 2 completion approval | Existing eight Met rows, four In progress rows, accepted decisions/exclusions and exact-head CI/browser evidence | Agent prepares final evidence after results/decisions; owner reviews only then; no merge/Phase 3 start before completion and approval |
+
+### Focused execution and safe reporting
+
+Use only the existing disposable development installation and invented accounts/answers. The agent first confirms the available desktop/reader and current code revision, then gives one small check at a time. No broad request to repeat the original manual sheet is made. Use English for remaining reader listening; Persian visual/keyboard/zoom checks do not imply Persian Narrator acceptance. Native browser zoom means the browser's own zoom controls, not operating-system display scaling or injected CSS. Preserve the initial zoom setting and restore it afterwards.
+
+For each check report only the controlled journey name, locale, Pass/Fail/Not run and a short expected-versus-observed description. Record SHA/date, OS, browser/version, reader/version when used, zoom and timezone once per session and note later changes. Do not send entered credentials/answers, cookies, access/refresh/proof values, stream-ticket URLs, raw storage/network dumps or private report text. No production quota exhaustion, manual proof manipulation, database edits or weakening of origin/CSRF controls is part of owner-assisted listening/zoom checks. The existing automated harness retains adversarial replay/expiry/quota tests.
+
+The proposed P2-D disposition is **not applicable to comparison with a previous release for this initial unreleased contract**, with the first genuine public release retaining its tagged OpenAPI/native manifest and subsequent releases comparing against that genuine baseline. This is awaiting explicit owner agreement, not an already granted exception, a released-contract pass, an initial-success branch in the checker or authority to publish a release. If a real earlier released document is identified, use it instead.
+
+No remaining item is marked passed by preparing this ledger. Phase 2 remains In progress; PR #12 stays draft/open/unmerged. The next phase begins only after actual closeout and owner approval.
