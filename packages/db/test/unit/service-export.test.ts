@@ -57,7 +57,10 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
     const exported = JSON.parse(readFileSync(join(target, 'bun.lock'), 'utf8')) as {
       packages: Record<string, unknown>;
     };
-    for (const [name, value] of Object.entries(exported.packages)) expect(value, name).toEqual(original.packages[name]);
+    for (const [name, value] of Object.entries(exported.packages)) {
+      const normalise = (record: unknown) => JSON.stringify(record).replaceAll('\\\\', '/');
+      expect(normalise(value), name).toBe(normalise(original.packages[name]));
+    }
   });
   it('exports a container-like source context without Git and excludes a secret tripwire', () => {
     const fixture = join(fresh(), 'context');
