@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AuthChallenge from '../components/AuthChallenge.vue';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
 
@@ -19,19 +19,47 @@ const answers = ref<string[]>([]);
 const password = ref('');
 const repeatPassword = ref('');
 
+let disposed = false,
+  generation = 0;
+function clearSecrets() {
+  challenge.value = '';
+  answers.value = answers.value.map(() => '');
+  password.value = '';
+  repeatPassword.value = '';
+}
+function invalidateFlow() {
+  generation++;
+  clearSecrets();
+  username.value = '';
+  questions.value = [];
+  answers.value = [];
+  stage.value = 'username';
+  failed.value = false;
+  busy.value = false;
+}
+watch(() => session.authVersion, invalidateFlow, { flush: 'sync' });
+onUnmounted(() => {
+  disposed = true;
+  invalidateFlow();
+});
+
 onMounted(async () => {
   try {
     const policy = await authClient.recoveryPolicy();
+    if (disposed) return;
     enabled.value = policy.recoveryEnabled;
     captchaEnabled.value = policy.captchaEnabled === true;
   } catch {
-    failed.value = true;
+    if (!disposed) failed.value = true;
   } finally {
-    ready.value = true;
+    if (!disposed) ready.value = true;
   }
 });
 
 function restart() {
+  if (busy.value || challengeBusy.value || disposed) return;
+  generation++;
+  clearSecrets();
   stage.value = 'username';
   questions.value = [];
   answers.value = [];
@@ -41,14 +69,21 @@ function restart() {
 }
 
 async function submit() {
-  if (busy.value || challengeBusy.value || !enabled.value) return;
+  if (busy.value || challengeBusy.value || !enabled.value || disposed) return;
+  const ticket = ++generation;
+  const version = session.authVersion;
+  const current = () => !disposed && ticket === generation && version === session.authVersion;
   busy.value = true;
   failed.value = false;
   try {
     const { csrfToken } = await authClient.csrf();
+    if (!current()) return;
     if (stage.value === 'username') {
       await authClient.forgot(username.value, csrfToken, challenge.value || undefined);
-      questions.value = await authClient.recoveryQuestions(csrfToken);
+      if (!current()) return;
+      const catalogue = await authClient.recoveryQuestions(csrfToken);
+      if (!current()) return;
+      questions.value = catalogue;
       answers.value = questions.value.map(() => '');
       stage.value = 'answers';
     } else if (stage.value === 'answers') {
@@ -56,21 +91,22 @@ async function submit() {
         questions.value.map((question, index) => ({ questionId: question.id, answer: answers.value[index] ?? '' })),
         csrfToken,
       );
+      if (!current()) return;
       answers.value = [];
       stage.value = 'reset';
     } else if (stage.value === 'reset') {
       await authClient.resetPassword(password.value, repeatPassword.value, csrfToken);
+      if (!current()) return;
       session.clearSession();
       stage.value = 'done';
     }
   } catch {
-    failed.value = true;
+    if (current()) failed.value = true;
   } finally {
-    challenge.value = '';
-    answers.value = answers.value.map(() => '');
-    password.value = '';
-    repeatPassword.value = '';
-    busy.value = false;
+    if (ticket === generation) {
+      clearSecrets();
+      busy.value = false;
+    }
   }
 }
 </script>
@@ -100,7 +136,7 @@ async function submit() {
             class="w-full min-w-0 max-w-full"
             autocomplete="username"
             required
-            maxlength="32"
+            maxlength="64"
           />
           <button type="submit">{{ $t('recovery.start') }}</button>
         </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { authClient } from '../auth-client.js';
 import { useSessionStore } from '../stores/session.js';
@@ -20,8 +20,26 @@ const keys = [
   'favoriteMeal',
   'childhoodDream',
 ];
+let disposed = false,
+  generation = 0;
+function clearPrivateState() {
+  generation++;
+  currentPassword.value = '';
+  answers.value = ['', '', '', '', ''];
+  questions.value = [1, 2, 3, 4, 5];
+  busy.value = false;
+  failed.value = false;
+}
+watch(() => session.authVersion, clearPrivateState, { flush: 'sync' });
+onUnmounted(() => {
+  disposed = true;
+  clearPrivateState();
+});
 async function submit() {
-  if (busy.value) return;
+  if (busy.value || disposed) return;
+  const ticket = ++generation;
+  const version = session.authVersion;
+  const current = () => !disposed && ticket === generation && version === session.authVersion;
   busy.value = true;
   failed.value = false;
   try {
@@ -30,14 +48,17 @@ async function submit() {
       questions.value.map((questionId, index) => ({ questionId, answer: answers.value[index] ?? '' })),
       session.accessToken ?? '',
     );
+    if (!current()) return;
     session.clearSession();
     await router.push('/_auth/login');
   } catch {
-    failed.value = true;
+    if (current()) failed.value = true;
   } finally {
-    currentPassword.value = '';
-    answers.value = ['', '', '', '', ''];
-    busy.value = false;
+    if (ticket === generation) {
+      currentPassword.value = '';
+      answers.value = ['', '', '', '', ''];
+      busy.value = false;
+    }
   }
 }
 </script>

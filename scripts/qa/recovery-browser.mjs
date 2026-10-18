@@ -46,6 +46,8 @@ export async function runRecoveryBrowserEdges({
     assert.equal(await page.locator('html').getAttribute('dir'), locale === 'fa' ? 'rtl' : 'ltr');
     await page.locator('#recovery-username').waitFor();
     await onAccessibility(page, 'recovery account lookup');
+    await page.locator('#recovery-username').pressSequentially('a'.repeat(64));
+    assert.equal((await page.locator('#recovery-username').inputValue()).length, 64);
     await page.locator('#recovery-username').fill(username);
     await page.locator('form button[type="submit"]').first().click();
     await page.locator('input[id^="recovery-answer-"]').first().waitFor();
@@ -143,6 +145,7 @@ export async function runRecoveryBrowserEdges({
       consumedProofReplayStatus,
       verificationRequests,
       resetRequests,
+      usernameEntry: '64 ASCII characters; pass',
       failedSecretsCleared: 'pass',
       genericLocalisedError: 'pass',
       viewportOverflow: 'pass',
