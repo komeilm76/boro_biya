@@ -11,7 +11,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { exportService, planService, repositoryRoot, services } from '../../../../scripts/services/export.mjs';
 
 const temporary: string[] = [];
@@ -21,6 +21,7 @@ function fresh() {
   return parent;
 }
 afterEach(() => {
+  vi.unstubAllEnvs();
   for (const path of temporary.splice(0)) rmSync(path, { recursive: true, force: true });
 });
 describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
@@ -46,6 +47,13 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
     const manifest = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8')) as { workspaces: string[] };
     expect(manifest.workspaces.sort()).toEqual([...plan.selected.values()].map(({ path }) => path).sort());
     expect(readFileSync(join(target, 'bun.lock'), 'utf8')).not.toContain('embedded-postgres');
+    const original = JSON.parse(
+      readFileSync(join(repositoryRoot, 'bun.lock'), 'utf8').replace(/,(\s*[}\]])/g, '$1'),
+    ) as { packages: Record<string, unknown> };
+    const exported = JSON.parse(readFileSync(join(target, 'bun.lock'), 'utf8')) as {
+      packages: Record<string, unknown>;
+    };
+    for (const [name, value] of Object.entries(exported.packages)) expect(value, name).toEqual(original.packages[name]);
   });
   it('exports a container-like source context without Git and excludes a secret tripwire', () => {
     const fixture = join(fresh(), 'context');
@@ -73,6 +81,16 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
     expect(existsSync(join(target, '.env'))).toBe(false);
     const metadata = JSON.parse(readFileSync(join(target, 'service-export.json'), 'utf8')) as { dirty: boolean | null };
     expect(metadata.dirty).toBeNull();
+  });
+  it('needs neither Bun nor registry metadata to derive the locked source closure', () => {
+    const parent = fresh();
+    const cache = join(parent, 'absent-package-cache');
+    vi.stubEnv('PATH', '');
+    vi.stubEnv('BUN_INSTALL_CACHE_DIR', cache);
+    const target = join(parent, 'output');
+    exportService('relation', target);
+    expect(existsSync(join(target, 'bun.lock'))).toBe(true);
+    expect(existsSync(cache)).toBe(false);
   });
   it.each(['../core', 'core;echo unsafe', 'toString', 'constructor', 'unknown'])(
     'rejects invalid service %s before writing',

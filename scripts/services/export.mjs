@@ -64,7 +64,7 @@ export function planService(service, root = repositoryRoot) {
   };
 }
 
-export function exportService(service, output, { root = repositoryRoot, bun = 'bun' } = {}) {
+export function exportService(service, output, { root = repositoryRoot } = {}) {
   const plan = planService(service, root);
   if (!output || !isAbsolute(output)) throw new Error('output must be an absolute path outside the checkout');
   output = resolve(output);
@@ -102,6 +102,8 @@ export function exportService(service, output, { root = repositoryRoot, bun = 'b
   // Seed matching workspace metadata from the reviewed lock; retain exact registry resolutions.
   const parseLock = (path) => JSON.parse(readFileSync(path, 'utf8').replace(/,(\s*[}\]])/g, '$1'));
   const seed = parseLock(join(root, 'bun.lock'));
+  // The export has no lifecycle-script grants; repository test-tool trust stays local.
+  delete seed.trustedDependencies;
   seed.workspaces = { '': { name: plan.manifest.name, devDependencies: plan.manifest.devDependencies } };
   for (const { path } of plan.selected.values()) {
     const manifest = json(join(output, path, 'package.json'));
@@ -111,19 +113,48 @@ export function exportService(service, output, { root = repositoryRoot, bun = 'b
         .map((key) => [key, manifest[key]]),
     );
   }
-  for (const [name, value] of Object.entries(seed.packages)) {
-    if (String(value[0]).includes('workspace:') && !plan.selected.has(name)) delete seed.packages[name];
+  // Preserve Bun's existing nested resolution keys, including scoped packages and peers.
+  // No package-manager invocation, registry metadata or package cache is needed to export.
+  const original = seed.packages;
+  const selected = new Set();
+  function selectDependency(name, from = '', optional = false) {
+    const parent = from.split('/').filter(Boolean);
+    let key;
+    for (;;) {
+      const candidate = [...parent, name].join('/');
+      if (Object.hasOwn(original, candidate)) {
+        key = candidate;
+        break;
+      }
+      if (!parent.length) break;
+      parent.pop();
+      if (parent.at(-1)?.startsWith('@')) parent.pop();
+    }
+    if (key === undefined) {
+      if (optional) return;
+      throw new Error(`reviewed lock is missing dependency ${name}`);
+    }
+    if (selected.has(key)) return;
+    selected.add(key);
+    const value = original[key];
+    if (String(value[0]).includes('workspace:')) {
+      if (!plan.selected.has(name)) throw new Error(`unselected workspace dependency ${name}`);
+      return;
+    }
+    const metadata = value[2] ?? {};
+    for (const dependency of Object.keys(metadata.dependencies ?? {})) selectDependency(dependency, key);
+    for (const dependency of Object.keys(metadata.optionalDependencies ?? {})) selectDependency(dependency, key, true);
+    for (const dependency of Object.keys(metadata.peerDependencies ?? {}))
+      selectDependency(dependency, key, (metadata.optionalPeers ?? []).includes(dependency));
   }
+  for (const { manifest } of plan.selected.values()) {
+    selectDependency(manifest.name);
+    for (const name of Object.keys(manifest.dependencies ?? {})) selectDependency(name, manifest.name);
+    for (const name of Object.keys(manifest.peerDependencies ?? {})) selectDependency(name, manifest.name);
+  }
+  for (const name of Object.keys(plan.manifest.devDependencies)) selectDependency(name);
+  seed.packages = Object.fromEntries(Object.entries(original).filter(([key]) => selected.has(key)));
   writeJson(join(output, 'bun.lock'), seed);
-  // Prune offline, then reject any changed registry resolution.
-  execFileSync(bun, ['install', '--lockfile-only', '--offline', '--ignore-scripts'], { cwd: output, stdio: 'pipe' });
-  const original = parseLock(join(root, 'bun.lock')).packages;
-  const exported = parseLock(join(output, 'bun.lock')).packages;
-  const reviewedResolutions = new Set(Object.values(original).map((value) => JSON.stringify(value)));
-  for (const [name, value] of Object.entries(exported)) {
-    if (String(value[0]).includes('workspace:')) continue;
-    if (!reviewedResolutions.has(JSON.stringify(value))) throw new Error(`export changed locked dependency ${name}`);
-  }
   let source = process.env.BUILD_COMMIT ?? 'unknown';
   let dirty = null;
   try {

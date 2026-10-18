@@ -13,7 +13,7 @@ Reviewed repository source → isolated service source export → reproducible b
 | Threat | Required control | Evidence / phase |
 | --- | --- | --- |
 | Export of another unit or production secrets | Allowlisted source/runtime-library closure; refuse existing/in-checkout targets; omit environment, tests and runtime data | Export boundary unit tests and outside-checkout rehearsal in the architecture replacement |
-| Dependency drift or build hooks | Derive from reviewed lock resolutions; offline lock pruning; ignore lifecycle scripts; fail on changed registry resolution | Export tests and frozen-lock standalone builds; existing advisory/dependency gates |
+| Dependency drift or build hooks | Select the reviewed lock graph without package-manager/registry/cache access; preserve exact registry records; ignore lifecycle scripts during installation | Export tests and frozen-lock standalone builds; existing advisory/dependency gates |
 | Compromised release or forged upstream | Operator provenance/digest review; authenticated service audience/scope; fixed configured destination | Full rollout evidence Phase 7; identity before domain calls in Phase 4 |
 | Confused-deputy access or cross-user data exposure | Data owner checks service scope and user/consent context independently | Phase 4/5 denial and privacy tests |
 | Cross-service SQL or shared credentials | Own role/schema or separate database; own migrations; no foreign data writes | Existing permission-isolation integration tests; selected-service migration rehearsal |

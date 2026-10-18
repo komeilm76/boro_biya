@@ -65,7 +65,7 @@ bun run build
 bun run start
 ```
 
-Use `core` or `sos` for the other units. Output must not exist and must be outside the checkout. The export contains the selected service, its runtime library source closure, build configurations, selected migration entry and a lockfile derived offline from reviewed resolutions. It excludes other services, clients, test tooling, `.env`, build output and database files. This is a source directory, not a runtime plugin package. No registry publishing or public-release licence decision is implied.
+Use `core` or `sos` for the other units. Output must not exist and must be outside the checkout. The export contains the selected service, its runtime library source closure, build configurations, selected migration entry and a lockfile selected directly from reviewed resolutions without registry/cache access. It excludes other services, clients, test tooling, `.env`, build output and database files. This is a source directory, not a runtime plugin package. No registry publishing or public-release licence decision is implied.
 
 Inject `DATABASE_URL` for the unit's least-privilege role, listener/metrics configuration, and core's `WEB_ORIGIN`/`SESSION_SECRET` where applicable. The consumer provisions PostgreSQL independently; it may be a separate database/host. Run `bun run db:up` with `DB_ADMIN_URL` and `SERVICE_DB_PASSWORD` only in a separate deployment job. `db:status` inspects and `db:down` reverses one migration. Never pass administrative database credentials to the runtime. These commands use only the selected unit's migrations, not the development cluster bootstrap. The repository Compose file remains a convenience composition; it is not a runtime dependency or an installation interface.
 

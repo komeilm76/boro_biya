@@ -13,4 +13,4 @@ export function planService(
   selected: Map<string, { path: string; manifest: Manifest }>;
   manifest: Manifest;
 };
-export function exportService(service: string, output: string, options?: { root?: string; bun?: string }): string;
+export function exportService(service: string, output: string, options?: { root?: string }): string;
