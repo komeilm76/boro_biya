@@ -7,7 +7,8 @@ import { once } from 'node:events';
 import pg from 'pg';
 import { describe, expect, it, inject } from 'vitest';
 import { createDatabaseFor } from '@boro-biya/test-utils/pg';
-import { exportService } from '../../../../scripts/services/export.mjs';
+import { diagnoseLocks } from '../../../../scripts/services/diagnose-lock.mjs';
+import { exportService, repositoryRoot } from '../../../../scripts/services/export.mjs';
 
 async function port() {
   const server = createServer();
@@ -63,10 +64,16 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
       try {
         exportService(service, output);
         expect(readdirSync(join(output, 'services'))).toEqual([service]);
-        run('bun', ['install', '--lockfile-only', '--frozen-lockfile', '--ignore-scripts', '--offline'], {
-          ...env,
-          BUN_INSTALL_CACHE_DIR: join(parent, 'empty-metadata-cache'),
-        });
+        try {
+          run('bun', ['install', '--lockfile-only', '--frozen-lockfile', '--ignore-scripts', '--offline'], {
+            ...env,
+            BUN_INSTALL_CACHE_DIR: join(parent, 'empty-metadata-cache'),
+          });
+        } catch (cause) {
+          throw new Error(`Offline lock diagnostics: ${JSON.stringify(diagnoseLocks(output, repositoryRoot, env))}`, {
+            cause,
+          });
+        }
         run('bun', ['install', '--frozen-lockfile', '--ignore-scripts', '--offline']);
         run('bun', ['run', 'build']);
         for (let attempt = 0; attempt < 2; attempt++)
