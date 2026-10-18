@@ -25,47 +25,26 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
     }
   };
   check('repository-baseline', repositoryRoot);
-  for (const name of ['sorted', 'explicit-root', 'config-v0', 'lock-v1', 'single-root']) {
+  for (const name of ['root-runtime', 'root-runtime-peers', 'unpruned-packages', 'root-runtime-unpruned']) {
     const target = `${output}-diagnostic-${name}`;
     mkdirSync(target);
     cpSync(join(output, 'packages'), join(target, 'packages'), { recursive: true });
     cpSync(join(output, 'services'), join(target, 'services'), { recursive: true });
     const manifest = read(join(output, 'package.json'));
     const lock = read(join(output, 'bun.lock'));
-    if (name === 'sorted') {
-      lock.workspaces = Object.fromEntries(Object.entries(lock.workspaces).sort(([a], [b]) => a.localeCompare(b)));
-      for (const workspace of Object.values(lock.workspaces))
-        for (const key of ['dependencies', 'devDependencies', 'peerDependencies']) {
-          if (workspace[key])
-            workspace[key] = Object.fromEntries(Object.entries(workspace[key]).sort(([a], [b]) => a.localeCompare(b)));
-        }
-      manifest.devDependencies = lock.workspaces[''].devDependencies;
-    }
-    if (name === 'explicit-root') {
-      const service = Object.values(lock.workspaces).find(
-        (entry) =>
-          entry.name?.startsWith('@boro-biya/') &&
-          ['@boro-biya/api', '@boro-biya/relation', '@boro-biya/sos'].includes(entry.name),
-      );
-      manifest.dependencies = { [service.name]: 'workspace:*' };
-      lock.workspaces[''].dependencies = manifest.dependencies;
-    }
-    if (name === 'config-v0') lock.configVersion = 0;
-    if (name === 'lock-v1') lock.lockfileVersion = 1;
-    if (name === 'single-root') {
-      delete manifest.workspaces;
+    if (name.startsWith('root-runtime')) {
       manifest.dependencies = {};
       for (const entry of Object.values(lock.workspaces))
-        for (const [dependency, version] of Object.entries(entry.dependencies ?? {})) {
-          if (!version.startsWith('workspace:')) manifest.dependencies[dependency] = version;
-        }
-      lock.workspaces = {
-        '': { name: manifest.name, dependencies: manifest.dependencies, devDependencies: manifest.devDependencies },
-      };
-      lock.packages = Object.fromEntries(
-        Object.entries(lock.packages).filter(([, entry]) => !entry[0].includes('workspace:')),
-      );
+        for (const field of name === 'root-runtime-peers' ? ['dependencies', 'peerDependencies'] : ['dependencies'])
+          for (const [dependency, version] of Object.entries(entry[field] ?? {})) {
+            if (version.startsWith('workspace:')) continue;
+            if (manifest.dependencies[dependency] && manifest.dependencies[dependency] !== version)
+              throw new Error(`conflicting runtime dependency ${dependency}`);
+            manifest.dependencies[dependency] = version;
+          }
+      lock.workspaces[''].dependencies = manifest.dependencies;
     }
+    if (name.includes('unpruned')) lock.packages = read(join(repositoryRoot, 'bun.lock')).packages;
     writeFileSync(join(target, 'package.json'), JSON.stringify(manifest, null, 2));
     writeFileSync(join(target, 'bun.lock'), JSON.stringify(lock, null, 2));
     check(name, target);
