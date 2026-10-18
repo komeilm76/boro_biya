@@ -26,6 +26,7 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
   };
   check('repository-baseline', repositoryRoot);
   check('canonical-cwd', realpathSync(output));
+  check('native-canonical-cwd', realpathSync.native(output));
   for (const name of ['plain-cwd', 'native-keys', 'native-resolutions', 'fresh-repository']) {
     const target =
       name === 'plain-cwd'
@@ -61,5 +62,7 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
       if (name === 'plain-cwd') rmSync(target, { recursive: true, force: true });
     }
   }
+  results['short-path-input'] = /~[0-9]/.test(output) ? 'yes' : 'no';
+  results['native-path-differs'] = realpathSync.native(output) !== realpathSync(output) ? 'yes' : 'no';
   return results;
 }
