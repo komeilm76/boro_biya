@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
 import { uuidV7Schema } from './uuid.js';
 import { uniqueStringItemsCheck } from './unique-strings.js';
-import { administrativeReasonContentSchema, securityReportContentSchema } from './text-content.js';
+import { administrativeReasonPattern, securityReportPattern } from './text-content.js';
+import { contractText, contractUtcBefore } from './contract-rules.js';
 
 export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
 
@@ -125,7 +126,16 @@ const permissionKeys = z
   .meta({ uniqueItems: true });
 export const adminStateSchema = z.strictObject({
   currentPassword: z.string().max(1024),
-  reason: z.string().trim().pipe(administrativeReasonContentSchema),
+  reason: contractText({
+    version: 1,
+    kind: 'text',
+    steps: [
+      { op: 'trim' },
+      { op: 'min', value: 1 },
+      { op: 'max', value: 500 },
+      { op: 'pattern', value: administrativeReasonPattern.source },
+    ],
+  }),
 });
 export const adminRoleAssignmentSchema = z.strictObject({ currentPassword: z.string().max(1024), roleIds: uniqueIds });
 export const adminRoleCreateSchema = z.strictObject({
@@ -138,36 +148,34 @@ export const adminRoleUpdateSchema = adminRoleCreateSchema.omit({ key: true });
 export const adminCursorSchema = z.strictObject({ cursor: uuidV7Schema.optional() });
 /** Strict, bounded administrative search; usernames are literal substrings, not SQL patterns. */
 export const adminUsersQuerySchema = adminCursorSchema.extend({
-  username: z
-    .string()
-    .trim()
-    .max(256)
-    .transform((value) => value.normalize('NFKC').toLowerCase())
-    .pipe(
-      z
-        .string()
-        .min(1)
-        .refine((value) => [...value].length <= 64 && !/[\p{Cc}\p{Cf}]/u.test(value)),
-    )
-    .optional(),
+  username: contractText({
+    version: 1,
+    kind: 'text',
+    steps: [
+      { op: 'trim' },
+      { op: 'max', value: 256 },
+      { op: 'nfkc' },
+      { op: 'lowercase' },
+      { op: 'min', value: 1 },
+      { op: 'max', value: 64 },
+      { op: 'no-control-format' },
+    ],
+  }).optional(),
   status: z.enum(['active', 'locked', 'banned', 'deactivated']).optional(),
   setupRequired: z.enum(['true', 'false']).optional(),
   roleId: uuidV7Schema.optional(),
 });
 const auditKey = z.string().regex(/^[a-z][a-z0-9_]{0,79}$/);
-const instantKey = (value: string) => value.slice(0, 19) + '.' + value.slice(19, -1).replace('.', '').padEnd(9, '0');
-export const adminAuditQuerySchema = adminCursorSchema
-  .extend({
+export const adminAuditQuerySchema = contractUtcBefore(
+  adminCursorSchema.extend({
     actorId: uuidV7Schema.optional(),
     action: auditKey.optional(),
     targetId: uuidV7Schema.optional(),
     targetType: auditKey.optional(),
     from: utcInstantSchema.optional(),
     to: utcInstantSchema.optional(),
-  })
-  .refine((value) => !value.from || !value.to || instantKey(value.from) < instantKey(value.to), {
-    message: 'from must precede to',
-  });
+  }),
+);
 export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
 export type AdminAuditQuery = z.infer<typeof adminAuditQuerySchema>;
 export const adminIdSchema = z.strictObject({ id: uuidV7Schema });
@@ -261,7 +269,16 @@ export const privacyPolicySchema = z.strictObject({
 /** Anonymous intake: no account lookup, secrets, attachments or reply contact fields. */
 export const securityReportSchema = z.strictObject({
   category: z.enum(['account_compromise', 'abuse', 'vulnerability']),
-  message: z.string().trim().pipe(securityReportContentSchema),
+  message: contractText({
+    version: 1,
+    kind: 'text',
+    steps: [
+      { op: 'trim' },
+      { op: 'min', value: 20 },
+      { op: 'max', value: 4000 },
+      { op: 'pattern', value: securityReportPattern.source },
+    ],
+  }),
   locale: z.enum(['en', 'fa']),
 });
 

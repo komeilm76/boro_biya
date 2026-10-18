@@ -1,5 +1,7 @@
 # API Contracts, OpenAPI 3.1, Zod, km-api, and zopia
 
+Current Phase 2 publication checkpoint: [section 16](#16-full-application-publication-and-mandatory-semantic-profile-2026-10-18). Earlier dated checkpoints are historical, not current publication blockers.
+
 ## 1. Contract-first policy
 
 Owner: Engineering. Reviewed: 2026-10-18.
@@ -178,3 +180,38 @@ Both must be readable OpenAPI 3.1 documents and pass the maintained validator wi
 The CLI exits 0 for a proved compatible addition, 1 for incompatible/unproven changes, and 2 for missing/malformed/invalid documents or usage. Errors suppress parser/source messages. Regression fixtures cover path/method/component removal, security/defaults, status/parameter/serialization/requiredness changes, schema bounds/enum/nullability/strictness/format changes, a property literally named `description`, unknown extensions, missing references and invalid baselines; original inputs must not be mutated. The existing unit gate runs them without altering the gate runner or thresholds.
 
 No released application-contract baseline has been identified in the checkout; GitHub's release list was empty when checked. The structural fixture used by these regressions is **not** relabelled as a released auth contract. An actual released-contract comparison and faithful full application document/native manifest remain incomplete, along with the preflight's semantic blockers. Row 6 stays In progress.
+
+## 16. Full application publication and mandatory semantic profile (2026-10-18)
+
+This section supersedes the publication-blocker inventory in the earlier, historical checkpoints. The application artefacts now live in `api/auth/`: OpenAPI 3.1 `openapi.json`, the native `.zopia-manifest.json`, all 44 endpoint modules (43 canonical JSON operations plus security SSE), components, the generated compiler bridge and a located conversion-diagnostic inventory. They are development artefacts, not a tagged public release. The runtime client still imports authoritative shared schemas; it is not replaced by a generic JSON Schema validator.
+
+```sh
+bun --tsconfig-override tsconfig.base.json scripts/contracts/application.mjs
+bun --tsconfig-override tsconfig.base.json scripts/contracts/application.mjs --check
+bun --tsconfig-override tsconfig.base.json scripts/contracts/fixtures/semantic-profile.mjs
+bun --tsconfig-override tsconfig.base.json scripts/contracts/fixtures/application-compatibility.mjs
+```
+
+Publication first requires all 43 bindings / 627 non-absent request and response positions to pass the source preflight, with no blockers. It validates the complete OpenAPI with the maintained validator, generates the native directory and manifest, installs only temporary links to existing tool peers, restores the declared runtime semantics, reverses through the pinned native converter, requires an identical full-document diff and **zero reverse warnings**, validates OpenAPI again and requires `zopia validate` to return no diagnostics. Generated formatting must reach a fixed point. `--check` regenerates in an isolated sibling directory and compares both the complete file inventory and every byte; no generated tree or manifest can silently drift. No tool dependency or policy change accompanies this work.
+
+### Required profile, not ordinary JSON Schema equivalence
+
+`x-boro-rules` version 1 is **mandatory executable contract data**. Plain JSON Schema/OpenAPI validation alone is insufficient. `packages/validation/src/contract-rules.ts` compiles a closed, strictly validated instruction vocabulary:
+
+- `text`: ordered `trim`, `nfkc`, locale-independent `lowercase`, code-point `min`/`max`, flag-free `pattern`, and `no-control-format`. Administrative reason, report text and user search preserve their original step ordering, input acceptance and successful normalized output. The raw 256-code-point search bound runs before NFKC/lowercasing; its 64-code-point bound runs afterwards.
+- `utc-before`: optional `from` must strictly precede optional `to`. Both present values must be valid existing UTC instants. Fractional strings are right-padded to nine digits and compared at full precision; equal instants with different spellings fail. There is no `Date`/millisecond truncation.
+- `strip-unknown`: preserve Zod's existing default object-parser behaviour, including nested objects. Standard `additionalProperties: true` declares input acceptance; the required profile strips those keys from parsed output. This is necessary because the native generator otherwise preserves them. Strict source objects remain strict, without this instruction. This does not loosen any authoritative source parser.
+
+Unknown profile versions, instructions, extra descriptor fields or incompatible structural shapes fail closed. Generated native modules execute the compiler; metadata alone is not called validation. The projection guard recognizes only exact compiler-owned schemas and recursively inspects their structural bases. Forged annotations, extra unregistered refinements, transforms, discriminators and versioned native UUID formats remain rejected. Definition traversal preserves existing uniqueness metadata as well as rules; cloning is not allowed to drop either.
+
+Full aggregate query/path schemas are included as operation extensions. Individual OpenAPI parameters cannot express object-level strictness or sibling ordering. The native bridge rebuilds strict aggregate parsers and compiles the root ordering instruction without registering aggregate component references that the pinned parameter serializer cannot dereference. Absent JSON requests explicitly reject supplied bodies. HTTP 204 carries no JSON body: native docs use `undefined`, while the existing client transport retains its established `null` sentinel. These protocol-boundary representations are tested explicitly, not falsely asserted to be the same JSON value.
+
+The independent validation unit tests retain pre-profile text validators and compare acceptance and successful output across every BMP character, surrogates, Persian/astral/compatibility characters, invalid types and raw/normalized length bounds. A BigInt-based independent oracle checks fractional timestamp ordering. The full committed-tree fixture compares canonical/native/profile-aware strict Ajv acceptance and native parsed output across every operation, all declared error responses, strict parameters, text bounds/controls, duplicate roles/permissions, calendar-invalid/nanosecond timestamps and SSE tickets/cursors. Ajv checks acceptance only: it does not produce normalized output. A strict generic Ajv instance must reject the unknown mandatory keyword; profile-aware compilation must reject unknown versions/instructions.
+
+The only admitted generation diagnostics identify the exact previously proved UTC intersection, an unconstrained nullable string, or string-array uniqueness. Full-document equality and independent semantic fixtures remain required; arbitrary frozen subtrees/warnings are not waived. `conversion-diagnostics.json` commits the exact located inventory. Native reverse diagnostics must remain empty.
+
+### Released-baseline disposition
+
+The conservative compatibility checker now also runs against the **actual complete application artefact** and regenerated canonical candidate. It rejects seven actual-document mutations affecting endpoint removal, protection, query/profile instructions, timestamp ordering, trimming, unknown-key policy and SSE protection. This is development/bootstrap consistency and negative-regression evidence, **not released-contract acceptance**.
+
+No released application baseline was identified; the previously checked GitHub release list was empty. No fixture, development checkpoint or self-comparison is labelled a release. Actual released-contract comparison remains unavailable until a genuine released document exists. For the first public release, retain its tagged OpenAPI/native manifest as the baseline; each subsequent candidate must pass `compatibility.mjs <released.json> <candidate.json>`. Missing, malformed or unproven input continues to fail closed, rather than receiving an initial-publication pass. This absence is not a new request for human device testing and does not authorise merging Phase 2 early.

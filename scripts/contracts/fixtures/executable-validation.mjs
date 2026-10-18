@@ -18,19 +18,22 @@ import { findExecutableValidation, projectSchema } from '../schema.mjs';
 const require = createRequire(realpathSync(new URL('../../../node_modules/zopia/package.json', import.meta.url)));
 const { z } = require('zod');
 
-const cases = [
-  ['query canonicalisation', adminUsersQuerySchema, 'pipe'],
-  ['cross-field timestamp ordering', adminAuditQuerySchema, 'custom'],
-  ['trimmed, control-free administrative reason', adminStateSchema, 'overwrite'],
-  ['trimmed report text', securityReportSchema, 'pipe'],
-];
-for (const [name, schema, kind] of cases) {
-  assert(
-    findExecutableValidation(schema).some((finding) => finding.kind === kind),
-    name,
-  );
-  assert.throws(() => projectSchema(schema), /would lose executable validation/, name);
+// These four formerly unsupported source schemas now use the mandatory finite profile.
+// Their semantic acceptance/output proofs live in semantic-profile.mjs and unit tests.
+for (const schema of [adminUsersQuerySchema, adminAuditQuerySchema, adminStateSchema, securityReportSchema]) {
+  assert.deepEqual(findExecutableValidation(schema), []);
+  assert.doesNotThrow(() => projectSchema(schema));
 }
+// Unregistered legacy execution still fails closed, including extra checks on a codec.
+for (const schema of [
+  z.string().trim(),
+  z.string().transform((text) => text.toLowerCase()),
+  z.object({ from: z.string(), to: z.string() }).refine((value) => value.from < value.to),
+  adminStateSchema.refine(() => true),
+  adminUsersQuerySchema.shape.username.unwrap().refine(() => true),
+  z.string().meta({ 'x-boro-rules': { version: 1, kind: 'text', steps: [{ op: 'trim' }] } }),
+])
+  assert.throws(() => projectSchema(schema), /would lose executable validation/);
 
 // Reproduce the silent-loss bug without relying on a hypothetical schema or a warning.
 const warnings = [];

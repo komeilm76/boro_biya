@@ -99,14 +99,14 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
       expect(result.stdout).toContain(`compatibility CLI ${mode} passed`);
     },
   );
-  it('audits every actual binding and refuses partial/unsupported publication', () => {
+  it('audits every actual binding without unsupported publication blockers', () => {
     const result = spawnSync('bun', ['--tsconfig-override', 'tsconfig.base.json', 'scripts/contracts/audit-auth.mjs'], {
       cwd: root,
       encoding: 'utf8',
       timeout: 30_000,
     });
     expect(result.error).toBeUndefined();
-    expect(result.status, result.stderr).toBe(1);
+    expect(result.status, result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as {
       operations: number;
       schemas: number;
@@ -115,19 +115,29 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
     };
     expect(report.operations).toBe(43);
     expect(report.schemas).toBe(627);
-    expect(report.readyForPublication).toBe(false);
-    expect(report.blockers.map(({ at }) => at)).toEqual([
-      'reportSecurity/request/body',
-      'adminUsers/request/query',
-      'adminAudit/request/query',
-      'adminLock/request/body',
-      'adminUnlock/request/body',
-      'adminBan/request/body',
-      'adminUnban/request/body',
-      'adminDeactivate/request/body',
-      'adminReactivate/request/body',
-      'reissueSetupCredential/request/body',
-    ]);
-    expect(report.blockers.every(({ kind }) => kind === 'executable-validation')).toBe(true);
+    expect(report.readyForPublication).toBe(true);
+    expect(report.blockers).toEqual([]);
   });
+  it.each([
+    ['scripts/contracts/application.mjs', ['--check'], 'deterministic and current'],
+    [
+      'scripts/contracts/fixtures/semantic-profile.mjs',
+      [],
+      'canonical/native/Ajv acceptance and parsed-output comparisons passed',
+    ],
+    ['scripts/contracts/fixtures/application-compatibility.mjs', [], 'no released baseline claimed'],
+  ])(
+    'proves full application publication using %s',
+    (script, args, output) => {
+      const result = spawnSync('bun', ['--tsconfig-override', 'tsconfig.base.json', script, ...args], {
+        cwd: root,
+        encoding: 'utf8',
+        timeout: 30_000,
+      });
+      expect(result.error).toBeUndefined();
+      expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+      expect(result.stdout).toContain(output);
+    },
+    30_000,
+  );
 });
