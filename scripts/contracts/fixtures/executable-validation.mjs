@@ -9,6 +9,7 @@ import {
   adminStateSchema,
   adminUsersQuerySchema,
   loginSchema,
+  securityReportSchema,
 } from '../../../packages/validation/src/auth.ts';
 import { utcInstantSchema, utcDateSchema } from '../../../packages/validation/src/time.ts';
 import { findExecutableValidation, projectSchema } from '../schema.mjs';
@@ -21,6 +22,7 @@ const cases = [
   ['query canonicalisation', adminUsersQuerySchema, 'pipe'],
   ['cross-field timestamp ordering', adminAuditQuerySchema, 'custom'],
   ['trimmed, control-free administrative reason', adminStateSchema, 'overwrite'],
+  ['trimmed report text', securityReportSchema, 'pipe'],
 ];
 for (const [name, schema, kind] of cases) {
   assert(
@@ -99,5 +101,5 @@ assert.equal(findExecutableValidation(shared).filter((finding) => finding.kind =
 assert.equal(invoked, false);
 assert.deepEqual(findExecutableValidation(null), []);
 console.log(
-  'executable-validation fidelity: 3 real auth regressions and portable calendar/uniqueness boundaries passed',
+  'executable-validation fidelity: 4 real auth regressions and portable calendar/uniqueness boundaries passed',
 );

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { utcInstantSchema } from './time.js';
 import { uuidV7Schema } from './uuid.js';
 import { uniqueStringItemsCheck } from './unique-strings.js';
+import { administrativeReasonContentSchema, securityReportContentSchema } from './text-content.js';
 
 export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
 
@@ -124,12 +125,7 @@ const permissionKeys = z
   .meta({ uniqueItems: true });
 export const adminStateSchema = z.strictObject({
   currentPassword: z.string().max(1024),
-  reason: z
-    .string()
-    .trim()
-    .min(1)
-    .max(500)
-    .refine((value) => !/\p{Cc}/u.test(value)),
+  reason: z.string().trim().pipe(administrativeReasonContentSchema),
 });
 export const adminRoleAssignmentSchema = z.strictObject({ currentPassword: z.string().max(1024), roleIds: uniqueIds });
 export const adminRoleCreateSchema = z.strictObject({
@@ -265,19 +261,7 @@ export const privacyPolicySchema = z.strictObject({
 /** Anonymous intake: no account lookup, secrets, attachments or reply contact fields. */
 export const securityReportSchema = z.strictObject({
   category: z.enum(['account_compromise', 'abuse', 'vulnerability']),
-  message: z
-    .string()
-    .trim()
-    .min(20)
-    .max(4000)
-    // PostgreSQL char_length counts code points, not UTF-16 code units.
-    .refine((value) => Array.from(value).length >= 20)
-    .refine((value) =>
-      Array.from(value).every((character) => {
-        const code = character.codePointAt(0)!;
-        return code !== 127 && (code >= 32 || [9, 10, 13].includes(code));
-      }),
-    ),
+  message: z.string().trim().pipe(securityReportContentSchema),
   locale: z.enum(['en', 'fa']),
 });
 

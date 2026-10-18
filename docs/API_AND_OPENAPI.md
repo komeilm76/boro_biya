@@ -145,3 +145,36 @@ The actual challenge response now uses a plain union of two strict objects with 
 `scripts/contracts/fixtures/portable-challenge.mjs` compares previous/runtime/JSON Schema/manifest-generated request and response acceptance and successful output, validates OpenAPI before/after conversion, runs `zopia validate` and requires an exact reverse diff. The precise existing frozen UTC subtree diagnostic is asserted and proved lossless; no reverse warnings are allowed. The projection guard rejects remaining discriminated unions as a known-loss boundary. The generic discriminator negative regression remains mandatory: arbitrary `oneOf`/discriminator publication has not been declared safe.
 
 This closes the actual challenge union's structural loss, not all of row 6. Query canonicalisation, cross-field ordering, reason/report sanitization and full application publication/manifest/released compatibility remain incomplete. No additional dependency or changed policy/check/threshold is introduced.
+
+
+## 14. Portable post-trim text content (2026-10-18)
+
+`text-content.ts` expresses administrative reason and anonymous report **content validation** with built-in string bounds and flag-free character-range patterns. Reasons reject Unicode Cc (the BMP ranges U+0000–U+001F/U+007F–U+009F); reports continue allowing HT/LF/CR and C1 characters but reject the other C0 controls and DEL. The pinned Zod string bounds already count code points, so the report's additional code-point minimum refinement was redundant. No character decision, limit or normalization is relaxed: the real request fields still trim first and then validate this content through a pipe.
+
+The full before/after validators are compared across every BMP character inside prose, including isolated surrogates, plus boundary controls, whitespace trimming, Persian text, astral characters, length bounds and invalid types. `portable-text.mjs` separately proves the actual post-trim schemas against previous content validators, JSON Schema and native-manifest-generated request/response schemas; both OpenAPI validations, `zopia validate`, exact reverse equality and empty generation/reverse warnings are required.
+
+This closes the content/refinement portion only. It does **not** claim that OpenAPI or a generated plain string schema performs trimming. The complete reason/report pipelines remain deliberately blocked by `projectSchema`; no extension profile, fallback dialect, weaker validator or converter-warning exception is introduced.
+
+## 15. Publication preflight and conservative compatibility (2026-10-18)
+
+Run the actual-source preflight with:
+
+```bash
+bun --tsconfig-override tsconfig.base.json scripts/contracts/audit-auth.mjs
+```
+
+It inspects all 43 canonical JSON operations and 627 non-absent request/response schema positions, including declared errors, in their input/output direction. It lists every unsupported executable-validation location instead of stopping at the first one. Absent JSON content is omitted by its authoritative schema identity, not projected to a permissive schema. A bounded plain-string Unicode length probe also checks concrete supplementary-character boundary witnesses; absence of a witness is not a general equivalence proof. No refinements/transforms are invoked by projection. The preflight writes no published document or partial manifest, and exits **1** while blockers exist.
+
+At this checkpoint, ten positions are blocked: report intake body, administrative user query, administrative audit query, six administrative state-action bodies and setup-credential reissuance body. The remaining semantics are trim/Unicode query canonicalisation and cross-field ordered UTC timestamps. The unchanged unit gate asserts this inventory and the non-zero publication-readiness result. This is an honest negative regression, not a claim that a deliberately failing publication preflight is accepted production output.
+
+Compare an explicitly supplied released document and candidate with:
+
+```bash
+bun scripts/contracts/compatibility.mjs released.json candidate.json
+```
+
+Both must be readable OpenAPI 3.1 documents and pass the maintained validator with external reference fetching disabled. The checker also runs `zopia`'s document diff. It proves compatibility only for unchanged existing contracts plus isolated new paths/methods/reusable declarations and an information-version bump. Previous paths, operations and reusable declarations must remain. Default security/servers/dialect/extensions, inherited path parameters, operation contracts and existing component schemas must remain identical. Object key order is irrelevant; unknown or semantic changes are **unproven**, not silently approved. This intentionally conservative proof may block a genuinely safe change until a narrower proof is added; it never equates every structural difference with an established breaking change.
+
+The CLI exits 0 for a proved compatible addition, 1 for incompatible/unproven changes, and 2 for missing/malformed/invalid documents or usage. Errors suppress parser/source messages. Regression fixtures cover path/method/component removal, security/defaults, status/parameter/serialization/requiredness changes, schema bounds/enum/nullability/strictness/format changes, a property literally named `description`, unknown extensions, missing references and invalid baselines; original inputs must not be mutated. The existing unit gate runs them without altering the gate runner or thresholds.
+
+No released application-contract baseline has been identified in the checkout; GitHub's release list was empty when checked. The structural fixture used by these regressions is **not** relabelled as a released auth contract. An actual released-contract comparison and faithful full application document/native manifest remain incomplete, along with the preflight's semantic blockers. Row 6 stays In progress.
