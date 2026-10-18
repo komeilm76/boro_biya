@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -31,7 +32,7 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
     expect(plan.selected.has('@boro-biya/test-utils')).toBe(false);
     expect(plan.selected.has('@boro-biya/web')).toBe(false);
     const target = join(fresh(), service);
-    expect(exportService(service, target)).toBe(target);
+    expect(exportService(service, target)).toBe(realpathSync.native(target));
     expect(readdirSync(join(target, 'services'))).toEqual([service]);
     for (const path of [
       'apps',
@@ -58,6 +59,16 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
       packages: Record<string, unknown>;
     };
     for (const [name, value] of Object.entries(exported.packages)) expect(value, name).toEqual(original.packages[name]);
+  });
+  it('returns a native canonical consumer path through an external directory alias', () => {
+    const parent = fresh();
+    const alias = join(fresh(), 'external-alias');
+    symlinkSync(parent, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const target = join(alias, 'relation');
+    const canonical = exportService('relation', target);
+    expect(canonical).toBe(realpathSync.native(join(parent, 'relation')));
+    expect(canonical).not.toBe(target);
+    expect(existsSync(join(canonical, 'bun.lock'))).toBe(true);
   });
   it('exports a container-like source context without Git and excludes a secret tripwire', () => {
     const fixture = join(fresh(), 'context');

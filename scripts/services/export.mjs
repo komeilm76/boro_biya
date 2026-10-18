@@ -71,13 +71,16 @@ export function exportService(service, output, { root = repositoryRoot } = {}) {
   output = resolve(output);
   let ancestor = output;
   while (!existsSync(ancestor)) ancestor = dirname(ancestor);
-  const actual = resolve(realpathSync(ancestor), relative(ancestor, output));
-  const inRoot = relative(realpathSync(root), actual);
+  const actual = resolve(realpathSync.native(ancestor), relative(ancestor, output));
+  const inRoot = relative(realpathSync.native(root), actual);
   if (
     inRoot === '' ||
     (inRoot !== '..' && !inRoot.startsWith('../') && !inRoot.startsWith('..\\') && !isAbsolute(inRoot))
   )
     throw new Error('output must be outside the checkout');
+  // Native canonicalisation expands Windows DOS short aliases as well as symlinks.
+  // Bun workspace discovery cannot reliably consume the short spelling; return the usable path.
+  output = actual;
   if (existsSync(output)) throw new Error('output already exists; refusing to overwrite it');
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output); // exclusive: never merge into an existing project
@@ -182,7 +185,7 @@ export function exportService(service, output, { root = repositoryRoot } = {}) {
   });
   writeFileSync(
     join(output, 'README.md'),
-    `# Standalone ${service} service\n\nReviewed source with its required library closure; no other service or client is included.\nUse Node 24 and Bun 1.4. Run bun install --frozen-lockfile --ignore-scripts, bun run build, then bun run start.\nSet NODE_ENV to development, test or production. Provision PostgreSQL and inject DATABASE_URL (least-privilege runtime role). For migrations use DB_ADMIN_URL and SERVICE_DB_PASSWORD in the deployment environment, then bun run db:up. Use bun run db:status or bun run db:down (one migration) for maintenance. Never give administrative credentials to the runtime process.\nCore also requires WEB_ORIGIN and SESSION_SECRET. All configuration is validated at startup. /healthz and /readyz are infrastructure endpoints. Metrics stay private.\nRelation and SOS are skeletons: domain routes arrive in Phases 4 and 5. No deployment automatically grants inter-service or user permissions.\nNo .env, node_modules, test databases, uploaded code, ZIP installer or application orchestration is exported.\n`,
+    `# Standalone ${service} service\n\nReviewed source with its required library closure; no other service or client is included.\nUse Node 24 and Bun 1.4. Run bun install --frozen-lockfile --ignore-scripts, bun run build, then bun run start. On Windows, use the canonical output directory printed by the exporter, not a DOS short-path alias.\nSet NODE_ENV to development, test or production. Provision PostgreSQL and inject DATABASE_URL (least-privilege runtime role). For migrations use DB_ADMIN_URL and SERVICE_DB_PASSWORD in the deployment environment, then bun run db:up. Use bun run db:status or bun run db:down (one migration) for maintenance. Never give administrative credentials to the runtime process.\nCore also requires WEB_ORIGIN and SESSION_SECRET. All configuration is validated at startup. /healthz and /readyz are infrastructure endpoints. Metrics stay private.\nRelation and SOS are skeletons: domain routes arrive in Phases 4 and 5. No deployment automatically grants inter-service or user permissions.\nNo .env, node_modules, test databases, uploaded code, ZIP installer or application orchestration is exported.\n`,
   );
   return output;
 }

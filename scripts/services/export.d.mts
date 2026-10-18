@@ -13,4 +13,5 @@ export function planService(
   selected: Map<string, { path: string; manifest: Manifest }>;
   manifest: Manifest;
 };
+/** Returns the native canonical output directory for subsequent consumer commands. */
 export function exportService(service: string, output: string, options?: { root?: string }): string;

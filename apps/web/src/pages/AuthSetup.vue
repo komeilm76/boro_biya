@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import AuthChallenge from '../components/AuthChallenge.vue';
-import { ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
+import { useSessionStore } from '../stores/session.js';
 import { authClient } from '../auth-client.js';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
+const session = useSessionStore();
 const stage = ref<'start' | 'password' | 'questions' | 'done'>('start');
 const username = ref('');
 const password = ref('');
@@ -24,46 +26,78 @@ const keys = [
   'favoriteMeal',
   'childhoodDream',
 ];
+let disposed = false,
+  generation = 0;
+function clearSecrets() {
+  challenge.value = '';
+  password.value = '';
+  repeatPassword.value = '';
+  answers.value = ['', '', '', '', ''];
+}
+function invalidateFlow() {
+  generation++;
+  clearSecrets();
+  username.value = '';
+  questions.value = [1, 2, 3, 4, 5];
+  failed.value = false;
+  busy.value = false;
+  stage.value = 'start';
+}
+watch(() => session.authVersion, invalidateFlow, { flush: 'sync' });
+onUnmounted(() => {
+  disposed = true;
+  invalidateFlow();
+});
 async function resume() {
-  if (busy.value || challengeBusy.value) return;
+  if (busy.value || challengeBusy.value || disposed) return;
+  const ticket = ++generation;
+  const version = session.authVersion;
+  const current = () => !disposed && ticket === generation && version === session.authVersion;
   busy.value = true;
   failed.value = false;
   try {
     const state = await authClient.setupStatus();
+    if (!current()) return;
     stage.value = state.passwordSetupRequired ? 'password' : 'questions';
   } catch {
-    failed.value = true;
+    if (current()) failed.value = true;
   } finally {
-    busy.value = false;
+    if (ticket === generation) busy.value = false;
   }
 }
 async function submit() {
-  if (busy.value || challengeBusy.value) return;
+  if (busy.value || challengeBusy.value || disposed) return;
+  const ticket = ++generation;
+  const version = session.authVersion;
+  const current = () => !disposed && ticket === generation && version === session.authVersion;
   busy.value = true;
   failed.value = false;
   try {
     const { csrfToken } = await authClient.csrf();
+    if (!current()) return;
     if (stage.value === 'start') {
       await authClient.setupStart(username.value, password.value, csrfToken, challenge.value || undefined);
+      if (!current()) return;
       stage.value = 'password';
     } else if (stage.value === 'password') {
       await authClient.setupPassword(password.value, repeatPassword.value, csrfToken);
+      if (!current()) return;
       stage.value = 'questions';
     } else if (stage.value === 'questions') {
       await authClient.setupSecurity(
         questions.value.map((questionId, index) => ({ questionId, answer: answers.value[index] ?? '' })),
         csrfToken,
       );
+      if (!current()) return;
       stage.value = 'done';
     }
   } catch {
-    failed.value = true;
+    if (current()) failed.value = true;
   } finally {
-    challenge.value = '';
-    password.value = '';
-    repeatPassword.value = '';
-    answers.value = ['', '', '', '', ''];
-    busy.value = false;
+    if (ticket === generation) {
+      clearSecrets();
+      busy.value = false;
+    }
   }
 }
 </script>

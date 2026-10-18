@@ -7,8 +7,7 @@ import { once } from 'node:events';
 import pg from 'pg';
 import { describe, expect, it, inject } from 'vitest';
 import { createDatabaseFor } from '@boro-biya/test-utils/pg';
-import { diagnoseLocks } from '../../../../scripts/services/diagnose-lock.mjs';
-import { exportService, repositoryRoot } from '../../../../scripts/services/export.mjs';
+import { exportService } from '../../../../scripts/services/export.mjs';
 
 async function port() {
   const server = createServer();
@@ -36,7 +35,7 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
     'builds, migrates and runs %s without any other service',
     async (service) => {
       const parent = mkdtempSync(join(tmpdir(), 'standalone-service-'));
-      const output = join(parent, service);
+      let output = join(parent, service);
       const database = await createDatabaseFor(inject('pgAdminUrl'), `standalone_${service}`);
       const password = `disposable-${service}-standalone`;
       const inherited = Object.fromEntries(
@@ -62,18 +61,14 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
       let child: ChildProcess | undefined;
       const admin = new pg.Client({ connectionString: database.adminConnectionString });
       try {
-        exportService(service, output);
+        output = exportService(service, output);
+        env.PWD = output;
+        env.INIT_CWD = output;
         expect(readdirSync(join(output, 'services'))).toEqual([service]);
-        try {
-          run('bun', ['install', '--lockfile-only', '--frozen-lockfile', '--ignore-scripts', '--offline'], {
-            ...env,
-            BUN_INSTALL_CACHE_DIR: join(parent, 'empty-metadata-cache'),
-          });
-        } catch (cause) {
-          throw new Error(`Offline lock diagnostics: ${JSON.stringify(diagnoseLocks(output, repositoryRoot, env))}`, {
-            cause,
-          });
-        }
+        run('bun', ['install', '--lockfile-only', '--frozen-lockfile', '--ignore-scripts', '--offline'], {
+          ...env,
+          BUN_INSTALL_CACHE_DIR: join(parent, 'empty-metadata-cache'),
+        });
         run('bun', ['install', '--frozen-lockfile', '--ignore-scripts', '--offline']);
         run('bun', ['run', 'build']);
         for (let attempt = 0; attempt < 2; attempt++)

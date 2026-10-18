@@ -2,8 +2,10 @@
 import AuthChallenge from '../components/AuthChallenge.vue';
 import RecoveryWarning from '../components/RecoveryWarning.vue';
 import { useI18n } from 'vue-i18n';
-import { ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
+import { useSessionStore } from '../stores/session.js';
 import { authClient } from '../auth-client.js';
+const session = useSessionStore();
 const { locale } = useI18n();
 const username = ref('');
 const password = ref('');
@@ -26,12 +28,38 @@ const keys = [
   'favoriteMeal',
   'childhoodDream',
 ];
+let disposed = false,
+  generation = 0;
+function clearSecrets() {
+  challenge.value = '';
+  password.value = '';
+  repeatPassword.value = '';
+  answers.value = ['', '', '', '', ''];
+}
+function invalidateFlow() {
+  generation++;
+  clearSecrets();
+  username.value = '';
+  questions.value = [1, 2, 3, 4, 5];
+  failed.value = false;
+  busy.value = false;
+  accepted.value = false;
+}
+watch(() => session.authVersion, invalidateFlow, { flush: 'sync' });
+onUnmounted(() => {
+  disposed = true;
+  invalidateFlow();
+});
 async function register() {
-  if (busy.value || challengeBusy.value) return;
+  if (busy.value || challengeBusy.value || disposed) return;
+  const ticket = ++generation;
+  const version = session.authVersion;
+  const current = () => !disposed && ticket === generation && version === session.authVersion;
   busy.value = true;
   failed.value = false;
   try {
     const { csrfToken } = await authClient.csrf();
+    if (!current()) return;
     await authClient.register(
       {
         username: username.value,
@@ -43,15 +71,15 @@ async function register() {
       csrfToken,
       challenge.value || undefined,
     );
+    if (!current()) return;
     accepted.value = true;
   } catch {
-    failed.value = true;
+    if (current()) failed.value = true;
   } finally {
-    challenge.value = '';
-    password.value = '';
-    repeatPassword.value = '';
-    answers.value = ['', '', '', '', ''];
-    busy.value = false;
+    if (ticket === generation) {
+      clearSecrets();
+      busy.value = false;
+    }
   }
 }
 </script>
@@ -72,54 +100,60 @@ async function register() {
       purpose="register"
       @working="challengeBusy = $event"
     />
-    <form v-if="!accepted" @submit.prevent="register">
-      <label for="register-user">{{ $t('auth.username') }}</label
-      ><input
-        id="register-user"
-        v-model="username"
-        required
-        maxlength="64"
-        autocomplete="username"
-        class="block border p-2 mb-4 w-full"
-      />
-      <label for="register-password">{{ $t('auth.password') }}</label
-      ><input
-        id="register-password"
-        v-model="password"
-        required
-        type="password"
-        minlength="12"
-        maxlength="128"
-        autocomplete="new-password"
-        class="block border p-2 mb-4 w-full"
-      />
-      <label for="register-repeat">{{ $t('auth.repeatPassword') }}</label
-      ><input
-        id="register-repeat"
-        v-model="repeatPassword"
-        required
-        type="password"
-        autocomplete="new-password"
-        class="block border p-2 mb-4 w-full"
-      />
-      <fieldset v-for="(_, index) in questions" :key="index" class="my-4 min-w-0">
-        <legend>{{ $t('auth.securityQuestion', { number: index + 1 }) }}</legend>
-        <label :for="`question-${index}`">{{ $t('auth.chooseQuestion') }}</label>
-        <select :id="`question-${index}`" v-model="questions[index]" class="block w-full min-w-0 max-w-full border p-2">
-          <option v-for="(key, i) in keys" :key="key" :value="i + 1">{{ $t(`questions.${key}`) }}</option>
-        </select>
-        <label :for="`answer-${index}`">{{ $t('auth.answer') }}</label
+    <form v-if="!accepted" :aria-busy="busy" @submit.prevent="register">
+      <fieldset :disabled="busy || challengeBusy" class="min-w-0 border-0 p-0">
+        <label for="register-user">{{ $t('auth.username') }}</label
         ><input
-          :id="`answer-${index}`"
-          v-model="answers[index]"
+          id="register-user"
+          v-model="username"
           required
-          maxlength="256"
-          autocomplete="off"
-          class="block w-full min-w-0 max-w-full border p-2"
+          maxlength="64"
+          autocomplete="username"
+          class="block border p-2 mb-4 w-full"
         />
+        <label for="register-password">{{ $t('auth.password') }}</label
+        ><input
+          id="register-password"
+          v-model="password"
+          required
+          type="password"
+          minlength="12"
+          maxlength="128"
+          autocomplete="new-password"
+          class="block border p-2 mb-4 w-full"
+        />
+        <label for="register-repeat">{{ $t('auth.repeatPassword') }}</label
+        ><input
+          id="register-repeat"
+          v-model="repeatPassword"
+          required
+          type="password"
+          autocomplete="new-password"
+          class="block border p-2 mb-4 w-full"
+        />
+        <fieldset v-for="(_, index) in questions" :key="index" class="my-4 min-w-0">
+          <legend>{{ $t('auth.securityQuestion', { number: index + 1 }) }}</legend>
+          <label :for="`question-${index}`">{{ $t('auth.chooseQuestion') }}</label>
+          <select
+            :id="`question-${index}`"
+            v-model="questions[index]"
+            class="block w-full min-w-0 max-w-full border p-2"
+          >
+            <option v-for="(key, i) in keys" :key="key" :value="i + 1">{{ $t(`questions.${key}`) }}</option>
+          </select>
+          <label :for="`answer-${index}`">{{ $t('auth.answer') }}</label
+          ><input
+            :id="`answer-${index}`"
+            v-model="answers[index]"
+            required
+            maxlength="256"
+            autocomplete="off"
+            class="block w-full min-w-0 max-w-full border p-2"
+          />
+        </fieldset>
+        <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
+        <v-btn type="submit" :disabled="busy || challengeBusy">{{ $t('auth.register') }}</v-btn>
       </fieldset>
-      <p v-if="failed" role="alert">{{ $t('auth.rejected') }}</p>
-      <v-btn type="submit" :disabled="busy || challengeBusy">{{ $t('auth.register') }}</v-btn>
     </form>
   </section>
 </template>

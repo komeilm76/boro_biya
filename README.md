@@ -87,4 +87,7 @@ bun install --frozen-lockfile --ignore-scripts
 bun run build
 ```
 
+Use the canonical output directory printed by the exporter for subsequent commands; on Windows, avoid DOS short-path aliases.
+
+
 Set validated deployment environment variables and provision that unit's database/role before `bun run start`. Only its source/library closure is exported. See [service integration and migration commands](docs/SERVICE_SYSTEM.md#4-configuration-and-reuse). Core retains identity ownership; Relation/SOS remain domain skeletons for Phases 4/5. Phase 3 is being prepared, not declared started or accepted.
