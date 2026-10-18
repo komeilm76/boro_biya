@@ -38,7 +38,18 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
       const output = join(parent, service);
       const database = await createDatabaseFor(inject('pgAdminUrl'), `standalone_${service}`);
       const password = `disposable-${service}-standalone`;
-      const env = { ...process.env, DB_ADMIN_URL: database.adminConnectionString, SERVICE_DB_PASSWORD: password };
+      const inherited = Object.fromEntries(
+        Object.entries(process.env).filter(
+          ([key]) => !key.toLowerCase().startsWith('npm_') && !['INIT_CWD', 'PWD', 'OLDPWD'].includes(key),
+        ),
+      );
+      const env = {
+        ...inherited,
+        PWD: output,
+        INIT_CWD: output,
+        DB_ADMIN_URL: database.adminConnectionString,
+        SERVICE_DB_PASSWORD: password,
+      };
       const run = (file: string, args: string[], environment: NodeJS.ProcessEnv = env) =>
         execFileSync(file, args, {
           cwd: output,
