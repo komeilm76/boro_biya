@@ -155,20 +155,6 @@ export function exportService(service, output, { root = repositoryRoot } = {}) {
   }
   for (const name of Object.keys(plan.manifest.devDependencies)) selectDependency(name);
   seed.packages = Object.fromEntries(Object.entries(original).filter(([key]) => selected.has(key)));
-  // Bun compares workspace resolutions with native discovered paths on Windows.
-  // Registry package keys/records stay byte-for-byte identical to the reviewed lock.
-  if (process.platform === 'win32') {
-    seed.workspaces = Object.fromEntries(
-      Object.entries(seed.workspaces).map(([path, value]) => [path.replaceAll('/', '\\'), value]),
-    );
-    for (const value of Object.values(seed.packages)) {
-      if (String(value[0]).includes('@workspace:')) {
-        const [name, path] = value[0].split('@workspace:');
-        value[0] = `${name}@workspace:${path.replaceAll('/', '\\')}`;
-      }
-    }
-  }
-
   writeJson(join(output, 'bun.lock'), seed);
   let source = process.env.BUILD_COMMIT ?? 'unknown';
   let dirty = null;
