@@ -28,7 +28,7 @@ bun run loadtest                     # baseline load profile with its pass/fail 
 | 4 | Every identifier is covered by exactly one traceability row, and the file is current | `docs/development/07-traceability.md`; gate checks 3 and 4 | Met |
 | 5 | All critical design questions are resolved or explicitly deferred with owner, phase, and risk | [DECISIONS](../DECISIONS.md) open-questions register (Q-01 … Q-26) | Met |
 | 6 | Every decision that was previously implicit is recorded | [DECISIONS](../DECISIONS.md) ADR-001 … ADR-028 | Met |
-| 7 | Security baseline, threat model, data classification, and plugin threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [plugin threat model](../security/plugin-threat-model.md) | Met |
+| 7 | Security baseline, threat model, data classification, and service threat model are written and internally consistent | [SECURITY](../SECURITY.md), [threat model](../security/threat-model.md), [data classification](../security/data-classification.md), [service threat model](../security/service-threat-model.md) | Met |
 | 8 | Dependency and version baseline is verified from primary sources, with dates and evidence | [dependency policy](02-dependency-policy.md) §3, [REFERENCES](../REFERENCES.md) verification log | Met |
 | 9 | Windows and Linux workflows are documented, including the Docker-based startup contract Phase 1 must satisfy | [development environment](01-development-environment.md) §4 | Met |
 | 10 | Environment configuration template contains placeholders only | `.env.example`; gate check 7 | Met |
@@ -53,7 +53,7 @@ bun run loadtest                     # baseline load profile with its pass/fail 
 | 7 | Formatting, lint, type check, unit, integration, audit, secret, and build gates active in Phase 1 | `bun run gate` exit status | Met — the gate summary table (15 gates) is reproduced in the [Phase 1 report](09-phase-1-report.md); secret scanning runs as the CI `secrets` job plus the documentation gate's pattern check |
 | 8 | Runtime baseline in place: production artefacts build and start on **Node 24 LTS**, Bun serves as the development package manager and script runner, and no Bun-only runtime API is reachable from application code outside an approved adapter ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)) | Decision recorded in DECISIONS; `QA-123` exit status and the artefact smoke output; `OPS-84` deployment notes naming the runtime and tested versions | Met — `QA-123` runs in the CI `gate` job on Node 24 (smoke output quoted in the report); the source scan passes everywhere; deployment notes live in [operations](../operations/README.md); the Bun spike result is recorded in REFERENCES and dependency policy §4 |
 | 9 | Baseline load profile defined for development and CI, with explicit measurable pass/fail criteria, and CI failing on a breach ([ADR-028](../DECISIONS.md#adr-028--configurable-scalability-with-measured-baselines-no-capacity-claims-without-measurement)) | `docs/performance/README.md` baseline table; `QA-124` exit status | Met — the baseline table is filled with its method and first measurement; the breach path is proven (a run against an impossible threshold exits 1; transcript in the report); CI runs it inside `bun run gate` and uploads the report artefact |
-| 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Met — scope statement in the [Phase 1 report](09-phase-1-report.md): no `/api/v1` routes exist, the sign-in page is an honest placeholder, the session store is a documented seam, no map or plugin code is present |
+| 10 | No authentication, map, or business-domain feature implemented yet | Code review scope statement | Met — scope statement in the [Phase 1 report](09-phase-1-report.md): no `/api/v1` routes exist, the sign-in page is an honest placeholder, the session store is a documented seam, no map or service code is present |
 | 11 | Every requirement affiliated with Phase 1 (§4) is implemented and verifiable in Phase 1, with the audit output recorded | `node scripts/gates/traceability.mjs` output and the phase report | Met — traceability passes with 691 requirements mapped, the affiliation and roadmap audits are clean, and the report walks the Phase 1 requirement areas with their evidence or their honest Phase 1 slice |
 | 12 | Wire timestamps are UTC instants under a contract test; one correlation identifier follows a request across service hops; the first migration has a rollback runbook, exercised once | Contract test output, a log sample carrying one correlation identifier, exercise transcript; `API-36`, `SEC-73`, `OPS-81` (declared pull-forward, [GOV-88](00-repository-conventions.md) §8) | Met — `API-36` contract tests (schema + live `/healthz`), the two-service correlation integration test with its log sample, and the full [runbook](../operations/runbooks/failed-migration-rollback.md) exercise transcript are reproduced in the [Phase 1 report](09-phase-1-report.md) |
 
@@ -147,18 +147,18 @@ Historical partial acceptance evidence for rows 7, 8, 9 and 11 (rows 7 and 9 are
 | 7 | Mobile performance measured against the Phase 1 budgets | Measurement record with commit, environment, dataset, command; `QA-29 … QA-33` | Not started |
 | 8 | `Q-10` resolved for routing, traffic, and speed-limit providers | [DECISIONS](../DECISIONS.md) register row updated | Not started |
 
-### Phase 7 — Secure plugin lifecycle
+### Phase 7 — Service integration and rollout hardening
 
-| # | Criterion | Evidence that will prove it | Status |
+| # | Criterion | Evidence | Status |
 | --- | --- | --- | --- |
-| 1 | Package lifecycle end to end: quarantine, validation, signature and trust policy, staged deploy, activate, disable, rollback, uninstall | Lifecycle test per state; `PLG-04 … PLG-34`, `DATA-11`, `DATA-13` | Not started |
-| 2 | Adversarial archive tests pass: traversal, symlinks, bombs, collisions, oversized and nested members | Security suite; `QA-26`, `SEC-29 … SEC-39`, `PT-01 … PT-06` | Not started |
-| 3 | Container-isolation review passes: no host secrets, no Docker socket, bounded network and resources | Review record + tests; `QA-27`, `PLG-47 … PLG-50`, `PLG-51 … PLG-56` | Not started |
-| 4 | Permission model enforced server-side, with capability re-evaluation when a plugin's health changes | Capability tests incl. a health-change case; `PLG-21 … PLG-24`, `PLG-45` | Not started |
-| 5 | Plugin host runs out of process with a service identity, explicit timeouts, bounded retries, and an authenticated channel | The pull-forward slices (`PLG-36`, `PLG-37`, `PLG-39`) completed and verified here | Not started |
-| 6 | Lifecycle audit trail demonstrated for install, configure, enable, disable, upgrade, rollback, uninstall | Audit query; `PLG-46` | Not started |
-| 7 | Dynamic configuration form validated against the strict schema; secrets write-only | Config submission tests; `DATA-13`, API inventory §7 | Not started |
-| 8 | `Q-13` resolved; ZIP-driven installation stays disabled in production until this gate passes | [DECISIONS](../DECISIONS.md) register row + configuration evidence | Not started |
+| 1 | Independent source/image outputs with revision/digest and compatibility evidence | Selected-unit export/build tests and operator release record | Not started |
+| 2 | Configuration and secret injection validated without application code installation | Service configuration and secret-disclosure tests | Not started |
+| 3 | Non-root runtime, resource/egress/volume isolation and no host/Docker socket access | Service threat-model runtime review and constrained-resource test | Not started |
+| 4 | Data-owner scopes and health-change capability denial enforced server-side | `PLG-21 … PLG-24`, `PLG-45`; denial/consent tests | Not started |
+| 5 | Service identity, explicit timeouts/bounded retries and authenticated channels | `PLG-36`, `PLG-37`, `PLG-39` with integration evidence | Not started |
+| 6 | Owned migrations, staged rollout and deliberately failed upgrade/rollback rehearsed | `PLG-28`, `PLG-44`; prior healthy release retained | Not started |
+| 7 | Scoped credential rotation/revocation, decommissioning and attributable evidence | `PLG-43`, `PLG-46`, `DATA-11`; deployment record | Not started |
+| 8 | Q-13 image trust/credential policy resolved; no application package installer | Decision and negative-route/source-boundary tests | Not started |
 
 ### Phase 8 — Android hardening and scale
 
@@ -225,7 +225,7 @@ Phases are sequential for *approval*, not for *all* work: a phase starts only af
 
 | Workstream | May start when | Blocked by |
 | --- | --- | --- |
-| Plugin lifecycle (Phase 7) | Phase 2 gate passes | Nothing in Phases 3–6 for install, isolation, health, and rollback: it needs the admin role, authentication, and the service skeleton. Three pieces are declared pull-forwards (`PLG-36`, `PLG-37`, `PLG-39`) because an isolated host needs a service identity, bounded calls, and an authenticated channel before Phase 4 completes; integration tests that exercise the location scopes still wait for Phase 4. |
+| Service integration (Phase 7) | Phase 2 gate passes | Operator deployment hardening may be prepared independently; domain integration still waits for its data-owner APIs. Declared early slices `PLG-36`, `PLG-37`, `PLG-39` require identity, bounded calls and authenticated channels; no extension host or application installer exists. |
 | Android shell (Phase 8) | Phase 3 gate passes | The PWA it wraps; not by routing or SOS. Load, tuning, and backup/restore work still follows the phases above. |
 | Routing and navigation (Phase 6) | Phase 3 gate passes | Map shell and provider adapters; not by the SOS service. |
 | SOS service (Phase 5) | Phase 4 gate passes | Relation Service (eligibility, blocks, location) and the category catalogue it dispatches on. This is the real critical path: every later phase inherits its contract. |

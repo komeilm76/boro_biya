@@ -6,7 +6,7 @@ import { createIdentityRepository } from '../../src/identity/repository.js';
 
 // Deliberately not a real credential: this fixture tests persistence, not password hashing.
 const HASH_FIXTURE = '$argon2id$v=19$m=65536,t=2,p=1$fixture$not-a-real-credential';
-const migrationsDir = resolve('apps/api/migrations');
+const migrationsDir = resolve('services/core/migrations');
 let database: TestDatabaseHandle;
 let db: Db;
 let runtime: Db;

@@ -35,7 +35,7 @@ const TS_WORKSPACES = [
   'packages/api-client',
   'packages/ui',
   'packages/test-utils',
-  'apps/api',
+  'services/core',
   'services/relation',
   'services/sos',
 ];

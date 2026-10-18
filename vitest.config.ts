@@ -12,10 +12,6 @@ export default defineConfig({
         include: ['packages/*/test/unit/**/*.test.ts'],
       }),
       nodeProject({
-        name: 'api',
-        include: ['apps/api/test/unit/**/*.test.ts'],
-      }),
-      nodeProject({
         name: 'services',
         include: ['services/*/test/unit/**/*.test.ts'],
       }),
@@ -39,18 +35,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reportsDirectory: 'coverage',
-      include: [
-        'packages/*/src/**/*.ts',
-        'apps/api/src/**/*.ts',
-        'apps/web/src/**/*.ts',
-        'apps/web/src/**/*.vue',
-        'services/*/src/**/*.ts',
-      ],
+      include: ['packages/*/src/**/*.ts', 'apps/web/src/**/*.ts', 'apps/web/src/**/*.vue', 'services/*/src/**/*.ts'],
       exclude: [
         '**/*.d.ts',
         '**/dist/**',
         'apps/web/src/main.ts',
-        'apps/api/src/main.ts',
         'services/*/src/main.ts',
         // Modules whose behaviour is exercised end-to-end by the integration run (QA-06/15),
         // the runtime compatibility check (QA-123), and the load baseline (QA-124) rather than

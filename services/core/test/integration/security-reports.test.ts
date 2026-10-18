@@ -204,9 +204,9 @@ describe('native anonymous operator intake and password confirmation quotas', ()
     await expect(auth.authenticate(`Bearer ${grant.accessToken}`)).rejects.toMatchObject({ statusCode: 401 });
   });
   it('reverses and reapplies the application intake migration on a disposable database', async () => {
-    await root.query(await readFile(resolve('apps/api/migrations/0013_security_reports.down.sql'), 'utf8'));
+    await root.query(await readFile(resolve('services/core/migrations/0013_security_reports.down.sql'), 'utf8'));
     expect((await root.query("SELECT to_regclass('core.security_reports') AS table")).rows[0]).toEqual({ table: null });
-    await root.query(await readFile(resolve('apps/api/migrations/0013_security_reports.up.sql'), 'utf8'));
+    await root.query(await readFile(resolve('services/core/migrations/0013_security_reports.up.sql'), 'utf8'));
     expect((await submit()).statusCode).toBe(202);
   });
 });

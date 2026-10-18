@@ -1,6 +1,6 @@
 # Development Workflow
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 This guide summarizes the executable Phase 0–1 workflow and the repository rules. The [onboarding guide](11-developer-onboarding.md) prepares the environment; the [commands and testing reference](15-commands-and-testing.md) gives the command-level details and execution evidence.
 
@@ -8,7 +8,7 @@ This guide summarizes the executable Phase 0–1 workflow and the repository rul
 
 | Path | Responsibility today |
 | --- | --- |
-| `apps/api/` | Core Fastify API skeleton and core-schema migration; no business routes yet |
+| `services/core/` | Core Fastify API skeleton and core-schema migration; no business routes yet |
 | `apps/web/` | Vue 3/Vite client route shell, English/Persian message catalogues, fixed-upstream static server, and web tests |
 | `apps/android/` | Capacitor configuration only; no native shell or Android build |
 | `services/relation/` | Relation Fastify service skeleton and its own schema migration; no relationship APIs yet |

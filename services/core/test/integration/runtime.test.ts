@@ -17,7 +17,7 @@ import { makeCapturedLog } from '@boro-biya/test-utils';
 import { createDatabaseFor, startTestService, type TestDatabaseHandle } from '@boro-biya/test-utils/pg';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
-const MAIN = join(ROOT, 'apps/api/dist/main.js');
+const MAIN = join(ROOT, 'services/core/dist/main.js');
 const PASSWORDS = {
   core: 'itest-core-disposable',
   relation: 'itest-relation-disposable',
@@ -30,7 +30,7 @@ let coreUrl: string;
 beforeAll(async () => {
   if (!existsSync(MAIN)) {
     throw new Error(
-      'apps/api/dist/main.js is missing — the integration run consumes built artefacts; run `bun run build` first',
+      'services/core/dist/main.js is missing — the integration run consumes built artefacts; run `bun run build` first',
     );
   }
   database = await createDatabaseFor(inject('pgAdminUrl'), 'api_runtime');

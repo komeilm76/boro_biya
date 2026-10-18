@@ -1,6 +1,6 @@
 # Environment and Configuration Reference
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 This is the Phase 1 configuration reference, derived from `.env.example`, `packages/config/src/server-config.ts`, the web/Vite source, the development scripts, Dockerfiles, and `docker-compose.yml`. A value shown in `.env.example` is a template suggestion, not necessarily an implemented setting or a runtime default.
 
@@ -91,7 +91,7 @@ The Compose resource-limit variables below are supported by `docker-compose.yml`
 
 ## 5. Template-only settings for later phases
 
-The tables below preserve the Phase 1 template-only classification. The following keys now have a Phase 2 core-API consumer in `apps/api/src/auth/config.ts`; these overrides supersede their historical Phase 1 row:
+The tables below preserve the Phase 1 template-only classification. The following keys now have a Phase 2 core-API consumer in `services/core/src/auth/config.ts`; these overrides supersede their historical Phase 1 row:
 
 | Key | Current default/requirement | Verification |
 | --- | --- | --- |
@@ -176,11 +176,6 @@ The tables below preserve the Phase 1 template-only classification. The followin
 | `AUDIT_LOG_RETENTION_DAYS` | Audit retention window; integer example `0` | Not required; no runtime default/consumer | No. Generator uses `0`; no Phase 1 effect |
 | `OPERATIONAL_RECORD_RETENTION_DAYS` | Operational-record window; integer example `0` | Not required; no runtime default/consumer | No. Generator uses `0`; no Phase 1 effect |
 | `DEPLOYMENT_PROFILE_PATH` | Operator deployment-profile path; path example `./deployment/profile.md` | Not required; no runtime default/consumer | No. Generator uses the example path; no Phase 1 effect |
-| `PLUGIN_INSTALL_ENABLED` | Plugin-installation switch; boolean `false` | Not required; no runtime default/consumer | No. `false`; plugin installation is not implemented |
-| `PLUGIN_TRUST_STORE_PATH` | Publisher trust-store directory; path example `./var/plugin-trust-store` | Not required; no runtime default/consumer | No. Generator uses the example path; no Phase 1 effect |
-| `PLUGIN_MAX_ARCHIVE_BYTES` | Maximum archive size; integer example `52428800` | Not required; no runtime default/consumer | No. Generator uses `52428800`; no Phase 1 effect |
-| `PLUGIN_MAX_EXTRACTED_BYTES` | Maximum extracted archive size; integer example `209715200` | Not required; no runtime default/consumer | No. Generator uses `209715200`; no Phase 1 effect |
-| `PLUGIN_MAX_FILES` | Maximum archive entry count; integer example `2000` | Not required; no runtime default/consumer | No. Generator uses `2000`; no Phase 1 effect |
 
 ## 6. Port and exposure reference
 
@@ -206,7 +201,7 @@ Compose internal communication uses DNS service names and container ports (`api:
 - `TEST_DATABASE_URL` is an optional integration-harness override; see §3.
 - The ten `*_CPU_LIMIT` and `*_MEMORY_LIMIT` Compose substitutions are listed in §4. Compose defaults are the values in `docker-compose.yml`; they are not in `.env.example`.
 
-No map/provider, authentication, location-sharing, upload, push, retention-job, or plugin behaviour can be enabled by setting the template-only values in §5; those variables have no Phase 1 consumer.
+No map/provider, authentication, location-sharing, upload, push, retention-job, or service behaviour can be enabled by setting the template-only values in §5; those variables have no Phase 1 consumer.
 
 
 ### Recovery configuration checkpoint

@@ -8,7 +8,7 @@ import { createDatabaseFor, injectedPgAdminUrl, type TestDatabaseHandle } from '
 import { verifyAuditIntegrity, type AuditCheckpoint } from '../../src/audit/integrity.js';
 let database: TestDatabaseHandle, db: Db, root: Db;
 let runtimeUrl = '';
-const migrationsDir = resolve('apps/api/migrations');
+const migrationsDir = resolve('services/core/migrations');
 beforeAll(async () => {
   database = await createDatabaseFor(injectedPgAdminUrl(), 'audit_integrity');
   await initCluster({

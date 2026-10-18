@@ -2,12 +2,12 @@
 
 Thanks for helping. The full rules live in the documentation; this file is the short path to them.
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## Before you start
 
 1. Read [docs/MASTER_PROJECT_PROMPT.md](docs/MASTER_PROJECT_PROMPT.md) — it defines the mission, the technology direction, and the engineering rules.
-2. Read the documents that cover your change. Almost every change touches one of: [PRODUCT_REQUIREMENTS](docs/PRODUCT_REQUIREMENTS.md), [ARCHITECTURE](docs/ARCHITECTURE.md), [SECURITY](docs/SECURITY.md), [DATA_MODEL](docs/DATA_MODEL.md), [API_AND_OPENAPI](docs/API_AND_OPENAPI.md), [PLUGIN_SYSTEM](docs/PLUGIN_SYSTEM.md).
+2. Read the documents that cover your change. Almost every change touches one of: [PRODUCT_REQUIREMENTS](docs/PRODUCT_REQUIREMENTS.md), [ARCHITECTURE](docs/ARCHITECTURE.md), [SECURITY](docs/SECURITY.md), [DATA_MODEL](docs/DATA_MODEL.md), [API_AND_OPENAPI](docs/API_AND_OPENAPI.md), [SERVICE_SYSTEM](docs/SERVICE_SYSTEM.md).
 3. Check [DECISIONS](docs/DECISIONS.md) before assuming anything is decided: the open-question register lists what is still unresolved and who owns it. Choosing silently is not allowed.
 4. Check [ROADMAP](docs/ROADMAP.md) for the current phase. Do not implement later-phase work early.
 5. For orientation, [DIAGRAMS](docs/DIAGRAMS.md) shows the topology, flows, and lifecycles, and [GLOSSARY](docs/GLOSSARY.md) explains the words this project uses in its own way.
@@ -38,7 +38,7 @@ For a complete Phase 0–1 environment and architecture walkthrough, start with 
    ```
 
 4. Open a pull request using the repository template, filling in the requirement IDs and the real gate results (command + exit status). "Tests pass" without a command is not evidence.
-5. Security-sensitive changes (authentication, authorization, crypto, uploads, plugin loading, location sharing, release workflows) need a second reviewer where one is available.
+5. Security-sensitive changes (authentication, authorization, crypto, uploads, service loading, location sharing, release workflows) need a second reviewer where one is available.
 
 ## Style
 

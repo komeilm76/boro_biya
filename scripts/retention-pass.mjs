@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Application maintenance entry, not a scheduler or a general erasure facility.
 import { createDb } from '../packages/db/dist/index.js';
-import { readAuthConfig } from '../apps/api/dist/auth/config.js';
-import { runRetentionPass } from '../apps/api/dist/privacy/retention.js';
+import { readAuthConfig } from '../services/core/dist/auth/config.js';
+import { runRetentionPass } from '../services/core/dist/privacy/retention.js';
 let db;
 try {
   if (process.argv.length !== 2 || !process.env['DATABASE_URL']) throw new Error('configuration');

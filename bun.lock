@@ -32,7 +32,7 @@
         "@capacitor/cli": "8.5.3",
       },
     },
-    "apps/api": {
+    "services/core": {
       "name": "@boro-biya/api",
       "version": "0.1.0",
       "dependencies": {
@@ -214,7 +214,7 @@
 
     "@boro-biya/android": ["@boro-biya/android@workspace:apps/android"],
 
-    "@boro-biya/api": ["@boro-biya/api@workspace:apps/api"],
+    "@boro-biya/api": ["@boro-biya/api@workspace:services/core"],
 
     "@boro-biya/api-client": ["@boro-biya/api-client@workspace:packages/api-client"],
 

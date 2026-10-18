@@ -46,7 +46,7 @@ const mix = baseline.profile.mix;
 const requestTimeoutMs = baseline.profile.requestTimeoutMs;
 
 const requiredArtefacts = [
-  'apps/api/dist/main.js',
+  'services/core/dist/main.js',
   'packages/test-utils/dist/pg/index.js',
   'packages/db/dist/index.js',
 ];
@@ -88,7 +88,7 @@ const coreUrl = serviceConnectionString(database.adminConnectionString, coreServ
 
 process.stdout.write('loadtest: starting the core API artefact...\n');
 const apiLogs = [];
-const api = spawn(process.execPath, [join(ROOT, 'apps/api/dist/main.js')], {
+const api = spawn(process.execPath, [join(ROOT, 'services/core/dist/main.js')], {
   cwd: ROOT,
   env: {
     ...process.env,

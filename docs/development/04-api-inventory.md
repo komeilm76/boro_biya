@@ -2,7 +2,7 @@
 
 Planned endpoints, grouped by area, with the access level and the phase that delivers them. This inventory includes implemented and planned endpoints; the implementation checkpoint below is authoritative for availability. Conventions, error envelopes, validation, and contract generation are defined in [API_AND_OPENAPI](../API_AND_OPENAPI.md). Access levels: **public** (no authentication), **auth** (authenticated user), **admin** (authenticated administrator with an explicit check), **internal** (service-to-service only, never publicly reachable).
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 Base path: `/api/v1`. Infrastructure paths (`/healthz`, `/readyz`, metrics) are not part of this inventory and are documented in [ARCHITECTURE](../ARCHITECTURE.md) §8.
 
@@ -147,20 +147,11 @@ Live location updates reach a granted viewer over the authenticated event stream
 | POST | `/streams/ticket` | auth | Implemented Phase 2 core-security scope only: bearer/origin/CSRF, persisted quotas, empty body, hashed one-shot ticket bound to user/session and at most 15-second/access expiry |
 | GET | `/streams/events` | auth (ticket) | Implemented Phase 2 core-security notices only: strict ticket/cursor, owner-filtered bounded replay, one terminal own-credential-revocation notice, lease/access expiry and state rechecks; general streams remain planned |
 
-## 7. Plugin lifecycle (Phase 7)
+## 7. Service integration (Phase 7)
 
-| Method | Path | Access | Notes |
-| --- | --- | --- | --- |
-| GET | `/admin/plugins` | admin | Installed plugins, versions, status, capabilities |
-| POST | `/admin/plugins/packages` | admin | Upload to quarantine; re-authentication + CSRF required; size/rate limited |
-| POST | `/admin/plugins/:id/validate` | admin | Runs structural/manifest/signature/dependency checks |
-| POST | `/admin/plugins/:id/stage` | admin | Staged isolated deployment with limits |
-| POST | `/admin/plugins/:id/activate` `/disable` | admin | Requires health check success; audited |
-| POST | `/admin/plugins/:id/rollback` | admin | Restores the previous version; audited |
-| DELETE | `/admin/plugins/:id` | admin | Uninstall; revokes credentials and stops workloads |
-| GET | `/admin/plugins/:id/config-schema` | admin | Strict schema for the dynamic form |
-| PUT | `/admin/plugins/:id/config` | admin | Server-side schema validation; secrets write-only |
-| GET | `/admin/plugins/:id/events` | admin | Lifecycle/audit trail |
+No application package-upload, validation, staging, activation, rollback, uninstall or dynamic configuration-schema endpoints exist or are planned. Operators deploy independently reviewed service images/source units outside core. Phase 7 verifies identity, configuration/credential policy, compatibility, capability denial, deployment evidence and rollback; it does not expose remote code execution through `/admin`.
+
+Service domain endpoints stay in their own phase sections. Core's published 43 JSON operations and SSE contract are unchanged. No domain upstream is enabled before its identity and user-authorisation adapter is implemented and tested.
 
 ## 8. Internal (service-to-service only)
 

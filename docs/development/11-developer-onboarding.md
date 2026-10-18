@@ -1,12 +1,12 @@
 # Developer Onboarding
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 This guide takes a new contributor from a clean checkout to a working Phase 0–1 local environment. Read commands from top to bottom and choose one database/run mode where indicated. Commands are shown for the repository root unless a step says otherwise.
 
 ## 1. What this checkout contains
 
-Phase 0 and Phase 1 are marked complete and owner-approved in the [roadmap](../ROADMAP.md). The current code is a development foundation: a Vue route shell, a core Fastify API skeleton, Relation and SOS service skeletons, shared TypeScript packages, PostgreSQL migration/bootstrap tooling, and a local/CI Compose stack. There are no authentication, map, navigation, location-sharing, SOS business workflows, plugin-installation, or native Android features in this build. See the [implementation-status guide](17-implementation-status.md) before treating a roadmap item as implemented.
+Phase 0 and Phase 1 are marked complete and owner-approved in the [roadmap](../ROADMAP.md). The current code is a development foundation: a Vue route shell, a core Fastify API skeleton, Relation and SOS service skeletons, shared TypeScript packages, PostgreSQL migration/bootstrap tooling, and a local/CI Compose stack. There are no authentication, map, navigation, location-sharing, SOS business workflows, service-installation, or native Android features in this build. See the [implementation-status guide](17-implementation-status.md) before treating a roadmap item as implemented.
 
 ## 2. Prerequisites
 

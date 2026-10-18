@@ -41,7 +41,9 @@
     "check:telemetry": "node scripts/check-telemetry.mjs",
     "check:images": "node scripts/check-images.mjs",
     "loadtest": "node scripts/loadtest.mjs",
-    "start:api": "node apps/api/dist/main.js",
+    "service:export": "node scripts/services/export.mjs",
+    "service:migrate": "node scripts/services/migrate.mjs",
+    "start:api": "node services/core/dist/main.js",
     "start:relation": "node services/relation/dist/main.js",
     "start:sos": "node services/sos/dist/main.js",
     "start:web": "node apps/web/server/serve.mjs"

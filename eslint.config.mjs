@@ -11,7 +11,7 @@ import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
 const backendTsFiles = [
-  'apps/api/**/*.ts',
+  'services/core/**/*.ts',
   'services/**/*.ts',
   'packages/api-client/**/*.ts',
   'packages/config/**/*.ts',

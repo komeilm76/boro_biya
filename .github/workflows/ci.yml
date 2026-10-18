@@ -280,6 +280,7 @@ jobs:
             const roots = ["/repo/node_modules", "/repo/node_modules/.bun/node_modules"];
             const absent = ["embedded-postgres", "@embedded-postgres/linux-x64", "vite", "vue", "typescript", "@boro-biya/test-utils", "@boro-biya/web"];
             const present = ["fastify", "zod", "pg"];
+            for (const path of ["/repo/services/relation", "/repo/services/sos", "/repo/apps", "/repo/.env"]) if (existsSync(path)) { console.error(`unrelated source/secret in core image: ${path}`); process.exit(1); }
             const found = (name) => roots.some((root) => existsSync(`${root}/${name}`));
             for (const name of absent) if (found(name)) { console.error(`unexpected package in backend image: ${name}`); process.exit(1); }
             for (const name of present) if (!found(name)) { console.error(`missing runtime package in backend image: ${name}`); process.exit(1); }
@@ -466,7 +467,7 @@ jobs:
           TAG_VERSION="${GITHUB_REF_NAME#v}" node -e '
             const fs = require("node:fs");
             const tag = process.env.TAG_VERSION;
-            const files = ["package.json", "apps/api/package.json", "apps/web/package.json", "services/relation/package.json", "services/sos/package.json"];
+            const files = ["package.json", "services/core/package.json", "apps/web/package.json", "services/relation/package.json", "services/sos/package.json"];
             for (const file of files) {
               const version = JSON.parse(fs.readFileSync(file, "utf8")).version;
               if (version !== tag) { console.error(`${file} says ${version}, tag says ${tag}`); process.exit(1); }
@@ -487,7 +488,7 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           mkdir -p release
           tar -czf "release/boro-biya-backend-${version}.tar.gz" \
-            apps/api/dist apps/api/package.json \
+            services/core/dist services/core/package.json \
             services/relation/dist services/relation/package.json \
             services/sos/dist services/sos/package.json \
             packages/*/dist packages/*/package.json \

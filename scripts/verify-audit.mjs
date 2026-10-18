@@ -3,7 +3,7 @@
 // independently controlled location, not in the database whose integrity it anchors.
 import { readFileSync } from 'node:fs';
 import { createDb } from '../packages/db/dist/index.js';
-import { parseAuditCheckpoint, verifyAuditIntegrity } from '../apps/api/dist/audit/integrity.js';
+import { parseAuditCheckpoint, verifyAuditIntegrity } from '../services/core/dist/audit/integrity.js';
 let db;
 try {
   const args = process.argv.slice(2);

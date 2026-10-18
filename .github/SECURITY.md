@@ -1,6 +1,6 @@
 # Security Policy
 
-Owner: Security. Reviewed: 2026-10-17.
+Owner: Security. Reviewed: 2026-10-18.
 
 This document defines how to report security vulnerabilities in `komeilm76/boro_biya`, what response to expect, and how reports are handled while the project is in pre-release development.
 
@@ -14,7 +14,7 @@ GitHub serves `.github/SECURITY.md` as the repository's security policy. The eng
 - **Account requirement:** Submitting a private report through GitHub Private Vulnerability Reporting requires signing in with a **GitHub account** and having access to this repository on GitHub. (The unauthenticated in-application reporting route for end users and suspected account compromise in a running product deployment is tracked separately under [SEC-74](../docs/SECURITY.md#9-observability-and-incident-response) for Phase 2: the development `/_public/report` form now accepts account-compromise, abuse and vulnerability reports into that installation’s private operator inbox without any account. See the [operator runbook](../docs/operations/runbooks/account-compromise-report.md) and [user guide](../docs/user/README.md#reporting-security-concerns-development-preview). No real end-user deployment is currently operated.)
 - **Coordinated disclosure:** Do **not** disclose vulnerability details publicly — in GitHub issues, pull requests, discussions, commit comments, or external channels — before the report has been triaged and coordinated disclosure is agreed.
 - **What to include in a report:** Provide enough actionable detail to reproduce and assess the issue without guesswork:
-  1. **Affected version or commit:** the exact commit SHA on `main`, branch name, or non-production tag (such as `v0.1.0`), and the affected workspace or file path (`apps/api`, `apps/web`, `services/relation`, `services/sos`, `packages/*`, `docker/*`, `scripts/*`, or `.github/workflows/*`).
+  1. **Affected version or commit:** the exact commit SHA on `main`, branch name, or non-production tag (such as `v0.1.0`), and the affected workspace or file path (`services/core`, `apps/web`, `services/relation`, `services/sos`, `packages/*`, `docker/*`, `scripts/*`, or `.github/workflows/*`).
   2. **Impact:** what an attacker could achieve, which security control or asset in [`docs/SECURITY.md`](../docs/SECURITY.md) or [`docs/security/threat-model.md`](../docs/security/threat-model.md) is bypassed or threatened, and the realistic scope of exposure.
   3. **Reproduction steps:** minimal, deterministic steps, commands, HTTP requests, or proof-of-concept code that demonstrate the issue.
   4. **Prerequisites:** required runtime, environment configuration, account or role state, network conditions, or container setup.

@@ -2,7 +2,7 @@
 
 Phases are sequential. Each phase ends with recorded evidence, not a status claim, and the repository owner approves the transition. Requirement identifiers referenced below are defined in the registry documents and mapped to phases in [traceability](development/07-traceability.md). The gate catalogue that each phase must run is in [CI and gates](development/03-ci-and-gates.md).
 
-Owner: Repo owner. Reviewed: 2026-10-17.
+Owner: Repo owner. Reviewed: 2026-10-18.
 
 ## Phase 0 — Repository foundation and documentation
 
@@ -14,9 +14,9 @@ Deliverables and evidence:
 | --- | --- |
 | Documentation structure with developer and user audiences separated | [`docs/`](README.md) index with an owner and review date per document; `/docs/user/` contains no internal identifiers |
 | Repository conventions and code/commit/review rules | [repository conventions](development/00-repository-conventions.md) |
-| Architecture, threat model, data classification, data model, plugin trust model | [ARCHITECTURE](ARCHITECTURE.md), [threat model](security/threat-model.md), [data classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [plugin threat model](security/plugin-threat-model.md) |
+| Architecture, threat model, data classification, data model, service trust model | [ARCHITECTURE](ARCHITECTURE.md), [threat model](security/threat-model.md), [data classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [service threat model](security/service-threat-model.md) |
 | Architecture decisions and open questions with owner and deadline | [DECISIONS](DECISIONS.md) — ADR-001 … ADR-028, register Q-01 … Q-26 |
-| Version/dependency policy with verified current versions | [dependency policy](development/02-dependency-policy.md) with verification date 2026-10-13 |
+| Version/dependency policy with verified current versions | [dependency policy](development/02-dependency-policy.md) with verification date 2026-10-18 |
 | Windows/Linux developer workflows and the Docker-based startup contract that Phase 1 must satisfy | [development environment](development/01-development-environment.md) §4 |
 | Environment configuration template | [`.env.example`](../.env.example) |
 | API conventions, inventory, and toolchain verification | [API and OpenAPI](API_AND_OPENAPI.md), [API inventory](development/04-api-inventory.md) |
@@ -80,13 +80,13 @@ Deliver: routing provider adapter (MAP-13) with car/bicycle/foot alternatives, r
 
 Exit gate: documented provider limits with graceful fallback; mobile performance measured against the Phase 1 budgets; no fabricated data (speed limits, traffic, instructions) anywhere in the UI; Q-10 resolved for routing, traffic, and speed-limit providers.
 
-## Phase 7 — Secure plugin lifecycle
+## Phase 7 — Service integration and rollout hardening
 
 **Status: Not started.**
 
-Deliver: manifest and configuration schema, upload quarantine, archive validation, provenance and signature policy, isolated build/run environment, permission model, resource limits, health checks, enable/disable/upgrade/rollback with credential revocation and a lifecycle audit trail, capability re-evaluation when health changes, and the dynamic configuration UI (PLG-43 … PLG-46).
+Deliver: operator-deployed independent images, source/image provenance, strict configuration and credential policy, authenticated service identities, scoped permissions, bounded calls/resources/network, health-based capability denial, compatibility checks, owned migrations, staged rollout and attributable deployment evidence. There is no application package installer or extension host ([ADR-030](DECISIONS.md#adr-030--independent-reusable-services-with-no-application-package-installer)). Current source export/isolation does not imply full rollout controls are implemented.
 
-Exit gate: adversarial archive tests and the container-isolation review pass; the plugin threat-model tests exist and pass; capability re-evaluation on a health change and the lifecycle audit trail are demonstrated (PLG-45, PLG-46); Q-13 resolved. ZIP-driven installation remains disabled in production until this gate passes.
+Exit gate: service threat-model tests, runtime isolation/secret handling, resource/egress boundaries, credential rotation/revocation, failed-rollout rollback and audit evidence pass; capabilities are re-evaluated on health change (`PLG-45`, `PLG-46`); Q-13 image trust/credential policy is resolved. No phase enables ZIP-driven installation.
 
 ## Phase 8 — Android hardening and scale
 
@@ -117,3 +117,9 @@ For each phase, report:
 - Performance and resource impact.
 - Known issues, deferred work, and any requirement withdrawn or re-scoped (with reason).
 - Whether the phase gate passed, and who approved it.
+
+## Architecture replacement and Phase 3 preparation (2026-10-18)
+
+The owner authorised replacement of the plugin/ZIP model and preparation for Phase 3. Backend units are grouped under `services/`, independently exportable with only their required library closure; public core authentication APIs stay unchanged. See [ADR-030](DECISIONS.md#adr-030--independent-reusable-services-with-no-application-package-installer) and [SERVICE_SYSTEM](SERVICE_SYSTEM.md).
+
+Phase 3 remains **Not started**. Before its implementation, review the existing Q-06/Q-10 map/search-provider and geospatial decisions, prototype/benchmark scope, resource budgets, test fixtures and gate checklist. No provider is selected or dependency upgraded by this preparation. Phase 2's missing reader/native-zoom observations and final owner exit approval remain explicitly open; preparation is not acceptance or merge authorisation.

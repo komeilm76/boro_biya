@@ -1,6 +1,6 @@
 # Runbook: account compromise report
 
-Owner: Security. Reviewed: 2026-10-17.
+Owner: Security. Reviewed: 2026-10-18.
 
 This is the Phase 2 operator path for `SEC-74`, covering suspected account compromise, abuse and vulnerabilities submitted without signing in. It is not emergency response, proof of account ownership, automatic recovery or the later production incident-response procedure. No end-user deployment is currently operated.
 
@@ -45,4 +45,4 @@ Keep a private incident register keyed by report UUID. Scan the latest page on e
 - 500/network uncertainty: check the inbox and correlated audit privately before assuming non-delivery. A database/audit failure rolls the intake transaction back; a response lost after commit does not.
 - CLI failure: verify the build, protected configuration and database availability. Diagnostics omit submitted text and connection strings. Do not paste credentials or reporter content into a public support issue.
 
-Development rehearsal, 2026-10-17: `apps/api/test/integration/security-reports.test.ts` submits a signed-out synthetic report through the real HTTP adapter, reads it after reconnect, verifies audit integrity and content-free application logs, and retrieves the private inbox with the actual CLI and a second-page cursor. It also proves validation/CSRF/body bounds, restart/concurrent/global quotas, rollback, protected runtime grants and reversible migration. This is an automated disposable PostgreSQL rehearsal, not a staffed production incident or human/device acceptance exercise.
+Development rehearsal, 2026-10-17: `services/core/test/integration/security-reports.test.ts` submits a signed-out synthetic report through the real HTTP adapter, reads it after reconnect, verifies audit integrity and content-free application logs, and retrieves the private inbox with the actual CLI and a second-page cursor. It also proves validation/CSRF/body bounds, restart/concurrent/global quotas, rollback, protected runtime grants and reversible migration. This is an automated disposable PostgreSQL rehearsal, not a staffed production incident or human/device acceptance exercise.

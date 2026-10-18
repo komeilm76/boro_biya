@@ -66,7 +66,7 @@ const REGISTRY_DOCS = [
   'PRODUCT_REQUIREMENTS.md',
   'SECURITY.md',
   'ARCHITECTURE.md',
-  'PLUGIN_SYSTEM.md',
+  'SERVICE_SYSTEM.md',
   'API_AND_OPENAPI.md',
   'QUALITY_GATES.md',
   'DATA_MODEL.md',
@@ -76,7 +76,7 @@ const REGISTRY_DOCS = [
   'development/03-ci-and-gates.md',
   'development/06-release-plan.md',
   'security/data-classification.md',
-  'security/plugin-threat-model.md',
+  'security/service-threat-model.md',
   'performance/README.md',
   'operations/README.md',
 ];
@@ -106,7 +106,7 @@ const PHASE_RULES = [
   ['UI', 10, 10, 2], // sessions/account-state settings land with the account lifecycle
   ['UI', 11, 13, 3], // appearance, locale, and permission status (map phase)
   ['UI', 14, 14, 5], // notification preferences ship with notifications
-  ['UI', 15, 15, 7], // plugin settings appear only once plugins exist
+  ['UI', 15, 15, 7], // service settings appear only once services exist
   ['UI', 16, 20, 3], // accessibility, empty/error states, offline behaviour
   ['UI', 21, 22, 2], // message catalogue and RTL scaffolding, before user-facing screens ship
   ['UI', 23, 24, 3], // contrast/state rules reviewed with the accessibility gate
@@ -134,7 +134,7 @@ const PHASE_RULES = [
   // Security controls
   ['SEC', 1, 3, 1], // baseline and mapping (fail-closed, category mapping)
   ['SEC', 4, 28, 2], // credentials, lockout, authorization
-  ['SEC', 29, 39, 7], // plugin ZIP surface (enabled in Phase 7)
+  ['SEC', 29, 39, 7], // service deployment boundary (full hardening in Phase 7)
   ['SEC', 40, 49, 2], // API/transport/validation
   ['SEC', 50, 56, 5], // image and file handling (first real uploads in SOS)
   ['SEC', 57, 57, 1], // structured logging and redaction (Phase 1 skeleton)
@@ -187,16 +187,16 @@ const PHASE_RULES = [
   ['OPS', 88, 89, 1], // server harness and database/migration packages, created with the skeleton (ADR-029)
   ['OPS', 90, 91, 2], // migration lock and statement bounds, before the first data-bearing tables (Phase 1 exit review)
 
-  // Plugin/service contracts
+  // Service/service contracts
   ['PLG', 1, 3, 1],
   ['PLG', 4, 34, 7], // manifest, upload/install workflow, configuration form
   ['PLG', 35, 40, 4], // service lifecycle and API contract (first used by Relation/SOS)
   ['PLG', 41, 41, 4], // Relation unavailable: private location fails closed
   ['PLG', 42, 42, 5], // SOS unavailable: SOS actions hidden or disabled
-  ['PLG', 43, 46, 7], // plugin disable/uninstall, upgrades, capability re-evaluation, lifecycle audit
+  ['PLG', 43, 46, 7], // service disable/uninstall, upgrades, capability re-evaluation, lifecycle audit
   ['PLG', 47, 50, 7], // resource controls for untrusted containers
-  ['PLG', 51, 56, 7], // prohibited shortcuts in the plugin threat model
-  ['PLG', 57, 57, 7], // plugin interface text is declared per locale when the plugin UI exists
+  ['PLG', 51, 56, 7], // prohibited shortcuts in the service threat model
+  ['PLG', 57, 57, 7], // service interface text is declared per locale when the service UI exists
 
   // API contracts
   ['API', 1, 19, 1], // contract-first policy and conventions (tooling + skeleton)
@@ -299,7 +299,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: a service identity for its calls',
+        'the service workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: a service identity for its calls',
     },
   ],
   [
@@ -307,7 +307,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
+        'the service workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: explicit timeouts and bounded retries before the service contract phase completes',
     },
   ],
   [
@@ -315,7 +315,7 @@ const PULL_FORWARD = new Map([
     {
       into: 3,
       reason:
-        'the plugin workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: the plugin host must reach core services over an authenticated channel or not at all',
+        'the service workstream may run in parallel from the Phase 2 gate (checklist §6), so the earliest phase it can need this is 3: the independently deployed service must reach core services over an authenticated channel or not at all',
     },
   ],
 ]);
@@ -670,7 +670,7 @@ function render(reqs, rows, perPhaseId) {
     'Do not edit by hand: change the requirement documents or the phase mapping in the generator, then regenerate.',
   );
   lines.push('');
-  lines.push('Owner: Engineering. Reviewed: 2026-10-14.');
+  lines.push('Owner: Engineering. Reviewed: 2026-10-18.');
   lines.push('');
   lines.push(
     'Each row groups requirements that share a document, a section, and a phase. The range column shows the first and last identifier in the row and the count column shows how many requirements it holds, so a row may skip identifiers that are affiliated with another phase. A requirement may be extended or hardened in a later phase; the phase below is where it starts.',

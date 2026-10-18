@@ -1,12 +1,12 @@
 # Code owners (QA-81): changes to security-sensitive files require explicit approval from a
 # designated owner. Paths follow the Phase 1 tree; later phases extend this list (auth, crypto,
-# uploads, plugins) as those directories appear.
+# uploads, services) as those directories appear.
 /.github/ @komeilm76
 /scripts/gates/ @komeilm76
 /packages/server-runtime/ @komeilm76
 /packages/config/ @komeilm76
 /packages/db/ @komeilm76
-/apps/api/src/ @komeilm76
+/services/core/src/ @komeilm76
 /apps/web/server/ @komeilm76
 /services/ @komeilm76
 /docker/ @komeilm76

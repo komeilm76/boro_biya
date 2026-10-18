@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Read-only operator inspection. Requires a build and the existing DATABASE_URL environment.
 import { createDb } from '../packages/db/dist/index.js';
-import { readSecurityAlerts } from '../apps/api/dist/audit/alerts.js';
+import { readSecurityAlerts } from '../services/core/dist/audit/alerts.js';
 let db;
 try {
   const args = process.argv.slice(2);

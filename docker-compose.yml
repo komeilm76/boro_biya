@@ -60,9 +60,10 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      target: migrations
       args:
-        SERVICE_MAIN: apps/api/dist/main.js
-    image: boro-biya/api:dev
+        SERVICE: core
+    image: boro-biya/migrations:dev
     command: ["node", "packages/db/dist/cli.js", "init-cluster"]
     environment:
       NODE_ENV: production
@@ -81,8 +82,8 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: apps/api/dist/main.js
-    command: ["node", "apps/api/dist/main.js"]
+        SERVICE: core
+    command: ["node", "services/core/dist/main.js"]
     environment: &backend-env
       NODE_ENV: production
       API_HOST: 0.0.0.0
@@ -144,7 +145,7 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: services/relation/dist/main.js
+        SERVICE: relation
     command: ["node", "services/relation/dist/main.js"]
     environment:
       <<: *backend-env
@@ -185,7 +186,7 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: services/sos/dist/main.js
+        SERVICE: sos
     command: ["node", "services/sos/dist/main.js"]
     environment:
       <<: *backend-env

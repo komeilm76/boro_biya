@@ -63,7 +63,7 @@ Constructs that must have explicit fixtures: nullable/optional distinctions, uni
 
 ## 6. API surface planning
 
-Endpoint inventories are created during Phase 0 and implemented per phase; the current inventory is in [API inventory](development/04-api-inventory.md). Groups: auth, sessions, users, admin, map/geocoding adapter, relation, SOS, notifications, plugin lifecycle, health/metrics. Each endpoint is marked public, authenticated, admin-only, or internal, and carries the phase in which it is delivered.
+Endpoint inventories are created during Phase 0 and implemented per phase; the current inventory is in [API inventory](development/04-api-inventory.md). Groups: auth, sessions, users, admin, map/geocoding adapter, relation, SOS, notifications, service lifecycle, health/metrics. Each endpoint is marked public, authenticated, admin-only, or internal, and carries the phase in which it is delivered.
 
 
 ## 7. Phase 2 core security stream implementation

@@ -11,8 +11,8 @@ import { startTestDatabaseServer } from '../../packages/test-utils/dist/pg/index
 import { createDb, initCluster } from '../../packages/db/dist/index.js';
 import { makeServerConfigFixture } from '../../packages/test-utils/dist/index.js';
 import { createLogger, createMetricsRegistry } from '../../packages/server-runtime/dist/index.js';
-import { buildApp } from '../../apps/api/dist/app.js';
-import { createAuthService } from '../../apps/api/dist/auth/service.js';
+import { buildApp } from '../../services/core/dist/app.js';
+import { createAuthService } from '../../services/core/dist/auth/service.js';
 import { runAccessibilityBrowserChecks } from './accessibility-browser.mjs';
 import { runChallengeBrowserEdges } from './challenge-browser.mjs';
 import { runRecoveryBrowserEdges } from './recovery-browser.mjs';

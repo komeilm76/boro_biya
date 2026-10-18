@@ -2,7 +2,9 @@
 
 Historical Phase 1 boundary review and evidence, with the owner’s closing decisions recorded on 2026-10-17. Sections 5–6 preserve historical evidence, not an instruction to repeat the review or undertake hardening.
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
+
+The original review below is historical. ADR-030 (2026-10-18) supersedes its package-installer/extension-host assumptions; current paths and PLG references are migration cross-references, not a claim that these historical commands were re-run. Current architecture and evidence are recorded in [implementation status](17-implementation-status.md#45-independent-service-architecture-replacement-and-three-pass-review-2026-10-18).
 
 ## 1. Scope and method
 
@@ -53,7 +55,7 @@ Correcting the two links in the Phase 0 review record changes navigation only; t
 | 18 | `QA-13` — the Android build gate | Fixture fidelity | `packages/test-utils` (source and test) | `GOV-67` — fixtures come from shared builders |
 | 19 | `QA-99` — contract diff reviewed | Packaging artefacts and checksums | `ci.yml` release job | `QA-50` — the artefact set, checksums included |
 | 20 | `QA-48` to `QA-56` as "release mechanics" — `QA-55` and `QA-56` are gate exceptions | The release-mechanics job | `ci.yml` header, `CHANGELOG.md` | `QA-48` … `QA-54`, the release-process section |
-| 21 | `ADR-002` — plugin ZIP security | Semantic Versioning | `CHANGELOG.md` | `QA-48`, `QA-87` |
+| 21 | `ADR-002` — service ZIP security | Semantic Versioning | `CHANGELOG.md` | `QA-48`, `QA-87` |
 | 22 | `ADR-004` — realtime transport | "SQL-first, no ORM" for `pg`, a rule no decision records | dependency policy §3 | What [ADR-029](../DECISIONS.md#adr-029--phase-1-infrastructure-is-owned-minimal-implementations-behind-swappable-interfaces) and `SEC-42` do say: the only new runtime dependency, used through the bounded pool with parameterized SQL |
 | 23 | `OPS-78` — run the active gates and report the real exit status | Configurable Compose host ports | `.env.example` | `OPS-67` — configuration through environment variables |
 | 24 | `SEC-24` — mass assignment | The password-recovery diagram | [DIAGRAMS](../DIAGRAMS.md) §5.2 `Cited:` line | `SEC-07`, `SEC-12` — what the diagram draws |

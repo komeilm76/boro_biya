@@ -2,7 +2,7 @@
 
 Requirement identifiers (`OPS-…`, `MAP-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate.
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## 1. High-level topology
 
@@ -23,12 +23,12 @@ Constraints:
 
 ## 2. Service boundaries
 
-- **[OPS-10]** The Core API owns identity, sessions, roles, account lifecycle, profile identity, user preferences, audit records, the plugin registry/install metadata, and integration contracts.
+- **[OPS-10]** The Core API owns identity, sessions, roles, account lifecycle, profile identity, user preferences, audit records, integration contracts, and no executable package registry.
 - **[OPS-11]** The Relation Service owns follow requests, blocks, accepted relationships, relationship-specific preferences, live-sharing sessions and their per-follower grants (`live_share_sessions`, `live_share_grants`), history-share grants (`history_share_grants`), the immediate location row, and the retention-bounded location trail (`user_location_history`). It consumes stable user IDs from the core and MUST NOT create a second identity system.
 - **[OPS-12]** The SOS Service owns SOS records, the categories an alert carries (`sos_alert_categories`), dispatch suggestions, claims/tasks, task transitions, and SOS-specific notifications. The assistance-category catalogue and each user's single category are core data (OPS-10) and are read using the rule in OPS-80. It uses core user IDs and a defined authorization mechanism.
 - **[OPS-13]** Each service exposes versioned APIs, health and readiness checks, metrics, and structured logs. Internal endpoints are not publicly reachable unless explicitly required.
 - **[OPS-14]** Service-to-service calls are authenticated (mTLS or short-lived signed service tokens with a documented audience and scope) and follow least privilege. Service tokens are never reused for user-facing authorization.
-- **[OPS-15]** A service MUST NOT depend on another service's availability for authentication or login. Plugin unavailability degrades features, never sign-in.
+- **[OPS-15]** A service MUST NOT depend on another service's availability for authentication or login. Service unavailability degrades features, never sign-in.
 - **[OPS-16]** Cross-service reads and writes go through APIs or published events, never through direct table access.
 - **[OPS-80]** SOS dispatch applies the category filter inside the SOS Service, using category data obtained through the core API or published events (OPS-16); the SOS Service never reads core tables directly, and the candidate set is bounded before distance ordering so the filter cannot be bypassed by a large radius.
 
@@ -79,7 +79,7 @@ Rules:
 Workspace layout:
 
 - **[OPS-28]** `apps/web` — Vue web/PWA application.
-- **[OPS-29]** `apps/api` — core Fastify API.
+- **[OPS-29]** `services/core` — core Fastify API.
 - **[OPS-30]** `apps/android` — Capacitor/Ionic Android packaging configuration, if it cannot be maintained cleanly inside `apps/web`.
 - **[OPS-31]** `services/relation` — Relation Service.
 - **[OPS-32]** `services/sos` — SOS Service.

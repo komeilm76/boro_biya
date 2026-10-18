@@ -2,7 +2,7 @@
 
 How versions are chosen, verified, pinned, updated, and licensed. The verified baseline below is the record that Phase 0 required; it is re-verified at every phase boundary and before every release.
 
-Owner: Engineering. Reviewed: 2026-10-17. Baseline verified: **2026-10-15** (Phase 1 → Phase 2 boundary); next scheduled re-verification is the Phase 2 → Phase 3 boundary.
+Owner: Engineering. Reviewed: 2026-10-18. Baseline verified: **2026-10-15** (Phase 1 → Phase 2 boundary); next scheduled re-verification is the Phase 2 → Phase 3 boundary.
 
 ## 1. Principles
 
@@ -132,7 +132,7 @@ Data, tiles, fonts, and content are covered by the same discipline:
 | **No email and no SMS provider** — the product stores no email address and no mobile number ([ADR-019](../DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)) | — | Not applicable: no mail or SMS channel exists, so no provider is reviewed, pinned, or configured |
 | Redis or another shared store (only if scaling is required) | After [ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists) is revisited | Operational cost versus measured need |
 | Playwright (or equivalent) for browser-level tests | Phase 3 | Current compatibility with the pinned browser matrix |
-| Android SDK/JDK versions and Capacitor Android plugin set | Phase 8 | Current supported matrix, permission behaviour |
+| Android SDK/JDK versions and Capacitor Android service set | Phase 8 | Current supported matrix, permission behaviour |
 
 Each verification is appended to the verification log in [REFERENCES](../REFERENCES.md) with its date and outcome, and unresolved findings block the phase that depends on them.
 

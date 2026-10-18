@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Sensitive local operator output, not application logs or a public endpoint.
 import { createDb } from '../packages/db/dist/index.js';
-import { readSecurityReports } from '../apps/api/dist/security/reports.js';
+import { readSecurityReports } from '../services/core/dist/security/reports.js';
 let db;
 try {
   const args = process.argv.slice(2);

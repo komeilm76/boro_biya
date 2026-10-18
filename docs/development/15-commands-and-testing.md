@@ -1,6 +1,6 @@
 # Commands and Testing Reference
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 Run commands from the repository root unless stated otherwise. The workspace pins Bun `1.4.3` for package operations and Node.js `24` for tooling and runtime checks. The manifest allows Node `>=24 <25`; CI uses Node 24 and container images pin Node `24.22.0`. Use [`11-developer-onboarding.md`](11-developer-onboarding.md) to set up a local environment.
 
@@ -41,7 +41,7 @@ Run commands from the repository root unless stated otherwise. The workspace pin
 | `bun run test:integration` | Runs PostgreSQL-backed tests using the test-utils global setup; requires a successful workspace build (the full gate builds first) | Default is a disposable embedded PostgreSQL 18 instance; tests create and drop isolated test databases. If `TEST_DATABASE_URL` is set, it uses that PostgreSQL server and still creates/drops databases there. Never point it at production or a database with data to keep |
 | `bun run coverage` | Runs the unit suite with V8 coverage collection | Creates ignored `coverage/` artefacts and enforces the current `vitest.config.ts` floors: 85% lines/functions/statements and 80% branches |
 
-Individual project tests are under `packages/*/test`, `apps/api/test`, `apps/web/test`, and `services/*/test`. The integration configuration is `vitest.integration.config.ts`; the regular `bun run test` is the unit suite, not the PostgreSQL integration suite.
+Individual project tests are under `packages/*/test`, `services/core/test`, `apps/web/test`, and `services/*/test`. The integration configuration is `vitest.integration.config.ts`; the regular `bun run test` is the unit suite, not the PostgreSQL integration suite.
 
 ## 4. Build, local development, and standalone starts
 
@@ -55,7 +55,7 @@ Individual project tests are under `packages/*/test`, `apps/api/test`, `apps/web
 | `node scripts/dev.mjs --only=sos` | Start only SOS after a full `bun run build` has produced its artefact | Long-running; requires `.env` and an initialized database; loopback by default |
 | `node scripts/dev.mjs --only=web` | Start only Vite; the Core API must already be reachable for proxied API requests | Long-running; Vite binds all interfaces for local/container previews and applies `VITE_ALLOWED_HOSTS`; do not treat it as a production edge |
 | `bun run dev:db` | Starts a persistent embedded PostgreSQL 18 development server and bootstraps roles/schemas/migrations; Dockerless option | Long-running; stores persistent data in ignored `var/pg-dev/`. Stop with Ctrl+C. Deleting this directory is destructive; see onboarding reset steps |
-| `bun run start:api` | Starts built `apps/api/dist/main.js` with `node` | Requires `bun run build`, a valid `.env`/process environment, and initialized reachable DB; does not build or watch |
+| `bun run start:api` | Starts built `services/core/dist/main.js` with `node` | Requires `bun run build`, a valid `.env`/process environment, and initialized reachable DB; does not build or watch |
 | `bun run start:relation` | Starts built `services/relation/dist/main.js` | Requires `bun run build`, `.env` or process configuration, and an initialized reachable database; does not build or watch |
 | `bun run start:sos` | Starts built `services/sos/dist/main.js` | Requires `bun run build`, `.env` or process configuration, and an initialized reachable database; does not build or watch |
 | `bun run start:web` | Starts `apps/web/server/serve.mjs` | Requires `bun run build`, `WEB_STATIC_DIR` containing `index.html`, and `API_ORIGIN`; it is a plain HTTP web edge, not a TLS proxy |

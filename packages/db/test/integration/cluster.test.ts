@@ -144,7 +144,7 @@ describe('cluster bootstrap (OPS-16 … OPS-18, QA-15)', () => {
   it('rejects unsafe schema identifiers before any SQL is built (SEC-42)', async () => {
     await withAdminPool(async (pool) => {
       await expect(
-        migrateUp(pool, { schema: 'core; DROP TABLE users', migrationsDir: join(ROOT, 'apps/api/migrations') }),
+        migrateUp(pool, { schema: 'core; DROP TABLE users', migrationsDir: join(ROOT, 'services/core/migrations') }),
       ).rejects.toThrow(/unsafe schema identifier/);
     });
   });

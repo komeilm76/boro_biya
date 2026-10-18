@@ -1,56 +1,37 @@
-# Backend image: builds every workspace, then runs one service selected by SERVICE_MAIN
-# (apps/api, services/relation, services/sos share this Dockerfile; Compose passes the entry).
-#
-# QA-14 / OPS-84 properties: pinned base image (Node 24 LTS — the exact tested minor is
-# recorded in docs/operations/README.md), no `latest` tag, non-root runtime user, no secrets or
-# .env content in any layer (.dockerignore excludes them), devDependencies removed from the
-# runtime layer (OPS-06: minimum necessary components).
+# One independently reusable service and its library closure per runtime image.
 FROM node:24.22.0-slim AS build
-
-# Bun is the package manager and script runner (ADR-025), pinned to the exact verified version
-# and installed from the same npm registry the lockfile resolves against.
 RUN npm install -g bun@1.4.3 --no-audit --no-fund && npm cache clean --force
-
 WORKDIR /repo
 COPY . .
 RUN bun install --frozen-lockfile
-
 ARG BUILD_COMMIT=dev
 ENV BUILD_COMMIT=${BUILD_COMMIT}
+ARG SERVICE=core
+RUN node scripts/services/export.mjs "$SERVICE" /standalone \
+  && cd /standalone \
+  && bun install --frozen-lockfile --ignore-scripts \
+  && bun run build \
+  && rm -rf node_modules packages/*/node_modules services/*/node_modules \
+  && bun install --production --frozen-lockfile --ignore-scripts
 
-# Compiled artefacts: TypeScript workspaces to dist/, the web bundle via Vite (QA-11).
-RUN node scripts/build.mjs
-
-# Clean-room production dependency set: devDependencies never reach the runtime layer, and
-# only the backend workspaces (apps/api, services/relation, services/sos and their workspace
-# closure) are installed — the web, Android, and test-only workspaces (including the
-# test-only embedded-postgres binaries, OPS-38) never enter a backend image (Phase 1 exit
-# review §3 item 2).
-RUN rm -rf node_modules apps/*/node_modules packages/*/node_modules services/*/node_modules \
-  && bun install --production --frozen-lockfile \
-    --filter @boro-biya/api --filter @boro-biya/relation --filter @boro-biya/sos
-
-FROM node:24.22.0-slim AS runtime
-
-# Published Debian security updates are applied to the shipped layer at build time (SEC-63):
-# upstream base rebuilds lag security advisories — node:24.22.0-slim still shipped
-# perl-base 5.36.0-7+deb12u3 with three published CRITICAL fixes (deb12u4). The base tag
-# stays pinned for lineage; the security suite provides the fixed OS packages. The build
-# stage is not upgraded: it is multi-stage-discarded and never shipped or scanned.
-RUN apt-get update \
-  && apt-get upgrade -y \
-  && rm -rf /var/lib/apt/lists/*
-
+# Development composition only: a separate one-shot image owns cluster bootstrap.
+# Domain runtime images never receive another service's source or migrations.
+FROM node:24.22.0-slim AS migrations
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
 WORKDIR /repo
-
-# The node image ships an unprivileged `node` user; the runtime never runs as root (QA-14).
 USER node
-COPY --from=build --chown=node:node /repo /repo
+COPY --from=build --chown=node:node /standalone /repo
+COPY --from=build --chown=node:node /repo/services/relation/migrations /repo/services/relation/migrations
+COPY --from=build --chown=node:node /repo/services/sos/migrations /repo/services/sos/migrations
+CMD ["node", "packages/db/dist/cli.js", "init-cluster"]
 
-ARG SERVICE_MAIN=apps/api/dist/main.js
-ENV SERVICE_MAIN=${SERVICE_MAIN}
-
-# `sh -c` + `exec` keeps signal delivery intact so SIGTERM reaches Node for the graceful
-# shutdown drain (OPS-62); a plain shell-form CMD would swallow the signal.
-CMD ["sh", "-c", "exec node \"$SERVICE_MAIN\""]
+FROM node:24.22.0-slim AS runtime
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+ENV NODE_ENV=production
+WORKDIR /repo
+USER node
+COPY --from=build --chown=node:node /standalone /repo
+ARG SERVICE=core
+ENV SERVICE=${SERVICE}
+CMD ["sh", "-c", "exec node services/\"$SERVICE\"/dist/main.js"]

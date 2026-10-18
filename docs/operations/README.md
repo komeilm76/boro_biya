@@ -2,11 +2,11 @@
 
 This directory holds the operational side of the project: the runbooks that say what to do when something breaks, the backup and restore policy, and the availability objective the deployment is held to. It exists before the first deployment so that "what do we do when the database is gone" has an answer written down before anyone is under pressure.
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## Rules
 
-- **[OPS-81]** Every failure mode named in [ARCHITECTURE](../ARCHITECTURE.md) §2–§3, [security/threat-model](../security/threat-model.md), and [security/plugin-threat-model](../security/plugin-threat-model.md) is covered by a row in the register below; rows may group closely related modes, and a mode introduced later is added in the same change as the work that introduces it. Each entry states: how the failure is detected (alert, health endpoint, or log signal), containment, the exact steps or commands, how to verify that the system is healthy again, who is told, and the follow-up (post-incident review, or a decision/requirement change). Runbooks are versioned with the code, and a change that alters a service's failure modes updates its runbook in the same change.
+- **[OPS-81]** Every failure mode named in [ARCHITECTURE](../ARCHITECTURE.md) §2–§3, [security/threat-model](../security/threat-model.md), and [security/service-threat-model](../security/service-threat-model.md) is covered by a row in the register below; rows may group closely related modes, and a mode introduced later is added in the same change as the work that introduces it. Each entry states: how the failure is detected (alert, health endpoint, or log signal), containment, the exact steps or commands, how to verify that the system is healthy again, who is told, and the follow-up (post-incident review, or a decision/requirement change). Runbooks are versioned with the code, and a change that alters a service's failure modes updates its runbook in the same change.
 - **[OPS-82]** Every stateful store is backed up automatically, encrypted, and copied off the host; the backup schedule sets the recovery point objective and the restore rehearsal measures the recovery time objective, both recorded below once the hosting decision (Q-19) is made. A failed backup job alerts ([SECURITY](../SECURITY.md) §9), restoration access is authorized and audited, and a restore never resurrects data past the retention window or a completed deletion in [data classification](../security/data-classification.md) §4 — that property is tested, not assumed.
 - **[OPS-85]** Each deployment has a **deployment profile** — a filled-in record of the operating organization, the applicable jurisdictions, where each data store physically resides, the privacy requirements, and the retention, deletion, export, audit-log, and location-data policies its operator has approved, together with the list of settings that must be reviewed for that deployment. The profile is a required review artefact before a production deployment ([ADR-027](../DECISIONS.md#adr-027--deployment-specific-law-and-data-residency-no-single-jurisdiction)) and starts from the template in this document, with every unresolved item marked as unresolved rather than left blank.
 - **[OPS-83]** An availability objective and an error-budget policy are recorded below before the Phase 9 gate, using the measurement rules of the [performance policy](../performance/README.md) (QA-107 … QA-111): objective, measurement point, exclusions (declared maintenance windows), and what happens when the budget is exhausted. No availability, uptime, or response-time figure is published anywhere before it is measured with its commit, environment, dataset, and command recorded.
@@ -23,16 +23,16 @@ Each row is a runbook that must exist before the phase gate named in the last co
 | [Failed migration and rollback](runbooks/failed-migration-rollback.md) | schema change that cannot complete | 1 | 2026-10-14 — exercised in Phase 1 against the disposable development database; transcript in the [Phase 1 report](../development/09-phase-1-report.md) |
 | Disk full or volume growth | uploads, logs, or location history exhaust storage — and, by design, retained data grows until an approved policy deletes it ([ADR-026](../DECISIONS.md#adr-026--retention-and-deletion-are-policies-not-defaults-nothing-is-deleted-automatically-yet)) | 8 | not yet |
 | Certificate expiry and TLS failure | expired or mis-issued certificate at the edge | 9 | not yet |
-| Secret and credential rotation | leaked or aged secret, plugin credential revocation | 7 | not yet |
+| Secret and credential rotation | leaked or aged secret, service credential revocation | 7 | not yet |
 | Provider outage | map tiles, geocoding, routing, or traffic provider down or rate-limited | 3 | not yet |
 | Realtime saturation | stream or connection limits reached; clients reconciling | 4 | not yet |
 | Abuse spike | credential stuffing, scraping, or suggestion spam | 2 | not yet |
 | Relation Service unavailable | sharing pipeline down; fail-closed behaviour | 4 | not yet |
 | SOS Service unavailable | alert creation or dispatch down; honest UI state | 5 | not yet |
-| Plugin container runaway or compromise | untrusted package exhausting resources or escaping its sandbox | 7 | not yet |
+| Service container runaway or compromise | compromised service exhausting resources or escaping its isolation boundary | 7 | not yet |
 | Backup job failure | backup did not run or did not complete | 8 | not yet |
 | Lost host and redeploy from scratch | hosting environment lost; rebuild from repository and backups | 8 | not yet |
-| Account compromise report | a user reports a suspected compromise or a vulnerability | 2 | [Runbook and automated disposable rehearsal](runbooks/account-compromise-report.md), 2026-10-17 |
+| Account compromise report | a user reports a suspected compromise or a vulnerability | 2 | [Runbook and automated disposable rehearsal](runbooks/account-compromise-report.md), 2026-10-18 |
 | Incident-response procedure | any security incident: severity, contacts, evidence, notification | 9 | not yet |
 
 The incident-response procedure required by [SECURITY](../SECURITY.md) §9 is one of these entries; it is exercised against a rehearsal incident before the Phase 9 gate. From Phase 8 onward, at least one runbook is executed against a disposable environment per phase, and the date and result are recorded in the phase report. A runbook that has never been exercised is not evidence that the procedure works, and no phase report may describe it as one.
@@ -47,7 +47,7 @@ One place naming the runtime and the exact versions each artefact is built and t
 | Development toolchain | Bun 1.4.3 — package manager and script runner only, never a server runtime ([ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)). `bun.lock` is committed; installs are frozen-lockfile in CI. |
 | TypeScript | 6.0.3 — pinned to the 6.0.x line because `typescript-eslint` 8.71.2 supports `>=4.8.4 <6.1.0` (dependency policy §3). |
 | Database | PostgreSQL 18. The Compose `db` service is built from `docker/db.Dockerfile`: the vendor `postgres:18.6` image (exact minor pinned, `QA-101`) plus Debian security updates applied at build time — with the pgdg repository removed first so an OS upgrade can never drift the PostgreSQL version — and the entrypoint's `gosu` privilege-drop helper rebuilt from checksum-pinned source with a patched Go toolchain, because the official release binaries embed a vulnerable Go stdlib (`SEC-63`, [REFERENCES](../REFERENCES.md)). CI integration tests run against embedded PostgreSQL 18.4 binaries — the same major, disposable per run (QA-06). |
-| Backend artefacts | `apps/api`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.22.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
+| Backend artefacts | `services/core`, `services/relation`, `services/sos`: compiled ESM under `dist/`, started as `node <workspace>/dist/main.js` inside `node:24.22.0-slim`, non-root, single replica ([ADR-008](../DECISIONS.md#adr-008--single-replica-core-api-until-shared-state-exists)). |
 | Web artefact | Vite production bundle served by the dependency-free `apps/web/server/serve.mjs` on the same Node 24 base, proxying `/api/*` to a fixed upstream (`OPS-64`, `SEC-48`). |
 | Android artefact | Capacitor packaging configuration only; the shell and its toolchain pins arrive in Phase 8. |
 
@@ -93,7 +93,7 @@ The targets are recorded here rather than in a deployment script, because a targ
 
 | Field | Meaning | Value |
 | --- | --- | --- |
-| Stores covered | every stateful store in [ARCHITECTURE](../ARCHITECTURE.md) §1–§2: the core database (identity, relations, SOS, plugin registry) and any store added later | the PostgreSQL 18 cluster (schemas `core`, `relation`, `sos`) exists in development and CI from Phase 1; backup values are set with the hosting decision (Q-19) |
+| Stores covered | every stateful store in [ARCHITECTURE](../ARCHITECTURE.md) §1–§2: the core database (identity, relations, SOS; operator service-deployment records are stored separately) and any store added later | the PostgreSQL 18 cluster (schemas `core`, `relation`, `sos`) exists in development and CI from Phase 1; backup values are set with the hosting decision (Q-19) |
 | Schedule and recovery point objective | how much work may be lost | set with the hosting decision (Q-19) |
 | Encryption and key custody | at rest, and who can decrypt | set with the hosting decision (Q-19); never a repository-stored key |
 | Off-host copy | a backup that survives the host | required; destination set with Q-19 |
@@ -111,7 +111,7 @@ The targets are recorded here rather than in a deployment script, because a targ
 | Measurement point | where availability is observed (edge, health endpoints, synthetic checks), and the command that produces the number | not set yet |
 | Exclusions | declared maintenance windows and how they are announced | none declared |
 | Error-budget policy | what stops when the budget is exhausted, and who decides | not set yet |
-| Degraded mode | which features remain usable when a dependency is down | per dependency; fail-closed rules are [PLG-41](../PLUGIN_SYSTEM.md) and [PLG-42](../PLUGIN_SYSTEM.md), and the client behaviour for unavailable features is [UI-19](../PRODUCT_REQUIREMENTS.md) |
+| Degraded mode | which features remain usable when a dependency is down | per dependency; fail-closed rules are [PLG-41](../SERVICE_SYSTEM.md) and [PLG-42](../SERVICE_SYSTEM.md), and the client behaviour for unavailable features is [UI-19](../PRODUCT_REQUIREMENTS.md) |
 | Burn alerting | how fast budget consumption is noticed | [SEC-60](../SECURITY.md) alerting |
 
 ## Deployment profile

@@ -1,6 +1,6 @@
 # Runbook: failed migration and rollback
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 First runbook of the register in [operations/README.md](../README.md) — the `OPS-81` slice
 declared as a pull-forward into Phase 1 under `GOV-88`, because the first migration needs a
@@ -52,7 +52,7 @@ Connection strings are printed redacted; a password never appears in this output
 Fix forward: correct the migration file (or replace it with a new version), then re-apply.
 
 ```sh
-# edit or add apps/api/migrations/NNNN_name.{up,down}.sql (or the service's own directory)
+# edit or add services/core/migrations/NNNN_name.{up,down}.sql (or the service's own directory)
 bun run db:migrate          # re-runs; already-applied migrations are skipped by the ledger
 bun run db:status           # confirm the fix applied
 ```
@@ -73,7 +73,7 @@ the cluster bootstrap, not to a single service's migrations.
 ### 3c. Checksum mismatch
 
 Never edit an applied migration to "match". Either restore the applied file (deployments carry
-the exact commit — `git show <deployed-sha>:apps/api/migrations/NNNN_name.up.sql`), or reverse
+the exact commit — `git show <deployed-sha>:services/core/migrations/NNNN_name.up.sql`), or reverse
 the migration (3b) and apply the corrected version as a new one. The runner refuses both `up`
 and `down` on a mismatched file until the discrepancy is resolved — this is fail-closed, not a
 bug to route around.
