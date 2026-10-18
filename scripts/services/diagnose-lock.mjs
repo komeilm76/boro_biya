@@ -1,7 +1,7 @@
 // Failure-only, offline diagnostics. Never changes the original checkout or weakens an assertion.
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { cpSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 const read = (path) => JSON.parse(readFileSync(path, 'utf8').replace(/,(\s*[}\]])/g, '$1'));
 export function diagnoseLocks(output, repositoryRoot, environment) {
   const results = {};
@@ -25,29 +25,41 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
     }
   };
   check('repository-baseline', repositoryRoot);
-  for (const name of ['root-runtime', 'unpruned-packages', 'root-runtime-unpruned']) {
-    const target = `${output}-diagnostic-${name}`;
-    mkdirSync(target);
-    cpSync(join(output, 'packages'), join(target, 'packages'), { recursive: true });
-    cpSync(join(output, 'services'), join(target, 'services'), { recursive: true });
-    const manifest = read(join(output, 'package.json'));
-    const lock = read(join(output, 'bun.lock'));
-    if (name.startsWith('root-runtime')) {
-      manifest.dependencies = {};
-      for (const entry of Object.values(lock.workspaces))
-        for (const field of ['dependencies'])
-          for (const [dependency, version] of Object.entries(entry[field] ?? {})) {
-            if (version.startsWith('workspace:')) continue;
-            if (manifest.dependencies[dependency] && manifest.dependencies[dependency] !== version)
-              throw new Error(`conflicting runtime dependency ${dependency}`);
-            manifest.dependencies[dependency] = version;
+  check('canonical-cwd', realpathSync(output));
+  for (const name of ['plain-cwd', 'native-keys', 'native-resolutions', 'fresh-repository']) {
+    const target =
+      name === 'plain-cwd'
+        ? join(dirname(repositoryRoot), `${basename(dirname(output))}-${basename(output)}-plain`)
+        : `${output}-diagnostic-${name}`;
+    try {
+      mkdirSync(target);
+      const from = name === 'fresh-repository' ? repositoryRoot : output;
+      const manifest = read(join(from, 'package.json'));
+      const lock = read(join(from, 'bun.lock'));
+      for (const path of Object.keys(lock.workspaces)) {
+        if (!path) continue;
+        mkdirSync(join(target, path), { recursive: true });
+        cpSync(join(from, path, 'package.json'), join(target, path, 'package.json'));
+      }
+      if (name === 'native-keys')
+        lock.workspaces = Object.fromEntries(
+          Object.entries(lock.workspaces).map(([path, value]) => [path.replaceAll('/', '\\'), value]),
+        );
+      if (name === 'native-resolutions')
+        for (const value of Object.values(lock.packages))
+          if (value[0].includes('@workspace:')) {
+            const [name, path] = value[0].split('@workspace:');
+            value[0] = `${name}@workspace:${path.replaceAll('/', '\\')}`;
           }
-      lock.workspaces[''].dependencies = manifest.dependencies;
+      writeFileSync(join(target, 'package.json'), JSON.stringify(manifest, null, 2));
+      writeFileSync(join(target, 'bun.lock'), JSON.stringify(lock, null, 2));
+      check(name, target);
+    } catch {
+      results[name] = 'diagnostic-error';
+    } finally {
+      // The sibling checkout-volume fixture is not under the integration test's temp parent.
+      if (name === 'plain-cwd') rmSync(target, { recursive: true, force: true });
     }
-    if (name.includes('unpruned')) lock.packages = read(join(repositoryRoot, 'bun.lock')).packages;
-    writeFileSync(join(target, 'package.json'), JSON.stringify(manifest, null, 2));
-    writeFileSync(join(target, 'bun.lock'), JSON.stringify(lock, null, 2));
-    check(name, target);
   }
   return results;
 }
