@@ -6452,7 +6452,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             },
             "style": "form"
           },
@@ -6462,7 +6462,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
             }
           }
         ],
@@ -6557,7 +6557,7 @@
           "additionalProperties": false,
           "properties": {
             "after": {
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
               "type": "string"
             },
             "ticket": {
@@ -6567,6 +6567,10 @@
           },
           "required": ["ticket"],
           "type": "object"
+        },
+        "x-boro-request-parser": "stream-resume.ts#parseSecurityStreamRequest",
+        "x-boro-resume-schema": {
+          "$ref": "#/components/schemas/SecurityStreamResume"
         },
         "x-boro-sse-event-schema": {
           "$ref": "#/components/schemas/SecurityNoticeEvent"
@@ -6669,6 +6673,24 @@
         },
         "required": ["id", "event", "createdAt"],
         "additionalProperties": false
+      },
+      "SecurityStreamResume": {
+        "type": "object",
+        "properties": {
+          "after": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "lastEventId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          }
+        },
+        "additionalProperties": false,
+        "x-boro-rules": {
+          "version": 1,
+          "kind": "matching-cursors"
+        }
       },
       "adminAssignRolesBody": {
         "type": "object",

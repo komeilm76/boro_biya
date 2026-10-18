@@ -12,6 +12,12 @@ assert.equal(result.compatible, true);
 assert.deepEqual(result.findings, []);
 for (const mutate of [
   (document) => {
+    delete document.components.schemas.SecurityStreamResume['x-boro-rules'];
+  },
+  (document) => {
+    delete document.paths['/api/v1/streams/events'].get['x-boro-request-parser'];
+  },
+  (document) => {
     delete document.paths['/api/v1/auth/login'];
   },
   (document) => {
@@ -39,5 +45,5 @@ for (const mutate of [
 }
 assert.deepEqual(baseline, JSON.parse(await readFile(join(applicationDirectory, 'openapi.json'), 'utf8')));
 console.log(
-  'Real application development comparison passed; seven semantic/removal/security changes rejected; no released baseline claimed',
+  'Real application development comparison passed; nine semantic/removal/security changes rejected; no released baseline claimed',
 );

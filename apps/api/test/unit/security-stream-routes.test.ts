@@ -71,6 +71,36 @@ describe('bounded SSE adapter lifecycle', () => {
     expect(await response.text()).toContain(`id: ${id}`);
     expect(f.read.mock.calls[0]?.[1]).toBe(id);
   });
+  it('rejects malformed, uppercase, duplicate and conflicting hints before consuming a ticket', async () => {
+    const f = await fixture();
+    const id = '01902c60-0000-7000-8000-000000000001';
+    const ticket = `ticket=${'A'.repeat(43)}`;
+    const rejected: [string, Record<string, string>][] = [
+      [`${ticket}&after=${id.toUpperCase()}`, {}],
+      [ticket, { 'last-event-id': id.toUpperCase() }],
+      [`${ticket}&after=${id}`, { 'last-event-id': id.toUpperCase() }],
+      [`${ticket}&after=${id}&after=${id}`, {}],
+      [`${ticket}&after=`, {}],
+      [ticket, { 'last-event-id': '' }],
+      [ticket, { 'last-event-id': `${id}, ${id}` }],
+      [`${ticket}&after=${id}`, { 'last-event-id': '01902c60-0000-7000-8000-000000000002' }],
+    ];
+    for (const [query, headers] of rejected) expect((await f.get(query, headers)).status).toBe(400);
+    expect(f.consume).not.toHaveBeenCalled();
+    f.read.mockResolvedValue({ items: [], close: true });
+    for (const [query, headers] of [
+      [ticket, {}],
+      [`${ticket}&after=${id}`, {}],
+      [ticket, { 'last-event-id': id }],
+      [`${ticket}&after=${id}`, { 'last-event-id': id }],
+    ] as const) {
+      const response = await f.get(query, headers);
+      expect(response.status).toBe(200);
+      await response.text();
+    }
+    expect(f.consume).toHaveBeenCalledTimes(4);
+    expect(f.read.mock.calls.map((call: unknown[]) => call[1])).toEqual([undefined, id, id, id]);
+  });
   it('closes on a failed read without leaking an exception into the stream', async () => {
     const f = await fixture();
     f.read.mockRejectedValue(new Error('private database exception'));

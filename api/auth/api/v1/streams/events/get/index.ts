@@ -24,13 +24,13 @@ export const securityEvents = makeApiConfig({
       ['ticket']: z.string().regex(new RegExp('^[A-Za-z0-9_-]{43}$')),
       ['after']: z
         .string()
-        .regex(new RegExp('^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$'))
+        .regex(new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'))
         .optional(),
     }),
     headers: z.object({
       ['Last-Event-ID']: z
         .string()
-        .regex(new RegExp('^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$'))
+        .regex(new RegExp('^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'))
         .optional(),
     }),
     cookies: z.object({}),

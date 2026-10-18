@@ -17,6 +17,7 @@ const step = z.discriminatedUnion('op', [
 ]);
 const descriptorSchema = z.discriminatedUnion('kind', [
   z.strictObject({ version: z.literal(1), kind: z.literal('strip-unknown') }),
+  z.strictObject({ version: z.literal(1), kind: z.literal('matching-cursors') }),
   z.strictObject({ version: z.literal(1), kind: z.literal('text'), steps: z.array(step).min(1).max(16) }),
   z.strictObject({
     version: z.literal(1),
@@ -100,6 +101,24 @@ export function contractUtcBefore<T extends z.ZodObject>(base: T): T {
   return schema;
 }
 
+function matchingCursors(value: unknown): boolean {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const after: unknown = Object.getOwnPropertyDescriptor(value, 'after')?.value;
+  const last: unknown = Object.getOwnPropertyDescriptor(value, 'lastEventId')?.value;
+  if (after !== undefined && typeof after !== 'string') return false;
+  if (last !== undefined && typeof last !== 'string') return false;
+  return after === undefined || last === undefined || after === last;
+}
+/** SSE resume hints are optional, but two supplied hints must agree byte for byte. */
+export function contractMatchingCursors<T extends z.ZodObject>(base: T): T {
+  const parsed = rules({ version: 1, kind: 'matching-cursors' });
+  const schema = base
+    .refine(matchingCursors, { message: 'Resume cursors must match' })
+    .meta({ ...base.meta(), [CONTRACT_RULES]: parsed });
+  registrations.set(schema, Object.freeze({ base, rules: parsed }));
+  return schema;
+}
+
 /** Compile a profile annotation from a generated tree. No source functions/eval/imports
  * are accepted in metadata. Rebuild the exact finite instruction set instead.
  */
@@ -116,7 +135,7 @@ export function restoreContractRules(schema: z.ZodType): z.ZodType {
       return contractText(parsed);
     }
     if (!(schema instanceof z.ZodObject)) throw new Error('Object profile requires an object');
-    if ((schema._zod.def.checks?.length ?? 0) !== 0) throw new Error('UTC profile forbids unregistered checks');
+    if ((schema._zod.def.checks?.length ?? 0) !== 0) throw new Error('Object profile forbids unregistered checks');
     // Remove only this annotation before applying it once to the rebuilt base.
     const { [CONTRACT_RULES]: _removed, ...rest } = metadata ?? {};
     const base = restoreChildren(schema).meta(rest) as z.ZodObject;
@@ -126,6 +145,7 @@ export function restoreContractRules(schema: z.ZodType): z.ZodType {
       registrations.set(restored, Object.freeze({ base: structural, rules: parsed }));
       return restored;
     }
+    if (parsed.kind === 'matching-cursors') return contractMatchingCursors(base);
     return contractUtcBefore(base);
   }
   return restoreChildren(schema);
@@ -153,5 +173,6 @@ export function compileContractAssertion(value: unknown): (data: unknown) => boo
   }
   if (parsed.kind === 'strip-unknown')
     return (data) => data !== null && typeof data === 'object' && !Array.isArray(data);
+  if (parsed.kind === 'matching-cursors') return matchingCursors;
   return ordered;
 }

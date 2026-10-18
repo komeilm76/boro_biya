@@ -3,6 +3,7 @@ import { authOperations } from '../../packages/contracts/src/auth.ts';
 import {
   absentBodySchema,
   securityStreamQuerySchema,
+  securityStreamResumeSchema,
   securityNoticeEventSchema,
 } from '../../packages/validation/src/auth.ts';
 import { projectSchema } from './schema.mjs';
@@ -169,6 +170,8 @@ export function buildApplicationDocument() {
         ),
       },
       'x-boro-query-schema': projectSchema(securityStreamQuerySchema),
+      'x-boro-resume-schema': component(securityStreamResumeSchema, 'SecurityStreamResume'),
+      'x-boro-request-parser': 'stream-resume.ts#parseSecurityStreamRequest',
       'x-boro-sse-event-schema': component(securityNoticeEventSchema, 'SecurityNoticeEvent'),
       'x-requirements': ['AUTH-18', 'API-31', 'API-33'],
     },
@@ -257,6 +260,18 @@ export async function generateApplication(directory) {
       );
     await writeFile(path, text);
   }
+  await writeFile(
+    join(directory, 'stream-resume.ts'),
+    `// Generated SSE boundary adapter: compile both query and header resume semantics.
+import endpoint from './api/v1/streams/events/get/index.ts';
+import resumeSchema from './components/SecurityStreamResume/index.ts';
+export function parseSecurityStreamRequest(query: unknown, lastEventId: unknown) {
+  const parsed = endpoint.request.query.parse(query);
+  const resume = resumeSchema.parse({after:parsed.after,lastEventId});
+  return {query:parsed,cursor:resume.lastEventId ?? resume.after};
+}
+`,
+  );
   // Isolated peer links are temporary, never committed.
   const requireTool = createRequire(await realpath(join(root, 'node_modules/zopia/package.json')));
   await mkdir(join(directory, 'node_modules'), { recursive: true });

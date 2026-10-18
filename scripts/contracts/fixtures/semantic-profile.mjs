@@ -188,6 +188,37 @@ try {
     ],
     document.paths[stream.path].get['x-boro-query-schema'],
   );
+  const resumeEntry = manifest.components.find((entry) => entry.name === 'SecurityStreamResume');
+  assert(resumeEntry);
+  const resumeNative = (await import(pathToFileURL(join(directory, resumeEntry.file)).href)).default;
+  const { parseSecurityStreamRequest } = await import(pathToFileURL(join(directory, 'stream-resume.ts')).href);
+  const cursor = '01902c60-0000-7000-8000-000000000001';
+  const hints = [
+    undefined,
+    null,
+    '',
+    cursor,
+    cursor.toUpperCase(),
+    '01902c60-0000-7000-8000-000000000002',
+    0,
+    [],
+    [cursor],
+  ];
+  const resumeValues = hints.flatMap((after) => hints.map((lastEventId) => ({ after, lastEventId })));
+  compare(v.securityStreamResumeSchema, resumeNative, resumeValues, document.components.schemas.SecurityStreamResume);
+  for (const after of hints)
+    for (const lastEventId of hints) {
+      const query = { ticket: 'T'.repeat(43), after };
+      const originalQuery = v.securityStreamQuerySchema.safeParse(query);
+      const originalResume = v.securityStreamResumeSchema.safeParse({ after, lastEventId });
+      if (!originalQuery.success || !originalResume.success)
+        assert.throws(() => parseSecurityStreamRequest(query, lastEventId));
+      else
+        assert.deepEqual(parseSecurityStreamRequest(query, lastEventId), {
+          query: originalQuery.data,
+          cursor: originalResume.data.lastEventId ?? originalResume.data.after,
+        });
+    }
   const eventEntry = manifest.components.find((entry) => entry.name === 'SecurityNoticeEvent');
   assert(eventEntry);
   const eventNative = (await import(pathToFileURL(join(directory, eventEntry.file)).href)).default;

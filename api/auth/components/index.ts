@@ -1,4 +1,5 @@
 export { SecurityNoticeEventSchema } from './SecurityNoticeEvent/index';
+export { SecurityStreamResumeSchema } from './SecurityStreamResume/index';
 export { adminAssignRolesBodySchema } from './adminAssignRolesBody/index';
 export { adminAuditResponse200Schema } from './adminAuditResponse200/index';
 export { adminCreateRoleBodySchema } from './adminCreateRoleBody/index';

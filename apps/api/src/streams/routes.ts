@@ -1,6 +1,6 @@
 import { PassThrough } from 'node:stream';
 import type { FastifyInstance } from 'fastify';
-import { securityStreamQuerySchema } from '@boro-biya/validation';
+import { securityStreamQuerySchema, securityStreamResumeSchema } from '@boro-biya/validation';
 import { AuthFailure, type AuthService } from '../auth/service.js';
 /** Explicit per-process bounds; no persistent connection holds a database client. */
 export function applySecurityStreamRoute(app: FastifyInstance, auth: AuthService) {
@@ -12,16 +12,13 @@ export function applySecurityStreamRoute(app: FastifyInstance, auth: AuthService
   });
   app.get('/api/v1/streams/events', async (request, reply) => {
     const parsed = securityStreamQuerySchema.safeParse(request.query);
-    const last = request.headers['last-event-id'];
-    if (
-      !parsed.success ||
-      (last !== undefined &&
-        (typeof last !== 'string' || (parsed.data.after !== undefined && parsed.data.after !== last)))
-    )
-      throw new AuthFailure(400);
-    const cursor = last ?? parsed.data.after;
-    if (cursor !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(cursor))
-      throw new AuthFailure(400);
+    if (!parsed.success) throw new AuthFailure(400);
+    const resume = securityStreamResumeSchema.safeParse({
+      after: parsed.data.after,
+      lastEventId: request.headers['last-event-id'],
+    });
+    if (!resume.success) throw new AuthFailure(400);
+    const cursor = resume.data.lastEventId ?? resume.data.after;
     if (active.size >= 32) throw new AuthFailure(429, 60);
     const lease = await auth.streams.consume(parsed.data.ticket);
     if (active.size >= 32 || (perUser.get(lease.userId) ?? 0) >= 2) throw new AuthFailure(429, 60);

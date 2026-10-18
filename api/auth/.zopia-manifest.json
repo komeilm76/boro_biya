@@ -9118,7 +9118,7 @@
             "name": "after",
             "required": false,
             "schema": {
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
               "type": "string"
             },
             "style": "form"
@@ -9128,7 +9128,7 @@
             "name": "Last-Event-ID",
             "required": false,
             "schema": {
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
               "type": "string"
             }
           }
@@ -9224,7 +9224,7 @@
           "additionalProperties": false,
           "properties": {
             "after": {
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
               "type": "string"
             },
             "ticket": {
@@ -9234,6 +9234,10 @@
           },
           "required": ["ticket"],
           "type": "object"
+        },
+        "x-boro-request-parser": "stream-resume.ts#parseSecurityStreamRequest",
+        "x-boro-resume-schema": {
+          "$ref": "#/components/schemas/SecurityStreamResume"
         },
         "x-boro-sse-event-schema": {
           "$ref": "#/components/schemas/SecurityNoticeEvent"
@@ -10125,6 +10129,29 @@
         },
         "required": ["id", "event", "createdAt"],
         "type": "object"
+      }
+    },
+    {
+      "file": "components/SecurityStreamResume/index.ts",
+      "name": "SecurityStreamResume",
+      "overlay": [],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "lastEventId": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "x-boro-rules": {
+          "kind": "matching-cursors",
+          "version": 1
+        }
       }
     },
     {
@@ -11957,7 +11984,7 @@
     "description": "English diagnostic prose is not machine-readable state. The required Boro validation profile compiles normalization and sibling UTC ordering; consumers must not ignore it.",
     "kind": "openapi-3.1",
     "openapiVersion": "3.1.0",
-    "sha256": "cde0a8f614714f4ecd81a46a12405681d8ef68f685a8193d12b7880772a6e281",
+    "sha256": "1aff8dfbe4bb1ddea2670bf9472707a2136b119c908230d6f4f1a8fe80c9662c",
     "title": "Boro_biya Phase 2 API",
     "version": "0.1.0"
   },

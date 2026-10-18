@@ -3,7 +3,7 @@ import { utcInstantSchema } from './time.js';
 import { uuidV7Schema } from './uuid.js';
 import { uniqueStringItemsCheck } from './unique-strings.js';
 import { administrativeReasonPattern, securityReportPattern } from './text-content.js';
-import { contractText, contractUtcBefore } from './contract-rules.js';
+import { contractText, contractUtcBefore, contractMatchingCursors } from './contract-rules.js';
 
 export const securityStreamPolicy = { ticketTtlSeconds: 15, maxConnectionSeconds: 60 } as const;
 
@@ -286,9 +286,19 @@ export const securityStreamTicketSchema = z.strictObject({
   ticket: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   expiresAt: utcInstantSchema,
 });
+/** The SSE route already rejects uppercase cursors; never normalize replay hints. */
+export const securityStreamCursorSchema = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+export const securityStreamResumeSchema = contractMatchingCursors(
+  z.strictObject({
+    after: securityStreamCursorSchema.optional(),
+    lastEventId: securityStreamCursorSchema.optional(),
+  }),
+);
 export const securityStreamQuerySchema = z.strictObject({
   ticket: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
-  after: uuidV7Schema.optional(),
+  after: securityStreamCursorSchema.optional(),
 });
 export const securityNoticeEventSchema = z.strictObject({
   id: uuidV7Schema,
