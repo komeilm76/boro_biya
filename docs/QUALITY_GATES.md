@@ -2,7 +2,7 @@
 
 Requirement identifiers (`QA-…`) are permanent handles, assigned when the requirement is written and validated by the documentation gate. Which gates are active in which phase is defined in [CI and gates](development/03-ci-and-gates.md); a gate that cannot yet run must be declared inactive for that phase rather than reported as passing.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## 1. Required gates
 
@@ -17,7 +17,7 @@ Run gates locally and in CI. A gate returns a non-zero exit status on failure an
 | **[QA-05]** Unit tests| Domain rules, schemas, state machines, adapters | Vitest (Phase 1) |
 | **[QA-06]** Integration tests with isolated PostgreSQL| Constraints, transactions, throttling, races | Vitest against a disposable PostgreSQL 18: the Compose container where Docker is available, embedded server binaries where it is not; `TEST_DATABASE_URL` overrides the source. The Windows CI matrix provisions the same pinned binaries under a disposable standard user — Windows PostgreSQL refuses an elevated administrator token, which hosted runners carry — and passes that server in through the override (Phase 1) |
 | **[QA-07]** API/OpenAPI validation and contract tests| Contract fidelity and no accidental breaking changes | OpenAPI validator + `zopia validate` + `zopia diff` (Phase 2, when generated contracts first exist) |
-| **[QA-08]** Security tests| Auth, authorization, account states, recovery, plugin archives, location privacy | Vitest security suites plus dedicated adversarial fixtures (Phase 2+) |
+| **[QA-08]** Security tests| Auth, authorization, account states, recovery, service isolation, location privacy | Vitest security suites plus dedicated adversarial fixtures (Phase 2+) |
 | **[QA-09]** Dependency vulnerability audit and licence policy| Known CVEs and licence compliance | Registry advisory scan + licence allowlist from the [dependency policy](development/02-dependency-policy.md) (Phase 1) |
 | **[QA-10]** Secret scanning| No credentials in the repository or history | Secret scanner in CI plus the documentation gate's pattern check (Phase 0 for docs) |
 | **[QA-11]** Production builds| Web, API, and service artefacts build reproducibly **on the pinned production runtime** (Node 24 LTS, [DECISIONS](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain) ADR-025) | Vite build, API build, container builds (Phase 1+) |
@@ -42,11 +42,11 @@ Pure domain rules, validation schemas, account-state transitions, task state mac
 
 ### Integration
 
-PostgreSQL constraints and transactions, login throttling, lockout windows, recovery challenge lifecycle, follow-request and block lifecycle, location authorization, idempotency replay, task-claiming races under concurrency, notification persistence, and plugin lifecycle state transitions.
+PostgreSQL constraints and transactions, login throttling, lockout windows, recovery challenge lifecycle, follow-request and block lifecycle, location authorization, idempotency replay, task-claiming races under concurrency, notification persistence, and service lifecycle state transitions.
 
 ### End-to-end
 
-Registration, first-login setup, login/logout, password change and reset, account lockout, admin user management, follower privacy, live-sharing grant expiry and revoke, history-sharing boundaries, SOS creation and category-matched dispatch/claim/resolve, plugin install/disable/rollback, and map permission-denied and manual-coordinate flows.
+Registration, first-login setup, login/logout, password change and reset, account lockout, admin user management, follower privacy, live-sharing grant expiry and revoke, history-sharing boundaries, SOS creation and category-matched dispatch/claim/resolve, service deployment/disable/rollback, and map permission-denied and manual-coordinate flows.
 
 ### Accessibility and localization
 
@@ -60,8 +60,8 @@ Automated axe checks on primary routes, keyboard-only walkthrough of critical fl
 - **[QA-23]** Banned, deactivated, locked, or setup-incomplete accounts cannot enter protected features, and status changes take effect for existing sessions.
 - **[QA-24]** Parallel claim attempts produce exactly one successful claimant.
 - **[QA-25]** Replayed recovery grants and reused idempotency keys cannot repeat a forbidden action.
-- **[QA-26]** Malicious archives (traversal, symlink, bomb, duplicate path, oversized member, nested archive) are rejected.
-- **[QA-27]** Plugin containers cannot read host secrets, mount the Docker socket, or reach arbitrary networks.
+- **[QA-26]** Service export rejects invalid units, existing/in-checkout outputs and unintended source/secret inclusion; no application package-installation route exists.
+- **[QA-27]** Service containers cannot read host secrets, mount the Docker socket, or reach arbitrary networks.
 - **[QA-28]** Invalid OpenAPI/Zod input is rejected consistently, with the documented error envelope.
 - **[QA-112]** A live-sharing grant cannot be extended, re-opened, or transferred to another viewer after it expires or is revoked, and the affected stream closes when it ends (integration).
 - **[QA-113]** Location history is authorized per request against the viewer's grant: expired rows are never served, revoking one grant, unfollowing, blocking, disabling sharing, or deleting the trail ends access immediately, and no bulk-export path exists (integration).
@@ -107,7 +107,7 @@ Mirrored in the repository template [`.github/pull_request_template.md`](../.git
 
 - **[QA-48]** SemVer for released packages and services; the changelog records user-visible changes and breaking changes.
 - **[QA-49]** Artefacts are built once, versioned, tagged to the exact commit, and promoted between environments — never rebuilt from untracked changes at deployment time.
-- **[QA-50]** Artefact set: web/PWA bundle, API and service container images, plugin image/package (Phase 7+), Android APK/AAB (Phase 8+), migrations, checksums, and an SBOM where practical.
+- **[QA-50]** Artefact set: web/PWA bundle, API and service container images, service image/package (Phase 7+), Android APK/AAB (Phase 8+), migrations, checksums, and an SBOM where practical.
 - **[QA-51]** Signing keys and production credentials stay outside source control and CI logs.
 - **[QA-52]** Migration, rollback, and backup/restore checks run before production deployment, and the results are attached to the release record.
 - **[QA-53]** Deployment, health verification, rollback steps, and incident contacts are documented in the [release plan](development/06-release-plan.md) and its runbook.

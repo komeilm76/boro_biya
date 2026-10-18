@@ -2,7 +2,9 @@
 
 Nineteen successive passes over the Phase 0 pack, looking for defects rather than deliverables. The record grows by appending one section per pass, and this paragraph is the only place that states how many passes it holds — check 14 (`QA-122`) keeps that number and the pass ordinals true. Everything found was fixed in the same work session as the pass that found it; the exit status of the gate at the end of that session is the evidence. §1–§6 are the first pass, with its evidence in §7.4; every later pass is its own section, the latest being [§24](#24-nineteenth-pass--the-pack-re-read-against-the-three-new-decisions-2026-10-14).
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-18.
+
+The original review below is historical. ADR-030 (2026-10-18) supersedes its package-installer/extension-host assumptions; current paths and PLG references are migration cross-references, not a claim that these historical commands were re-run. Current architecture and evidence are recorded in [implementation status](17-implementation-status.md#45-independent-service-architecture-replacement-and-three-pass-review-2026-10-18).
 
 ## 1. Method
 
@@ -28,7 +30,7 @@ The phase checklist still claimed the register ended at `ADR-012` and `Q-20`, an
 
 ### 2.2 A decision that reached only half the pack (the important one)
 
-Three owner decisions — per-follower timed live grants, per-follower history sharing, and exactly one assistance category per user — were applied to the data model, the requirements, and the decision log, but **not** to `SECURITY.md`, `security/data-classification.md`, `ARCHITECTURE.md`, `PLUGIN_SYSTEM.md`, or `MASTER_PROJECT_PROMPT.md`. Those documents still described session-wide sharing, follower-wide history access, and multiple `category membership` rows.
+Three owner decisions — per-follower timed live grants, per-follower history sharing, and exactly one assistance category per user — were applied to the data model, the requirements, and the decision log, but **not** to `SECURITY.md`, `security/data-classification.md`, `ARCHITECTURE.md`, `SERVICE_SYSTEM.md`, or `MASTER_PROJECT_PROMPT.md`. Those documents still described session-wide sharing, follower-wide history access, and multiple `category membership` rows.
 
 The cause is worth recording: the edits were applied by a script whose helper rebound a local copy of the file text, so the write was a silent no-op for part of the batch. The gate could not see it, because nothing in the pack was structurally wrong — the identifiers, links, and traceability coverage were all intact. The lesson is not "be careful with scripts"; it is that **a documentation set needs a semantic check, not only a structural one**, which is what check 8 below adds.
 
@@ -52,7 +54,7 @@ The dependency policy and reference log stated "latest PostgreSQL minor 18.6" wi
 
 ### 2.6 One capability, two audiences
 
-After the audience change, `SECURITY.md` and the API inventory implied that an active grant is required for **all** location reads, including last-known location. That contradicts `ADR-013`, which deliberately keeps last-known location on relationship plus preference, because it is a stale value its owner already published. Fixed: the live and last-known audiences are now stated separately wherever the access rule appears (`PRIV-02`, the data-classification access column, the plugin scope `locations.read.consented`, and the `/relation/locations/:userId` inventory row).
+After the audience change, `SECURITY.md` and the API inventory implied that an active grant is required for **all** location reads, including last-known location. That contradicts `ADR-013`, which deliberately keeps last-known location on relationship plus preference, because it is a stale value its owner already published. Fixed: the live and last-known audiences are now stated separately wherever the access rule appears (`PRIV-02`, the data-classification access column, the service scope `locations.read.consented`, and the `/relation/locations/:userId` inventory row).
 
 ## 3. Cross-reference fixes
 
@@ -124,7 +126,7 @@ Fixed: the three owner-accepted ADRs are now `Accepted (owner decision, 2026-10-
 
 **7.2.6 The threat model had not absorbed the capabilities the decisions created.** Three assets were missing from the asset table — the retained location trail, the category assignment, and the sharing-grant set itself (whose reconstruction reveals the social graph) — and two threats still described the pre-`ADR-013` model: `TH-07` ("stalker follows, is accepted once, and keeps location") was mitigated by "an accepted relationship **and** live sharing", which is no longer the access rule, and `TH-21` scheduled all sharing-indicator review to Phase 3 although the grant indicators land in Phase 4. `AB-02` (many accounts to locate a person) omitted category matching from the eligibility rules, and the Phase-0 residual-risk list did not name the two open bounds (`Q-21`, `Q-22`) or unverified categories (`Q-23`). All fixed.
 
-**7.2.7 The plugin scope vocabulary was smaller than the capabilities it governs.** `PLUGIN_SYSTEM.md` grants plugins a location scope but had **no scope for reading a recorded trail** (a capability `ADR-014` created and `SECURITY.md` models), and none for the category lookup that dispatch matching needs. `PLG-35` also asserted a per-service version prefix, while the API inventory defines one `/api/v1` prefix with per-service path groups. Fixed.
+**7.2.7 The service scope vocabulary was smaller than the capabilities it governs.** `SERVICE_SYSTEM.md` grants services a location scope but had **no scope for reading a recorded trail** (a capability `ADR-014` created and `SECURITY.md` models), and none for the category lookup that dispatch matching needs. `PLG-35` also asserted a per-service version prefix, while the API inventory defines one `/api/v1` prefix with per-service path groups. Fixed.
 
 **7.2.8 The API inventory was missing an endpoint the architecture requires and the channel its own requirements depend on.** `OPS-80` requires category matching inside a bounded candidate set and the inventory has no internal endpoint for it — an "endpoint that exists in code but not in this inventory is a defect" by the inventory's own rule — and neither the inventory nor the live-location rows named the mechanism by which a granted viewer receives updates, although `OPS-24` and `OPS-27` make closing that mechanism on revocation a hard requirement. Both added.
 
@@ -201,7 +203,7 @@ A phase mapping is a plan, and a plan can be internally consistent while being i
 - **`Q-15` (languages and RTL) moved from Phase 3 to Phase 2.** The audit caught this as a contradiction the moment `UI-22` moved: RTL scaffolding in Phase 2 cannot be built before the decision that says whether RTL is required. Waiting until Phase 3 would mean deciding layout direction after every authentication string exists. This is the one place where the *decision* moved earlier so the *work* is not blocked, and Phase 2's exit gate now requires it.
 - **`QA-07` text corrected** from "(Phase 1/2)" to "(Phase 2)", matching the CI activation table, which has contract tests inactive in Phase 1.
 - **The administrative-location check moved from the Phase 4 exit gate to the Phase 5 gate**, because `PRIV-07` is affiliated with the phase that first gives an administrator a location view (the SOS admin map).
-- **The critical path is now stated** in [phase gate checklist](05-phase-gate-checklist.md) §6: Phase 4 → Phase 5 is the only hard chain (the SOS Service dispatches on the Relation Service); the plugin lifecycle can run in parallel from the Phase 2 gate with one exception (permission-vocabulary tests need Phase 4's location scopes); the Android shell can be prepared once the PWA exists. Nothing in Phases 3–6 blocks the plugin workstream.
+- **The critical path is now stated** in [phase gate checklist](05-phase-gate-checklist.md) §6: Phase 4 → Phase 5 is the only hard chain (the SOS Service dispatches on the Relation Service); the service lifecycle can run in parallel from the Phase 2 gate with one exception (permission-vocabulary tests need Phase 4's location scopes); the Android shell can be prepared once the PWA exists. Nothing in Phases 3–6 blocks the service workstream.
 
 ### 8.5 Gate change: the affiliation audit
 
@@ -214,8 +216,8 @@ The audit earned its place immediately: the first run failed on `UI-22` dependin
 Three requirement texts name a phase that differs from their mapping, and each is correct as written — recorded so a future audit does not "fix" them:
 
 - `QA-10` (secret scanning, Phase 1) says the documentation gate already applies the same pattern check **in Phase 0**. That is a statement about earlier coverage, not a second affiliation.
-- `QA-50` (release artefact set, Phase 1) lists plugin packages as Phase 7+ and the Android artefact as Phase 8+. The requirement is the artefact *catalogue*; the phases named are the artefacts' own.
-- `PLG-02` (third-party plugin scope, Phase 1) says the lifecycle is delivered in Phase 7. The requirement defines what a third-party plugin *is*, which Phase 1 must know in order to draw the boundary.
+- `QA-50` (release artefact set, Phase 1) lists service packages as Phase 7+ and the Android artefact as Phase 8+. The requirement is the artefact *catalogue*; the phases named are the artefacts' own.
+- `PLG-02` (third-party service scope, Phase 1) says the lifecycle is delivered in Phase 7. The requirement defines what a third-party service *is*, which Phase 1 must know in order to draw the boundary.
 
 ### 8.7 Evidence (third pass)
 
@@ -240,7 +242,7 @@ Rounds 1–3 read the documents against each other. This pass read them against 
 | --- | --- | --- |
 | Documented files versus real files | Compare each claim about `.editorconfig`, `.gitattributes`, `.gitignore`, `.github/workflows/docs-gates.yml` with the file it describes | One mismatch (§9.2.1); every other claim about the workflow (matrix, pinned SHAs, least privilege, concurrency, timeout) verified true |
 | Phase deliverable versus its exit gate | For each phase, list what it delivers and check the gate can prove it | Six gates were missing evidence for their own deliverables (§9.2.6) |
-| Affiliation re-check of round 3's work | Re-read the moved requirements and the rules that were *not* moved | Three UI requirements and five plugin requirements were still riding in blanket rules (§9.2.4, §9.2.5) |
+| Affiliation re-check of round 3's work | Re-read the moved requirements and the rules that were *not* moved | Three UI requirements and five service requirements were still riding in blanket rules (§9.2.4, §9.2.5) |
 | Register cells | Every open-question row must name exactly one decide-by phase | One row named two (§9.2.2) |
 | Environment template | Every variable has a placeholder and a description; every documented bound exists as a variable | Clean (70 variables) |
 | Route inventory | Every path mentioned in any document resolves to an inventory route, an infrastructure note, or a known directory | Clean |
@@ -254,9 +256,9 @@ Rounds 1–3 read the documents against each other. This pass read them against 
 
 **9.2.3 Phase 0 claimed more than it delivered.** The Phase 0 evidence table listed "Docker-based startup" as a delivered item, but Phase 0 ships the *documented contract* — the Compose stack is a Phase 1 deliverable, and the same document says so. The checklist row had the same overclaim. Both now say "the Docker-based startup contract Phase 1 must satisfy". In the same area, Phase 1's deliver list did not name the client route namespaces (`/_auth/*`, `/_public/*`, `/_user/*`, `/_admin/*`) even though `UI-01 … UI-07` are affiliated with Phase 1; the list now does.
 
-**9.2.4 Three UI requirements were riding in a blanket Phase 3 block.** `UI-10` (sessions and account-state settings) belongs with the account lifecycle in Phase 2; `UI-14` (notification preferences) belongs where notifications exist, Phase 5; `UI-15` (plugin settings appear only when a plugin is installed and healthy) belongs to Phase 7. Phase 3 keeps appearance, locale, permission status, accessibility, and offline behaviour.
+**9.2.4 Three UI requirements were riding in a blanket Phase 3 block.** `UI-10` (sessions and account-state settings) belongs with the account lifecycle in Phase 2; `UI-14` (notification preferences) belongs where notifications exist, Phase 5; `UI-15` (service settings appear only when a service is installed and healthy) belongs to Phase 7. Phase 3 keeps appearance, locale, permission status, accessibility, and offline behaviour.
 
-**9.2.5 The same class in the plugin rules.** A blanket "capability and failure behaviour" rule put `PLG-41 … PLG-46` in Phase 4. Four of them are plugin-lifecycle rules — disable/uninstall with credential revocation (`PLG-43`), upgrades with rollback (`PLG-44`), capability re-evaluation when health changes (`PLG-45`), and lifecycle auditing (`PLG-46`) — and one is SOS-specific (`PLG-42`, SOS unavailable). They are now Phase 7 and Phase 5 respectively; Phase 4 keeps `PLG-41` (Relation unavailable fails closed) and names it in its gate, Phase 5 names the SOS case, and Phase 7 names capability re-evaluation and the lifecycle audit trail.
+**9.2.5 The same class in the service rules.** A blanket "capability and failure behaviour" rule put `PLG-41 … PLG-46` in Phase 4. Four of them are service-lifecycle rules — disable/uninstall with credential revocation (`PLG-43`), upgrades with rollback (`PLG-44`), capability re-evaluation when health changes (`PLG-45`), and lifecycle auditing (`PLG-46`) — and one is SOS-specific (`PLG-42`, SOS unavailable). They are now Phase 7 and Phase 5 respectively; Phase 4 keeps `PLG-41` (Relation unavailable fails closed) and names it in its gate, Phase 5 names the SOS case, and Phase 7 names capability re-evaluation and the lifecycle audit trail.
 
 **9.2.6 Six phase exit gates were missing evidence for their own deliverables.** A gate that cannot prove what the phase delivers is not a gate:
 
@@ -291,7 +293,7 @@ The group count moved from 112 to 116 because three blanket phase rules were spl
 The affiliation rules from round 3 were correct and too rigid in one direction: they left no way to **legally** do a small piece of later-phase work when the current phase cannot proceed without it. Two cases are visible in the plan itself:
 
 - The Phase 3 PostGIS prototype must benchmark proximity **on the real location row**, or its measurements cannot answer `ADR-005` for Phase 4. The row's requirements (`DATA-04`, `DATA-05`) are Phase 4, so the honest plan was previously impossible to write down.
-- The plugin workstream is allowed to run in parallel from the Phase 2 gate, but an isolated plugin host cannot be validated without a service identity, bounded calls, and an authenticated channel (`PLG-36`, `PLG-37`, `PLG-39`) — all Phase 4.
+- The service workstream is allowed to run in parallel from the Phase 2 gate, but an isolated service host cannot be validated without a service identity, bounded calls, and an authenticated channel (`PLG-36`, `PLG-37`, `PLG-39`) — all Phase 4.
 
 The alternative to a declared mechanism is what actually happens in projects: the rule is quietly ignored, or the work is done twice. Both are worse than a recorded exception.
 
@@ -301,7 +303,7 @@ A phase may implement the **minimal slice** of a later-phase requirement when th
 
 `GOV-87` consequence 4 was amended accordingly: a phase gate must not require later-phase work *unless it is a declared pull-forward*. A gate that cannot run at all remains a different mechanism — a recorded exception with owner, justification, and expiry ([QUALITY_GATES](../QUALITY_GATES.md) §6) — and the two are now explicitly distinguished, because one weakens a gate and the other does not.
 
-Five pull-forwards are declared, each with its reason in the register: `DATA-04` and `DATA-05` into Phase 3 (prototype migration only), `PLG-36`, `PLG-37`, `PLG-39` into Phase 3 (parallel plugin workstream). The Phase 3 deliver line and the parallel-work table in [phase gate checklist](05-phase-gate-checklist.md) now name them, so a reader does not have to open the gate script to find out what the plan actually allows.
+Five pull-forwards are declared, each with its reason in the register: `DATA-04` and `DATA-05` into Phase 3 (prototype migration only), `PLG-36`, `PLG-37`, `PLG-39` into Phase 3 (parallel service workstream). The Phase 3 deliver line and the parallel-work table in [phase gate checklist](05-phase-gate-checklist.md) now name them, so a reader does not have to open the gate script to find out what the plan actually allows.
 
 ### 10.3 Affiliations that were still wrong
 
@@ -415,12 +417,12 @@ Fixed: every site now uses category/assignment vocabulary, the ADR-016 heading b
 
 ### 12.4 A decision nobody cited
 
-`ADR-002` (plugin ZIP security) was not referenced by identifier anywhere, although its rule ("never run uploaded code in the core process") is stated in `SECURITY.md` §6 and `MASTER_PROJECT_PROMPT`. The rule is now cited at the place it is stated, so a reader can reach the decision rather than inferring it. This was the only unreferenced decision; every closed question (`Q-18`) and every other ADR is referenced.
+`ADR-002` (service ZIP security) was not referenced by identifier anywhere, although its rule ("never run uploaded code in the core process") is stated in `SECURITY.md` §6 and `MASTER_PROJECT_PROMPT`. The rule is now cited at the place it is stated, so a reader can reach the decision rather than inferring it. This was the only unreferenced decision; every closed question (`Q-18`) and every other ADR is referenced.
 
 ### 12.5 Verified clean (no change)
 
-- **Enum and state lists** agree everywhere they appear: suggestion states (`pending`, `accepted`, `declined`, `expired`, `cancelled`), account status (four values plus the two setup flags), alert priorities, plugin lifecycle states, category status (`self_declared`, `verified`), theme values.
-- **Configuration values against documents**: the Argon2id parameters, upload byte and pixel bounds, plugin archive and extraction bounds, SOS radius, login attempt and window values, and stream ticket lifetime all match their documented descriptions; no bound exists in a document without a variable, and no variable carries a value the documents contradict.
+- **Enum and state lists** agree everywhere they appear: suggestion states (`pending`, `accepted`, `declined`, `expired`, `cancelled`), account status (four values plus the two setup flags), alert priorities, service lifecycle states, category status (`self_declared`, `verified`), theme values.
+- **Configuration values against documents**: the Argon2id parameters, upload byte and pixel bounds, service archive and extraction bounds, SOS radius, login attempt and window values, and stream ticket lifetime all match their documented descriptions; no bound exists in a document without a variable, and no variable carries a value the documents contradict.
 - **Action pins**: both SHAs in the workflow match `REFERENCES.md` exactly (`actions/checkout` `3d3c42e5…`, `actions/setup-node` `949feb24…`).
 - **Identifier coverage**: no area has a numbering gap (all fifteen areas re-verified), and no requirement identifier is undefined.
 - **Path namespaces**: `/_auth`, `/_public`, `/_user`, `/_admin`, `/healthz`, `/readyz`, `/api/v1`, and the metric endpoint appear only in their defined forms.
@@ -441,9 +443,9 @@ Three questions were asked of the pack: whether the files and structure exist fo
 
 ### 13.1 Files and structure
 
-**Present now:** 26 documents under `/docs` (index, requirements, architecture, security, data model, plugin system, API, quality gates, roadmap, decisions, references, threat models, data classification, conventions, development guides, performance policy, user guide), two dependency-free gate scripts, the CI workflow with pinned actions, the environment template, and the repository dotfiles. Everything Phase 0 promises exists and is enforced by the gate.
+**Present now:** 26 documents under `/docs` (index, requirements, architecture, security, data model, service system, API, quality gates, roadmap, decisions, references, threat models, data classification, conventions, development guides, performance policy, user guide), two dependency-free gate scripts, the CI workflow with pinned actions, the environment template, and the repository dotfiles. Everything Phase 0 promises exists and is enforced by the gate.
 
-**Deliberately absent:** the code tree — `apps/web`, `apps/api`, `apps/android`, `services/relation`, `services/sos`, `packages/contracts`, `packages/validation`, `packages/api-client`, `packages/config`, `packages/ui`, `packages/test-utils` — is specified ([ARCHITECTURE](../ARCHITECTURE.md) §5, `OPS-28 … OPS-43`) with dependency-direction rules, and created in Phase 1. That is `ADR-010`: Phase 0 is documentation-only, and the Phase 0 checklist row "no feature implementation is present" depends on the tree not existing yet.
+**Deliberately absent:** the code tree — `apps/web`, `services/core`, `apps/android`, `services/relation`, `services/sos`, `packages/contracts`, `packages/validation`, `packages/api-client`, `packages/config`, `packages/ui`, `packages/test-utils` — is specified ([ARCHITECTURE](../ARCHITECTURE.md) §5, `OPS-28 … OPS-43`) with dependency-direction rules, and created in Phase 1. That is `ADR-010`: Phase 0 is documentation-only, and the Phase 0 checklist row "no feature implementation is present" depends on the tree not existing yet.
 
 ### 13.2 Task breakdown — what was missing
 
@@ -491,13 +493,13 @@ Three more questions about the pack: do we have the diagrams, do we have the cyc
 
 `grep -rn 'mermaid\|diagram\|flowchart' docs/` returned one hit in the entire pack: the opening sentence of [DATA_MODEL](../DATA_MODEL.md) promising an ER diagram *in the phase that builds each domain*. Topology, the request path, every state transition, and the shape of the repository were prose only, so a reader — human or agent — had to reconstruct each of them from sentences and hope the reconstruction matched.
 
-Added [DIAGRAMS](../DIAGRAMS.md) as a first-class document: **16 Mermaid blocks**, each preceded by a `Cited:` line naming the requirements it draws — the repository map, the system topology and schema ownership, the request path, the account states, password recovery, follow requests and blocking, live grants, location history, the SOS flow from alert to resolution, suggestion states, task states, the plugin lifecycle, and the four cycles (phase, decision, documentation, release) that govern the work itself. §9 of the document holds the four state vocabularies; §1 states the rule that matters most: **the requirement text is normative and the diagram is derived**, so a disagreement is a defect fixed in the same change.
+Added [DIAGRAMS](../DIAGRAMS.md) as a first-class document: **16 Mermaid blocks**, each preceded by a `Cited:` line naming the requirements it draws — the repository map, the system topology and schema ownership, the request path, the account states, password recovery, follow requests and blocking, live grants, location history, the SOS flow from alert to resolution, suggestion states, task states, the service lifecycle, and the four cycles (phase, decision, documentation, release) that govern the work itself. §9 of the document holds the four state vocabularies; §1 states the rule that matters most: **the requirement text is normative and the diagram is derived**, so a disagreement is a defect fixed in the same change.
 
 Verification was not assumed. Every block parses with **Mermaid 12.2.0** (npm registry, installed in an isolated scratch environment — it is not a repository dependency), recorded in [REFERENCES](../REFERENCES.md) and in §14.6 below. GitHub remains the renderer of record; a renderer check in CI waits for Phase 1, when dependencies are allowed, and is recorded as such rather than claimed ([QA-60](03-ci-and-gates.md) §1).
 
 ### 14.2 Cycles — the lifecycles existed only as scattered prose
 
-Four state machines were declared in prose across three documents — account states ([PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3), suggestion states and task transitions (§7), plugin installation states ([PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5) — and the follow-request, blocking, live-grant, history, and recovery lifecycles were described the same way. Nothing showed them together, and nothing could tell whether a later edit renamed a state in one place and missed the other.
+Four state machines were declared in prose across three documents — account states ([PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3), suggestion states and task transitions (§7), service installation states ([SERVICE_SYSTEM](../SERVICE_SYSTEM.md) §5) — and the follow-request, blocking, live-grant, history, and recovery lifecycles were described the same way. Nothing showed them together, and nothing could tell whether a later edit renamed a state in one place and missed the other.
 
 Closed in the same document: §5–§8 draw the domain lifecycles, §9 tabulates the four checked vocabularies, and §10 draws the project's own cycles — the phase cycle (deliver, evidence, gate, owner approval, next phase), the decision cycle (question, owner, decide-by phase, ADR, and what an unresolved question blocks), the documentation cycle (requirement, identifier, traceability row, gate), and the release cycle (freeze, gates, build once, verify, rehearse, promote, record, announce, roll back).
 
@@ -580,8 +582,8 @@ The two documents added in §14 were reviewed the way the rest of the pack is re
 | 6 | The recovery sequence did not name the endpoints it describes, so it did not match the API inventory it will become. | It now calls `POST /auth/password/recover/questions` and `POST /auth/password/recover/verify` ([API inventory](04-api-inventory.md) §1). |
 | 7 | `dispatch or policy cancels it` invented a cancellation verb for suggestions that no requirement defines. | "the owning flow cancels it — for example when the alert is cancelled first" (`SOS-06`, `SOS-11`). |
 | 8 | `the user becomes eligible again only while holding no other active task` said the opposite of what it meant. | "eligibility returns only if the user holds no other active task" (`SOS-19`). |
-| 9 | The plugin note explained a failed upgrade but not how a successful one behaves. | An upgrade stages a new version against the recorded `previous_version`, and the running version keeps serving until the new one is activated (`PLG-28`, `PLG-44`). |
-| 10 | §9 claimed the four vocabularies "also appear in requirement text". For the plugin states that is false — they are declared in `PLUGIN_SYSTEM` §5 prose. | The intro now names the declaring documents and sections; the plugin row cites `PLG-15 … PLG-46` instead of `PLG-04 … PLG-46`. |
+| 9 | The service note explained a failed upgrade but not how a successful one behaves. | An upgrade stages a new version against the recorded `previous_version`, and the running version keeps serving until the new one is activated (`PLG-28`, `PLG-44`). |
+| 10 | §9 claimed the four vocabularies "also appear in requirement text". For the service states that is false — they are declared in `SERVICE_SYSTEM` §5 prose. | The intro now names the declaring documents and sections; the service row cites `PLG-15 … PLG-46` instead of `PLG-04 … PLG-46`. |
 | 11 | "Two orthogonal facts are deliberately not status values" — the second (a task's recorded reason) is metadata, not state. | Reworded: the setup flags are orthogonal state; the reason is metadata on the event (`AUTH-27`, `SOS-17`, `SOS-20`). |
 | 12 | The release diagram drew the rollback edge out of `record`, i.e. a failure while writing the release notes. | The edge leaves `prod` — "a failure that has shipped" — with a sentence noting that a release failing before promotion is simply not released (`QA-92 … QA-95`). |
 | 13 | §10.3 listed the documentation gate's checks inline, a list that changes whenever a check is added. | Replaced with a pointer to the checks in [CI and gates](03-ci-and-gates.md) §3. |
@@ -626,7 +628,7 @@ F  the task state row points at §7.2 instead of §7.3
    - [diagrams] sos_tasks.status: state "assigned" is declared in docs/PRODUCT_REQUIREMENTS.md
      but §7.2 does not draw it                                                    exit 1
 
-G  the plugin state row points at §9, which has no diagram
+G  the service state row points at §9, which has no diagram
    - [diagrams] plugin_installations.status: §9 in docs/DIAGRAMS.md draws no diagram  exit 1
 
 H  a state renamed inside the section the table names (en_route -> enroute)
@@ -697,7 +699,7 @@ Backups, availability, and runbooks were promised in the roadmap and referred to
 
 ### 16.3 The deliberate exclusions are now written down
 
-PRODUCT_REQUIREMENTS §10 lists eleven exclusions with a reason and a reconsider-trigger for each: emergency-service dispatch, an iOS application, offline maps and routing, traffic and speed limits from unlicensed sources, analytics and tracking, a public user directory, more than one concurrent responder, plugin ZIP installation before its gate, email and SMS channels, legal documents beyond the privacy notice, and published availability figures. A pack that states only what it will build invites the reader to assume everything else is intended; a table that says "not in v1, and here is what would change that" is the other half of the same promise.
+PRODUCT_REQUIREMENTS §10 lists eleven exclusions with a reason and a reconsider-trigger for each: emergency-service dispatch, an iOS application, offline maps and routing, traffic and speed limits from unlicensed sources, analytics and tracking, a public user directory, more than one concurrent responder, service ZIP installation before its gate, email and SMS channels, legal documents beyond the privacy notice, and published availability figures. A pack that states only what it will build invites the reader to assume everything else is intended; a table that says "not in v1, and here is what would change that" is the other half of the same promise.
 
 Four candidates the sweep flagged were already covered and needed no change: pagination and the error envelope (`API-11` … `API-13`), the deprecation window (`API-10`, `API-18`, `QA-88`), contract drift and generated artefacts (`API-25` … `API-30`, `QA-07`, `QA-88`), and export and deletion obligations ([data classification](../security/data-classification.md) §4 with the Q-14 register row).
 
@@ -767,8 +769,8 @@ One question the directive does not answer, and which no document should guess: 
 | [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) | `UI-28` added — both catalogues complete, key-set parity, the switch reachable before sign-in; `UI-12` states both languages and the direction; `UI-22` and `UI-25` now cite ADR-017 instead of the closed question |
 | [API_AND_OPENAPI](../API_AND_OPENAPI.md) | `API-37` added — prose is never the contract: clients render from the stable `code` and their own catalogue, and any server-composed sentence is negotiated and labelled |
 | [QUALITY_GATES](../QUALITY_GATES.md) | The localization gate (`QA-17`) now requires both catalogues to hold the same key set, so a key present in one locale and missing from the other fails the build |
-| [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) | `PLG-57` added — plugin-contributed interface text is declared per locale and never merged into the host catalogue |
-| [development/02-dependency-policy](02-dependency-policy.md) | `vue-i18n` 11.4.14 (MIT, peer `vue ^3.0.0`) added to the verified frontend baseline, verified against the registry on 2026-10-14 |
+| [SERVICE_SYSTEM](../SERVICE_SYSTEM.md) | `PLG-57` added — service-contributed interface text is declared per locale and never merged into the host catalogue |
+| [development/02-dependency-policy](02-dependency-policy.md) | `vue-i18n` 11.4.14 (MIT, peer `vue ^3.0.0`) added to the verified frontend baseline, verified against the registry on 2026-10-18 |
 | [MASTER_PROJECT_PROMPT](../MASTER_PROJECT_PROMPT.md) | Core objectives state the two required languages; the technology direction names the catalogue library |
 | [ROADMAP](../ROADMAP.md) | Phase 2 delivers both catalogues complete and its exit gate keeps the parity check and the pre-sign-in switch, with Q-24 in place of the closed Q-15; Phase 3 verifies the settings screen in both directions |
 | [phase gate checklist](05-phase-gate-checklist.md) | Phase 2 rows 6 and 9 carry the new identifiers and the parity evidence; the Phase 0 register ranges move to ADR-017 and Q-24 |
@@ -865,7 +867,7 @@ The instruction for this pass was literal: read every file under `docs/` line by
 | 4 | `§6.3` and `§6.2` were cited bare inside a table, where they read as sections of this record. | §15 | Both name [DIAGRAMS](../DIAGRAMS.md). |
 | 5 | An example identifier (`OPS-99`) appeared in prose with nothing to distinguish it from a typo: no registry defines it, and a reader could only guess that the sentence was hypothetical. | §12 | The sentence now says the identifier does not exist before using it as the example. Check 11 requires that: an unassigned identifier must be explained on the line where it appears, and the phantom in §12 stays exactly where it is, deliberately. |
 | 6 | A requirement pointed at the wrong section of the right document: the provider-outage rule cited the routing section for map behaviour. | [ARCHITECTURE](../ARCHITECTURE.md), `MAP-20` | It now cites the map rules and the navigation-degradation requirement by identifier (`NAV-11`). A citation that resolves is not the same as a citation that is correct — this is the one class in this table no automated check can decide. |
-| 7 | The new citation check rejected `PLUGIN_SYSTEM §2–§7`: the second `§` started a second, bare citation. Both sections exist, and the range was right, so the **checker** was wrong. | `scripts/gates/phase0.mjs` | The range pattern accepts `–§M`, and a range is now read as what it claims to be — a contiguous block, with every section inside it verified, not just the two ends. |
+| 7 | The new citation check rejected `SERVICE_SYSTEM §2–§7`: the second `§` started a second, bare citation. Both sections exist, and the range was right, so the **checker** was wrong. | `scripts/gates/phase0.mjs` | The range pattern accepts `–§M`, and a range is now read as what it claims to be — a contiguous block, with every section inside it verified, not just the two ends. |
 | 8 | The gate resolved links but not **mentions**: an identifier typed into prose — or a section cited by name rather than link — could be wrong anywhere, and `SEC-999`, an identifier that does not exist, passed the whole gate. | `scripts/gates/phase0.mjs` | Check 11 (`QA-119`) resolves every requirement, decision, and open-question mention, and every section citation, whether linked, named, or bare inside a document that numbers its own sections. Mutation T10 in §19.5 is that hole closed. |
 | 9 | The pack used two varieties of English at once: `behaviour`, `licence`, `catalogue`, and `artefact` beside `-isation` endings, and `artifact`, `behavior`, `defense`, `license` (noun) in 34 files. A reader could not tell the house style from a mistake, and the gate had no opinion. | 24 files across `docs/`, `README.md`, `CONTRIBUTING.md` | One variety is now declared ([repository conventions](00-repository-conventions.md) §1, `GOV-89`): British spelling with `-ize`/`-ization` endings, `licence` as a noun. 59 `-is-` forms were converted across 24 files, including the ADR-017 heading and its eleven inbound anchors, plus `artefacts`, `behaviour`, `defence`, and `licence`. The first run of the sweep dropped the capital letter from nine words that begin a sentence, a heading, or a table label (`Parameterized queries`, `Pseudonymized only`, `Localization checks`, the ADR-017 title, and five more); all nine were restored by comparing the result against the pre-review text word by word — which is the point of reading the output of a mechanical change rather than trusting it. The same sweep was briefly run over the gate script itself, where it rewrote the retired-spelling pattern into the spellings the pattern exists to catch; the pattern was restored, and §19.5 now tests it in both directions (T15, T16) instead of trusting it. Code identifiers keep their own spelling. Check 12 (`QA-120`) enforces it. |
 | 10 | Eight documents had changed since the date in their own review line, so the date certified text nobody had re-read. | `ARCHITECTURE.md`, `docs/README.md`, `REFERENCES.md`, [repository conventions](00-repository-conventions.md), [development environment](01-development-environment.md), [API inventory](04-api-inventory.md), root `README.md`, `CONTRIBUTING.md` | Each review line was moved to the day of the change its history records, and the matching index rows moved with it — check 1 verifies the pair, so half a bump fails. Check 13 (`QA-121`) now enforces the rule. |
@@ -887,7 +889,7 @@ Checks 11–13 were written in this pass for the defects above, and each is regi
 
 Recorded because each was suspected during the reading and then disproved — a review that only lists its hits leaves the next reader to re-open the same questions:
 
-- **`PLUGIN_SYSTEM §2–§7`.** Both sections exist (§2 *Plugin manifest*, §7 *Resource controls*), so the citation was right and the checker was wrong. Fixed in the checker, not in the document.
+- **`SERVICE_SYSTEM §2–§7`.** Both sections exist (§2 *Service manifest*, §7 *Resource controls*), so the citation was right and the checker was wrong. Fixed in the checker, not in the document.
 - **`ARCHITECTURE.md` §5 in the root `README.md`.** §5 is the workspace layout, so the pointer was correct where a note written earlier in this session doubted it.
 - **The *Start here* table in `docs/README.md`.** It lists DIAGRAMS and GLOSSARY as items 4 and 5; nothing was missing.
 - **`package.json` / `engines.node`.** The repository contains no `package.json` at all — it is documentation, tooling, and configuration. The `engines: node >= 20` line in the [dependency policy](02-dependency-policy.md) is the external `zopia` package's own metadata, quoted correctly as such.
@@ -901,7 +903,7 @@ Recorded because each was suspected during the reading and then disproved — a 
 | Check 11 added (`QA-119`), with range expansion and a named/bare/attached citation resolver | Defect 7 and 8: a citation is a promise, and a range is a promise about everything between its ends |
 | Check 12 added (`QA-120`) over Markdown, `.env.example`, and the two root files | Defect 9: one variety of English, declared before it is enforced |
 | Check 13 added (`QA-121`), with a working-tree branch and a shallow-clone note | Defects 10 and 11: the review line is a claim, and a check that skips itself everywhere is not a check |
-| `PLUGIN_SYSTEM`-style ranges, `–§M` continuations | Defect 7 |
+| `SERVICE_SYSTEM`-style ranges, `–§M` continuations | Defect 7 |
 | `fetch-depth: 0` in `docs-gates.yml` — recorded in this pass, added in the fifteenth ([§20.4](#204-the-records-own-summary-had-drifted)) | Defect 11 |
 | `GOV-89` (language variety), `GOV-71` and the `QA-01` row extended, catalogue items 11–13 | Defect 12: the rule, its requirement, and its documentation land together |
 | `PHASE_RULES` in the traceability generator: `GOV-89`, `QA-119 … QA-121` affiliated with Phase 0 | The gate rules themselves are Phase 0 deliverables, as `QA-62 … QA-68` and `QA-116 … QA-118` already were |
@@ -918,8 +920,8 @@ T10 `SEC-999` typed into docs/GLOSSARY.md, a requirement no document defines
 T11 [SECURITY](SECURITY.md) §99 added to docs/GLOSSARY.md (a section that does not exist)
     - [references] docs/GLOSSARY.md:25 cites SECURITY.md §99, but docs/SECURITY.md has no §99   exit 1
 
-T12 one word moved back to the other variety: "behaviour" -> "behavior" in PLUGIN_SYSTEM §6
-    - [language] docs/PLUGIN_SYSTEM.md:73 uses the American spelling "behavior" —
+T12 one word moved back to the other variety: "behaviour" -> "behavior" in SERVICE_SYSTEM §6
+    - [language] docs/SERVICE_SYSTEM.md:73 uses the American spelling "behavior" —
       the pack uses the British form                                            exit 1
 
 T13a a sentence appended to a committed document with no review-line change
@@ -939,9 +941,9 @@ T15 "normalisation" added to GLOSSARY.md — the retired form of a word the pack
 T16 "normalization" added to GLOSSARY.md, one word later in the same row — the form the pack uses
                                                                                  exit 0
 
-T14 §5 of PLUGIN_SYSTEM renamed, leaving a hole inside the range cited as §2–§7
-    - [references] docs/security/plugin-threat-model.md:3 cites ../PLUGIN_SYSTEM.md §5,
-      but docs/PLUGIN_SYSTEM.md has no §5                                       exit 1
+T14 §5 of SERVICE_SYSTEM renamed, leaving a hole inside the range cited as §2–§7
+    - [references] docs/security/service-threat-model.md:3 cites ../SERVICE_SYSTEM.md §5,
+      but docs/SERVICE_SYSTEM.md has no §5                                       exit 1
     (six further citations of §5 across the pack failed in the same run)
 
 all mutations restored from the pre-test copies                                  exit 0

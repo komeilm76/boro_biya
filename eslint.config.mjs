@@ -11,7 +11,7 @@ import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
 const backendTsFiles = [
-  'apps/api/**/*.ts',
+  'services/core/**/*.ts',
   'services/**/*.ts',
   'packages/api-client/**/*.ts',
   'packages/config/**/*.ts',
@@ -134,6 +134,41 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'error',
       'no-console': 'error',
       eqeqeq: ['error', 'always'],
+      // UI-21 / QA-17: prose and accessible labels must come from the catalogues.
+      'vue/no-bare-strings-in-template': [
+        'error',
+        {
+          allowlist: [],
+          attributes: {
+            '/.+/': [
+              'title',
+              'aria-label',
+              'aria-placeholder',
+              'aria-roledescription',
+              'aria-valuetext',
+              'placeholder',
+              'alt',
+              'label',
+            ],
+          },
+        },
+      ],
+      'vue/no-restricted-syntax': [
+        'error',
+        {
+          selector: 'VElement > VExpressionContainer > Literal[raw=/^["\']/]',
+          message: 'Use a message catalogue for visible text.',
+        },
+        {
+          selector: 'VElement > VExpressionContainer > TemplateLiteral[expressions.length=0]',
+          message: 'Use a message catalogue for visible text.',
+        },
+        {
+          selector:
+            "VAttribute[directive=true][key.name.name='bind'][key.argument.name=/^(title|aria-label|aria-placeholder|aria-roledescription|aria-valuetext|placeholder|alt|label)$/] > VExpressionContainer > Literal",
+          message: 'Use a message catalogue for accessible labels.',
+        },
+      ],
       'vue/multi-word-component-names': ['error', { ignores: ['App'] }],
     },
   },

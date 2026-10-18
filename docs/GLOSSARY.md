@@ -2,7 +2,7 @@
 
 The words this project uses in a specific way. Each entry says what the term means **here** — not in general use — and names the document that owns the definition. When an entry and a requirement disagree, the requirement wins and this page is the defect.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## Process and governance
 

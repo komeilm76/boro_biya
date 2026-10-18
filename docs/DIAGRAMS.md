@@ -1,8 +1,8 @@
 # Diagrams and Lifecycles
 
-The pictures of this project: what exists in the repository, how the runtime is put together, how the account, relation, SOS, and plugin lifecycles move through their states, and how work itself moves through the phases. Every diagram is drawn from requirements that are written elsewhere — this document adds no rules of its own.
+The pictures of this project: what exists in the repository, how the runtime is put together, how the account, relation, SOS, and service lifecycles move through their states, and how work itself moves through the phases. Every diagram is drawn from requirements that are written elsewhere — this document adds no rules of its own.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## 1. How these diagrams are maintained
 
@@ -26,7 +26,7 @@ flowchart LR
   end
   subgraph p1["Built in Phase 1"]
     web["apps/web — Vue PWA skeleton<br/>+ production static server"]
-    api["apps/api — core Fastify API"]
+    api["services/core — core Fastify API"]
     android["apps/android — Capacitor packaging config"]
     relsvc["services/relation"]
     sossvc["services/sos"]
@@ -49,7 +49,7 @@ Cited: `OPS-01` … `OPS-09`, `OPS-11` … `OPS-19`, `OPS-80`, `PLG-36` … `PLG
 flowchart TB
   browser["Browser / PWA — Vue 3, Vuetify, Tailwind,<br/>Pinia, MapLibre GL JS"]
   shell["Android shell — Capacitor,<br/>Ionic confined to shell affordances"]
-  api["Core API — Fastify modular monolith<br/>identity, sessions, roles, account lifecycle,<br/>preferences, audit, plugin registry"]
+  api["Core API — Fastify modular monolith<br/>identity, sessions, roles, account lifecycle,<br/>preferences, audit, integration contracts"]
   rel["Relation Service — own bounded domain:<br/>follow requests, blocks, grants,<br/>live and last-known location, history"]
   sos["SOS Service — own bounded domain:<br/>alerts, dispatch, suggestions, tasks"]
   pg[("PostgreSQL 18 — one shared cluster,<br/>one schema and one least-privilege role per service")]
@@ -301,51 +301,41 @@ stateDiagram-v2
   end note
 ```
 
-## 8. Plugin lifecycle
+## 8. Operator service release lifecycle
 
-Cited: `PLG-15` … `PLG-28`, `PLG-43` … `PLG-46`, `PLG-50`, `DATA-11`, `ADR-002`.
+Cited: `PLG-15` … `PLG-28`, `PLG-43` … `PLG-46`, `PLG-50`, `DATA-11`, `ADR-030`.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> uploaded : admin re-authenticates and submits a package
-  uploaded --> validating : archive, manifest, compatibility, signature, and policy checks
-  validating --> staged : built and tested in isolation, then staged with least privilege
-  staged --> installed : health checks pass and the admin activates it
-  installed --> staged : upgrade stages a new version against the recorded previous version
-  installed --> disabled : disabled — credentials revoked, workloads stopped, subscriptions closed
-  disabled --> installed : re-enabled after a capability check
-  installed --> uninstalling : uninstall
-  disabled --> uninstalling : uninstall
-  uninstalling --> uninstalled : credentials and storage released
-  validating --> failed : a check fails
-  staged --> failed : smoke tests fail
-  failed --> disabled : with no prior version active, the plugin stays disabled
-  note right of failed
-    A failed upgrade leaves the previously installed version active;
-    failed describes the attempted version, not the running one.
-    An upgrade stages a new version against the recorded previous
-    version, and the running version keeps serving until the new one
-    is activated (PLG-28, PLG-44).
-    Every install, configuration change, enable, disable, upgrade,
-    rollback, and uninstall is written to plugin_lifecycle_events in
-    the same transaction as the state change.
-  end note
+  [*] --> built : reviewed selected source and locked dependencies
+  built --> verified : isolated build and contract tests pass
+  verified --> staged : operator stages isolated workload
+  staged --> active : readiness and approval pass
+  active --> disabled : revoke credentials and stop workload
+  disabled --> staged : new reviewed rollout
+  built --> failed : build fails
+  verified --> failed : deployment fails
+  staged --> failed : health or smoke checks fail
+  failed --> retired : failed attempt archived; prior healthy release stays active
+  disabled --> retired : preserve audit evidence and apply storage policy
+  active --> retired : successful replacement and credential revocation
+  retired --> [*]
 ```
 
-Third-party installation stays disabled in production until the Phase 7 exit gate passes (`PLG-02`); the Relation and SOS services follow the same contracts as first-party services rather than uploaded packages (`ADR-012`).
+Deployment tooling owns these evidence states. No core installation table, upload endpoint or runtime orchestration controller is implied. Phase 7 supplies the full rollout rehearsal; source export is not a claim that it is already implemented.
 
 ## 9. State vocabularies
 
-The four machines whose states are declared outside this document: three in [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) (§3 and §7) and one in [PLUGIN_SYSTEM](PLUGIN_SYSTEM.md) §5. This table is the checked surface: the documentation gate compares each row with the sentence that declares the states, requires every one of them to appear in the section named in the last column, and fails on any disagreement ([QA-118](development/03-ci-and-gates.md) §3).
+The four machines whose states are declared outside this document: three in [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md) (§3 and §7) and one in [SERVICE_SYSTEM](SERVICE_SYSTEM.md) §5 (operator evidence, not a core table). This table is the checked surface: the documentation gate compares each row with the sentence that declares the states, requires every one of them to appear in the section named in the last column, and fails on any disagreement ([QA-118](development/03-ci-and-gates.md) §3).
 
 | Machine | States | Declared in | Drawn in |
 | --- | --- | --- | --- |
 | `account_status` | `active`, `locked`, `banned`, `deactivated` | [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md#3-authentication-and-account-recovery) §3, `AUTH-31 … AUTH-34` | §5.1 |
 | `sos_suggestions.status` | `pending`, `accepted`, `declined`, `expired`, `cancelled` | [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md#7-sos-service) §7, `SOS-11` | §7.2 |
 | `sos_tasks.status` | `assigned`, `en_route`, `arrived`, `investigating`, `resolving`, `resolved` | [PRODUCT_REQUIREMENTS](PRODUCT_REQUIREMENTS.md#task-states) §7, `SOS-16` | §7.3 |
-| `plugin_installations.status` | `uploaded`, `validating`, `staged`, `installed`, `disabled`, `failed`, `uninstalling`, `uninstalled` | [PLUGIN_SYSTEM](PLUGIN_SYSTEM.md#5-service-lifecycle-and-api) §5, `PLG-15 … PLG-46` | §8 |
+| `service_release.status` | `built`, `verified`, `staged`, `active`, `disabled`, `failed`, `retired` | [SERVICE_SYSTEM](SERVICE_SYSTEM.md#5-service-lifecycle-and-api) §5, `PLG-15 … PLG-46` | §8 |
 
-Two facts are deliberately not status values: an account's setup flags, which are orthogonal state (`AUTH-27`), and a task's recorded transition reason, which is metadata on the event (`SOS-17`, `SOS-20`). Adding a fifth account state, a sixth suggestion state, or a plugin state means changing the governing document first — the gate then demands the diagram and this table in the same change.
+Two facts are deliberately not status values: an account's setup flags, which are orthogonal state (`AUTH-27`), and a task's recorded transition reason, which is metadata on the event (`SOS-17`, `SOS-20`). Adding a fifth account state, a sixth suggestion state, or an operator release state means changing the governing document first — the gate then demands the diagram and this table in the same change.
 
 ## 10. The project's own cycles
 

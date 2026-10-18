@@ -13,7 +13,7 @@ export function installRouteGuards(router: Router): void {
     const session = useSessionStore();
 
     // UI-05 (first half): routes that require a session send unauthenticated visitors to the
-    // sign-in entry, preserving where they wanted to go so they can return after Phase 2.
+    // sign-in entry, preserving the private destination for validated post-login return navigation.
     if (to.meta.requiresAuthentication === true && !session.isAuthenticated) {
       return {
         path: `${CLIENT_ROUTE_NAMESPACES.auth}/login`,
@@ -21,7 +21,7 @@ export function installRouteGuards(router: Router): void {
       };
     }
 
-    // The admin namespace is additionally gated on the admin role for UX; the server remains
+    // The admin namespace is additionally gated on current administrative permissions for UX; the server remains
     // the only authority (ADM-02 arrives with authentication in Phase 2).
     if (to.meta.requiresAdminRole === true && !session.isAdmin) {
       return { path: CLIENT_ROUTE_NAMESPACES.user };

@@ -2,7 +2,8 @@
 /**
  * Baseline load profile runner (ADR-028, OPS-86, QA-124).
  *
- * Runs the documented Phase 1 profile — bounded synthetic concurrency against the core API's
+ * Runs the retained operational profile plus a separate Phase 2 real-login profile. The operational
+ * workload uses bounded synthetic concurrency against the core API's
  * operational endpoints, with the database reachable — on a disposable PostgreSQL 18, measures
  * latency percentiles, error rate, throughput, process memory, and log volume, and FAILS on a
  * breach of the pass/fail criteria in scripts/loadtest/baseline.json (mirrored in
@@ -13,7 +14,7 @@
  * Dependency-free Node (GOV-45); uses the built artefacts (run `bun run build` first — the gate
  * orchestrator does). Flags: --concurrency=N --duration=N --report=path.json
  */
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem, platform, arch } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -28,7 +29,9 @@ const flagNumber = (name) => {
   return hit === undefined ? undefined : Number(hit.slice(name.length + 3));
 };
 const reportFlag = argv.find((arg) => arg.startsWith('--report='));
-const reportPath = reportFlag === undefined ? undefined : reportFlag.slice('--report='.length);
+// The existing CI upload expects this ignored output even without an explicit --report flag.
+const reportPath =
+  reportFlag === undefined ? join(ROOT, 'var', 'load-baseline-report.json') : reportFlag.slice('--report='.length);
 // --baseline=<file> substitutes the pass/fail rule. Its purpose is proving the gate FAILS on a
 // breach (QA-124): CI and the gate suite use the committed baseline; a reviewer can point this
 // at a tightened copy and watch the run fail closed.
@@ -43,7 +46,7 @@ const mix = baseline.profile.mix;
 const requestTimeoutMs = baseline.profile.requestTimeoutMs;
 
 const requiredArtefacts = [
-  'apps/api/dist/main.js',
+  'services/core/dist/main.js',
   'packages/test-utils/dist/pg/index.js',
   'packages/db/dist/index.js',
 ];
@@ -85,7 +88,7 @@ const coreUrl = serviceConnectionString(database.adminConnectionString, coreServ
 
 process.stdout.write('loadtest: starting the core API artefact...\n');
 const apiLogs = [];
-const api = spawn(process.execPath, [join(ROOT, 'apps/api/dist/main.js')], {
+const api = spawn(process.execPath, [join(ROOT, 'services/core/dist/main.js')], {
   cwd: ROOT,
   env: {
     ...process.env,
@@ -98,8 +101,10 @@ const api = spawn(process.execPath, [join(ROOT, 'apps/api/dist/main.js')], {
     LOG_LEVEL: 'info',
     DATABASE_URL: coreUrl,
     WEB_ORIGIN: 'http://localhost:5173',
+    SESSION_SECRET: 'disposable-runtime-test-only-signing-material',
     GRACEFUL_SHUTDOWN_TIMEOUT_SECONDS: '5',
     BUILD_COMMIT: 'loadtest',
+    ...baseline.login.configuration,
   },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -243,9 +248,146 @@ const logBytesPer1k = result.total === 0 ? Number.POSITIVE_INFINITY : (logBytes 
 const peakRssBytes = result.rssSamples.length > 0 ? Math.max(...result.rssSamples) : (idleRssBytes ?? 0);
 const MB = 1024 * 1024;
 
+// Login has its own dataset, native hash work and budgets. Never dilute its latency
+// distribution with the much faster operational endpoints or disable its rate limiting.
+async function runLoginProfile() {
+  const login = baseline.login;
+  if (login.profile.concurrency !== 1) throw new Error('login profile requires one sequential worker');
+  const csrfResponse = await fetch(`${BASE}/api/v1/auth/csrf`, { signal: AbortSignal.timeout(requestTimeoutMs) });
+  const { csrfToken } = await csrfResponse.json();
+  if (!csrfResponse.ok || typeof csrfToken !== 'string') throw new Error('login fixture unavailable');
+  const headers = {
+    origin: 'http://localhost:5173',
+    'content-type': 'application/json',
+    'x-csrf-token': csrfToken,
+    cookie: `boro_csrf=${csrfToken}`,
+  };
+  const username = 'load_fixture',
+    password = 'Synthetic!orchard782';
+  const registered = await fetch(`${BASE}/api/v1/auth/register`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      username,
+      password,
+      repeatPassword: password,
+      answers: [1, 2, 3, 4, 5].map((questionId) => ({ questionId, answer: 'synthetic private answer' })),
+    }),
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
+  if (registered.status !== 201) throw new Error('login fixture unavailable');
+  await registered.body?.cancel();
+  async function phase(seconds) {
+    const stopAt = Date.now() + seconds * 1000,
+      latencies = [],
+      rssSamples = [],
+      statusCounts = new Map();
+    let failed = 0,
+      cleanupFailures = 0;
+    const verificationStatusCounts = new Map();
+    const count = (stage, status) => {
+      const key = `${stage}:${status}`;
+      verificationStatusCounts.set(key, (verificationStatusCounts.get(key) ?? 0) + 1);
+    };
+    const timer = setInterval(() => {
+      void scrapeRssBytes().then((value) => {
+        if (value !== null) rssSamples.push(value);
+      });
+    }, 100);
+    try {
+      while (Date.now() < stopAt) {
+        const start = performance.now();
+        let recorded = false,
+          issued = false;
+        try {
+          const response = await fetch(`${BASE}/api/v1/auth/login`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ username, password }),
+            signal: AbortSignal.timeout(requestTimeoutMs),
+          });
+          const body = await response.json();
+          latencies.push(performance.now() - start);
+          recorded = true;
+          statusCounts.set(response.status, (statusCounts.get(response.status) ?? 0) + 1);
+          const refresh = /^boro_refresh=([^;]+)/.exec(response.headers.get('set-cookie') ?? '')?.[1];
+          if (
+            !response.ok ||
+            typeof body.accessToken !== 'string' ||
+            body.accessToken.split('.').length !== 3 ||
+            body.expiresIn !== 900 ||
+            !refresh
+          ) {
+            failed++;
+            continue;
+          }
+          issued = true;
+          const profile = await fetch(`${BASE}/api/v1/users/me`, {
+            headers: { authorization: `Bearer ${body.accessToken}` },
+            signal: AbortSignal.timeout(requestTimeoutMs),
+          });
+          await profile.body?.cancel();
+          const logout = await fetch(`${BASE}/api/v1/auth/logout`, {
+            method: 'POST',
+            headers: {
+              origin: headers.origin,
+              'x-csrf-token': csrfToken,
+              cookie: `${headers.cookie}; boro_refresh=${refresh}`,
+            },
+            signal: AbortSignal.timeout(requestTimeoutMs),
+          });
+          await logout.body?.cancel();
+          const denied = await fetch(`${BASE}/api/v1/users/me`, {
+            headers: { authorization: `Bearer ${body.accessToken}` },
+            signal: AbortSignal.timeout(requestTimeoutMs),
+          });
+          await denied.body?.cancel();
+          count('profile', profile.status);
+          count('logout', logout.status);
+          count('revoked', denied.status);
+          if (profile.status !== 200 || logout.status !== 204 || denied.status !== 401) failed++;
+          if (logout.status !== 204 || denied.status !== 401) cleanupFailures++;
+        } catch {
+          if (!recorded) latencies.push(performance.now() - start);
+          failed++;
+          if (issued) cleanupFailures++;
+        }
+      }
+    } finally {
+      clearInterval(timer);
+    }
+    const finalRss = await scrapeRssBytes();
+    if (finalRss !== null) rssSamples.push(finalRss);
+    return { latencies, rssSamples, statusCounts, failed, cleanupFailures, verificationStatusCounts };
+  }
+  await phase(login.profile.warmupSeconds);
+  const result = await phase(login.profile.durationSeconds);
+  const ordered = result.latencies.sort((a, b) => a - b);
+  const percentile = (fraction) => ordered[Math.max(0, Math.ceil(ordered.length * fraction) - 1)] ?? Number.NaN;
+  return {
+    requests: ordered.length,
+    errorRate: ordered.length === 0 ? 1 : result.failed / ordered.length,
+    cleanupFailures: result.cleanupFailures,
+    verificationStatusCounts: Object.fromEntries(result.verificationStatusCounts),
+    statusCounts: Object.fromEntries(result.statusCounts),
+    latencyMs: { p95: Math.round(percentile(0.95) * 10) / 10, p99: Math.round(percentile(0.99) * 10) / 10 },
+    peakRssMb: result.rssSamples.length === 0 ? null : Math.round((Math.max(...result.rssSamples) / MB) * 10) / 10,
+  };
+}
+let loginResult;
+try {
+  loginResult = await runLoginProfile();
+} catch {
+  process.stderr.write('loadtest FAILED: login profile could not complete.\n');
+  await cleanup(1);
+}
+const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: ROOT, encoding: 'utf8' }).trim().length > 0;
+
 const report = {
   generatedAt: new Date().toISOString(),
-  phase: 1,
+  phase: 2,
+  revision: { commit, dirty },
   gate: 'QA-124 baseline profile',
   environment: {
     platform: platform(),
@@ -263,7 +405,8 @@ const report = {
     durationSeconds: Math.round(elapsedSeconds * 10) / 10,
     mix,
     targetService: 'api (core API artefact, built dist)',
-    routes: Object.keys(mix),
+    routes: [...Object.keys(mix), '/api/v1/auth/login'],
+    login: baseline.login,
   },
   results: {
     requests: result.total,
@@ -282,6 +425,7 @@ const report = {
     },
     logBytesPer1kRequests: Math.round(logBytesPer1k),
     streamSurfaceAbsent,
+    login: loginResult,
   },
   pass: baseline.pass,
   breaches: [],
@@ -323,8 +467,40 @@ const checks = [
     logBytesPer1k <= baseline.pass.logBytesPer1kRequestsMax,
     `${Math.round(logBytesPer1k)} B/1k requests <= ${baseline.pass.logBytesPer1kRequestsMax} B/1k`,
   ],
-  ['stream surface absent (Phase 4 owns SSE)', streamSurfaceAbsent, 'GET /api/v1/streams answers 404'],
+  [
+    'legacy stream collection absent (core security uses ticketed /streams/events)',
+    streamSurfaceAbsent,
+    'GET /api/v1/streams answers 404',
+  ],
 ];
+checks.push(
+  [
+    'login p95 latency',
+    loginResult.latencyMs.p95 <= baseline.login.pass.p95MsMax,
+    `${loginResult.latencyMs.p95} ms <= ${baseline.login.pass.p95MsMax} ms`,
+  ],
+  [
+    'login p99 latency',
+    loginResult.latencyMs.p99 <= baseline.login.pass.p99MsMax,
+    `${loginResult.latencyMs.p99} ms <= ${baseline.login.pass.p99MsMax} ms`,
+  ],
+  [
+    'login error rate',
+    loginResult.errorRate <= baseline.login.pass.errorRateMax,
+    `${loginResult.errorRate} <= ${baseline.login.pass.errorRateMax}`,
+  ],
+  [
+    'login sample floor',
+    loginResult.requests >= baseline.login.pass.requestsMin,
+    `${loginResult.requests} >= ${baseline.login.pass.requestsMin}`,
+  ],
+  ['login cleanup', loginResult.cleanupFailures === 0, 'every successful login is logged out'],
+  [
+    'login peak memory',
+    loginResult.peakRssMb !== null && loginResult.peakRssMb <= baseline.login.pass.peakRssMbMax,
+    `${loginResult.peakRssMb} MB <= ${baseline.login.pass.peakRssMbMax} MB`,
+  ],
+);
 for (const [name, passed, detail] of checks) {
   process.stdout.write(`  ${passed ? '✓' : '✗'} ${name}: ${detail}\n`);
   if (!passed) report.breaches.push(`${name}: ${detail}`);

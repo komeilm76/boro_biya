@@ -60,9 +60,10 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+      target: migrations
       args:
-        SERVICE_MAIN: apps/api/dist/main.js
-    image: boro-biya/api:dev
+        SERVICE: core
+    image: boro-biya/migrations:dev
     command: ["node", "packages/db/dist/cli.js", "init-cluster"]
     environment:
       NODE_ENV: production
@@ -81,8 +82,8 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: apps/api/dist/main.js
-    command: ["node", "apps/api/dist/main.js"]
+        SERVICE: core
+    command: ["node", "services/core/dist/main.js"]
     environment: &backend-env
       NODE_ENV: production
       API_HOST: 0.0.0.0
@@ -95,6 +96,19 @@ services:
       TRUST_PROXY: "false"
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
+      SESSION_SECRET: "${SESSION_SECRET:?set SESSION_SECRET in .env (bun run env:create)}"
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-900}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-30}
+      LOGIN_MAX_ATTEMPTS_PER_ACCOUNT: ${LOGIN_MAX_ATTEMPTS_PER_ACCOUNT:-10}
+      LOGIN_MAX_ATTEMPTS_PER_ORIGIN: ${LOGIN_MAX_ATTEMPTS_PER_ORIGIN:-30}
+      LOGIN_WINDOW_SECONDS: ${LOGIN_WINDOW_SECONDS:-900}
+      LOCKOUT_SECONDS: ${LOCKOUT_SECONDS:-900}
+      RECOVERY_MAX_ATTEMPTS: ${RECOVERY_MAX_ATTEMPTS:-10}
+      RECOVERY_CHALLENGE_TTL_SECONDS: ${RECOVERY_CHALLENGE_TTL_SECONDS:-300}
+      RECOVERY_GRANT_TTL_SECONDS: ${RECOVERY_GRANT_TTL_SECONDS:-300}
+      LOGIN_DELAY_MAX_SECONDS: ${LOGIN_DELAY_MAX_SECONDS:-30}
+      SECURITY_QUESTIONS_ENABLED: ${SECURITY_QUESTIONS_ENABLED:-true}
+      CAPTCHA_ENABLED: ${CAPTCHA_ENABLED:-false}
       DATABASE_URL: postgres://boro_core:${CORE_DB_PASSWORD}@db:5432/${POSTGRES_DB:-boro_biya}
       DB_POOL_MAX: ${DB_POOL_MAX:-10}
       DB_CONNECT_TIMEOUT_MS: ${DB_CONNECT_TIMEOUT_MS:-2000}
@@ -131,7 +145,7 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: services/relation/dist/main.js
+        SERVICE: relation
     command: ["node", "services/relation/dist/main.js"]
     environment:
       <<: *backend-env
@@ -141,6 +155,7 @@ services:
       DATABASE_URL: postgres://boro_relation:${RELATION_DB_PASSWORD}@db:5432/${POSTGRES_DB:-boro_biya}
       # WEB_ORIGIN is core-API-only configuration; services do not serve browsers directly.
       WEB_ORIGIN: ""
+      SESSION_SECRET: ""
     depends_on:
       db:
         condition: service_healthy
@@ -171,7 +186,7 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       args:
-        SERVICE_MAIN: services/sos/dist/main.js
+        SERVICE: sos
     command: ["node", "services/sos/dist/main.js"]
     environment:
       <<: *backend-env
@@ -180,6 +195,7 @@ services:
       METRICS_PORT: "9002"
       DATABASE_URL: postgres://boro_sos:${SOS_DB_PASSWORD}@db:5432/${POSTGRES_DB:-boro_biya}
       WEB_ORIGIN: ""
+      SESSION_SECRET: ""
     depends_on:
       db:
         condition: service_healthy

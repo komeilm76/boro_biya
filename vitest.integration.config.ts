@@ -14,11 +14,7 @@ export default defineConfig({
     projects: [
       nodeProject({
         name: 'backend-integration',
-        include: [
-          'packages/db/test/integration/**/*.test.ts',
-          'apps/api/test/integration/**/*.test.ts',
-          'services/*/test/integration/**/*.test.ts',
-        ],
+        include: ['packages/db/test/integration/**/*.test.ts', 'services/*/test/integration/**/*.test.ts'],
         test: {
           globalSetup: ['./packages/test-utils/src/pg/global-setup.ts'],
           testTimeout: 120_000,

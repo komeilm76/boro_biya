@@ -2,7 +2,7 @@
 
 ## Role and mission
 
-Owner: Repo owner. Reviewed: 2026-10-15.
+Owner: Repo owner. Reviewed: 2026-10-18.
 
 Act as a senior cross-functional engineering team: product architect, TypeScript/Vue engineer, backend engineer, GIS/map engineer, application-security engineer, DevOps engineer, QA engineer, and technical writer.
 
@@ -21,7 +21,7 @@ Deliver:
 - A TypeScript Fastify server and PostgreSQL database.
 - A map experience with search, selectable destinations, route alternatives, navigation states, useful POIs, and location permission handling.
 - Admin and user areas with server-enforced authentication and authorization.
-- Two independently deployable services integrated through a controlled plugin system: **Relation Service** and **SOS Service**.
+- Two independently deployable services integrated through explicit authenticated APIs: **Relation Service** and **SOS Service**.
 - OpenAPI 3.1 API documentation and runtime validation using Zod, with the project's `km-api` and `zopia` tools where their current versions and capabilities are verified.
 - Docker-based local development and production deployment, cross-platform developer setup for Windows and Linux, CI workflows, security/quality gates, and repeatable releases.
 - A product interface in **Persian and English**, both complete, with right-to-left layout as a first-class requirement ([ADR-017](DECISIONS.md#adr-017--internationalization-persian-and-english-ship-together)).
@@ -29,7 +29,7 @@ Deliver:
 
 ## Required technology direction
 
-Use TypeScript throughout application code, including frontend, backend, plugin services, scripts, and tests wherever feasible.
+Use TypeScript throughout application code, including frontend, backend, service services, scripts, and tests wherever feasible.
 
 - Frontend: Vue 3, Vite, Vuetify, Tailwind CSS, Pinia, VueUse, `@vueuse/motion`, `vue-i18n` for the message catalogue, MapLibre GL JS, Ionic Vue, and Capacitor for Android. The conflict between three overlapping UI systems is resolved by [ADR-009](DECISIONS.md#adr-009--ui-framework-strategy-for-web-and-android).
 - Backend: Node.js 24 LTS as the production runtime and Bun as the preferred package manager/tooling toolchain where compatibility is verified ([ADR-025](DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)); Fastify for HTTP APIs; Zod for validation; PostgreSQL for durable data. The runtime baseline and the Bun-versus-Node production decision are governed by [ADR-007](DECISIONS.md#adr-007--runtime-and-toolchain-baseline) and [Q-16](DECISIONS.md#open-questions).
@@ -57,9 +57,9 @@ Private-by-default follow requests, accept/reject, unfollow, blocking, follower-
 
 Create SOS alerts with priority, **at least one assistance category**, description, optional coordinates, and optional image. Admins view alerts on a map, find nearby eligible users, and send assistance suggestions — suggestions reach only users whose single category the alert carries ([DECISIONS](DECISIONS.md) ADR-015), and holding a category is never a permission ([DECISIONS](DECISIONS.md) ADR-016). Suggestions may be delivered to multiple users, but a task may be claimed by exactly one eligible user. Task states are explicit and audited. A user with an active task cannot claim another. A completed task returns the user to eligibility only after the server validates the completion transition.
 
-### Plugin management
+### Independent service integration
 
-Admins can upload and install plugin packages through a controlled workflow. Do not execute arbitrary uploaded code inside the core server or with host privileges. Follow [PLUGIN_SYSTEM](PLUGIN_SYSTEM.md): strict package validation, signatures or trusted registry policy, permission declaration, resource limits, isolated deployment, configuration schema validation, health checks, versioning, rollback, and audit trail. Treat a ZIP as untrusted input. Relation and SOS are first-party services rather than uploaded packages ([ADR-012](DECISIONS.md#adr-012--relation-and-sos-are-first-party-services-not-third-party-plugins)).
+Core, Relation and SOS are independent processes under `services/`. Reuse selected reviewed source/library exports or independently built images; operators deploy them outside the application. No package upload, extraction, dynamic installation UI or executable extension loader is permitted. [SERVICE_SYSTEM](SERVICE_SYSTEM.md) and [ADR-030](DECISIONS.md#adr-030--independent-reusable-services-with-no-application-package-installer) govern identity, scoped permissions, owned data/migrations, configuration, health, resources and rollout evidence. Authentication remains core-owned, not copied into each domain service.
 
 ## Architecture principles
 
@@ -104,7 +104,7 @@ Before feature code:
 
 - **[GOV-19]** Inspect the repository and current toolchain.
 - **[GOV-20]** Create and review the documentation structure listed in [docs/README.md](README.md), with developer and user documentation separated.
-- **[GOV-21]** Write threat model, data classification, architecture decisions, initial schema, plugin trust model, version policy, environment setup, and quality gates — these now live in [security/threat-model](security/threat-model.md), [security/data-classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [security/plugin-threat-model](security/plugin-threat-model.md), [development/02-dependency-policy](development/02-dependency-policy.md), [development/01-development-environment](development/01-development-environment.md), and [QUALITY_GATES](QUALITY_GATES.md).
+- **[GOV-21]** Write threat model, data classification, architecture decisions, initial schema, service trust model, version policy, environment setup, and quality gates — these now live in [security/threat-model](security/threat-model.md), [security/data-classification](security/data-classification.md), [DATA_MODEL](DATA_MODEL.md), [security/service-threat-model](security/service-threat-model.md), [development/02-dependency-policy](development/02-dependency-policy.md), [development/01-development-environment](development/01-development-environment.md), and [QUALITY_GATES](QUALITY_GATES.md).
 - **[GOV-22]** Define supported Windows/Linux workflows and Docker-based startup.
 - **[GOV-23]** Define CI workflows and branch protection expectations.
 - **[GOV-24]** Define initial acceptance criteria, performance budgets, privacy defaults, and release strategy. Requirement identifiers and their phase coverage are the acceptance-criteria backbone ([traceability](development/07-traceability.md)).
@@ -113,7 +113,15 @@ Before feature code:
 
 ## Phase governance
 
-Phase 0 was approved by the repository owner on 2026-10-14, and Phase 1 (skeleton and developer experience) on 2026-10-15 (see [ROADMAP](ROADMAP.md) and the [Phase 1 report](development/09-phase-1-report.md) §10). Two Phase 1 items were held out of that approval for an evidence review the owner requested — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 (owned minimal infrastructure) — and work that depends on either waits for the owner's decision ([Phase 1 exit review](development/10-phase-1-exit-review.md) §5–§6). Phase 2 (authentication and account lifecycle) is the next phase. Each later phase follows the same rule: evidence, then owner approval, then the next phase.
+Phase 0 was owner-approved on 2026-10-14 and Phase 1 on 2026-10-15. Phase 2 is **In progress**, explicitly authorised by the owner on 2026-10-17 under the [phase-start rule](development/05-phase-gate-checklist.md) §7, rule 8. Phase 1 exit conditions are met and owner-approved (2026-10-15); its dependent decisions are closed; no blocker remains unresolved. The initial authorised scope is authentication and account lifecycle, Phase 2 checklist rows 1–12.
+
+**BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
+
+**ADR-029: Accepted (owner decision, 2026-10-17)** — review waived; implementations accepted as-is; hardening deferred, non-blocking. Logger and redaction, metrics, migration runner, and web edge stand as-is for development.
+
+`OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
+
+Q-25 (project licence) stays open before the first public release; Q-19 (hosting) stays open for Phase 8. Neither blocks development. Later phases still require evidence and explicit owner approval.
 
 ## Definition of done
 

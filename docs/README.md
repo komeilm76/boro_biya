@@ -2,7 +2,7 @@
 
 This directory is the normative planning and implementation baseline for **Boro_biya**, a security-focused mapping, navigation, social-location, and SOS assistance platform.
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## Start here
 
@@ -16,7 +16,7 @@ Owner: Engineering. Reviewed: 2026-10-17.
 | 6 | [GLOSSARY.md](GLOSSARY.md) | Everyone | A term is used in a way you have not seen before |
 | 7 | [SECURITY.md](SECURITY.md) | Engineers, reviewers | You need the mandatory security baseline and control mapping (for vulnerability reporting, see [.github/SECURITY.md](../.github/SECURITY.md)) |
 | 8 | [DATA_MODEL.md](DATA_MODEL.md) | Engineers | You need the domain model, invariants, and their enforcement |
-| 9 | [PLUGIN_SYSTEM.md](PLUGIN_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the plugin boundary |
+| 9 | [SERVICE_SYSTEM.md](SERVICE_SYSTEM.md) | Engineers | You work on the Relation/SOS services or the service boundary |
 | 10 | [API_AND_OPENAPI.md](API_AND_OPENAPI.md) | Engineers | You touch API contracts, validation, or generated documentation |
 | 11 | [QUALITY_GATES.md](QUALITY_GATES.md) | Everyone | You need the gate catalogue, test strategy, or release criteria |
 | 12 | [ROADMAP.md](ROADMAP.md) | Everyone | You need phases, deliverables, and phase exit criteria |
@@ -29,60 +29,61 @@ Owner: Engineering. Reviewed: 2026-10-17.
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [DIAGRAMS.md](DIAGRAMS.md) | Topology, data ownership, the request path, the account, relation, SOS, and plugin lifecycles, and the project's own cycles — every diagram citing the requirements it draws | Engineering | 2026-10-15 |
-| [GLOSSARY.md](GLOSSARY.md) | The project's specific vocabulary, one line each, naming the document that owns each definition | Engineering | 2026-10-14 |
+| [DIAGRAMS.md](DIAGRAMS.md) | Topology, data ownership, the request path, the account, relation, SOS, and service lifecycles, and the project's own cycles — every diagram citing the requirements it draws | Engineering | 2026-10-18 |
+| [GLOSSARY.md](GLOSSARY.md) | The project's specific vocabulary, one line each, naming the document that owns each definition | Engineering | 2026-10-18 |
 
 ### Development (engineers and agents)
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
 | [development/README.md](development/README.md) | Index for the Phase 0–1 developer onboarding and workflow manual | Engineering | 2026-10-16 |
-| [development/11-developer-onboarding.md](development/11-developer-onboarding.md) | Numbered zero-to-working-environment setup, run, verification, stop, reset, and setup diagnosis | Engineering | 2026-10-16 |
-| [development/12-development-workflow.md](development/12-development-workflow.md) | Current repository/workspace workflow, tests, scoped changes, Git, PR, review, and CI | Engineering | 2026-10-16 |
-| [development/13-architecture-and-repository-guide.md](development/13-architecture-and-repository-guide.md) | Implemented Phase 0–1 repository architecture, boundaries, migrations, Compose, and CI | Engineering | 2026-10-16 |
-| [development/14-environment-and-configuration.md](development/14-environment-and-configuration.md) | Environment variables, effective settings, secrets, defaults, ports, and networking | Engineering | 2026-10-16 |
-| [development/15-commands-and-testing.md](development/15-commands-and-testing.md) | Install, development, validation, test, build, and diagnosis commands with evidence | Engineering | 2026-10-16 |
+| [development/11-developer-onboarding.md](development/11-developer-onboarding.md) | Numbered zero-to-working-environment setup, run, verification, stop, reset, and setup diagnosis | Engineering | 2026-10-18 |
+| [development/12-development-workflow.md](development/12-development-workflow.md) | Current repository/workspace workflow, tests, scoped changes, Git, PR, review, and CI | Engineering | 2026-10-18 |
+| [development/13-architecture-and-repository-guide.md](development/13-architecture-and-repository-guide.md) | Implemented Phase 0–1 repository architecture, boundaries, migrations, Compose, and CI | Engineering | 2026-10-18 |
+| [development/14-environment-and-configuration.md](development/14-environment-and-configuration.md) | Environment variables, effective settings, secrets, defaults, ports, and networking | Engineering | 2026-10-18 |
+| [development/15-commands-and-testing.md](development/15-commands-and-testing.md) | Install, development, validation, test, build, and diagnosis commands with evidence | Engineering | 2026-10-18 |
 | [development/16-troubleshooting.md](development/16-troubleshooting.md) | Evidence-based setup, database, Docker, test, and contribution troubleshooting | Engineering | 2026-10-16 |
-| [development/17-implementation-status.md](development/17-implementation-status.md) | Completed Phase 0–1 scope, future-phase boundary, user-manual and production status | Engineering | 2026-10-16 |
-| [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-14 |
+| [development/17-implementation-status.md](development/17-implementation-status.md) | Completed Phase 0–1 scope, future-phase boundary, user-manual and production status | Engineering | 2026-10-18 |
+| [development/00-repository-conventions.md](development/00-repository-conventions.md) | Layout, branching, commits, review, code, test, and dependency rules | Engineering | 2026-10-18 |
 | [development/01-development-environment.md](development/01-development-environment.md) | Supported platforms, prerequisites, setup commands, troubleshooting | Engineering | 2026-10-16 |
-| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-16 |
-| [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-15 |
-| [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-14 |
-| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-16 |
-| [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-14 |
-| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-14 |
-| [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-15 |
-| [development/09-phase-1-report.md](development/09-phase-1-report.md) | The Phase 1 report: what was built, the commands and exit statuses that prove each gate, deviations, and residual risks | Engineering | 2026-10-17 |
-| [development/10-phase-1-exit-review.md](development/10-phase-1-exit-review.md) | The Phase 1 exit review: defects found and fixed at the Phase 1 → Phase 2 boundary, findings awaiting the owner, the boundary re-verifications, and the evidence for the two pending owner decisions | Engineering | 2026-10-17 |
+| [development/02-dependency-policy.md](development/02-dependency-policy.md) | Version policy, verified baseline with evidence, licence policy, re-verification procedure | Engineering | 2026-10-18 |
+| [development/03-ci-and-gates.md](development/03-ci-and-gates.md) | Gate catalogue, phase activation, CI job design, exception process | Engineering | 2026-10-18 |
+| [development/04-api-inventory.md](development/04-api-inventory.md) | Planned endpoints per area with access level and delivery phase | Engineering | 2026-10-18 |
+| [development/05-phase-gate-checklist.md](development/05-phase-gate-checklist.md) | Runnable phase gate checklist, per-phase task lists for phases 2–9, task-status rules, and the reported evidence format | Engineering | 2026-10-18 |
+| [development/06-release-plan.md](development/06-release-plan.md) | Versioning, artefacts, promotion, rollback, and release evidence | Engineering | 2026-10-18 |
+| [development/07-traceability.md](development/07-traceability.md) | Generated requirement-to-phase coverage, including declared pull-forwards (checked by the documentation gate) | Engineering | 2026-10-18 |
+| [development/08-phase-0-review.md](development/08-phase-0-review.md) | What the Phase 0 review checked, the defects it found, and how each was fixed | Engineering | 2026-10-18 |
+| [development/09-phase-1-report.md](development/09-phase-1-report.md) | The Phase 1 report: what was built, the commands and exit statuses that prove each gate, deviations, and residual risks | Engineering | 2026-10-18 |
+| [development/10-phase-1-exit-review.md](development/10-phase-1-exit-review.md) | The Phase 1 exit review: defects found and fixed at the Phase 1 → Phase 2 boundary, resolved findings, historical boundary evidence, and the two closed, non-blocking owner decisions | Engineering | 2026-10-18 |
 
 ### Security and privacy
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-16 |
-| [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-16 |
-| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-15 |
-| [security/plugin-threat-model.md](security/plugin-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-14 |
+| [../.github/SECURITY.md](../.github/SECURITY.md) | Repository security policy: private vulnerability reporting, target response commitments, and pre-release scope | Security | 2026-10-18 |
+| [security/threat-model.md](security/threat-model.md) | Assets, actors, trust boundaries, threats, mitigations, residual risk | Security | 2026-10-18 |
+| [security/data-classification.md](security/data-classification.md) | Data classes, handling rules, retention, and privacy defaults | Security | 2026-10-18 |
+| [security/service-threat-model.md](security/service-threat-model.md) | Attack paths for untrusted packages and the tests that must exist | Security | 2026-10-18 |
 
 ### User documentation
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-14 |
+| [user/README.md](user/README.md) | End-user guide (published audience); content is added as features ship | Product | 2026-10-17 |
 
 ### Operations
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-16 |
-| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-16 |
+| [operations/README.md](operations/README.md) | Runbook register, backup and restore policy, the deployment profile each operator fills in, and the availability objective — what to do when something breaks, fixed before the first outage | Engineering | 2026-10-18 |
+| [operations/runbooks/account-compromise-report.md](operations/runbooks/account-compromise-report.md) | Anonymous operator inbox, protected retrieval, triage and development rehearsal for compromise, abuse and vulnerability reports | Security | 2026-10-18 |
+| [operations/runbooks/failed-migration-rollback.md](operations/runbooks/failed-migration-rollback.md) | The first operational runbook: detection, containment, reversal, and verification for a failed or bad migration (the OPS-81 pull-forward slice) | Engineering | 2026-10-18 |
 
 ### Evidence
 
 | Document | Purpose | Owner | Reviewed |
 | --- | --- | --- | --- |
-| [performance/README.md](performance/README.md) | Performance budget and measurement policy, plus reported results | Engineering | 2026-10-14 |
+| [performance/README.md](performance/README.md) | Performance budget and measurement policy, plus reported results | Engineering | 2026-10-17 |
 
 ## Normative language
 
@@ -106,7 +107,7 @@ Every binding requirement carries a permanent identifier of the form `AREA-NN`. 
 | `NAV` | Routing, navigation, guidance | 13 | `1 … 13` |
 | `REL` | Relation Service | 14 | `1 … 14` |
 | `SOS` | SOS Service | 31 | `1 … 31` |
-| `PLG` | Plugin system and service contracts | 57 | `1 … 57` |
+| `PLG` | Service system and service contracts | 57 | `1 … 57` |
 | `SEC` | Platform security controls | 74 | `1 … 75` |
 | `PRIV` | Location privacy, retention, and data lifecycle | 35 | `1 … 35` |
 | `OPS` | Architecture, operations, configuration, performance, observability | 91 | `1 … 91` |
@@ -145,12 +146,12 @@ Both are dependency-free Node scripts and run in CI on Linux and Windows.
 | --- | --- | --- |
 | 0 | Repository foundation and documentation | Complete, owner-approved (2026-10-14) |
 | 1 | Skeleton and developer experience | Complete, owner-approved (2026-10-15) |
-| 2 | Authentication and account lifecycle | Not started |
+| 2 | Authentication and account lifecycle | In progress |
 | 3 | Map foundation and user settings | Not started |
 | 4 | Relation Service | Not started |
 | 5 | SOS Service | Not started |
 | 6 | Routing and navigation | Not started |
-| 7 | Secure plugin lifecycle | Not started |
+| 7 | Secure service lifecycle | Not started |
 | 8 | Android hardening and scale | Not started |
 | 9 | Production release | Not started |
 

@@ -1,6 +1,6 @@
 # Security Policy
 
-Owner: Security. Reviewed: 2026-10-16.
+Owner: Security. Reviewed: 2026-10-18.
 
 This document defines how to report security vulnerabilities in `komeilm76/boro_biya`, what response to expect, and how reports are handled while the project is in pre-release development.
 
@@ -11,16 +11,20 @@ GitHub serves `.github/SECURITY.md` as the repository's security policy. The eng
 - **Reporting channel:** Report suspected security vulnerabilities privately through **GitHub Private Vulnerability Reporting** for this repository:
   - Open the repository's **Security** tab on GitHub and select **Report a vulnerability**, or go directly to `https://github.com/komeilm76/boro_biya/security/advisories/new` (also linked from `https://github.com/komeilm76/boro_biya/security/policy`).
   - GitHub Private Vulnerability Reporting is the **only supported vulnerability-reporting channel** for this repository. Do not rely on any email address, external reporting portal, or third-party contact channel; none is operated for this repository ([ADR-019](../docs/DECISIONS.md#adr-019--username-only-identity-with-no-email-address-and-no-mobile-number)).
-- **Account requirement:** Submitting a private report through GitHub Private Vulnerability Reporting requires signing in with a **GitHub account** and having access to this repository on GitHub. (The unauthenticated in-application reporting route for end users and suspected account compromise in a running product deployment is tracked separately under [SEC-74](../docs/SECURITY.md#9-observability-and-incident-response) for Phase 2 and is not present in the Phase 1 skeleton.)
+- **Account requirement:** Submitting a private report through GitHub Private Vulnerability Reporting requires signing in with a **GitHub account** and having access to this repository on GitHub. (The unauthenticated in-application reporting route for end users and suspected account compromise in a running product deployment is tracked separately under [SEC-74](../docs/SECURITY.md#9-observability-and-incident-response) for Phase 2: the development `/_public/report` form now accepts account-compromise, abuse and vulnerability reports into that installation’s private operator inbox without any account. See the [operator runbook](../docs/operations/runbooks/account-compromise-report.md) and [user guide](../docs/user/README.md#reporting-security-concerns-development-preview). No real end-user deployment is currently operated.)
 - **Coordinated disclosure:** Do **not** disclose vulnerability details publicly — in GitHub issues, pull requests, discussions, commit comments, or external channels — before the report has been triaged and coordinated disclosure is agreed.
 - **What to include in a report:** Provide enough actionable detail to reproduce and assess the issue without guesswork:
-  1. **Affected version or commit:** the exact commit SHA on `main`, branch name, or non-production tag (such as `v0.1.0`), and the affected workspace or file path (`apps/api`, `apps/web`, `services/relation`, `services/sos`, `packages/*`, `docker/*`, `scripts/*`, or `.github/workflows/*`).
+  1. **Affected version or commit:** the exact commit SHA on `main`, branch name, or non-production tag (such as `v0.1.0`), and the affected workspace or file path (`services/core`, `apps/web`, `services/relation`, `services/sos`, `packages/*`, `docker/*`, `scripts/*`, or `.github/workflows/*`).
   2. **Impact:** what an attacker could achieve, which security control or asset in [`docs/SECURITY.md`](../docs/SECURITY.md) or [`docs/security/threat-model.md`](../docs/security/threat-model.md) is bypassed or threatened, and the realistic scope of exposure.
   3. **Reproduction steps:** minimal, deterministic steps, commands, HTTP requests, or proof-of-concept code that demonstrate the issue.
   4. **Prerequisites:** required runtime, environment configuration, account or role state, network conditions, or container setup.
   5. **Suggested mitigation:** a proposed fix, configuration change, or workaround when available.
 - **What must never be included:** Do **not** include credentials, private keys, tokens, production secrets, real user data, real location coordinates, or unrelated sensitive information in a vulnerability report ([GOV-47](../docs/development/00-repository-conventions.md#2-repository-layout), [GOV-48](../docs/development/00-repository-conventions.md#2-repository-layout)). Use synthetic data and redacted placeholders only.
 - **No bug bounty or guaranteed outcome:** This project does **not** offer a bug bounty or financial reward, and submitting a report does not guarantee a fix, a release schedule, or a response beyond the target commitments in §2.
+
+### Development installation operator inbox
+
+For a running development installation, its `/_public/report` page is the operator contact for suspected account compromise, abuse or a vulnerability, with no application or external account required. The form stores a bounded private message and concern type for manual review; the [runbook](../docs/operations/runbooks/account-compromise-report.md) documents protected retrieval and triage. A receipt confirms storage only. No email/phone is collected; there is no reply/tracking channel, guaranteed response time, emergency response or automatic account recovery. Operators must establish inspection ownership/cadence before a real deployment. This route does not forward reports to GitHub, and the repository targets below apply only to GitHub reports. It does not replace the repository's sole supported channel for repository-level vulnerability coordination.
 
 ## 2. Response commitments
 
@@ -39,7 +43,7 @@ Important distinctions and limitations:
 
 ## 3. Supported versions and remediation
 
-- **Pre-release status:** **Boro_biya** is currently in pre-release development (Phase 1 — skeleton and developer experience — is complete and owner-approved; Phase 2 has not started; see [`docs/ROADMAP.md`](../docs/ROADMAP.md)). No production release (`1.0.0`) exists, no deployment is operated for end users, and no project licence has been selected yet ([Q-25](../docs/DECISIONS.md#open-questions)).
+- **Pre-release status:** **Boro_biya** is currently in pre-release development (Phase 1 — skeleton and developer experience — is complete and owner-approved; Phase 2 is in progress; see [`docs/ROADMAP.md`](../docs/ROADMAP.md)). No production release (`1.0.0`) exists, no deployment is operated for end users, and the project licence decision remains open before first public release ([Q-25](../docs/DECISIONS.md#open-questions)).
 - **No supported-version window or patch SLA:** Because the project is pre-release, there is **no established supported-version table, support window, patch SLA, or guaranteed remediation date** ([`docs/development/06-release-plan.md`](../docs/development/06-release-plan.md)). The `v0.1.0` tag recorded in [`CHANGELOG.md`](../CHANGELOG.md) is a non-production tag used only to exercise Phase 1 release mechanics (`QA-48 … QA-54`) and carries no deployment or maintenance promise.
 - **How development commits and tags are assessed:**
   - Vulnerability reports are evaluated against the current head of `main` and, where relevant, the latest non-production tag (`v0.1.0`) or active container and build definitions.

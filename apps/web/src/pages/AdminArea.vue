@@ -1,6 +1,8 @@
 <script setup lang="ts">
-// The admin namespace screen (UI-04), behind the UX-only role guard. Server-side role checks
-// (ADM-01 … ADM-07) arrive with Phase 2; the guard here only keeps navigation honest.
+import { useSessionStore } from '../stores/session.js';
+import AdminManagement from '../components/AdminManagement.vue';
+import AdminCreateAccount from '../components/AdminCreateAccount.vue';
+const session = useSessionStore();
 </script>
 
 <template>
@@ -8,6 +10,8 @@
     <h1 id="admin-area-title" class="text-2xl font-semibold mb-4">
       {{ $t('adminArea.title') }}
     </h1>
+    <AdminCreateAccount v-if="session.permissions?.includes('users.create')" />
+    <AdminManagement />
     <p>
       {{ $t('adminArea.placeholder') }}
     </p>

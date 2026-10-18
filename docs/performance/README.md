@@ -2,7 +2,7 @@
 
 This directory holds performance budgets and the measurements that support them. No performance claim is published anywhere in this project — including in the user guide, release notes, or a pull request description — unless it names the commit, the environment, the dataset, and the exact command that produced it.
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-17.
 
 ## Rules
 
@@ -21,7 +21,7 @@ The **baseline profile** is fixed in Phase 1 ([ROADMAP](../ROADMAP.md)) and appl
 | --- | --- | --- |
 | Concurrent users | Synthetic sessions active at once | **25** concurrent HTTP clients against the core API. Sessions and authentication do not exist until Phase 2, so a "user" is one keep-alive client loop; the field gains session semantics when sessions exist. |
 | Request rate | Requests per second across the API, with the mix stated | Open-loop for **20 s** after a 3 s warm-up; mix **70 % `GET /healthz` + 30 % `GET /readyz`** (readiness crosses the bounded pool into PostgreSQL 18). Pass floor: **≥ 100 rps** — a regression signal, deliberately far below measured throughput so it fires on pathology, not on hardware variance. |
-| Event rate | SSE/WebSocket events per second and concurrent streams | **0** — no stream surface exists yet. The profile asserts this: `GET /api/v1/streams` must answer the 404 envelope. Real values arrive with the Relation Service streams (Phase 4, OPS-21 … OPS-27). |
+| Event rate | SSE/WebSocket events per second and concurrent streams | The baseline profile generates **0** stream events/connections and still asserts that legacy `GET /api/v1/streams` answers 404. Phase 2 now has the separate ticketed `/api/v1/streams/events` core-security slice, capped at 32 connections per process and two per user, with one-second database checks and at most 60-second leases. Those are implementation bounds, not measured capacity. The health/login load profile does not exercise concurrent streams; real stream load budgets remain future acceptance work. Relation streams remain Phase 4 (OPS-21 … OPS-27). |
 | Latency SLO | p95/p99 per critical route (login, map data, SOS creation) | **p95 ≤ 250 ms, p99 ≤ 500 ms** across the mixed routes, measured client-side. The critical routes of this phase are `/healthz` and `/readyz`; login, map-data, and SOS-creation routes join the profile in the phases that create them (2, 3, 5). |
 | Error rate | Failed request ratio that still passes | **≤ 0.5 %** (non-2xx statuses or transport failures). |
 | CPU and memory | Budget per service container on the reference environment | API process **idle RSS ≤ 200 MB**, **peak RSS ≤ 512 MB** under load, sampled from the service's own metrics endpoint. CPU is bounded by declared Compose limits (1.0 CPU per backend, 0.5 web — OPS-52) but is not asserted numerically in Phase 1: CPU share on shared CI runners is not a comparable signal (QA-108). |
@@ -29,6 +29,23 @@ The **baseline profile** is fixed in Phase 1 ([ROADMAP](../ROADMAP.md)) and appl
 | Pass/fail rule | CI fails when the baseline is breached on the reference environment, or when the profile cannot complete | Any breach fails the run: `bun run loadtest` exits non-zero and the `gate` CI job with it. The breach path is proven, not assumed — the Phase 1 report records a run against an impossible threshold exiting 1. |
 
 **Method.** `bun run loadtest` (locally and in the CI `gate` job) starts a disposable PostgreSQL 18, boots the built core-API artefact under Node, and drives the profile above; the JSON report it prints (and writes for the CI artefact) records the environment — CPU model and count, total memory, OS, Node version, PostgreSQL version — with every result, satisfying QA-107/QA-108 and the "state your hardware" rule of OPS-86. Threshold changes go through `scripts/loadtest/baseline.json` and this table in the same commit.
+
+### Phase 2 login profile (2026-10-17)
+
+The baseline runner now additionally exercises real `POST /api/v1/auth/login` after, not mixed into, the unchanged operational workload. The original health/readiness budgets above remain unchanged. Login is measured separately so its native credential cost cannot disappear inside aggregate percentiles. Its budgets are declared before measurement in the `login` section of `scripts/loadtest/baseline.json`:
+
+| Login field | Fixed development/CI value |
+| --- | --- |
+| Workload | One sequential login worker, one-second warm-up then ten seconds measured; native Argon2id and real PostgreSQL/session/audit writes; no mocked credentials |
+| Dataset | One synthetic registered account and five answer hashes; each successful login is checked with the profile endpoint, then logged out and checked for bearer rejection; no live family intentionally retained |
+| Latency budget | Login POST alone: **p95 ≤ 1 500 ms; p99 ≤ 2 500 ms**; profile/logout verification is outside that latency distribution |
+| Errors and minimum sample | **≤ 0.5 %** failed login/verification iterations; **at least 10** measured login attempts; **zero** logout/revocation verification failures |
+| Memory | **Peak API RSS ≤ 512 MB**, sampled during login; missing samples fail this login budget |
+| Test-only configuration | CAPTCHA disabled, question recovery enabled, persisted rolling window one second, account attempt cap 100, origin cap 300; quotas remain active and are neither bypassed nor erased by the harness |
+| Reporting | Same hardware/runtime/PostgreSQL metadata as the operational workload, plus Git revision and dirty-worktree marker; login metrics and status counts reported separately; no credentials or bearer/cookie values in the report |
+| Failure proof | A temporary baseline copy with login `p95MsMax` set to zero must exit 1 and name the login latency breach; committed budgets and existing checks are not relaxed |
+
+This is a successful-login regression workload, not authentication stress capacity, CAPTCHA performance, adversarial rate-limit capacity, or a production SLO claim. Existing native backoff/lockout/limit tests cover hostile and denied paths separately. Exact-revision CI reports are the measurement evidence; pre-commit local runs are explicitly marked dirty and are not published as committed performance figures. Map/SOS and stream budgets still belong to their owning phases.
 
 ### First measurement (calibration run)
 

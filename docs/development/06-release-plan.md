@@ -2,13 +2,13 @@
 
 How versions are cut, what is published, how an artefact moves from a commit to production, and how a release is undone. The gate set that must pass is defined in [QUALITY_GATES](../QUALITY_GATES.md); the phase that enables each part is in [ROADMAP](../ROADMAP.md).
 
-Owner: Engineering. Reviewed: 2026-10-14. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
+Owner: Engineering. Reviewed: 2026-10-18. This plan is exercised for the first time in Phase 1 with a non-production version tag, so the mechanics are proven before the product has users.
 
 ## 1. Versioning
 
 - **[QA-87]** The application and each service use Semantic Versioning. Migrations, contracts, and images carry the same version as the service that produced them.
 - **[QA-88]** The generated OpenAPI contract is versioned with the API prefix (`/api/v1`); a breaking API change requires a new prefix and a deprecation window.
-- **[QA-89]** Plugin packages carry their own semantic version plus an explicit core API compatibility range ([PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §2).
+- **[QA-89]** Service packages carry their own semantic version plus an explicit core API compatibility range ([SERVICE_SYSTEM](../SERVICE_SYSTEM.md) §2).
 - **[QA-90]** Documentation versions travel with the code: a tag's `/docs` describes that tag's behaviour.
 - **[QA-91]** Every release is tagged on the exact commit that was tested; the commit SHA appears in the version endpoint and in the release record.
 
@@ -20,7 +20,7 @@ Owner: Engineering. Reviewed: 2026-10-14. This plan is exercised for the first t
 | Container images | Phase 1+ | Core API, Relation Service, SOS Service, each built from a pinned base image on the pinned production runtime (Node 24 LTS, [ADR-025](../DECISIONS.md#adr-025--nodejs-24-lts-is-the-production-runtime-bun-is-the-development-toolchain)), non-root, with a health check |
 | Database migrations | Phase 1+ | Versioned, ordered, reversible where practical, with a dry-run path |
 | OpenAPI document and typed client | Phase 2+ | Generated contract plus the client used by the web app |
-| Plugin package and image | Phase 7+ | Signed package, manifest, digest, configuration schema |
+| Service package and image | Phase 7+ | Signed package, manifest, digest, configuration schema |
 | Android artefact | Phase 8+ | APK/AAB signed with a release key held outside the repository |
 | Checksums and SBOM | Phase 9 | Per-artefact digests and a software bill of materials where practical |
 | Changelog and release notes | Every release | User-visible changes, breaking changes, migration notes, known issues |
@@ -35,7 +35,7 @@ Owner: Engineering. Reviewed: 2026-10-14. This plan is exercised for the first t
 6. **Promote the same artefacts** — staging then production, using the identical digests; configuration differs, binaries do not.
 7. **Verify in production** — health/readiness endpoints, a synthetic smoke check of login and the map shell, and a check that no new error class appears in logs.
 8. **Record the release** — version, commit, artefact digests, gate results, migration results, the approver, and any accepted risk.
-9. **Announce** — changelog and release notes, including any feature that is defined but disabled (for example plugin installation before Phase 7, or a provider that is unlicensed in a region).
+9. **Announce** — changelog and release notes, including any feature that is defined but disabled (for example service rollout controls not yet exercised, or a provider that is unlicensed in a region).
 
 ## 4. Rollback and failure handling
 
@@ -63,7 +63,7 @@ Staging must not be a copy of production personal data: privacy obligations do n
 - **[QA-99]** Contract diff reviewed: no unintended breaking change.
 - **[QA-100]** Secrets: no new secret in the repository, images, or logs; required production values documented as placeholders.
 - **[QA-101]** Images scanned; base images pinned; no `latest` tags.
-- **[QA-102]** Migration dry-run and restore rehearsal complete.
+- **[QA-102]** **Deferred (owner decision, 2026-10-17); non-gating; excluded from every authorised scope unless named in a later owner message. Retained definition for traceability only:** Migration dry-run and restore rehearsal complete.
 - **[QA-103]** Rollback path stated and, for risky releases, actually rehearsed.
 - **[QA-104]** Monitoring and alerts cover the new behaviour; failure modes from the threat model have a signal.
 - **[QA-105]** Support/incident contacts updated.

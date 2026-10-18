@@ -2,7 +2,7 @@
 
 Normative rules for this repository: how work is organized, named, reviewed, and kept honest. Requirement identifiers referenced here (`GOV-…`, `QA-…`) are defined in the requirement registry — see [Documentation index](../README.md#requirement-ids).
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## 1. Language and documents
 
@@ -38,7 +38,7 @@ Rules:
 - **[GOV-50]** Work happens on short-lived branches named `<type>/<short-topic>` where `<type>` is one of `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `security`. Example: `docs/phase-0-gate`.
 - **[GOV-51]** Commit messages use Conventional Commits: `<type>(<scope>): <imperative summary>`, with an optional body explaining **why** and a footer listing the requirement IDs the change satisfies.
 - **[GOV-52]** Every pull request states the requirement IDs it satisfies, lists the gates that were actually run with their outcomes, and records known risks. The template is [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
-- **[GOV-53]** Security-sensitive changes (authentication, authorization, cryptography, plugin loading, file upload, location sharing, release workflow) require review by a second person where feasible. A self-review must be recorded as such.
+- **[GOV-53]** Security-sensitive changes (authentication, authorization, cryptography, service integration, file upload, location sharing, release workflow) require review by a second person where feasible. A self-review must be recorded as such.
 - **[GOV-54]** A pull request that weakens a quality gate is rejected unless the exception is recorded in [QUALITY_GATES](../QUALITY_GATES.md) §6 with owner, justification, and expiry date.
 - **[GOV-55]** Phase transitions follow [ROADMAP](../ROADMAP.md): each phase ends with recorded evidence and explicit repository-owner approval. Starting the next phase before that approval is not permitted.
 

@@ -87,7 +87,7 @@ const viteBin = join(ROOT, 'apps', 'web', 'node_modules', 'vite', 'bin', 'vite.j
 const BACKENDS = [
   {
     name: 'api',
-    dir: 'apps/api',
+    dir: 'services/core',
     port: envValue('API_PORT', '3000'),
     metricsPort: envValue('METRICS_PORT', '9000'),
     databaseUrl: envValue('DATABASE_URL', serviceUrl('boro_core', envValue('CORE_DB_PASSWORD'))),
@@ -117,7 +117,7 @@ const WATCHED_PACKAGES = [
 ];
 
 if (watch) {
-  for (const workspace of [...WATCHED_PACKAGES, 'apps/api', 'services/relation', 'services/sos']) {
+  for (const workspace of [...WATCHED_PACKAGES, 'services/core', 'services/relation', 'services/sos']) {
     if (only !== null && !only.has('api') && !only.has('relation') && !only.has('sos')) break;
     const dir = join(ROOT, workspace);
     const tsconfig = existsSync(join(dir, 'tsconfig.build.json')) ? 'tsconfig.build.json' : 'tsconfig.json';
@@ -149,6 +149,25 @@ for (const backend of BACKENDS) {
         METRICS_PORT: backend.metricsPort,
         DATABASE_URL: backend.databaseUrl,
         WEB_ORIGIN: envValue('WEB_ORIGIN', 'http://localhost:5173'),
+        ...Object.fromEntries(
+          [
+            'SESSION_SECRET',
+            'ACCESS_TOKEN_TTL_SECONDS',
+            'REFRESH_TOKEN_TTL_DAYS',
+            'LOGIN_MAX_ATTEMPTS_PER_ACCOUNT',
+            'LOGIN_MAX_ATTEMPTS_PER_ORIGIN',
+            'LOGIN_WINDOW_SECONDS',
+            'LOCKOUT_SECONDS',
+            'LOGIN_DELAY_MAX_SECONDS',
+            'RECOVERY_MAX_ATTEMPTS',
+            'RECOVERY_CHALLENGE_TTL_SECONDS',
+            'RECOVERY_GRANT_TTL_SECONDS',
+            'SECURITY_QUESTIONS_ENABLED',
+            'CAPTCHA_ENABLED',
+          ]
+            .filter((name) => envValue(name) !== '')
+            .map((name) => [name, envValue(name)]),
+        ),
         CORS_ALLOWED_ORIGINS: envValue('CORS_ALLOWED_ORIGINS', 'http://localhost:5173'),
         BUILD_COMMIT: envValue('BUILD_COMMIT', 'dev'),
       },

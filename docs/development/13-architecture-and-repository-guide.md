@@ -1,6 +1,6 @@
 # Architecture and Repository Guide
 
-Owner: Engineering. Reviewed: 2026-10-16.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 This guide describes code and executable configuration that exist in the current Phase 0–1 checkout. The broader [architecture document](../ARCHITECTURE.md), [requirements](../PRODUCT_REQUIREMENTS.md), and [roadmap](../ROADMAP.md) also describe future design; they are not evidence that a planned capability is implemented.
 
@@ -15,7 +15,6 @@ This guide describes code and executable configuration that exist in the current
 │   └── workflows/                 # docs-gates.yml and ci.yml
 ├── apps/
 │   ├── android/                   # Capacitor config; no native shell/build
-│   ├── api/                       # Core Fastify skeleton and core migration
 │   └── web/                       # Vue/Vite route shell, tests, and static server
 ├── docker/                        # backend, database, and web Dockerfiles
 ├── docs/                          # requirements, decisions, roadmap, operations, guides
@@ -30,6 +29,7 @@ This guide describes code and executable configuration that exist in the current
 │   └── validation/                # shared Zod wire schemas
 ├── scripts/                       # build, dev, database, gates, policy and smoke tooling
 ├── services/
+│   ├── core/                      # Core API, authentication, account/session authority
 │   ├── relation/                  # Relation skeleton and schema migration
 │   └── sos/                       # SOS skeleton and schema migration
 ├── docker-compose.yml             # local/CI stack: db, migrate, api, relation, sos, web
@@ -44,7 +44,7 @@ The `docs/` tree contains planning and requirement documents as well as implemen
 
 | Workspace | Responsibility now | Runtime/build relationship |
 | --- | --- | --- |
-| `@boro-biya/api` (`apps/api`) | Core Fastify process; shared security headers, CORS, error envelope, correlation/observability, `/healthz`, `/readyz`, metrics, database readiness, and graceful shutdown | TypeScript builds to `apps/api/dist`; runs on Node 24 and connects with the core database role |
+| `@boro-biya/api` (`services/core`) | Core Fastify process; shared security headers, CORS, error envelope, correlation/observability, `/healthz`, `/readyz`, metrics, database readiness, and graceful shutdown | TypeScript builds to `services/core/dist`; runs on Node 24 and connects with the core database role |
 | `@boro-biya/relation` (`services/relation`) | Relation service process with the same shared harness and its own database role/schema | TypeScript builds to `services/relation/dist`; no follow, block, sharing, or other domain route is registered |
 | `@boro-biya/sos` (`services/sos`) | SOS service process with the same shared harness and its own database role/schema | TypeScript builds to `services/sos/dist`; no alert, task, suggestion, or other domain route is registered |
 | `@boro-biya/web` (`apps/web`) | Vue 3/Vite shell, reserved client route namespaces, UX-only guards, en/fa catalogues, and a dependency-free Node server for built static files with a fixed `/api/*` proxy | Vite creates `apps/web/dist`; Node serves the built files. It has no authentication integration or business UI, and no PWA service worker/manifest is present; no production deployment is verified |
@@ -74,7 +74,7 @@ The current communication paths are deliberately small:
 
 Compose starts a single PostgreSQL 18.6 container. The `migrate` service runs `packages/db/dist/cli.js init-cluster` once after `db` becomes healthy. It creates `core`, `relation`, and `sos` schemas and service roles, then applies each service's versioned migrations. The Compose API, Relation, and SOS services wait for migration completion and database health.
 
-The committed migrations currently bootstrap the schemas and least-privilege grants; they do not create account, location, relation, map, or SOS domain tables. Each service has its own up/down migration pair under its workspace. The migration runner tracks versions and checksums, serializes runs, and supports reversal; the local `db:rollback` command reverses one migration and can remove the schema objects it created. Consult the [failed-migration runbook](../operations/runbooks/failed-migration-rollback.md) before using rollback outside a disposable environment.
+The committed migrations bootstrap schemas and least-privilege grants. Phase 2 adds the core `0002_identity` up/down pair for accounts and database-driven roles/permissions; the `0003_sessions` pair adds refresh-token generations and session families. `0004_authentication` adds security questions/answer hashes, audit events and abuse buckets. No location, relation, map or SOS tables exist yet. Each service owns its migrations under its workspace. The migration runner tracks versions and checksums, serializes runs, and supports reversal; the local `db:rollback` command reverses one migration and can remove the schema objects it created. Consult the [failed-migration runbook](../operations/runbooks/failed-migration-rollback.md) before using rollback outside a disposable environment.
 
 Integration tests normally start an isolated embedded PostgreSQL 18 instance and create/drop isolated test databases. `TEST_DATABASE_URL` changes that to a caller-provided server; use a disposable instance because the harness creates and drops databases there.
 
@@ -99,7 +99,7 @@ Host-run development differs from Compose: Node services bind to loopback on por
 
 ## 6. Dockerfiles and runtime/build path
 
-- `docker/backend.Dockerfile` builds with Node `24.22.0-slim` and Bun `1.4.3`, installs the frozen workspace, builds TypeScript artefacts, then performs a production-only backend workspace install. Its runtime stage uses Node 24, applies Debian package security updates at build time, runs as the image's non-root `node` user, and starts the selected compiled service entry point.
+- `docker/backend.Dockerfile` builds with Node `24.22.0-slim` and Bun `1.4.3`, installs the frozen workspace, builds TypeScript artefacts, then exports/builds the selected service/library closure and performs its frozen production-only install. Its runtime stage uses Node 24, applies Debian package security updates at build time, runs as the image's non-root `node` user, and starts the selected compiled service entry point.
 - `docker/web.Dockerfile` builds the Vite bundle, then copies only `apps/web/dist`, `apps/web/server`, and the manifest into a Node runtime image. The static server itself has no `node_modules` dependency.
 - `docker/db.Dockerfile` wraps the pinned `postgres:18.6` image, removes the PostgreSQL apt repository before OS upgrades so the PostgreSQL version cannot drift, and rebuilds the image's `gosu` helper from checksum-pinned source using the pinned Go toolchain.
 - `docker-compose.yml` supplies container environment values, health checks, dependency ordering, resource limits, and host-port publication. It is the local/CI stack; a successful Compose run is not a production deployment test.
@@ -121,4 +121,10 @@ The currently required status-check names and review rules are recorded in the [
 
 ## 8. Planned architecture is not Phase 1 code
 
-The architecture and requirements documents describe later designs, including account lifecycle, maps, service APIs, SSE/WebSocket feeds, provider adapters, uploads, plugin isolation, and production operations. Their presence does not mean routes, data tables, credentials, dependencies, integrations, or deployment procedures exist in this checkout. Check source, workspace manifests, migrations, executable scripts, and the roadmap's current phase before relying on a capability. See [implementation status](17-implementation-status.md) for the boundary and unresolved production items.
+The architecture and requirements documents describe later designs, including account lifecycle, maps, service APIs, SSE/WebSocket feeds, provider adapters, uploads, service isolation, and production operations. Their presence does not mean routes, data tables, credentials, dependencies, integrations, or deployment procedures exist in this checkout. Check source, workspace manifests, migrations, executable scripts, and the roadmap's current phase before relying on a capability. See [implementation status](17-implementation-status.md) for the boundary and unresolved production items.
+
+## 11. Independent service reuse
+
+All backend processes live under `services/`. `node scripts/services/export.mjs core|relation|sos /absolute/new/directory` exports reviewed source with only its runtime library closure, build tooling/configuration and selected migrations. It does not copy other units, clients, environment files, database state or test tooling. The exported directory builds/runs outside this repository; see [SERVICE_SYSTEM](../SERVICE_SYSTEM.md#4-configuration-and-reuse) for commands and identity/data boundaries. Each runtime image now copies this selected closure, not the repository; a distinct development migration image retains the composition's three migration directories without shipping other service source into runtime units.
+
+The shared libraries are ordinary build dependencies included in the export. They do not couple service availability or grant cross-schema access. Relation/SOS still have no domain endpoints; their future identity adapters and authorised domain calls are required before enabling integrations, not bypassed by reuse.

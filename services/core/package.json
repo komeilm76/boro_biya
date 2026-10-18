@@ -1,0 +1,28 @@
+{
+  "name": "@boro-biya/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Core API skeleton (OPS-02): configuration, structured logging, health/readiness, metrics, error envelope. Business endpoints arrive in Phase 2+ per docs/development/04-api-inventory.md.",
+  "license": "UNLICENSED",
+  "x-audience": "server",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@boro-biya/config": "workspace:*",
+    "@boro-biya/contracts": "workspace:*",
+    "@boro-biya/db": "workspace:*",
+    "@boro-biya/server-runtime": "workspace:*",
+    "@boro-biya/validation": "workspace:*",
+    "argon2": "0.45.1",
+    "fastify": "5.12.7",
+    "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "@boro-biya/test-utils": "workspace:*"
+  }
+}

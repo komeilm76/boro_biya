@@ -31,7 +31,7 @@ export const CLUSTER_SERVICES: readonly ClusterService[] = [
     key: 'core',
     schema: 'core',
     role: 'boro_core',
-    migrationsDir: 'apps/api/migrations',
+    migrationsDir: 'services/core/migrations',
     passwordEnv: 'CORE_DB_PASSWORD',
   },
   {

@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PINNED_NODE_MAJOR = 24;
-const SCAN_DIRS = ['apps/api/src', 'apps/web/src', 'services/relation/src', 'services/sos/src', 'packages'];
+const SCAN_DIRS = ['services/core/src', 'apps/web/src', 'services/relation/src', 'services/sos/src', 'packages'];
 const APPROVED_ADAPTERS = []; // none exist; see ADR-025 and the header comment
 const FORBIDDEN = [
   { pattern: /\bBun\./, label: 'Bun global' },
@@ -145,6 +145,7 @@ async function smokeBackend(name, mainPath, ports) {
   };
   if (name === 'api') {
     env.WEB_ORIGIN = 'http://localhost:5173';
+    env.SESSION_SECRET = 'disposable-runtime-smoke-only-signing-material';
   }
   const child = spawn(process.execPath, [mainPath], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let stderrTail = '';
@@ -295,7 +296,7 @@ async function smokeWeb(port) {
 
 if (!scanOnly && actualMajor === PINNED_NODE_MAJOR) {
   const missingArtefacts = [
-    'apps/api/dist/main.js',
+    'services/core/dist/main.js',
     'services/relation/dist/main.js',
     'services/sos/dist/main.js',
   ].filter((relative) => !existsSync(join(ROOT, relative)));
@@ -303,7 +304,7 @@ if (!scanOnly && actualMajor === PINNED_NODE_MAJOR) {
     problems.push(`built artefacts missing: ${missingArtefacts.join(', ')} — run \`bun run build\` first`);
   } else {
     evidence.push(`runtime: Node ${process.versions.node} (pinned major ${PINNED_NODE_MAJOR})`);
-    await smokeBackend('api', join(ROOT, 'apps/api/dist/main.js'), { api: 39_301, metrics: 39_901 });
+    await smokeBackend('api', join(ROOT, 'services/core/dist/main.js'), { api: 39_301, metrics: 39_901 });
     await smokeBackend('relation', join(ROOT, 'services/relation/dist/main.js'), { api: 39_302, metrics: 39_902 });
     await smokeBackend('sos', join(ROOT, 'services/sos/dist/main.js'), { api: 39_303, metrics: 39_903 });
     await smokeWeb(39_310);

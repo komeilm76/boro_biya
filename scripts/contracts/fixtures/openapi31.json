@@ -1,0 +1,215 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Contract fidelity fixture (not an application API)",
+    "version": "1.0.0"
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "paths": {
+    "/fixtures/{id}": {
+      "post": {
+        "operationId": "exerciseFidelity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "labels",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "maxItems": 3,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payload",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payload"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No content"
+          }
+        }
+      }
+    },
+    "/fixtures/upload": {
+      "post": {
+        "operationId": "exerciseUpload",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Binary",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Payload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["nullable", "count"],
+        "properties": {
+          "nullable": {
+            "type": ["string", "null"]
+          },
+          "optional": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "fraction": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "multipleOf": 0.25
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "choice": {
+            "type": ["string", "number"]
+          },
+          "child": {
+            "$ref": "#/components/schemas/Node"
+          },
+          "variant": {
+            "type": "object",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/First"
+              },
+              {
+                "$ref": "#/components/schemas/Second"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "first": "#/components/schemas/First",
+                "second": "#/components/schemas/Second"
+              }
+            }
+          }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "next": {
+            "$ref": "#/components/schemas/Node"
+          }
+        }
+      },
+      "First": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "first"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Second": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "second"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$comment": "Phase 1 baseline load profile (ADR-028, OPS-86, QA-124). This is a development/CI regression gate on the reference environment — NOT a production capacity claim. The reference environment is the machine the run executes on (recorded in every report: CPU model and count, total memory, runtime version, PostgreSQL version). Production capacity targets are per-deployment measurements in the same shape.",
+  "$comment": "Phase 1 baseline load profile (ADR-028, OPS-86, QA-124). This is a development/CI regression gate on the reference environment \u2014 NOT a production capacity claim. The reference environment is the machine the run executes on (recorded in every report: CPU model and count, total memory, runtime version, PostgreSQL version). Production capacity targets are per-deployment measurements in the same shape.",
   "profile": {
     "concurrency": 25,
     "warmupSeconds": 3,
@@ -22,5 +22,32 @@
   "phase1Scope": {
     "criticalRoutes": ["/healthz", "/readyz"],
     "note": "Login, map-data, and SOS-creation routes join the profile in the phases that create them (Phase 2/3/5). SSE/WebSocket event rate is 0 until the Relation Service ships streams (Phase 4); the gate asserts the stream surface does not exist yet."
+  },
+  "login": {
+    "profile": {
+      "concurrency": 1,
+      "warmupSeconds": 1,
+      "durationSeconds": 10
+    },
+    "pass": {
+      "p95MsMax": 1500,
+      "p99MsMax": 2500,
+      "errorRateMax": 0.005,
+      "requestsMin": 10,
+      "peakRssMbMax": 512
+    },
+    "dataset": {
+      "users": 1,
+      "securityAnswers": 5,
+      "liveFamiliesAtEnd": 0
+    },
+    "configuration": {
+      "LOGIN_WINDOW_SECONDS": "1",
+      "LOGIN_MAX_ATTEMPTS_PER_ACCOUNT": "100",
+      "LOGIN_MAX_ATTEMPTS_PER_ORIGIN": "300",
+      "CAPTCHA_ENABLED": "false",
+      "SECURITY_QUESTIONS_ENABLED": "true"
+    },
+    "note": "Phase 2: separate, sequential, real-password login profile following the unchanged health/readiness workload. Each successful login is validated then logged out; all rate-limit decisions remain active. This measures a single login worker, not authentication stress capacity."
   }
 }

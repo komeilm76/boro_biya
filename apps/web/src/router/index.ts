@@ -33,6 +33,36 @@ export const ROUTE_NAMES = {
 
 export const routes: RouteRecordRaw[] = [
   {
+    path: '/_auth/setup',
+    name: 'auth-setup',
+    component: () => import('../pages/AuthSetup.vue'),
+    meta: { namespace: 'auth' },
+  },
+  {
+    path: '/_auth/recover',
+    name: 'auth-recover',
+    component: () => import('../pages/AuthRecover.vue'),
+    meta: { namespace: 'auth', reachableWhenAuthenticated: true },
+  },
+  {
+    path: '/_public/privacy',
+    name: 'privacy',
+    component: () => import('../pages/PrivacyNotice.vue'),
+    meta: { namespace: 'public' },
+  },
+  {
+    path: '/_public/report',
+    name: 'report',
+    component: () => import('../pages/ReportConcern.vue'),
+    meta: { namespace: 'public' },
+  },
+  {
+    path: '/_auth/register',
+    name: 'auth-register',
+    component: () => import('../pages/AuthRegister.vue'),
+    meta: { namespace: 'auth' },
+  },
+  {
     path: '/',
     redirect: CLIENT_ROUTE_NAMESPACES.public,
   },

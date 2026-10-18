@@ -2,7 +2,7 @@
 
 This document explains how gates are organized, which gate is active in which phase, how CI is structured, and what happens when a gate cannot pass. The gate *catalogue* (what each gate checks) is [QUALITY_GATES](../QUALITY_GATES.md) §1.
 
-Owner: Engineering. Reviewed: 2026-10-15.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 ## 1. Gate model
 
@@ -70,7 +70,7 @@ Check 12 exists because the pack is read as one document: a reader who meets `be
 
 Check 11 exists because a citation is a promise that the named section exists and says what the sentence claims. The same reading applies to a claimed range (`ADR-001 … ADR-028` today, `PRIV-23 … PRIV-26`, `Q-01 … Q-26`): it is a claim about the register, so both ends must exist, and a range that names a withdrawn or renumbered identifier fails. What it cannot decide is whether a range is *current* — `ADR-001 … ADR-017` stays mechanically valid after ADR-018 is added — so a claim that a range is the whole register is still kept correct by reading it, as it was in the third pass ([review record](08-phase-0-review.md) §2.1). Ranges are prose here rather than part of the requirement above, because a requirement line that names a question is read by the affiliation audit as depending on it. A renamed heading, a section moved to another document, or an identifier typed from memory each produce a sentence that reads correctly and points nowhere; resolving mentions that are *not* links as well catches the reverse error, an identifier no registry defines. The link-target and source-file halves were added by the [Phase 1 exit review](10-phase-1-exit-review.md) §2, which found fourteen references that passed every other check: eleven identifier links aimed at the wrong document or section, one section citation, and two code comments naming identifiers that do not exist.
 
-Check 10 exists because a diagram is the most convincing place for a stale model to hide: it is read faster than the prose it summarizes and is rarely re-derived by hand. The gate reads the state lists out of [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3 and §7 and [PLUGIN_SYSTEM](../PLUGIN_SYSTEM.md) §5, compares them with the table, and then follows the table's own `Drawn in` reference into the section it names — so a rename, an addition, a removal, or a cross-reference pointing at the wrong section fails the build instead of surviving review. The glossary half is the same idea one level up: a term defined twice, or defined without saying who owns it, is how two documents start disagreeing about the same word.
+Check 10 exists because a diagram is the most convincing place for a stale model to hide: it is read faster than the prose it summarizes and is rarely re-derived by hand. The gate reads the state lists out of [PRODUCT_REQUIREMENTS](../PRODUCT_REQUIREMENTS.md) §3 and §7 and [SERVICE_SYSTEM](../SERVICE_SYSTEM.md) §5, compares them with the table, and then follows the table's own `Drawn in` reference into the section it names — so a rename, an addition, a removal, or a cross-reference pointing at the wrong section fails the build instead of surviving review. The glossary half is the same idea one level up: a term defined twice, or defined without saying who owns it, is how two documents start disagreeing about the same word.
 
 Check 9 exists because phase status is the one fact recorded in two documents; cross-checking it removes the only place where "which phase is active" could quietly disagree.
 
@@ -96,7 +96,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 - **[QA-78]** Direct pushes to `main` are blocked; pull requests are required.
 - **[QA-79]** The active gate set must pass before merge, and a failing check cannot be approved around by anyone, including the owner (exceptions go through §6 of [QUALITY_GATES](../QUALITY_GATES.md)).
 - **[QA-80]** Force pushes and branch deletion on `main` are blocked.
-- **[QA-81]** Security-sensitive paths (authentication, authorization, plugin loading, crypto, uploads, release workflows) are listed as CODEOWNERS paths so a review is requested automatically once a second maintainer exists.
+- **[QA-81]** Security-sensitive paths (authentication, authorization, service integration, crypto, uploads, release workflows) are listed as CODEOWNERS paths so a review is requested automatically once a second maintainer exists.
 
 ## 6. Adding or changing a gate
 
@@ -109,3 +109,7 @@ The gate is dependency-free Node.js so it runs on Linux and Windows with no inst
 ## 7. Reporting
 
 Phase reports and pull requests state, per gate: the command, the exit status, and — when a gate was skipped — the reason and the recorded exception. "Tests pass" without a command and an exit status is not evidence.
+
+### Phase 2 localization gate activation
+
+The existing `bun run lint` command now enables Vue template prose/accessible-label checks and restricted literal interpolation; no separate bypass or weaker configuration is used. `packages/test-utils/test/unit/localization-lint.test.ts` exercises the repository configuration against rejected literal text, placeholders, accessible labels and interpolation, with a translated positive control. Catalogue-key parity still runs in the web unit project. This is the current localization check surface, not a claim of script-string taint analysis or completed account-locale persistence.

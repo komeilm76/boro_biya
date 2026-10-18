@@ -19,6 +19,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@boro-biya/validation": "workspace:*"
+    "@boro-biya/validation": "workspace:*",
+    "km-api": "0.4.1"
   }
 }

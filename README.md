@@ -1,10 +1,16 @@
 # Boro_biya
 
-An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Authentication, maps, navigation, SOS workflows, installable-PWA behaviour, and a native Android application are not implemented.
+An early-stage, security-focused mapping, navigation, social-location, and SOS assistance project. This checkout contains the Phase 0–1 foundation and the initial Phase 2 identity entity/migration/repository: a Vue web-client shell, TypeScript/Fastify API and Relation/SOS service skeletons, shared packages, PostgreSQL migration/bootstrap tooling, and Capacitor Android packaging configuration. Development registration, sign-in, password change and session settings are implemented; Phase 2 is not complete. Maps, navigation, SOS workflows, installable-PWA behaviour and a native Android application are not implemented.
 
-Owner: Repo owner. Reviewed: 2026-10-16.
+Owner: Repo owner. Reviewed: 2026-10-18.
 
-**Current status: Phase 1 — skeleton and developer experience — complete and owner-approved (2026-10-15); Phase 2 (authentication and account lifecycle) is next and has not started.** Phase 0 (repository foundation and documentation) was owner-approved on 2026-10-14. Two Phase 1 items await the owner's decision after an evidence review — the BlueOak-1.0.0 licence-allowlist entry and ADR-029 — recorded in the [Phase 1 exit review](docs/development/10-phase-1-exit-review.md). The workspace, the core API, the Relation and SOS service skeletons, the web client skeleton, the migration framework, the gate suite, and the application CI exist; no authentication, map, or business feature does yet — those follow the phase order in [ROADMAP](docs/ROADMAP.md), and the evidence for this phase is the [Phase 1 report](docs/development/09-phase-1-report.md).
+**Current status: Phase 2 — authentication and account lifecycle — In progress (owner-authorised 2026-10-17).** Phase 1 is complete and owner-approved (2026-10-15). The authentication implementation and its remaining acceptance work are recorded in [implementation status](docs/development/17-implementation-status.md). See [ROADMAP](docs/ROADMAP.md) and the [Phase 1 report](docs/development/09-phase-1-report.md).
+
+**BlueOak-1.0.0: Accepted (owner decision, 2026-10-17)** — accepted as-is for development; deferred to before the first public release; non-blocking. The existing allowlist and licence checks remain unchanged; no development-only licence policy is authorised. The licence/notice re-check is deferred, not cancelled, to just before the first public release.
+
+**ADR-029: Accepted (owner decision, 2026-10-17)** — review waived; implementations accepted as-is; hardening deferred, non-blocking. Logger and redaction, metrics, migration runner, and web edge stand as-is for development.
+
+`OPS-90`, `OPS-91`, `QA-102`, and `SEC-75` are deferred, non-gating, and excluded from every authorised scope unless the owner names them in a later message. Their identifiers and definitions remain for traceability only; no implementation is authorised.
 
 ## Where to start
 
@@ -44,14 +50,14 @@ node scripts/gates/traceability.mjs --write   # regenerate requirement-to-phase 
 | --- | --- |
 | `docs/` | Normative documentation: requirements, architecture, diagrams and lifecycles, glossary, security, decisions, roadmap, guides |
 | `docs/development/` | Repository rules, environment, dependency policy, CI design, API inventory, gate checklists |
-| `docs/security/` | Threat model, data classification, plugin threat model |
+| `docs/security/` | Threat model, data classification, service threat model |
 | `docs/user/` | End-user documentation |
 | `docs/operations/` | Runbook register, backup and restore policy, deployment profile, availability objective |
 | `docs/performance/` | Baseline load profile, capacity policy, and measured results |
 | `scripts/` | Dependency-free Node tooling: gate runners, build/dev orchestration, policy checks, environment bootstrap, load baseline |
 | `.github/workflows/` | CI workflows: documentation gates and application gates |
 | `apps/web/` | Vue 3 client route shell and Node server for built static assets; no production deployment is verified, and PWA installation/offline behaviour is not implemented |
-| `apps/api/` | Core Fastify API skeleton |
+| `services/core/` | Independent core Fastify API and account/session authority |
 | `apps/android/` | Capacitor packaging configuration only; the native shell arrives in Phase 8 |
 | `services/relation/`, `services/sos/` | The two service skeletons, each with its own schema and least-privilege role |
 | `packages/` | Shared workspaces: contracts, validation, config, server-runtime, db, api-client, ui, test-utils |
@@ -69,3 +75,19 @@ The layout is fixed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §5 and enfo
 ## Licence
 
 Not yet decided. The choice is [Q-25](docs/DECISIONS.md#open-questions) with the repository owner, due before the first public release, and the dependency policy's licence allowlist is written to be compatible with a permissive choice. Until a licence is committed, no rights are granted.
+
+## Independent service reuse
+
+Backend units are grouped in `services/core`, `services/relation` and `services/sos`. There is no plugin/ZIP installation model. To reuse one unit outside this checkout:
+
+```sh
+node scripts/services/export.mjs relation /absolute/new/relation-project
+cd /absolute/new/relation-project
+bun install --frozen-lockfile --ignore-scripts
+bun run build
+```
+
+Use the canonical output directory printed by the exporter for subsequent commands; on Windows, avoid DOS short-path aliases.
+
+
+Set validated deployment environment variables and provision that unit's database/role before `bun run start`. Only its source/library closure is exported. See [service integration and migration commands](docs/SERVICE_SYSTEM.md#4-configuration-and-reuse). Core retains identity ownership; Relation/SOS remain domain skeletons for Phases 4/5. Phase 3 is being prepared, not declared started or accepted.

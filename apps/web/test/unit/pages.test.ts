@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createVuetify } from 'vuetify';
 import { VApp, VBtn, VMain } from 'vuetify/components';
@@ -12,7 +12,15 @@ import PublicLanding from '../../src/pages/PublicLanding.vue';
 import SignInPlaceholder from '../../src/pages/SignInPlaceholder.vue';
 import UserArea from '../../src/pages/UserArea.vue';
 import { createAppRouter } from '../../src/router/index.js';
-import { createAppI18n } from '../../src/i18n/index.js';
+import { useSessionStore } from '../../src/stores/session.js';
+import { createAppI18n, savedLocale } from '../../src/i18n/index.js';
+
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network not part of page rendering test')));
+});
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function makeVuetify() {
   return createVuetify({ components: { VApp, VBtn, VMain }, directives });
@@ -33,12 +41,12 @@ describe('namespace placeholder pages render catalogue text (GOV-63)', () => {
     expect(wrapper.html()).toContain('href="/_auth/login"');
   });
 
-  it('renders the sign-in placeholder honestly (no authentication exists yet)', () => {
+  it('renders the working sign-in form with labelled password entry and recovery warning', () => {
     const wrapper = mountPage(SignInPlaceholder);
     expect(wrapper.text()).toContain('Sign in');
-    expect(wrapper.text()).toContain('Authentication is not part of this build');
-    expect(wrapper.html()).not.toContain('<form');
-    expect(wrapper.html()).not.toContain('type="password"');
+    expect(wrapper.text()).toContain('Security questions are a weak recovery method');
+    expect(wrapper.find('form').exists()).toBe(true);
+    expect(wrapper.find('input[type="password"]').attributes('autocomplete')).toBe('current-password');
   });
 
   it('renders the user and admin placeholders', () => {
@@ -67,4 +75,38 @@ describe('the application shell composes (Vuetify + router + i18n + Pinia)', () 
     expect(wrapper.html()).toContain('Welcome to Boro biya');
     expect(router.currentRoute.value.meta['namespace']).toBe('public');
   });
+});
+
+describe('pre-sign-in locale acceptance through the application shell', () => {
+  it.each(['/_auth/login', '/_auth/register', '/_auth/recover'])(
+    'keeps both languages reachable and the explicit device choice persistent on %s',
+    async (path) => {
+      localStorage.clear();
+      const pinia = createPinia();
+      setActivePinia(pinia);
+      const router = createAppRouter(createMemoryHistory());
+      await router.push(path);
+      const i18n = createAppI18n(savedLocale());
+      const wrapper = mount(App, { global: { plugins: [pinia, router, i18n, makeVuetify()] } });
+      await router.isReady();
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('en');
+      expect(useSessionStore().isAuthenticated).toBe(false);
+      await wrapper.get('nav button[lang="fa"]').trigger('click');
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('fa');
+      expect(document.documentElement.dir).toBe('rtl');
+      expect(document.documentElement.lang).toBe('fa');
+      expect(savedLocale()).toBe('fa');
+      expect(createAppI18n(savedLocale()).global.locale.value).toBe('fa');
+      expect(router.currentRoute.value.path).toBe(path);
+      await wrapper.get('nav button[lang="en"]').trigger('click');
+      await flushPromises();
+      expect(i18n.global.locale.value).toBe('en');
+      expect(document.documentElement.dir).toBe('ltr');
+      expect(savedLocale()).toBe('en');
+      wrapper.unmount();
+      localStorage.clear();
+    },
+  );
 });

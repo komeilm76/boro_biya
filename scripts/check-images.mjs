@@ -119,17 +119,20 @@ for (const name of dockerfiles) {
 // `containers` job additionally lists the built api image's contents.
 {
   const backendDockerfile = readFileSync(join(dockerDir, 'backend.Dockerfile'), 'utf8');
-  if (!/bun install --production --frozen-lockfile[\s\S]*?--filter @boro-biya\/api/.test(backendDockerfile)) {
+  if (
+    !backendDockerfile.includes('node scripts/services/export.mjs "$SERVICE" /standalone') ||
+    !backendDockerfile.includes('bun install --production --frozen-lockfile --ignore-scripts') ||
+    !backendDockerfile.includes('COPY --from=build --chown=node:node /standalone /repo')
+  ) {
     problems.push(
-      'docker/backend.Dockerfile: the production install must be filtered to the backend workspaces (--filter @boro-biya/api …) so web/Android/test-only packages never enter a backend image (Phase 1 exit review §3 item 2)',
+      'docker/backend.Dockerfile: runtime must contain only the selected source closure, frozen production dependencies and no install hooks',
     );
   }
-  for (const service of ['@boro-biya/relation', '@boro-biya/sos']) {
-    if (!backendDockerfile.includes(`--filter ${service}`)) {
-      problems.push(
-        `docker/backend.Dockerfile: the production install is missing --filter ${service} (Phase 1 exit review §3 item 2)`,
-      );
-    }
+  const runtime = backendDockerfile.slice(backendDockerfile.lastIndexOf(' AS runtime'));
+  if (/COPY[^\n]*\/repo\s+\/repo/.test(runtime) || /services\/(relation|sos)\/migrations/.test(runtime)) {
+    problems.push(
+      'docker/backend.Dockerfile: domain runtime must not copy the repository or another service migrations',
+    );
   }
   const testUtilsManifest = JSON.parse(readFileSync(join(ROOT, 'packages', 'test-utils', 'package.json'), 'utf8'));
   for (const testTool of ['embedded-postgres', 'pg']) {
@@ -139,7 +142,7 @@ for (const name of dockerfiles) {
       );
     }
   }
-  notes.push('backend image contents: production install filtered to the backend workspaces; test tooling is dev-only');
+  notes.push('backend image contents: selected-service production closure; no unrelated units or test tooling');
 }
 
 // ------------------------------------------------------------------ compose file

@@ -8,22 +8,12 @@ import { z } from 'zod';
  */
 export const utcInstantPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/;
 
-/** Calendar check: Date.parse silently rolls invalid dates over (30 February becomes 2 March). */
-function isRealCalendarInstant(value: string): boolean {
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) return false;
-  const date = new Date(parsed);
-  const expected =
-    `${value.slice(0, 4)}-${value.slice(5, 7)}-${value.slice(8, 10)}` +
-    `T${value.slice(11, 13)}:${value.slice(14, 16)}:${value.slice(17, 19)}Z`;
-  const actual = date.toISOString().slice(0, 19) + 'Z';
-  return expected === actual;
-}
-
-export const utcInstantSchema = z
-  .string()
-  .regex(utcInstantPattern, 'timestamp must be an RFC 3339 UTC instant with a "Z" suffix (API-36)')
-  .refine(isRealCalendarInstant, 'timestamp is not a real calendar instant');
+// Native ISO validation expresses leap years, month lengths and clock bounds as portable
+// pattern checks. Keep the additional wire pattern: seconds are mandatory, precision is
+// bounded at nine digits and only the uppercase UTC suffix is accepted (API-08, API-36).
+export const utcInstantSchema = z.iso
+  .datetime()
+  .regex(utcInstantPattern, 'timestamp must be an RFC 3339 UTC instant with a "Z" suffix (API-36)');
 
 /** An instant as it appears on the wire. */
 export type UtcInstant = z.infer<typeof utcInstantSchema>;
@@ -34,16 +24,9 @@ export type UtcInstant = z.infer<typeof utcInstantSchema>;
  */
 export const utcDatePattern = /^\d{4}-\d{2}-\d{2}$/;
 
-function isRealCalendarDate(value: string): boolean {
-  const parsed = Date.parse(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed)) return false;
-  return new Date(parsed).toISOString().slice(0, 10) === value;
-}
-
-export const utcDateSchema = z
-  .string()
-  .regex(utcDatePattern, 'date must be a calendar date in YYYY-MM-DD form with no time component (API-36)')
-  .refine(isRealCalendarDate, 'date is not a real calendar date');
+export const utcDateSchema = z.iso
+  .date()
+  .regex(utcDatePattern, 'date must be a calendar date in YYYY-MM-DD form with no time component (API-36)');
 
 /** A calendar date on the wire: no time, no timezone ambiguity. */
 export type UtcDate = z.infer<typeof utcDateSchema>;

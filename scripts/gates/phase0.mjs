@@ -64,7 +64,7 @@ const REQUIRED_DOCS = [
   'docs/ARCHITECTURE.md',
   'docs/SECURITY.md',
   'docs/DATA_MODEL.md',
-  'docs/PLUGIN_SYSTEM.md',
+  'docs/SERVICE_SYSTEM.md',
   'docs/API_AND_OPENAPI.md',
   'docs/QUALITY_GATES.md',
   'docs/ROADMAP.md',
@@ -82,7 +82,7 @@ const REQUIRED_DOCS = [
   'docs/development/07-traceability.md',
   'docs/security/threat-model.md',
   'docs/security/data-classification.md',
-  'docs/security/plugin-threat-model.md',
+  'docs/security/service-threat-model.md',
   'docs/user/README.md',
   'docs/performance/README.md',
   'docs/operations/README.md',
@@ -643,9 +643,9 @@ const STATE_MACHINES = [
     separator: '->',
   },
   {
-    machine: 'plugin_installations.status',
-    source: 'docs/PLUGIN_SYSTEM.md',
-    pattern: /Plugin lifecycle states:\s*([^.\n]+)\./,
+    machine: 'service_release.status',
+    source: 'docs/SERVICE_SYSTEM.md',
+    pattern: /Service release states:\s*([^.\n]+)\./,
     separator: ',',
   },
 ];
@@ -851,7 +851,7 @@ function checkDiagrams() {
  *
  * A "§N" citation is resolved in three forms, in this order:
  *   1. attached to a link   — `[doc](doc.md) §3`, `[doc](doc.md#anchor) §3, §5`;
- *   2. named in prose       — `SECURITY §3`, `checklist §5`, `` `PLUGIN_SYSTEM` §3 ``;
+ *   2. named in prose       — `SECURITY §3`, `checklist §5`, `` `SERVICE_SYSTEM` §3 ``;
  *   3. bare                 — resolved against the document that writes it, which is only
  *                             meaningful in a document that numbers its own sections.
  * A document that does not number its sections (DATA_MODEL, DECISIONS, ROADMAP, …) may still
@@ -868,8 +868,8 @@ const DOC_NAMES = new Map([
   ['architecture', 'ARCHITECTURE.md'],
   ['data model', 'DATA_MODEL.md'],
   ['data_model', 'DATA_MODEL.md'],
-  ['plugin system', 'PLUGIN_SYSTEM.md'],
-  ['plugin_system', 'PLUGIN_SYSTEM.md'],
+  ['service system', 'SERVICE_SYSTEM.md'],
+  ['service_system', 'SERVICE_SYSTEM.md'],
   ['api and openapi', 'API_AND_OPENAPI.md'],
   ['api_and_openapi', 'API_AND_OPENAPI.md'],
   ['quality gates', 'QUALITY_GATES.md'],
@@ -881,7 +881,7 @@ const DOC_NAMES = new Map([
   ['glossary', 'GLOSSARY.md'],
   ['master_project_prompt', 'MASTER_PROJECT_PROMPT.md'],
   ['threat model', 'security/threat-model.md'],
-  ['plugin threat model', 'security/plugin-threat-model.md'],
+  ['service threat model', 'security/service-threat-model.md'],
   ['data classification', 'security/data-classification.md'],
   ['checklist', 'development/05-phase-gate-checklist.md'],
   ['release plan', 'development/06-release-plan.md'],

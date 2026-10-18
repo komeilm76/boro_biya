@@ -1,0 +1,86 @@
+[
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/SecurityNoticeEvent/properties/createdAt"
+  },
+  {
+    "code": "ZOPIA_WARN_UNIQUE_ITEMS",
+    "at": "#/components/schemas/adminAssignRolesBody/properties/roleIds"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/adminAuditResponse200/properties/items/items/properties/createdAt"
+  },
+  {
+    "code": "ZOPIA_WARN_UNIQUE_ITEMS",
+    "at": "#/components/schemas/adminCreateRoleBody/properties/permissions"
+  },
+  {
+    "code": "ZOPIA_WARN_UNIQUE_ITEMS",
+    "at": "#/components/schemas/adminUpdateRoleBody/properties/permissions"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/adminUserResponse200/properties/reason"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/adminUserResponse200/properties/stateChangedAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/adminUsersResponse200/properties/items/items/properties/reason"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/adminUsersResponse200/properties/items/items/properties/stateChangedAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/challengeResponse200/anyOf/1/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/createAccountResponse201/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/loginResponse200/properties/account/properties/securityNotices/items/properties/createdAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/meResponse200/properties/securityNotices/items/properties/createdAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/reissueSetupCredentialResponse200/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/securityStreamTicketResponse200/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/sessionsResponse200/items/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/sessionsResponse200/items/properties/issuedAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/sessionsResponse200/items/properties/lastSeenAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/components/schemas/verifyChallengeResponse200/properties/expiresAt"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/paths/~1api~1v1~1admin~1audit-events/get/parameters/5/schema"
+  },
+  {
+    "code": "ZOPIA_WARN_FROZEN_SUBTREE",
+    "at": "#/paths/~1api~1v1~1admin~1audit-events/get/parameters/6/schema"
+  }
+]

@@ -32,6 +32,7 @@ const DOCKER_COMPOSE_ENV = [
   'CORE_DB_PASSWORD',
   'RELATION_DB_PASSWORD',
   'SOS_DB_PASSWORD',
+  'SESSION_SECRET',
 ];
 
 function versionTuple(value) {
@@ -168,6 +169,7 @@ function checkComposeConfig() {
     'CORE_DB_PASSWORD=compose-network-test-only',
     'RELATION_DB_PASSWORD=compose-network-test-only',
     'SOS_DB_PASSWORD=compose-network-test-only',
+    'SESSION_SECRET=disposable-compose-network-test-only-secret',
     'DB_PORT=5432',
     'WEB_PORT=8080',
   ];

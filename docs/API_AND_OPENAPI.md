@@ -1,8 +1,10 @@
 # API Contracts, OpenAPI 3.1, Zod, km-api, and zopia
 
+Current Phase 2 publication checkpoints: [section 16](#16-full-application-publication-and-mandatory-semantic-profile-2026-10-18) and [SSE boundary conformance in section 17](#17-executable-sse-resume-boundary-conformance-2026-10-18). Earlier dated checkpoints are historical, not current publication blockers.
+
 ## 1. Contract-first policy
 
-Owner: Engineering. Reviewed: 2026-10-14.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 - **[API-01]** The published API contract is **OpenAPI 3.1.x**, produced from a single source of truth and validated in CI.
 - **[API-02]** Every public endpoint defines method, path, authentication, authorization, request schema, response schema, error responses, pagination, and examples where useful, plus its requirement IDs.
@@ -61,4 +63,176 @@ Constructs that must have explicit fixtures: nullable/optional distinctions, uni
 
 ## 6. API surface planning
 
-Endpoint inventories are created during Phase 0 and implemented per phase; the current inventory is in [API inventory](development/04-api-inventory.md). Groups: auth, sessions, users, admin, map/geocoding adapter, relation, SOS, notifications, plugin lifecycle, health/metrics. Each endpoint is marked public, authenticated, admin-only, or internal, and carries the phase in which it is delivered.
+Endpoint inventories are created during Phase 0 and implemented per phase; the current inventory is in [API inventory](development/04-api-inventory.md). Groups: auth, sessions, users, admin, map/geocoding adapter, relation, SOS, notifications, service lifecycle, health/metrics. Each endpoint is marked public, authenticated, admin-only, or internal, and carries the phase in which it is delivered.
+
+
+## 7. Phase 2 core security stream implementation
+
+This is the narrow `AUTH-18` in-app security slice of the ticket/events paths, not the planned location, SOS, general notification/read-state or push delivery APIs. The generated OpenAPI/client gate remains unfinished; these protocol/schema tests do not substitute for `zopia validate` or the round-trip fixtures above.
+
+- `POST /api/v1/streams/ticket`: bearer plus exact origin/double-submit CSRF, no request body. It returns only an opaque one-use ticket and UTC expiry; the database stores its SHA-256 hash bound to the current user/session. Admission is at most 15 seconds and never beyond verified access expiry. With one second or less remaining, minting is denied rather than racing expiry. Persisted budgets allow 120 tickets per account and 300 per origin per configured login window.
+- `GET /api/v1/streams/events?ticket=...&after=...`: no bearer in the URL. The ticket is consumed atomically under a current-binding recheck; unknown, expired, replayed or revoked bindings are denied. The ticket grants only core security events, never a caller-selected recipient/scope. Query fields are strict and duplicates/unknowns fail. An optional UUIDv7 `after` or `Last-Event-ID` is a hint; conflicting hints fail, and all reads still filter the bound recipient. Single-use consumption is durable across restart.
+- Every `security-notice` SSE event has `id`, `event` (`password_reset`, `password_changed`, `security_answers_changed`) and UTC `createdAt`. The SSE ID must match the payload ID. There are no user/session IDs, credential fields, prose or contacts in the payload. Clients select their own EN/FA catalogue text. Events are informational, never instructions to authorize, mutate state or silently replay a credential operation.
+- Replay reads nonexpired durable `core.notifications` in ascending server UUID order, at most 50 per pass. IDs establish replay order, not a client clock. Reconnect may repeat events; the client deduplicates IDs. Offline/revoked users must sign in before replay. Expiry follows the existing 30-day notice visibility window, not deletion; read state is not changed by stream delivery. There is no delivery acknowledgement or exactly-once promise.
+- Every pass rechecks the session, account/setup state and lease under the same user lock used by credential changes. A previously admitted connection may receive **one minimal terminal notice about its own credential-triggered family revocation** while the account remains active and the lease/session/family are unexpired; then it closes. This explicit final-notice exception implements reset notification despite reset revoking all sessions. It does not permit later/general replay through a revoked session. Lock/ban/deactivation, setup requirements, refresh rotation, ordinary revocation and expiry close without private replay.
+- Connections last at most 60 seconds or access expiry, whichever is earlier. Admission is capped at two per user and 32 per API process; no stream holds a pool connection between passes. The application checks once per second, emits heartbeats, uses a 16 KiB write buffer and closes on backpressure, database failure, disconnect or shutdown. This is bounded development behaviour, not a measured concurrent-stream capacity or instant global invalidation claim.
+- The browser closes native EventSource retries, obtains a fresh ticket on reconnect, and passes only its last validated ID. Delays back off from two to 30 seconds, honour bounded 429 Retry-After, stop after eight consecutive failures and stop on 401/403. There is no automatic access refresh, email/SMS, push, service worker or background delivery guarantee. Identity replacement/unmount cancels the connection and ignores late callbacks. Stream-ticket CSRF work shares the session store's cookie-operation queue with login/restore/logout, preventing an old background response from replacing a newer logout/login CSRF cookie in that store. Cross-tab cookie coordination remains outside this proof.
+
+Shared schemas reject unexpected fields, unsupported event types and non-UTC times. Public privacy policy/EN/FA notice publish the actual fixed ticket/connection bounds; ticket rows remain retained with automatic deletion off. Native real-HTTP tests prove actual recovery delivery and closure, owner-only replay, restart/concurrent ticket consumption, account-state decisions, token/lease expiry, quotas and stream bounds. Adapter tests exercise 32-connection shutdown; component/transport tests exercise validated replay, bilingual presentation, cancellation, reconnect and cookie ordering. Full device/browser and production stream-load acceptance remain separate work.
+
+
+## 8. Phase 2 conversion fidelity checkpoint (2026-10-17)
+
+Row 6 is **In progress**, not accepted. The owner authorised only the agreed contract tools and required validator additions: root development tools `zopia@0.7.1` and `@apidevtools/swagger-parser@13.0.0`, and `km-api@0.4.1` in contracts. The lockfile retains every previously locked package/version; the existing shared Zod version remains `4.6.7`. Existing policies, checks, allowlists and thresholds are unchanged.
+
+The executable fixtures run as part of the existing unit-test gate through `packages/contracts/test/unit/openapi-fidelity.test.ts`. They also run directly with `bun scripts/contracts/fixtures/executable-validation.mjs` and `bun scripts/contracts/fixtures/manifest-roundtrip.mjs`. No network, database or application credentials are required. Generated fixture trees and peer-resolution links exist only in uniquely named ignored temporary directories, removed in `finally`; these are not a published auth contract or generated application client.
+
+The structural fixture covers required-nullable versus optional properties, unions, recursive references, bounded integers and fractions, UUID/date-time formats, strict objects, JSON/multipart/binary content, path/query serialization, response headers, no-content responses and bearer/public operation security. It passes the maintained validator before and after conversion, the manifest-based reverse operation, `zopia validate`, and an exact `zopia diff` comparison. Expected generation diagnostics for frozen union metadata and binary-format overlays are asserted precisely in this fixture, not ignored or accepted for future application publication. Unexpected diagnostics fail the test. Removing the manifest must fail reverse conversion.
+
+Two negative regressions prevent a false acceptance claim:
+
+- **Executable validation is not automatically portable.** With the pinned tools, the real role-assignment schema rejects duplicate role IDs, but its JSON Schema projection has no `uniqueItems` and conversion emits no warning. Other real schemas contain calendar validation, cross-field audit timestamp ordering, query canonicalisation, reason trimming and control-character checks. `scripts/contracts/schema.mjs` detects executable refinements, overwrites, transforms, pipes and lazy definitions before projection, does not execute their functions, and refuses them. It also rejects converter warnings. This helper is groundwork for the pending generation pipeline, not an assertion that the current API is generated or that these schemas have been repaired.
+- **Validator success does not prove discriminator fidelity.** The committed discriminator fixture passes both validators, while reverse conversion adds `allOf`/`anyOf` structure and loses the original top-level `type` on that property. The regression requires the diff to identify that exact component change and verifies the rest of the fixture is unchanged. This is an expected detection test, not permission to publish the changed result. Runtime enforcement by generated Zod alone is also not established by the overlay round trip.
+
+The complete TypeScript endpoint source, committed application manifest, generated OpenAPI document/client, implementation compatibility tests and released-contract comparison remain unfinished. Publication must refuse unsupported validation rather than replace it with a weaker projection. These limitations must be fixed or expressed faithfully before row 6 is marked Met. No fallback dialect, tool upgrade, changed acceptance rule or policy exception is selected here. Full browser/device acceptance remains separate unfinished Phase 2 work; PR #12 remains draft/unmerged until completion and owner review.
+
+
+## 9. Phase 2 runtime endpoint/client activation (2026-10-17)
+
+This supersedes section 8's statement that the application endpoint source and generated client are wholly absent, but does not resolve its OpenAPI fidelity limitations. `packages/contracts/src/auth.ts` now defines all 43 concrete JSON operations registered by the authentication adapter, using `km-api` and the original shared Zod schemas. It carries success status, public/bearer/cookie-proof protection, CSRF requirement and administrative permission metadata. The security event stream remains the separately documented EventSource protocol, not a JSON request binding.
+
+`bun --tsconfig-override tsconfig.base.json scripts/contracts/generate-client.mjs` produces the committed `packages/api-client/src/generated/auth.ts`; `--check` fails if the generated file is stale. The existing unit gate runs this check without changing the gate runner or thresholds. Generated bindings validate body, path parameters, query and successful responses with the original schemas. Query transforms, executable refinements, strict objects and UTC calendar validation are retained, not reconstructed from a lossy document. Schema-derived input/output types preserve required body/path fields. Path segments and queries are encoded, and simultaneous bearer/challenge credentials are rejected before transport.
+
+All web JSON authentication/account/settings/administration/reporting calls now use these bindings through the existing same-origin transport. There is no automatic refresh/retry, new token persistence or cookie-ordering mechanism. Existing session-store serialisation and stale-identity guards remain intact. The browser transport checks the precise declared success status as well as the schema. Registration/account-creation fixture successes now correctly use the existing implementation's 201, not an inaccurate mocked 200; request-body assertions compare parsed objects because JSON property ordering is not a wire requirement.
+
+Evidence: `auth-contracts.test.ts` compares the complete registered method/path set in both directions, including the six concrete administrative state actions, while explicitly separating SSE. `auth-generated.test.ts` executes every generated JSON binding and its original response schema, checks deterministic generation and exercises duplicate-role, query-transform, cross-field-time, path-injection, credential-ambiguity and invalid-calendar rejection. Native `auth.test.ts` additionally runs generated registration/login/profile/preferences/session-list/ticket/refresh/logout calls through Fastify and PostgreSQL, including ordinary-user administrative rejection and immediate old-access denial after rotation/logout. Browser/component regressions exercise the activated same-origin transport and status/schema mismatch rejection. These are not real-device or screen-reader acceptance claims.
+
+Row 6 remains In progress: a faithful published OpenAPI document, committed application manifest, released-contract comparison and full contract/implementation acceptance are still required. The generator does not bypass `projectSchema` to publish weakened validation, and no fallback dialect or acceptance-rule change is made. No dependency declarations, policies, allowlists, checks or thresholds change in this activation checkpoint.
+
+## 10. Portable UTC calendar validation (2026-10-17)
+
+One conversion limitation from section 8 is now resolved without a tool upgrade or a runtime-only exception. `utcInstantSchema` and `utcDateSchema` use Zod's built-in ISO calendar validation together with the existing wire patterns, rather than custom JavaScript calendar refinements. Seconds remain mandatory, fractional precision remains one to nine digits when present, non-UTC offsets and lowercase suffixes remain rejected, and impossible dates/clock values remain invalid. The generated runtime client continues using these same shared schemas.
+
+`time.test.ts` compares the replacement with an independent copy of the previous acceptance checks for 29 February in all 10,000 four-digit years, representative month/day boundaries, century exceptions, clock bounds, precision and zone forms. `scripts/contracts/fixtures/portable-time.mjs` additionally compiles the actual projected schemas with the maintained validator's existing JSON Schema 2020-12 engine, compares calendar acceptance for all four-digit years, validates OpenAPI before/after conversion, requires an exact manifest reverse diff and checks the generated Zod request/response schema on valid and invalid boundary fixtures. Unexpected diagnostics fail; the exact frozen-intersection metadata diagnostics are asserted and their preserved semantics are tested. Temporary generated trees are removed in `finally`.
+
+The unchanged unit gate runs these regressions through `openapi-fidelity.test.ts`. Duplicate-role checks, query canonicalisation, cross-field audit timestamp ordering, reason/report sanitization and discriminator round-trip limitations are not declared resolved by the calendar change. Unsupported projections still fail closed. Row 6 remains In progress, and no full published application document/manifest or released-contract compatibility acceptance is claimed.
+
+
+## 11. Portable role and permission uniqueness (2026-10-17)
+
+The role-assignment duplicate-ID limitation from section 8 is now repaired for the actual role-assignment, role-creation and role-update schemas. They retain the original case-sensitive `Set` equality predicate through a shared check, with explicit `uniqueItems: true` metadata. `projectSchema` recognizes only that exact check identity on a string array with exactly the matching metadata; absent/false declarations, extra metadata, numeric arrays, unrelated refinements and additional executable checks remain rejected. This is a narrow declarative mapping, not permission to skip refinements or trust arbitrary metadata. Runtime validation, array order, the twenty-role/fifty-permission bounds and string validation remain intact.
+
+The pinned converter also drops the version-specific pattern from a plain `z.uuidv7()` when emitting generic `format: uuid`. The role-ID array now uses that same built-in UUIDv7 regex explicitly, retaining the runtime acceptance and a portable version/variant restriction in JSON Schema. This repair does not claim fidelity for every other versioned UUID occurrence in the application.
+
+`unique-strings.test.ts` compares original runtime acceptance, including UUID version/variant combinations, case sensitivity, malformed inputs and bounds. `scripts/contracts/fixtures/portable-uniqueness.mjs` uses the three actual schemas and independent copies of the previous array validators. It requires runtime/JSON Schema/generated request and response acceptance and successful-output equality, maintained OpenAPI validation before and after reverse conversion, `zopia validate`, and an exact manifest round trip. The exact three `ZOPIA_WARN_UNIQUE_ITEMS` generation diagnostics are asserted; generated refinements demonstrably enforce the keyword, and reverse conversion preserves it without warnings. This fixture proves these specific diagnostics are lossless here, not a blanket application-publication warning exception. The original silent-loss case remains as a negative regression using the former unannotated schema. Temporary generated trees are removed in `finally`.
+
+The unchanged unit gate runs the new fixture. Query canonicalisation, cross-field timestamp ordering, reason/report sanitization, broader format fidelity and discriminator drift still prevent full faithful application publication. Row 6 remains In progress; no application-wide OpenAPI document/manifest, released-contract compatibility acceptance, fallback dialect, dependency change, policy change or relaxed check/threshold is claimed.
+
+
+## 12. Authentication UUIDv7 projection fidelity (2026-10-17)
+
+The version-pattern repair from section 11 now covers all twenty remaining native UUIDv7 declarations in the shared authentication schemas, as well as the existing role-ID array. Account/session IDs, administrative paths and cursors, nullable references, role arrays and security-event identities use one `uuidV7Schema` with the pinned Zod UUIDv7 regex. Runtime acceptance and successful string output remain unchanged; no normalization, case folding or generic-UUID widening is introduced. The runtime generated client continues importing these authoritative shared schemas.
+
+The projection guard now also refuses a bare or nested versioned UUID format whose version restriction the pinned converter would silently drop. Explicit regex-based schemas remain portable; this is a stronger fail-closed boundary, not a converter-warning exception or a dependency upgrade.
+
+`uuid.test.ts` compares the previous validator across hexadecimal version/variant combinations, casing and malformed/non-string inputs and checks the authentication schema graph for remaining lossy native versioned formats. `scripts/contracts/fixtures/portable-uuid.mjs` combines actual required/path, optional cursor, nullable cursor and role-array schemas. It requires original/runtime/JSON Schema/generated request and response equivalence, exact successful output, maintained OpenAPI validation before/after conversion, `zopia validate` and an exact native-manifest reverse diff. Both generation and reverse warnings must be empty. Temporary fixture files are removed in `finally`.
+
+This closes the identified UUIDv7-format loss, not all possible format fidelity or full row 6 acceptance. Query canonicalisation, cross-field ordering, reason/report sanitization and discriminator drift remain unresolved for faithful full application publication, manifest and released-contract compatibility evidence. Existing dependencies, policies, allowlists, CI checks and thresholds remain unchanged.
+
+
+## 13. Portable challenge response union (2026-10-18)
+
+The actual challenge response now uses a plain union of two strict objects with mutually exclusive boolean literals (`required: false` or `required: true`). It accepts and returns exactly the same values as the previous discriminated union, including token/work/UTC restrictions and rejection of missing, additional or mixed-branch fields. This removes unnecessary discriminator machinery from the application schema: the portable `anyOf` has an exact native-manifest round trip with the pinned tools.
+
+`scripts/contracts/fixtures/portable-challenge.mjs` compares previous/runtime/JSON Schema/manifest-generated request and response acceptance and successful output, validates OpenAPI before/after conversion, runs `zopia validate` and requires an exact reverse diff. The precise existing frozen UTC subtree diagnostic is asserted and proved lossless; no reverse warnings are allowed. The projection guard rejects remaining discriminated unions as a known-loss boundary. The generic discriminator negative regression remains mandatory: arbitrary `oneOf`/discriminator publication has not been declared safe.
+
+This closes the actual challenge union's structural loss, not all of row 6. Query canonicalisation, cross-field ordering, reason/report sanitization and full application publication/manifest/released compatibility remain incomplete. No additional dependency or changed policy/check/threshold is introduced.
+
+
+## 14. Portable post-trim text content (2026-10-18)
+
+`text-content.ts` expresses administrative reason and anonymous report **content validation** with built-in string bounds and flag-free character-range patterns. Reasons reject Unicode Cc (the BMP ranges U+0000–U+001F/U+007F–U+009F); reports continue allowing HT/LF/CR and C1 characters but reject the other C0 controls and DEL. The pinned Zod string bounds already count code points, so the report's additional code-point minimum refinement was redundant. No character decision, limit or normalization is relaxed: the real request fields still trim first and then validate this content through a pipe.
+
+The full before/after validators are compared across every BMP character inside prose, including isolated surrogates, plus boundary controls, whitespace trimming, Persian text, astral characters, length bounds and invalid types. `portable-text.mjs` separately proves the actual post-trim schemas against previous content validators, JSON Schema and native-manifest-generated request/response schemas; both OpenAPI validations, `zopia validate`, exact reverse equality and empty generation/reverse warnings are required.
+
+This closes the content/refinement portion only. It does **not** claim that OpenAPI or a generated plain string schema performs trimming. The complete reason/report pipelines remain deliberately blocked by `projectSchema`; no extension profile, fallback dialect, weaker validator or converter-warning exception is introduced.
+
+## 15. Publication preflight and conservative compatibility (2026-10-18)
+
+Run the actual-source preflight with:
+
+```bash
+bun --tsconfig-override tsconfig.base.json scripts/contracts/audit-auth.mjs
+```
+
+It inspects all 43 canonical JSON operations and 627 non-absent request/response schema positions, including declared errors, in their input/output direction. It lists every unsupported executable-validation location instead of stopping at the first one. Absent JSON content is omitted by its authoritative schema identity, not projected to a permissive schema. A bounded plain-string Unicode length probe also checks concrete supplementary-character boundary witnesses; absence of a witness is not a general equivalence proof. No refinements/transforms are invoked by projection. The preflight writes no published document or partial manifest, and exits **1** while blockers exist.
+
+At this checkpoint, ten positions are blocked: report intake body, administrative user query, administrative audit query, six administrative state-action bodies and setup-credential reissuance body. The remaining semantics are trim/Unicode query canonicalisation and cross-field ordered UTC timestamps. The unchanged unit gate asserts this inventory and the non-zero publication-readiness result. This is an honest negative regression, not a claim that a deliberately failing publication preflight is accepted production output.
+
+Compare an explicitly supplied released document and candidate with:
+
+```bash
+bun scripts/contracts/compatibility.mjs released.json candidate.json
+```
+
+Both must be readable OpenAPI 3.1 documents and pass the maintained validator with external reference fetching disabled. The checker also runs `zopia`'s document diff. It proves compatibility only for unchanged existing contracts plus isolated new paths/methods/reusable declarations and an information-version bump. Previous paths, operations and reusable declarations must remain. Default security/servers/dialect/extensions, inherited path parameters, operation contracts and existing component schemas must remain identical. Object key order is irrelevant; unknown or semantic changes are **unproven**, not silently approved. This intentionally conservative proof may block a genuinely safe change until a narrower proof is added; it never equates every structural difference with an established breaking change.
+
+The CLI exits 0 for a proved compatible addition, 1 for incompatible/unproven changes, and 2 for missing/malformed/invalid documents or usage. Errors suppress parser/source messages. Regression fixtures cover path/method/component removal, security/defaults, status/parameter/serialization/requiredness changes, schema bounds/enum/nullability/strictness/format changes, a property literally named `description`, unknown extensions, missing references and invalid baselines; original inputs must not be mutated. The existing unit gate runs them without altering the gate runner or thresholds.
+
+No released application-contract baseline has been identified in the checkout; GitHub's release list was empty when checked. The structural fixture used by these regressions is **not** relabelled as a released auth contract. An actual released-contract comparison and faithful full application document/native manifest remain incomplete, along with the preflight's semantic blockers. Row 6 stays In progress.
+
+## 16. Full application publication and mandatory semantic profile (2026-10-18)
+
+This section supersedes the publication-blocker inventory in the earlier, historical checkpoints. The application artefacts now live in `api/auth/`: OpenAPI 3.1 `openapi.json`, the native `.zopia-manifest.json`, all 44 endpoint modules (43 canonical JSON operations plus security SSE), components, the generated compiler bridge and a located conversion-diagnostic inventory. They are development artefacts, not a tagged public release. The runtime client still imports authoritative shared schemas; it is not replaced by a generic JSON Schema validator.
+
+```sh
+bun --tsconfig-override tsconfig.base.json scripts/contracts/application.mjs
+bun --tsconfig-override tsconfig.base.json scripts/contracts/application.mjs --check
+bun --tsconfig-override tsconfig.base.json scripts/contracts/fixtures/semantic-profile.mjs
+bun --tsconfig-override tsconfig.base.json scripts/contracts/fixtures/application-compatibility.mjs
+```
+
+Publication first requires all 43 bindings / 627 non-absent request and response positions to pass the source preflight, with no blockers. It validates the complete OpenAPI with the maintained validator, generates the native directory and manifest, installs only temporary links to existing tool peers, restores the declared runtime semantics, reverses through the pinned native converter, requires an identical full-document diff and **zero reverse warnings**, validates OpenAPI again and requires `zopia validate` to return no diagnostics. Generated formatting must reach a fixed point. `--check` regenerates in an isolated sibling directory and compares both the complete file inventory and every byte; no generated tree or manifest can silently drift. No tool dependency or policy change accompanies this work.
+
+### Required profile, not ordinary JSON Schema equivalence
+
+`x-boro-rules` version 1 is **mandatory executable contract data**. Plain JSON Schema/OpenAPI validation alone is insufficient. `packages/validation/src/contract-rules.ts` compiles a closed, strictly validated instruction vocabulary:
+
+- `text`: ordered `trim`, `nfkc`, locale-independent `lowercase`, code-point `min`/`max`, flag-free `pattern`, and `no-control-format`. Administrative reason, report text and user search preserve their original step ordering, input acceptance and successful normalized output. The raw 256-code-point search bound runs before NFKC/lowercasing; its 64-code-point bound runs afterwards.
+- `utc-before`: optional `from` must strictly precede optional `to`. Both present values must be valid existing UTC instants. Fractional strings are right-padded to nine digits and compared at full precision; equal instants with different spellings fail. There is no `Date`/millisecond truncation.
+- `strip-unknown`: preserve Zod's existing default object-parser behaviour, including nested objects. Standard `additionalProperties: true` declares input acceptance; the required profile strips those keys from parsed output. This is necessary because the native generator otherwise preserves them. Strict source objects remain strict, without this instruction. This does not loosen any authoritative source parser.
+
+Unknown profile versions, instructions, extra descriptor fields or incompatible structural shapes fail closed. Generated native modules execute the compiler; metadata alone is not called validation. The projection guard recognizes only exact compiler-owned schemas and recursively inspects their structural bases. Forged annotations, extra unregistered refinements, transforms, discriminators and versioned native UUID formats remain rejected. Definition traversal preserves existing uniqueness metadata as well as rules; cloning is not allowed to drop either.
+
+Full aggregate query/path schemas are included as operation extensions. Individual OpenAPI parameters cannot express object-level strictness or sibling ordering. The native bridge rebuilds strict aggregate parsers and compiles the root ordering instruction without registering aggregate component references that the pinned parameter serializer cannot dereference. Absent JSON requests explicitly reject supplied bodies. HTTP 204 carries no JSON body: native docs use `undefined`, while the existing client transport retains its established `null` sentinel. These protocol-boundary representations are tested explicitly, not falsely asserted to be the same JSON value.
+
+The independent validation unit tests retain pre-profile text validators and compare acceptance and successful output across every BMP character, surrogates, Persian/astral/compatibility characters, invalid types and raw/normalized length bounds. A BigInt-based independent oracle checks fractional timestamp ordering. The full committed-tree fixture compares canonical/native/profile-aware strict Ajv acceptance and native parsed output across every operation, all declared error responses, strict parameters, text bounds/controls, duplicate roles/permissions, calendar-invalid/nanosecond timestamps and SSE tickets/cursors. Ajv checks acceptance only: it does not produce normalized output. A strict generic Ajv instance must reject the unknown mandatory keyword; profile-aware compilation must reject unknown versions/instructions.
+
+The only admitted generation diagnostics identify the exact previously proved UTC intersection, an unconstrained nullable string, or string-array uniqueness. Full-document equality and independent semantic fixtures remain required; arbitrary frozen subtrees/warnings are not waived. `conversion-diagnostics.json` commits the exact located inventory. Native reverse diagnostics must remain empty.
+
+### Released-baseline disposition
+
+The conservative compatibility checker now also runs against the **actual complete application artefact** and regenerated canonical candidate. It rejects seven actual-document mutations affecting endpoint removal, protection, query/profile instructions, timestamp ordering, trimming, unknown-key policy and SSE protection. This is development/bootstrap consistency and negative-regression evidence, **not released-contract acceptance**.
+
+No released application baseline was identified; the previously checked GitHub release list was empty. No fixture, development checkpoint or self-comparison is labelled a release. Actual released-contract comparison remains unavailable until a genuine released document exists. For the first public release, retain its tagged OpenAPI/native manifest as the baseline; each subsequent candidate must pass `compatibility.mjs <released.json> <candidate.json>`. Missing, malformed or unproven input continues to fail closed, rather than receiving an initial-publication pass. This absence is not a new request for human device testing and does not authorise merging Phase 2 early.
+
+## 17. Executable SSE resume boundary conformance (2026-10-18)
+
+The full publication now also captures two existing HTTP-handler rules that §16's initial native query parser did not execute completely: replay cursors are **lowercase UUIDv7**, without normalization, and supplied `after` / `Last-Event-ID` hints must agree byte for byte. The previous general query UUID schema could accept uppercase before the route's separate imperative check rejected it. This was a schema/runtime representation gap, not permission to accept uppercase at the HTTP boundary.
+
+`securityStreamCursorSchema` expresses the existing lowercase pattern; `securityStreamResumeSchema` combines optional `after` and `lastEventId` with the finite mandatory `matching-cursors` instruction. The route uses these shared parsers before ticket consumption or capacity admission. Its accepted HTTP requests, selected cursor, generic 400 rejection, ticket lifetime/one-use rules and stream bounds are unchanged. Unknown or extra descriptor instructions and additional unregistered refinements still fail closed.
+
+The published query/header parameter patterns now agree with the HTTP route. The operation's `x-boro-resume-schema` points to the committed native `SecurityStreamResume` component; `x-boro-request-parser` identifies `stream-resume.ts#parseSecurityStreamRequest`. **SSE consumers must use this combined boundary adapter**, not validate query and header independently and assume agreement. It validates the native query parser and compiled resume component, then returns the parsed query and selected cursor. Plain JSON Schema cannot enforce cross-parameter equality; its schema plus the mandatory profile and adapter form the executable contract.
+
+An independently retained copy of the former query parser and imperative handler checks compares original/current acceptance and successful output across missing/null/empty/malformed/uppercase/whitespace/comma/array/mismatched hints. Real HTTP route regressions reject duplicate query hints and invalid/conflicting headers before consuming any ticket; absent, query-only, header-only and identical hints pass and forward exactly the expected cursor. The full committed-tree fixture adds canonical/native/profile-aware Ajv resume comparisons and combined-adapter successes/failures. Real-application compatibility negatives now include removal of the matching instruction or boundary-adapter declaration. Full-document reverse equality, maintained/native validation and byte/inventory regeneration checks remain mandatory.
+
+This is a development-contract correction, not proof of compatibility with a released baseline. Earlier development artefacts lacked these executable constraints; they are not relabelled releases, and the conservative checker is not relaxed to excuse changed declarations. No genuine released baseline has become available. No dependency, policy, CI check, threshold, accepted infrastructure or owner-deferred test change is involved.
+
+
+## 18. Initial-contract applicability decision (owner, 2026-10-18)
+
+**Approved by the owner on 2026-10-18:** comparison against a previously released application contract (`API-27`) is **not applicable to this initial unreleased contract**, because no genuine previous released application contract exists. This is an applicability disposition, not a passing comparison, a fictitious released baseline, a gate exception or Phase 2 exit approval. The earlier checkpoints' pending applicability notes are superseded by this explicit decision.
+
+The first genuine public release must retain its tagged OpenAPI/native manifest as the released baseline. Subsequent candidates must compare against that genuine released document. The conservative compatibility checker, missing/malformed-input failures, semantic-change rejection and all CI/check policies remain unchanged. Development consistency and negative-regression fixtures remain evidence for those checks only, never a replacement released baseline.
+
+With this conditional comparison item disposition recorded, the existing full application OpenAPI/native validation, exact round trip, deterministic generation, active generated-client/implementation tests, semantic profiles and SSE boundary proofs satisfy checklist row 6's contract evidence. Row 6 can be Met without claiming that a previous-release comparison ran. This closes neither the remaining Phase 2 user-facing acceptance nor the required final owner exit review; PR #12 remains draft/open/unmerged.
