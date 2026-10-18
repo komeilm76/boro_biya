@@ -4,7 +4,7 @@ Owner: Engineering. Reviewed: 2026-10-18.
 
 This page separates what is implemented in the current checkout from what the roadmap schedules for later. Status labels below reproduce [`docs/ROADMAP.md`](../ROADMAP.md); this manual does not change, infer, or grant permission to change a phase status.
 
-Current Phase 2 closeout ledger: [§42](#42-phase-2-closeout-ledger-and-focused-owner-assistance-2026-10-18). Executable SSE conformance remains in §41, automated accessibility evidence in §40 and full publication in §39. Earlier numbered checkpoints remain historical and scoped to their recorded revisions.
+Current Phase 2 closeout decision: [§43](#43-owner-first-contract-disposition-and-unavailable-test-environment-2026-10-18); remaining-only ledger in §42. Executable SSE conformance remains in §41, automated accessibility evidence in §40 and full publication in §39. Earlier numbered checkpoints remain historical and scoped to their recorded revisions.
 
 ## 1. Phase status — roadmap source of truth
 
@@ -707,10 +707,10 @@ Android and Persian Narrator remain owner-deferred, not passed. No physical-devi
 
 | Ref | Remaining observation or decision | Existing evidence retained | Who can close it / status |
 | --- | --- | --- | --- |
-| P2-A | English assistive use beyond the already-observed sign-in: registration/question labels, recovery labels/generic rejection, challenge start/progress/cancel/retry feedback, security notices without duplicate announcements, session controls, privacy/report status and labelled exact-UTC disclosure | Automated labels/references and Tab traversal, challenge/recovery/reporting/stream failures and native API proofs; owner sign-in listening and functional journeys | Owner or appointed reader user on an available desktop; not run for the complete remaining set |
-| P2-B | Native browser zoom beyond the already-observed sign-in, for English and Persian registration/recovery/settings/privacy/reporting and opened UTC disclosure; text, controls, visible keyboard focus and error/status feedback remain usable without clipping or overlap | 200% root-font user-style reflow and 390-pixel emulation; earlier owner sign-in zoom observation | Owner or appointed tester with actual browser chrome; not replaced by CSS/pinch/device-scale emulation |
+| P2-A | English assistive use beyond the already-observed sign-in: registration/question labels, recovery labels/generic rejection, challenge start/progress/cancel/retry feedback, security notices without duplicate announcements, session controls, privacy/report status and labelled exact-UTC disclosure | Automated labels/references and Tab traversal, challenge/recovery/reporting/stream failures and native API proofs; owner sign-in listening and functional journeys | Not run for the complete remaining set; owner confirmed no test environment available now (§43); no session test request |
+| P2-B | Native browser zoom beyond the already-observed sign-in, for English and Persian registration/recovery/settings/privacy/reporting and opened UTC disclosure; text, controls, visible keyboard focus and error/status feedback remain usable without clipping or overlap | 200% root-font user-style reflow and 390-pixel emulation; earlier owner sign-in zoom observation | Not run; owner confirmed no test environment available now (§43); not replaced by CSS/pinch/device-scale emulation |
 | P2-C | Record the actual environment and per-journey Pass/Fail/Not run results, without assuming unavailable targets passed | Existing Windows observations and Linux Chromium/CI remain scoped to their recorded versions and revisions | Agent records results; owner identifies the available environment once; no future-phase browser matrix is invented |
-| P2-D | Explicit first-contract disposition for `API-27`: no previously released application contract exists to compare | Maintained/native validators, exact round trip, deterministic client/tree, conservative checker, real-development-document negatives and independent old-runtime oracles pass | Owner applicability decision pending; no baseline is fabricated and no checker/threshold is relaxed |
+| P2-D | Explicit first-contract disposition for `API-27`: no previously released application contract exists to compare | Maintained/native validators, exact round trip, deterministic client/tree, conservative checker, real-development-document negatives and independent old-runtime oracles pass | Closed by owner applicability decision 2026-10-18 (§43): not applicable, not passed; future released-baseline comparisons remain required |
 | P2-E | Final security/negative-case and cross-row exit review, evidence reconciliation, owner Phase 2 completion approval | Existing eight Met rows, four In progress rows, accepted decisions/exclusions and exact-head CI/browser evidence | Agent prepares final evidence after results/decisions; owner reviews only then; no merge/Phase 3 start before completion and approval |
 
 ### Focused execution and safe reporting
@@ -722,3 +722,22 @@ For each check report only the controlled journey name, locale, Pass/Fail/Not ru
 The proposed P2-D disposition is **not applicable to comparison with a previous release for this initial unreleased contract**, with the first genuine public release retaining its tagged OpenAPI/native manifest and subsequent releases comparing against that genuine baseline. This is awaiting explicit owner agreement, not an already granted exception, a released-contract pass, an initial-success branch in the checker or authority to publish a release. If a real earlier released document is identified, use it instead.
 
 No remaining item is marked passed by preparing this ledger. Phase 2 remains In progress; PR #12 stays draft/open/unmerged. The next phase begins only after actual closeout and owner approval.
+
+
+## 43. Owner first-contract disposition and unavailable test environment (2026-10-18)
+
+The owner answered the focused closeout questions: **no testing environment available now**, and **approve first-contract disposition**. These answers are recorded narrowly; they are not a blanket testing waiver or Phase 2 completion approval.
+
+### Contract criterion closed
+
+The `API-27` previous-release comparison is **not applicable to this initial unreleased contract**, not passed. No genuine earlier released application contract exists; no development artefact or self-comparison is relabelled as one. The first genuine public release retains its tagged OpenAPI/native manifest; subsequent candidates compare against that genuine baseline. The compatibility checker and its missing/malformed-baseline failures, negative tests and CI configuration are unchanged. See [the owner decision](../API_AND_OPENAPI.md#18-initial-contract-applicability-decision-owner-2026-10-18).
+
+Checklist row 6 now moves to **Met** on its existing actual-source/native/client/HTTP evidence plus that explicit applicability disposition: 43 JSON operations and SSE; maintained/native validation; exact complete reverse equality; deterministic tree/client generation; executable normalization/ordering/unknown-key/cursor profiles; 4,260 canonical/native/profile-aware comparisons; generated-client lifecycle and router conformance; SSE whole-boundary original/current and actual HTTP proofs. Passing comparison with a previous release is not one of the claims. The underlying application evidence remains scoped to `280c862`, with unchanged application code through `a78bf76`; no new code-head browser run is fabricated by this documentation change.
+
+### Remaining user-facing acceptance stays open
+
+The complete remaining English reader/native browser-zoom observations in P2-A/P2-B are **not run**, because no testing environment is available now. Existing owner observations and the 56 automated browser audits remain valid in their recorded scopes. The owner has not approved deferring all remaining assistive/zoom acceptance; lack of an environment is not treated as such approval. No further setup or manual test is requested in this session. Android and Persian Narrator retain their existing separate deferrals, not passing results.
+
+The agent can continue evidence review, reproducibility/security regression work and fixes for observed defects without owner execution. Those activities cannot stand in for listening with a screen reader or operating native browser zoom, and repeated unchanged automated suites alone do not close P2-A/P2-B. Formal supported-browser declaration/forced-colours implementation stays in Phase 3, not an added Phase 2 task. Final owner exit review follows completed or explicitly dispositioned acceptance; it has not occurred.
+
+**Current status: nine Met rows; rows 1/3/11 In progress.** Phase 2 remains In progress and PR #12 remains draft/open/unmerged. No Phase 3 start or merge authorisation is inferred. This closes the conditional released-baseline applicability item, not the remaining user-facing observations or the final phase review.
