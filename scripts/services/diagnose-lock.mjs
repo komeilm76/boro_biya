@@ -25,7 +25,7 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
     }
   };
   check('repository-baseline', repositoryRoot);
-  for (const name of ['root-runtime', 'root-runtime-peers', 'unpruned-packages', 'root-runtime-unpruned']) {
+  for (const name of ['root-runtime', 'unpruned-packages', 'root-runtime-unpruned']) {
     const target = `${output}-diagnostic-${name}`;
     mkdirSync(target);
     cpSync(join(output, 'packages'), join(target, 'packages'), { recursive: true });
@@ -35,7 +35,7 @@ export function diagnoseLocks(output, repositoryRoot, environment) {
     if (name.startsWith('root-runtime')) {
       manifest.dependencies = {};
       for (const entry of Object.values(lock.workspaces))
-        for (const field of name === 'root-runtime-peers' ? ['dependencies', 'peerDependencies'] : ['dependencies'])
+        for (const field of ['dependencies'])
           for (const [dependency, version] of Object.entries(entry[field] ?? {})) {
             if (version.startsWith('workspace:')) continue;
             if (manifest.dependencies[dependency] && manifest.dependencies[dependency] !== version)
