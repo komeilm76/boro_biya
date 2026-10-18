@@ -12,6 +12,7 @@ export async function runRecoveryBrowserEdges({
   password,
   ownerPage,
   onStep,
+  onAccessibility = async () => {},
 }) {
   const messages = JSON.parse(
     await readFile(new URL(`../../apps/web/src/i18n/messages/${locale}.json`, import.meta.url), 'utf8'),
@@ -43,10 +44,13 @@ export async function runRecoveryBrowserEdges({
     await page.goto(`${origin}/_auth/recover`);
     await page.locator(`button[lang="${locale}"]`).click();
     assert.equal(await page.locator('html').getAttribute('dir'), locale === 'fa' ? 'rtl' : 'ltr');
+    await page.locator('#recovery-username').waitFor();
+    await onAccessibility(page, 'recovery account lookup');
     await page.locator('#recovery-username').fill(username);
     await page.locator('form button[type="submit"]').first().click();
     await page.locator('input[id^="recovery-answer-"]').first().waitFor();
     assert.equal(await page.locator('input[id^="recovery-answer-"]').count(), 3);
+    await onAccessibility(page, 'recovery answers');
   }
   async function answers(page, wrong = false) {
     for (const answer of await page.locator('input[id^="recovery-answer-"]').all()) {
@@ -79,6 +83,7 @@ export async function runRecoveryBrowserEdges({
     const wrongAnswersStatus = await submit(stale, '/api/v1/auth/password/recover/verify');
     assert.equal(wrongAnswersStatus, 401);
     await failure(stale);
+    await onAccessibility(stale, 'recovery rejected answers');
     assert.equal(await stale.locator('input[id^="recovery-answer-"]').count(), 3);
     assert.equal(await stale.locator('#recovery-password').count(), 0);
     await layout(stale);
@@ -88,6 +93,7 @@ export async function runRecoveryBrowserEdges({
     const cleanRetryStatus = await submit(stale, '/api/v1/auth/password/recover/verify');
     assert.equal(cleanRetryStatus, 200);
     await stale.locator('#recovery-password').waitFor();
+    await onAccessibility(stale, 'recovery replacement password');
     assert.equal(await stale.locator('input[id^="recovery-answer-"]').count(), 0);
     await layout(stale);
 
@@ -126,6 +132,7 @@ export async function runRecoveryBrowserEdges({
     assert.equal(await stale.locator('#recovery-repeat').count(), 1);
     assert.equal(await ownerPage.locator('section[aria-label] aside[role="status"]').count(), 1);
     await layout(stale);
+    await onAccessibility(stale, 'recovery rejected consumed proof');
     assert.equal(pageErrors, 0);
     assert.equal(verificationRequests, 3);
     assert.equal(resetRequests, 2);

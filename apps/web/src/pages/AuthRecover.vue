@@ -76,7 +76,7 @@ async function submit() {
 </script>
 
 <template>
-  <section class="p-6 max-w-xl">
+  <section class="p-6 max-w-xl wrap-anywhere">
     <h1>{{ $t('recovery.title') }}</h1>
     <p role="note" class="my-4">{{ $t('auth.recoveryWarning') }}</p>
     <p v-if="ready && !enabled" role="status">{{ $t('recovery.disabled') }}</p>
@@ -91,19 +91,27 @@ async function submit() {
       @working="challengeBusy = $event"
     />
     <form v-if="enabled && stage !== 'done'" :aria-busy="busy" @submit.prevent="submit">
-      <fieldset :disabled="busy || challengeBusy" class="grid gap-3">
+      <fieldset :disabled="busy || challengeBusy" class="grid min-w-0 gap-3">
         <template v-if="stage === 'username'">
           <label for="recovery-username">{{ $t('auth.username') }}</label>
-          <input id="recovery-username" v-model="username" autocomplete="username" required maxlength="32" />
+          <input
+            id="recovery-username"
+            v-model="username"
+            class="w-full min-w-0 max-w-full"
+            autocomplete="username"
+            required
+            maxlength="32"
+          />
           <button type="submit">{{ $t('recovery.start') }}</button>
         </template>
         <template v-else-if="stage === 'answers'">
           <legend>{{ $t('recovery.answers') }}</legend>
-          <div v-for="(question, index) in questions" :key="question.id" class="grid gap-2">
+          <div v-for="(question, index) in questions" :key="question.id" class="grid min-w-0 gap-2">
             <label :for="`recovery-answer-${question.id}`">{{ $t(question.textKey) }}</label>
             <input
               :id="`recovery-answer-${question.id}`"
               v-model="answers[index]"
+              class="w-full min-w-0 max-w-full"
               type="password"
               autocomplete="off"
               required
@@ -118,6 +126,7 @@ async function submit() {
           <input
             id="recovery-password"
             v-model="password"
+            class="w-full min-w-0 max-w-full"
             type="password"
             autocomplete="new-password"
             required
@@ -127,6 +136,7 @@ async function submit() {
           <input
             id="recovery-repeat"
             v-model="repeatPassword"
+            class="w-full min-w-0 max-w-full"
             type="password"
             autocomplete="new-password"
             required

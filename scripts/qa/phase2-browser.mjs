@@ -13,6 +13,7 @@ import { makeServerConfigFixture } from '../../packages/test-utils/dist/index.js
 import { createLogger, createMetricsRegistry } from '../../packages/server-runtime/dist/index.js';
 import { buildApp } from '../../apps/api/dist/app.js';
 import { createAuthService } from '../../apps/api/dist/auth/service.js';
+import { runAccessibilityBrowserChecks } from './accessibility-browser.mjs';
 import { runChallengeBrowserEdges } from './challenge-browser.mjs';
 import { runRecoveryBrowserEdges } from './recovery-browser.mjs';
 import { runReportBrowserEdges } from './report-browser.mjs';
@@ -45,6 +46,7 @@ const report = {
   challengeEdgeCases: [],
   reportingEdgeCases: [],
   timestampEdgeCases: [],
+  accessibilityChecks: [],
   realtimeEdgeCases: [],
   recoveryExpiryEdgeCases: [],
   passed: false,
@@ -149,21 +151,42 @@ try {
         await target.waitForFunction((locale) => globalThis.document.documentElement.lang === locale, locale);
         assert.equal(await target.locator('html').getAttribute('dir'), locale === 'fa' ? 'rtl' : 'ltr');
       }
+      async function accessibility(target, journey) {
+        const outcome = await runAccessibilityBrowserChecks({
+          page: target,
+          locale,
+          onStep: (stage) => {
+            step = `${label}: ${journey} accessibility ${stage}`;
+          },
+        });
+        report.accessibilityChecks.push({
+          locale,
+          viewport: mobile ? '390x844 (emulated)' : '1280x900',
+          journey,
+          ...outcome,
+        });
+      }
       async function login(target, secret) {
         const destination = '/_user?tab=sessions#security';
         await target.goto(`${origin}${destination}`);
         await target.waitForURL(
           (url) => url.pathname === '/_auth/login' && url.searchParams.get('redirect') === destination,
         );
+        await accessibility(target, 'sign-in');
         await target.locator('#username').fill(`browser_${locale}_${mobile ? 'mobile' : 'desktop'}`);
         await target.locator('#password').fill(secret);
         await target.locator('#password').press('Enter');
         await target.waitForURL(`${origin}${destination}`);
         await target.locator('time').first().waitFor();
+        await target.locator('[data-action="revoke-session"]').first().waitFor();
+        await target.waitForFunction(
+          () => globalThis.document.querySelectorAll('section[aria-label] > p[role="status"]').length === 0,
+        );
       }
       step = `${label}: registration`;
       await page.goto(`${origin}/_auth/register`);
       await language(page);
+      await accessibility(page, 'registration');
       assert.equal(
         await page.evaluate(
           () => globalThis.document.documentElement.scrollWidth <= globalThis.document.documentElement.clientWidth,
@@ -184,6 +207,7 @@ try {
       await seedTimeFixtures(db, `browser_${locale}_${mobile ? 'mobile' : 'desktop'}`);
       step = `${label}: login/settings/time disclosure`;
       await login(page, password);
+      await accessibility(page, 'signed-in settings');
       const instant = await page.locator('time').first().getAttribute('datetime');
       const year = new Intl.DateTimeFormat(
         locale === 'fa' ? 'fa-IR-u-ca-persian-nu-arabext' : 'en-GB-u-ca-gregory-nu-latn',
@@ -228,6 +252,7 @@ try {
         username: `browser_${locale}_${mobile ? 'mobile' : 'desktop'}`,
         password: replacement,
         ownerPage: page,
+        onAccessibility: accessibility,
         onStep: (stage) => {
           step = `${label}: recovery ${stage}`;
         },
@@ -276,15 +301,22 @@ try {
       await page.locator('a[href="/_public/privacy"]').click();
       step = `${label}: effective policy`;
       await page.locator('[data-policy="effective"]').waitFor();
+      await accessibility(page, 'privacy');
       await page.locator('a[href="/_public/report"]').click();
       // Reporting must also work with a separate, signed-out cookie context.
       // Clear signed-in memory by using a fresh context for the actual anonymous submission.
       step = `${label}: anonymous reporting`;
-      const anonymousContext = await browser.newContext();
+      const anonymousContext = await browser.newContext({
+        viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+        isMobile: mobile,
+        hasTouch: mobile,
+        timezoneId: timeZone,
+      });
       try {
         const anonymous = await anonymousContext.newPage();
         await anonymous.goto(`${origin}/_public/report`);
         await language(anonymous);
+        await accessibility(anonymous, 'anonymous report');
         await anonymous
           .locator('#report-message')
           .fill('A completely invented anonymous security report for this disposable rehearsal.');

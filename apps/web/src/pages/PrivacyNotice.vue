@@ -22,7 +22,7 @@ function number(value: number) {
 }
 </script>
 <template>
-  <section class="mx-auto max-w-prose px-6 py-12" aria-labelledby="privacy-title">
+  <section class="mx-auto max-w-prose wrap-anywhere px-6 py-12" aria-labelledby="privacy-title">
     <h1 id="privacy-title" class="text-2xl font-semibold">{{ $t('privacy.title') }}</h1>
     <p class="my-4">{{ $t('privacy.development') }}</p>
     <p class="my-4">{{ $t('privacy.data') }}</p>

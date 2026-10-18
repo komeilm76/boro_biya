@@ -45,14 +45,14 @@ async function submit() {
 }
 </script>
 <template>
-  <section class="mx-auto max-w-prose px-6 py-12" aria-labelledby="report-title">
+  <section class="mx-auto max-w-prose wrap-anywhere px-6 py-12" aria-labelledby="report-title">
     <h1 id="report-title" class="text-2xl font-semibold">{{ $t('report.title') }}</h1>
     <p class="my-4">{{ $t('report.body') }}</p>
     <p id="report-warning" class="my-4">{{ $t('report.warning') }}</p>
     <p class="my-4">{{ $t('report.expectation') }}</p>
     <form :aria-busy="busy" @submit.prevent="submit">
       <label for="report-category">{{ $t('report.category') }}</label>
-      <select id="report-category" v-model="category" :disabled="busy">
+      <select id="report-category" v-model="category" :disabled="busy" class="block w-full min-w-0 max-w-full">
         <option value="account_compromise">{{ $t('report.compromise') }}</option>
         <option value="abuse">{{ $t('report.abuse') }}</option>
         <option value="vulnerability">{{ $t('report.vulnerability') }}</option>
@@ -66,7 +66,7 @@ async function submit() {
         maxlength="4000"
         :disabled="busy"
         aria-describedby="report-warning"
-        class="block border p-2 w-full"
+        class="block border p-2 w-full min-w-0 max-w-full"
       />
       <button type="submit" :disabled="busy">{{ $t(busy ? 'report.sending' : 'report.submit') }}</button>
     </form>

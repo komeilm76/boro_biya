@@ -20,6 +20,16 @@ function page(locale: 'en' | 'fa' = 'en') {
   return mount(Report, { global: { plugins: [createAppI18n(locale)] } });
 }
 describe('signed-out operator reporting', () => {
+  it.each(['en', 'fa'] as const)('bounds native report controls at enlarged text sizes in %s', (locale) => {
+    const wrapper = page(locale);
+    expect(wrapper.get('section').classes()).toContain('wrap-anywhere');
+    for (const selector of ['select', 'textarea'])
+      for (const utility of ['w-full', 'min-w-0', 'max-w-full']) {
+        expect(wrapper.get(selector).classes()).toContain(utility);
+      }
+    expect(wrapper.get('label[for="report-category"]').text()).not.toBe('');
+    wrapper.unmount();
+  });
   it.each(['en', 'fa'] as const)(
     'submits without any session store in %s and clears private draft after receipt',
     async (locale) => {

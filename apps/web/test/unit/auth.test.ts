@@ -400,14 +400,23 @@ describe('recovery browser workflow', () => {
       });
       const { wrapper, session } = mountPage(Recover, language);
       await flushPromises();
+      expect(wrapper.get('section').classes()).toContain('wrap-anywhere');
+      expect(wrapper.get('fieldset').classes()).toContain('min-w-0');
+      for (const utility of ['w-full', 'min-w-0', 'max-w-full'])
+        expect(wrapper.get('#recovery-username').classes()).toContain(utility);
       await wrapper.get('#recovery-username').setValue('alice');
       await wrapper.get('form').trigger('submit');
       await flushPromises();
       expect(wrapper.findAll('input[type="password"]')).toHaveLength(3);
+      for (const field of wrapper.findAll('input'))
+        for (const utility of ['w-full', 'min-w-0', 'max-w-full']) expect(field.classes()).toContain(utility);
       for (const field of wrapper.findAll('input')) await field.setValue('answer');
       await wrapper.get('form').trigger('submit');
       await flushPromises();
       expect(wrapper.find('#recovery-password').exists()).toBe(true);
+      for (const selector of ['#recovery-password', '#recovery-repeat'])
+        for (const utility of ['w-full', 'min-w-0', 'max-w-full'])
+          expect(wrapper.get(selector).classes()).toContain(utility);
       await wrapper.get('#recovery-password').setValue('Sailing!violet782');
       await wrapper.get('#recovery-repeat').setValue('Sailing!violet782');
       session.$patch({ isAuthenticated: true, accessToken: 'old' });

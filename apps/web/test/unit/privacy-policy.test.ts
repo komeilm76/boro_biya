@@ -39,6 +39,11 @@ function page(locale: 'en' | 'fa') {
   });
 }
 describe('effective development privacy notice', () => {
+  it.each(['en', 'fa'] as const)('allows enlarged privacy prose to wrap in %s', (locale) => {
+    const wrapper = page(locale);
+    expect(wrapper.get('section').classes()).toContain('wrap-anywhere');
+    wrapper.unmount();
+  });
   it.each(['en', 'fa'] as const)(
     'shows actual nondefault windows and localized policy distinctions in %s',
     async (locale) => {
