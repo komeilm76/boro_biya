@@ -795,3 +795,8 @@ The owner authorised preparation to begin Phase 3 after this architecture replac
 5. Apply the existing phase-start gate: previous mandatory acceptance/explicit dispositions, required decisions, scoped plan/test evidence and owner start approval. Missing Phase 2 reader/native-zoom observations and final owner exit approval are still open, not silently waived by the architecture request.
 
 **Phase 3: Not started.** The existing Phase 3 checklist remains the acceptance template. No map/provider/native application implementation, phase transition, merge or release is claimed here.
+
+
+### Windows workspace-discovery follow-up
+
+At `bca4d01`, Windows source-export unit tests passed, confirming cache-independent export; standalone installation still failed while resolving literal workspace paths. Linux frozen lock-only validation with a completely empty metadata cache succeeded. Replaced explicit workspace directory patterns with the same directory-glob discovery used by the host repository, while retaining exact filesystem closure assertions. Added a frozen/offline lock-only consumer check with a fresh empty metadata cache before every standalone installation. This strengthens cache-independence verification rather than granting network fallback or skipping Windows. Follow-up CI remains required; no success is inferred from the Linux result.

@@ -51,7 +51,8 @@ export function planService(service, root = repositoryRoot) {
       type: 'module',
       license: rootManifest.license,
       engines: rootManifest.engines,
-      workspaces: [...selected.values()].map(({ path }) => path),
+      // Directory globs use Bun's cross-platform workspace discovery, as in the host repository.
+      workspaces: ['packages/*', 'services/*'],
       scripts: {
         build: `node scripts/build.mjs --filter=${services[service]}`,
         start: `node services/${service}/dist/main.js`,

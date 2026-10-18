@@ -39,7 +39,7 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
       const database = await createDatabaseFor(inject('pgAdminUrl'), `standalone_${service}`);
       const password = `disposable-${service}-standalone`;
       const env = { ...process.env, DB_ADMIN_URL: database.adminConnectionString, SERVICE_DB_PASSWORD: password };
-      const run = (file: string, args: string[], environment = env) =>
+      const run = (file: string, args: string[], environment: NodeJS.ProcessEnv = env) =>
         execFileSync(file, args, {
           cwd: output,
           env: environment,
@@ -52,6 +52,10 @@ describe('outside-checkout independent service deployment (PLG-03, PLG-13, PLG-1
       try {
         exportService(service, output);
         expect(readdirSync(join(output, 'services'))).toEqual([service]);
+        run('bun', ['install', '--lockfile-only', '--frozen-lockfile', '--ignore-scripts', '--offline'], {
+          ...env,
+          BUN_INSTALL_CACHE_DIR: join(parent, 'empty-metadata-cache'),
+        });
         run('bun', ['install', '--frozen-lockfile', '--ignore-scripts', '--offline']);
         run('bun', ['run', 'build']);
         for (let attempt = 0; attempt < 2; attempt++)

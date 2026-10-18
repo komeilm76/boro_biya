@@ -45,7 +45,11 @@ describe('independent service source export (PLG-03, PLG-18, SEC-30)', () => {
     ])
       expect(existsSync(join(target, path)), path).toBe(false);
     const manifest = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8')) as { workspaces: string[] };
-    expect(manifest.workspaces.sort()).toEqual([...plan.selected.values()].map(({ path }) => path).sort());
+    expect(manifest.workspaces).toEqual(['packages/*', 'services/*']);
+    const included = ['packages', 'services'].flatMap((group) =>
+      readdirSync(join(target, group)).map((entry) => `${group}/${entry}`),
+    );
+    expect(included.sort()).toEqual([...plan.selected.values()].map(({ path }) => path).sort());
     expect(readFileSync(join(target, 'bun.lock'), 'utf8')).not.toContain('embedded-postgres');
     const original = JSON.parse(
       readFileSync(join(repositoryRoot, 'bun.lock'), 'utf8').replace(/,(\s*[}\]])/g, '$1'),
