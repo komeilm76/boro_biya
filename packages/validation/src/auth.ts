@@ -223,7 +223,9 @@ export const challengeVerifySchema = z.strictObject({
   token: challengeToken,
   counter: z.number().int().min(0).max(0xffffffff),
 });
-export const challengeResponseSchema = z.discriminatedUnion('required', [
+// Boolean literal branches are disjoint without discriminator metadata. A plain union
+// preserves the same wire acceptance while retaining its exact anyOf projection.
+export const challengeResponseSchema = z.union([
   z.strictObject({ required: z.literal(false) }),
   z.strictObject({
     required: z.literal(true),

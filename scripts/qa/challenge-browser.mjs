@@ -1,5 +1,6 @@
-// Optional actual-browser checks. Only Worker module delivery is delayed/failed;
-// API requests, SHA work, proof verification, grant clocks and admission stay real.
+// Optional actual-browser checks. Worker loading/capabilities/digest completion are
+// selectively fault-injected below. Four new fault cases reuse one real issued nonce;
+// server verification/admission and successful retries are never mocked.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createCredentialSequence } from './credential-sequence.mjs';
@@ -24,6 +25,20 @@ export async function runChallengeBrowserEdges({ browser, origin, password }) {
           );
           const page = await context.newPage();
           page.setDefaultTimeout(30_000);
+          result.issuanceResponses = [];
+          page.on('response', async (response) => {
+            if (response.url() !== `${origin}/api/v1/auth/challenge` || response.request().method() !== 'POST') return;
+            const observation = { stage, status: response.status() };
+            result.issuanceResponses.push(observation);
+            if (response.status() === 200) {
+              try {
+                const body = await response.json();
+                if (Number.isInteger(body.bits) && body.bits >= 12 && body.bits <= 20) observation.bits = body.bits;
+              } catch {
+                /* No response values are retained on parse failure. */
+              }
+            }
+          });
           page.on('request', (request) => {
             if (request.method() !== 'POST') return;
             if (request.url().endsWith('/api/v1/auth/challenge/verify')) counts.verification++;
@@ -95,7 +110,16 @@ export async function runChallengeBrowserEdges({ browser, origin, password }) {
 
           stage = 'Worker module network failure';
           await context.route(workerPattern, (route) => route.abort('failed').catch(() => {}));
-          await activate();
+          const [issued] = await Promise.all([
+            page.waitForResponse(
+              (response) =>
+                response.url() === `${origin}/api/v1/auth/challenge` && response.request().method() === 'POST',
+            ),
+            activate(),
+          ]);
+          assert.equal(issued.status(), 200);
+          const issuedChallenge = await issued.json();
+          assert.equal(issuedChallenge.required, true);
           await section.locator('[role="alert"]').waitFor();
           assert.equal(await section.locator('[role="alert"]').innerText(), messages.challenge.failed);
           assert.equal(await section.getAttribute('aria-busy'), 'false');
@@ -105,6 +129,126 @@ export async function runChallengeBrowserEdges({ browser, origin, password }) {
           await untouchedCredentials();
           result.workerLoadFailure = 'pass (localized generic alert; no verification or credential submission)';
           await context.unrouteAll({ behavior: 'wait' });
+
+          // Start the shipped solver and complete one native SHA-256 call, then hold its
+          // result pending. This deterministic seam lets keyboard cancellation happen after
+          // hashing began instead of racing a fast proof. It never fabricates a valid proof.
+          const digestMarker = 'phase2-native-digest-completed';
+          const pendingDigest = `
+const nativeDigest = crypto.subtle.digest.bind(crypto.subtle);
+crypto.subtle.digest = async (...args) => {
+  await nativeDigest(...args);
+  console.info('${digestMarker}');
+  return new Promise(() => {});
+};
+`;
+          const injectWorker = async (prefix) => {
+            await context.route(workerPattern, async (route) => {
+              const response = await route.fetch();
+              await route.fulfill({ response, body: prefix + (await response.text()) });
+            });
+          };
+          const beginPendingDigest = async () => {
+            const [worker] = await Promise.all([
+              page.waitForEvent('worker'),
+              page.waitForEvent('console', { predicate: (message) => message.text() === digestMarker }),
+              activate(),
+            ]);
+            const closed = Promise.withResolvers();
+            worker.once('close', () => closed.resolve());
+            return async () => {
+              let timer;
+              try {
+                await Promise.race([
+                  closed.promise,
+                  new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error('Worker termination timeout')), 30_000);
+                  }),
+                ]);
+              } finally {
+                clearTimeout(timer);
+              }
+            };
+          };
+          const unchangedFailure = async () => {
+            assert.equal(await section.getAttribute('aria-busy'), 'false');
+            assert.equal(await start.isEnabled(), true);
+            assert.equal(counts.verification, 0);
+            noSubmission();
+            await untouchedCredentials();
+          };
+
+          // These four deliberately non-verifying capability faults can use the same
+          // unsolved native challenge from the preceding load failure. Replay only that
+          // response, never a proof/grant or a verification. This isolates new fault cases
+          // without raising/resetting the unchanged 30-issue server-origin budget.
+          const challengePattern = `${origin}/api/v1/auth/challenge`;
+          let capabilityReplays = 0;
+          await context.route(challengePattern, (route) => {
+            capabilityReplays++;
+            return route.fulfill({ json: issuedChallenge });
+          });
+          result.capabilityFixture = 'four non-verifying faults reuse one native issued nonce; no quota/clock changes';
+
+          stage = 'keyboard cancellation after native hashing begins';
+          await injectWorker(pendingDigest);
+          const canceledWorkerClosed = await beginPendingDigest();
+          assert.equal(await section.getAttribute('aria-busy'), 'true');
+          await section.getByRole('button', { name: messages.challenge.cancel, exact: true }).focus();
+          await page.keyboard.press('Enter');
+          await canceledWorkerClosed();
+          await unchangedFailure();
+          assert.equal(await status.innerText(), messages.challenge.idle);
+          assert.equal(await section.locator('[role="alert"]').count(), 0);
+          result.cancelAfterHashingStarts =
+            'pass (native SHA-256 completed; result held pending; keyboard cancel closes Worker)';
+          await context.unroute(workerPattern);
+
+          stage = 'natural 45-second outer deadline with an unresolved digest';
+          await injectWorker(pendingDigest);
+          const stalledSince = Date.now();
+          const stalledWorkerClosed = await beginPendingDigest();
+          await section.locator('[role="alert"]').waitFor({ timeout: 50_000 });
+          await stalledWorkerClosed();
+          result.observedStalledDigestWaitMs = Date.now() - stalledSince;
+          assert(result.observedStalledDigestWaitMs >= 45_000);
+          assert.equal(await section.locator('[role="alert"]').innerText(), messages.challenge.failed);
+          await unchangedFailure();
+          result.stalledDigest = 'pass (native SHA-256 then unresolved digest; unchanged real deadline closes Worker)';
+          await context.unroute(workerPattern);
+
+          stage = 'missing Web Crypto capability in Worker';
+          await injectWorker(`Object.defineProperty(crypto, 'subtle', { value: undefined });\n`);
+          await activate();
+          await section.locator('[role="alert"]').waitFor();
+          assert.equal(await section.locator('[role="alert"]').innerText(), messages.challenge.failed);
+          await unchangedFailure();
+          result.unsupportedDigest =
+            'pass (simulated absent Web Crypto; generic localized failure; no verification/submission)';
+          await context.unroute(workerPattern);
+
+          stage = 'missing Worker capability in browser';
+          await page.evaluate(() => {
+            globalThis.__phase2Worker = globalThis.Worker;
+            globalThis.Worker = undefined;
+          });
+          try {
+            await activate();
+            await section.locator('[role="alert"]').waitFor();
+            assert.equal(await section.locator('[role="alert"]').innerText(), messages.challenge.failed);
+            await unchangedFailure();
+            result.unsupportedWorker =
+              'pass (simulated absent Worker; generic localized failure; no verification/submission)';
+          } finally {
+            await page.evaluate(() => {
+              globalThis.Worker = globalThis.__phase2Worker;
+              delete globalThis.__phase2Worker;
+            });
+          }
+
+          assert.equal(capabilityReplays, 4);
+          result.capabilityChallengeReplays = capabilityReplays;
+          await context.unroute(challengePattern);
 
           stage = 'natural 45-second work deadline during stalled Worker delivery';
           const stalled = Promise.withResolvers();

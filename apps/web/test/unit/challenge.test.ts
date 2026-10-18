@@ -76,6 +76,27 @@ describe('accessible explicit computational challenge control', () => {
       wrapper.unmount();
     },
   );
+  it.each(['en', 'fa'] as const)(
+    'fails closed without Worker support in %s and allows explicit retry',
+    async (locale) => {
+      vi.stubGlobal('Worker', undefined);
+      const wrapper = page(locale);
+      await start(wrapper);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(true);
+      expect(wrapper.text()).not.toContain('challenge.');
+      expect(wrapper.get('section').attributes('aria-busy')).toBe('false');
+      expect(authClient.verifyChallenge).not.toHaveBeenCalled();
+      expect(FakeWorker.instances).toHaveLength(0);
+      vi.stubGlobal('Worker', FakeWorker);
+      const worker = await start(wrapper);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+      worker.onmessage?.({ data: { counter: 1 } });
+      await flushPromises();
+      expect(authClient.verifyChallenge).toHaveBeenCalledTimes(1);
+      expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([grant]);
+      wrapper.unmount();
+    },
+  );
   it('handles a low-risk result without creating a worker or proof', async () => {
     vi.mocked(authClient.challenge).mockResolvedValue({ required: false });
     const wrapper = page();

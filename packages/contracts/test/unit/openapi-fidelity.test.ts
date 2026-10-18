@@ -58,4 +58,16 @@ describe('OpenAPI conversion fidelity (API-08, API-30)', () => {
       'portable UUIDv7: original/JSON Schema/generated validation and exact manifest round trip passed',
     );
   });
+  it('preserves challenge branch validation without lossy discriminator metadata', () => {
+    const result = spawnSync('bun', ['scripts/contracts/fixtures/portable-challenge.mjs'], {
+      cwd: root,
+      encoding: 'utf8',
+      timeout: 30_000,
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain(
+      'portable challenge union: original/JSON Schema/generated validation and exact manifest round trip passed',
+    );
+  });
 });

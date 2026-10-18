@@ -2,7 +2,7 @@
 
 ## 1. Contract-first policy
 
-Owner: Engineering. Reviewed: 2026-10-17.
+Owner: Engineering. Reviewed: 2026-10-18.
 
 - **[API-01]** The published API contract is **OpenAPI 3.1.x**, produced from a single source of truth and validated in CI.
 - **[API-02]** Every public endpoint defines method, path, authentication, authorization, request schema, response schema, error responses, pagination, and examples where useful, plus its requirement IDs.
@@ -136,3 +136,12 @@ The projection guard now also refuses a bare or nested versioned UUID format who
 `uuid.test.ts` compares the previous validator across hexadecimal version/variant combinations, casing and malformed/non-string inputs and checks the authentication schema graph for remaining lossy native versioned formats. `scripts/contracts/fixtures/portable-uuid.mjs` combines actual required/path, optional cursor, nullable cursor and role-array schemas. It requires original/runtime/JSON Schema/generated request and response equivalence, exact successful output, maintained OpenAPI validation before/after conversion, `zopia validate` and an exact native-manifest reverse diff. Both generation and reverse warnings must be empty. Temporary fixture files are removed in `finally`.
 
 This closes the identified UUIDv7-format loss, not all possible format fidelity or full row 6 acceptance. Query canonicalisation, cross-field ordering, reason/report sanitization and discriminator drift remain unresolved for faithful full application publication, manifest and released-contract compatibility evidence. Existing dependencies, policies, allowlists, CI checks and thresholds remain unchanged.
+
+
+## 13. Portable challenge response union (2026-10-18)
+
+The actual challenge response now uses a plain union of two strict objects with mutually exclusive boolean literals (`required: false` or `required: true`). It accepts and returns exactly the same values as the previous discriminated union, including token/work/UTC restrictions and rejection of missing, additional or mixed-branch fields. This removes unnecessary discriminator machinery from the application schema: the portable `anyOf` has an exact native-manifest round trip with the pinned tools.
+
+`scripts/contracts/fixtures/portable-challenge.mjs` compares previous/runtime/JSON Schema/manifest-generated request and response acceptance and successful output, validates OpenAPI before/after conversion, runs `zopia validate` and requires an exact reverse diff. The precise existing frozen UTC subtree diagnostic is asserted and proved lossless; no reverse warnings are allowed. The projection guard rejects remaining discriminated unions as a known-loss boundary. The generic discriminator negative regression remains mandatory: arbitrary `oneOf`/discriminator publication has not been declared safe.
+
+This closes the actual challenge union's structural loss, not all of row 6. Query canonicalisation, cross-field ordering, reason/report sanitization and full application publication/manifest/released compatibility remain incomplete. No additional dependency or changed policy/check/threshold is introduced.

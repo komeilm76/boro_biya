@@ -22,6 +22,11 @@ export function findExecutableValidation(schema) {
       if (['custom', 'overwrite', 'transform', 'pipe', 'lazy'].includes(kind)) {
         findings.push({ at, kind });
       }
+      // The pinned reverse converter changes oneOf/discriminator structure. Refuse that
+      // known-loss path; disjoint plain unions have an exact anyOf round trip.
+      if (definition.type === 'union' && definition.discriminator !== undefined) {
+        findings.push({ at, kind: 'discriminated_union' });
+      }
       // The pinned converter drops the UUID version pattern while retaining generic uuid.
       // Refuse that silent widening; explicit regex-based UUID schemas remain portable.
       if (definition.type === 'string' && definition.format === 'uuid' && definition.version !== undefined) {
